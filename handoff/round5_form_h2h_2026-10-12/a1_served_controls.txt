@@ -1,0 +1,75 @@
+A-1 — the depth region's controls, quoted from the served page (2026-10-12)
+
+Read: https://www.betexplorer.com/football/england/premier-league/coventry-newcastle-utd/tW4rOkzg/
+method: the page-fetch reader (bash has no route to betexplorer.com; the render is
+the reader's text of the served response, not raw HTML, and no raw-HTML artifact is
+claimed). This file quotes the control lines verbatim from that render.
+
+1) The form view strip — plain text, NO href, appearing once per side:
+
+   5 results10 results15 resultsall results
+
+   followed by the active marker, twice in the response:
+
+   - 5 results
+
+   Then exactly five dated rows per side, each with closing 1x2 odds. Coventry's
+   block, verbatim dates/scores (odds as served on this read):
+
+   19.09.2026  Nottingham 0 : 1 Coventry      1.64 3.87 5.52
+   13.09.2026  Coventry 0 : 5 Brighton        3.82 3.78 1.92
+   05.09.2026  Manchester City 1 : 0 Coventry 1.20 7.32 13.38
+   29.08.2026  Coventry 0 : 1 Hull            1.73 3.84 4.82
+   21.08.2026  Arsenal 3 : 0 Coventry         1.20 7.07 14.14
+
+   Newcastle Utd's block:
+
+   19.09.2026  Newcastle 2 : 1 Hull City      1.60 4.31 5.15
+   14.09.2026  Leeds 4 : 1 Newcastle          2.35 3.44 2.99
+   05.09.2026  Newcastle 2 : 2 Bournemouth    2.13 3.60 3.31
+   29.08.2026  Tottenham 0 : 2 Newcastle      2.17 3.69 3.14
+   23.08.2026  Newcastle 2 : 2 Liverpool      3.83 3.90 1.88
+
+2) The H2H list — 20 dated rows served under the heading "Head to Head: Last 6",
+   oldest 18.08.1993, newest 17.02.2010, with closing 1x2 odds on the older rows.
+   Its controls, verbatim:
+
+   Show more matches![](https://www.betexplorer.com/res/styles/img/redesign/showMoreIcon.png)
+
+   [Show all![](https://www.betexplorer.com/res/styles/img/redesign/arrowRight.png)](https://www.betexplorer.com/football/england/premier-league/mutual-matches/?home=GOvB22xg&away=p6ahwuwJ&where=0#league-summary-h2h)
+
+   -> "Show more matches" is a JS control with NO href. "Show all" IS an href,
+      and it is the mutual-matches/?home= list — the standing never-fetch URL.
+
+3) The standings block — the full table, ranks 1-20, served in the response.
+   Its controls, verbatim:
+
+   Show full table![](https://www.betexplorer.com/res/styles/img/redesign/showMoreIcon.png)
+
+   - [Standings](https://www.betexplorer.com/football/england/premier-league/standings/?table=table&table_sub=&ts=CfoA8Dmm&dcheck=0&as-ajax=1&l=en&event_context=tW4rOkzg)
+   - [Form](...standings/?table=form...&as-ajax=1...)
+   - [Over/Under](...standings/?table=over_under...&as-ajax=1...)
+   - [HT/FT](...standings/?table=ht_ft...&as-ajax=1...)
+   - [Top Scorers](...standings/?table=top_scorers...&as-ajax=1...)
+   - [Overall / Home / Away](...standings/?table=table&table_sub=overall|home|away...&as-ajax=1...)
+
+   -> "Show full table" is a JS control with NO href. The tab links ARE hrefs, and
+      they are the standings AJAX sub-tables — the standing never-fetch list.
+
+CONCLUSION (what the code comment now says)
+
+Every expander in the match-page depth region is a JS control with no href: the
+form view strip, "Show more matches", and "Show full table" carry no URL at all.
+The only hrefs that exist are "Show all" (mutual-matches/?home=) and the standings
+tabs (standings/?...as-ajax=1) — both already on the standing never-fetch list. So
+nothing fetchable exists in this region that is not banned, which is why the module
+keeps the 5-row read and adds no request. The earlier wording ("lead to further
+server responses") was wrong for three of the five controls and is retracted.
+
+DRIFT NOTE (measured, not explained away)
+
+The per-row closing odds are live values and differ between reads: the 17.02.2010
+H2H row read 1.44/4.20/7.50 on this read and 1.45/3.93/7.17 on the earlier one;
+Coventry's 19.09 row read 1.64/3.87/5.52 here and 1.64/3.88/5.49 earlier. The row
+set (dates, scores, order) is stable across reads; any per-row odds value is a
+read-time observation and must not be treated as a fixed fact.

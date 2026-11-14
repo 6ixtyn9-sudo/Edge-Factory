@@ -1,0 +1,305 @@
+== R2 proofs: dynamic per-slice floors ==
+  registry            : localdata/enhancement_registry.json (7 market type(s))
+  as_of / margin / gate: 2026-10-12 / 0.1 / n>=30
+  coverage            : {"keys_pct": 97.31051344743277, "league_pct": 97.31051344743277, "priced": 409, "records": 409, "with_keys": 398, "with_league": 398}
+  counts              : {"inherited": 218, "league": 213, "league_basis": 0, "market": 7, "market_basis": 2, "team": 0, "team_basis": 0, "team_slices": 696}
+
+-- 1. per-level refusal table (every row the derivation emitted) --
+  market away_under_25                            n=   1 LB=0.2065 derived=       - floor=    none basis=inherited no operator floor for this market — stays floorless, cannot fire
+  market away_under_35                            n=   1 LB=0.2065 derived=       - floor=    none basis=inherited no operator floor for this market — stays floorless, cannot fire
+  market btts_yes                                 n=   7 LB=0.2505 derived=       - floor=  1.8500 basis=inherited market evidence thin or unbounded (n=7 of 30) — inherits parent
+  market match_over_15                            n=  33 LB=0.5578 derived=  1.8927 floor=  1.8927 basis=market    market evidence n=33 wilsonLB=0.5578 -> 1.8927 > parent 1.45
+  market match_over_25                            n= 350 LB=0.6089 derived=  1.7424 floor=  1.7424 basis=market    market evidence n=350 wilsonLB=0.6089 -> 1.7424 > parent 1.60
+  market match_over_35                            n=  16 LB=0.1416 derived=       - floor=  3.3000 basis=inherited market evidence thin or unbounded (n=16 of 30) — inherits parent
+  market match_over_45                            n=   1 LB=0.2065 derived=       - floor=    none basis=inherited no operator floor for this market — stays floorless, cannot fire
+  league away_under_25 / World UEFA Nations Leagu n=   1 LB=0.2065 derived=       - floor=    none basis=inherited market floorless — no league floor to raise
+  league away_under_35 / World UEFA Nations Leagu n=   1 LB=0.2065 derived=       - floor=    none basis=inherited market floorless — no league floor to raise
+  league btts_yes / Scotland Premiership          n=   1 LB=0.0000 derived=       - floor=  1.8500 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league btts_yes / World Friendlies Clubs        n=   2 LB=0.3424 derived=       - floor=  1.8500 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league btts_yes / World UEFA Champions League   n=   1 LB=0.0000 derived=       - floor=  1.8500 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league btts_yes / World UEFA Europa Conference  n=   3 LB=0.2077 derived=       - floor=  1.8500 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_15 / Be1                      n=   1 LB=0.0000 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Bg1                      n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Brazil,Serie A           n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Ch1                      n=   3 LB=0.2077 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_15 / De1                      n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Denmark,1. Division      n=   1 LB=0.0000 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Ee1                      n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / England,Championship     n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / England,Premier League   n=   1 LB=0.0000 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Es1                      n=   1 LB=0.0000 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Fr1                      n=   1 LB=0.0000 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / France,Ligue 1           n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Germany,2. Bundesliga    n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / International,Club Frien n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Nl2                      n=   2 LB=0.0945 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_15 / Norway 1. Division       n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Pt1                      n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Saudi Arabia,Saudi Pro L n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Sc1                      n=   2 LB=0.3424 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_15 / Tr2                      n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Ua1                      n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / Wl1                      n=   3 LB=0.2077 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_15 / World CONCACAF Nations L n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_15 / World UEFA Nations Leagu n=   3 LB=0.2077 derived=       - floor=  1.8927 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_15 / unattributed             n=   1 LB=0.2065 derived=       - floor=  1.8927 basis=inherited no league recorded on these records — inherits the market floor (a backfill is how a league slice appears)
+  league match_over_25 / Ae1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Algeria Ligue 1          n=   3 LB=0.0615 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Ar1                      n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Argentina: Liga Profesio n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Austria,Bundesliga       n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Ba1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Be1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Be2                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Belgium: Jupiler Pro Lea n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Bg1                      n=   6 LB=0.4365 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=6 of 30) — inherits market
+  league match_over_25 / Bosnia: Premijer Liga    n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Br3                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / BrW                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Brazil,Serie A           n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Brazil,Serie B           n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Brazil: Serie A          n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Bulgaria,First Professio n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Bundesliga               n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / CH                       n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / CLW                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / CNL                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Ch1                      n=   4 LB=0.5101 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=4 of 30) — inherits market
+  league match_over_25 / Chile,Primera Division   n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Cn1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Colombia,Primera A Apert n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Croatia,Hnl              n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Czech Republic,1. Liga   n=   2 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Czech-Republic Czech Lig n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / DFB                      n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / De1                      n=   6 LB=0.4365 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=6 of 30) — inherits market
+  league match_over_25 / De2                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / De3                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Denmark Superliga        n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Denmark,1. Division      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Denmark,Superligaen      n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Denmark: Superliga       n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Dk1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / ECL                      n=   3 LB=0.4385 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / EFL                      n=   4 LB=0.5101 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=4 of 30) — inherits market
+  league match_over_25 / EPL                      n=   9 LB=0.2667 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=9 of 30) — inherits market
+  league match_over_25 / Ee1                      n=   5 LB=0.3755 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / Egypt,Premier League     n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England Premier League   n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / England,Efl Cup          n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England,Fa Cup           n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England,League Two       n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England,National League  n=   4 LB=0.3006 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=4 of 30) — inherits market
+  league match_over_25 / England,National League  n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England,Premier League   n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England,Wsl              n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / England: League One      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / England: National League n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Es1                      n=   6 LB=0.6097 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=6 of 30) — inherits market
+  league match_over_25 / Es2                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Fr1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / France Ligue 3           n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / France,Ligue 1           n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Germany Bundesliga       n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Germany,Bundesliga       n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Gr1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Greece,Super League      n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Hr1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Hu1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Hungary,Nb I             n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Iceland,Besta Deildin Ch n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Ie1                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Il1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Champions  n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Conference n=   3 LB=0.0615 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / International,Copa Liber n=   3 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / International,Copa Sudam n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Europa Lea n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Europa Lea n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Friendlies n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / International,Uefa Natio n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Uefa Natio n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / International,Uefa Natio n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Uefa Natio n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Uefa Natio n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / International,Uefa Natio n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Ireland Premier Division n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Is1                      n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Israel,Ligat Haal        n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / It1                      n=   5 LB=0.0362 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / It2                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Italy,Coppa Italia       n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Italy,Serie A            n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Italy,Serie C Grp. A     n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Italy,Serie C Grp. B     n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Italy,Serie C Grp. C     n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Jp1                      n=   7 LB=0.2505 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=7 of 30) — inherits market
+  league match_over_25 / Kr1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Kr2                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / L1                       n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / L2                       n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Mexico,Liga Mx Apertura  n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Mx1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / NCQ                      n=   5 LB=0.1176 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / NI1                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / NL                       n=   5 LB=0.3755 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / NLn                      n=   2 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / NLs                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Netherlands Eerste Divis n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Netherlands Eredivisie   n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Netherlands: Eredivisie  n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Nl1                      n=   9 LB=0.2667 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=9 of 30) — inherits market
+  league match_over_25 / Nl2                      n=   4 LB=0.5101 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=4 of 30) — inherits market
+  league match_over_25 / Nl3                      n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / No1                      n=   7 LB=0.3589 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=7 of 30) — inherits market
+  league match_over_25 / No2                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Norway 1. Division       n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Norway,1. Division       n=   6 LB=0.1876 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=6 of 30) — inherits market
+  league match_over_25 / Norway,Eliteserien       n=   3 LB=0.4385 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Pe1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Pl1                      n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Pl2                      n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Portugal Primeira Liga   n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Portugal,Liga Portugal   n=   3 LB=0.4385 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Pt1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Qa1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Ro1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Romania,Superliga        n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Romania: Liga I          n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Rs1                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Russia,Premier League    n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Sa1                      n=   5 LB=0.3755 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / Saudi Arabia,Saudi Pro L n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Saudi Arabia: Pro League n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Sc1                      n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Sc3                      n=   5 LB=0.2307 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / Scotland,Championship    n=   2 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Scotland,League One      n=   4 LB=0.5101 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=4 of 30) — inherits market
+  league match_over_25 / Scotland,Premiership     n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Se1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Slovenia,Prva Liga       n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / South Korea,K-league 1   n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / South Korea,K-league 2   n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Spain La Liga            n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Spain,Laliga2            n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Sweden,Allsvenskan       n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Sweden: Allsvenskan      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Switzerland,Super League n=   3 LB=0.4385 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / Thailand,Thai League     n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Tn1                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Tr1                      n=   2 LB=0.3424 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Tr2                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Turkey,Super Lig         n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Turkey: Süper Lig        n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / UCL                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / UEL                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / UNL                      n=   3 LB=0.2077 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=3 of 30) — inherits market
+  league match_over_25 / USA,Major League Soccer  n=   5 LB=0.3755 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=5 of 30) — inherits market
+  league match_over_25 / USA,Usl Championship Eas n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / United States: Major Lea n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Uruguay,Liga Auf Clausur n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Us1                      n=   4 LB=0.3006 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=4 of 30) — inherits market
+  league match_over_25 / Us2                      n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / WSL                      n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Wales Premier League     n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / Wales,Premier League     n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / Wl1                      n=   9 LB=0.5650 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=9 of 30) — inherits market
+  league match_over_25 / World UEFA Europa Confer n=   2 LB=0.0945 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_25 / World UEFA Nations Leagu n=   6 LB=0.3000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=6 of 30) — inherits market
+  league match_over_25 / World: UEFA Europa Leagu n=   1 LB=0.2065 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / World: UEFA Nations Leag n=   1 LB=0.0000 derived=       - floor=  1.7424 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_25 / unattributed             n=  10 LB=0.3127 derived=       - floor=  1.7424 basis=inherited no league recorded on these records — inherits the market floor (a backfill is how a league slice appears)
+  league match_over_35 / Bg1                      n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Br1                      n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / BrW                      n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Brazil Serie B           n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Brazil,Serie A           n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Es2                      n=   1 LB=0.2065 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Gr1                      n=   1 LB=0.2065 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / International,Copa Sudam n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / It2                      n=   1 LB=0.2065 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Portugal,Liga Portugal   n=   1 LB=0.2065 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Romania: Liga I          n=   2 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=2 of 30) — inherits market
+  league match_over_35 / Rs1                      n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Sweden,Allsvenskan       n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Sweden: Allsvenskan      n=   1 LB=0.0000 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_35 / Wl1                      n=   1 LB=0.2065 derived=       - floor=  3.3000 basis=inherited league evidence thin or unbounded (n=1 of 30) — inherits market
+  league match_over_45 / World Friendlies         n=   1 LB=0.2065 derived=       - floor=    none basis=inherited market floorless — no league floor to raise
+  [PASS] every row carries a level, a basis and a reason
+  [PASS] team slices are never applied (floor == parent's applied floor)
+  [PASS] thin slices inherit (no floor below the parent, no invented floor)
+
+-- 2. a thin slice self-disables even with a lucky record --
+  n=6, 5 hits (rate 0.833), Wilson LB 0.4365 < gate n>=30
+  league Thinland,Liga            gate=False floor=1.6 basis=inherited — league evidence thin or unbounded (n=6 of 30) — inherits market
+  [PASS] the lucky thin slice stays on the operator's floor
+
+-- 3. no lookahead: day D's table ignores day D's own records --
+  table before == table after adding 2 same-day record(s): True
+  [PASS] same-day records do not move the day's floors
+
+-- 4. match_over_15 is not lowered on its 72.7 % hit rate --
+  match_over_15: n=33 hits=24 rate=72.7% wilsonLB=0.5578
+  parent (operator) 1.4500 -> derived 1.8927 -> applied 1.8927 (market)
+  [PASS] the 72.7 % slice can only tighten
+
+-- 5. tighten-only clamp, visible on every row --
+  40 records / 39 hits: candidate 1.2479 < parent 1.6000 -> applied 1.6000 (inherited)
+  [PASS] a candidate under the parent keeps the parent (clamped)
+  [PASS] no row anywhere lands below its parent
+
+-- 6. hand re-derivation == the rendered slip, row for row --
+  rows re-derived by hand: 214; mismatches: []
+  [PASS] every applied floor equals 1/wilson_lb + margin clamped at the parent
+  carded legs on the card: 0; below-floor legs: 2
+    refuse PAOK vs Kalamata                   below floor 1.74 [inherited] — no bet in artifact: True
+    refuse Club Universidad de Chile vs Nuble below floor 3.30 [inherited] — no bet in artifact: True
+  [PASS] the artifact's FLOORS table prints every applied market floor
+  probe board (4 distinct fixtures at floor+0.05): 4 carded leg(s)
+    card   Probe3 FC vs Probe3 SC             floor 1.74 (market) in artifact: True
+    card   Probe0 FC vs Probe0 SC             floor 1.74 (market) in artifact: True
+    card   Probe2 FC vs Probe2 SC             floor 1.74 (market) in artifact: True
+    card   Probe1 FC vs Probe1 SC             floor 1.74 (market) in artifact: True
+  [PASS] every carded leg names its floor and its basis
+  [PASS] every below-floor leg names the floor and the basis that refused it
+
+-- 7. harness A/B, mean log growth per BET-day + no-bet frequency --
+  ==========================================================================
+  ENHANCEMENT LANE REPLAY (settled registry records only)
+  ==========================================================================
+  doctrine: this can only backtest history that HAD a price. On 2026-10-12
+  that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).
+  The newly-priced legs exist only going forward. Use these numbers for
+  RELATIVE floor comparisons — never as a prediction of bank growth.
+  
+  floor variant                                        bet-days  bets  hits    rate  mean log growth/bet-day  no-bet days
+  ------------------------------------------------------------------------------------------------------------------------
+  arm A: live floors                                         30    46    13  28.3%                  -0.0154        12/42
+  arm B: derived slice floors (day-by-day)                   21    26     6  23.1%                  -0.0182        12/33  ⚠ small-n
+  
+  NO BET frequency (MIN_ACCAS/LEGS_PER_ACCA: a day without a 2-leg
+  card is skipped, never a single) — live 29%, derived 36%; every mean above is per BET-day.
+  
+  by market (live floors):
+    market              floor     n  hits    rate  fires
+    btts_yes             1.85     7     4  57.1%      5  ⚠ small-n
+    match_over_15        1.45    33    24  72.7%      0  ⚠ small-n
+    match_over_25        1.60   350   231  66.0%    146
+    match_over_35        3.30    16     5  31.2%      5  ⚠ small-n
+  
+  paired bootstrap, B minus A, mean log growth per bet-day (5000 resamples):
+    median +0.0029  p10 -0.0294  p90 +0.0343  P(B>A) 54%  horizon 30 bet-days
+  [PASS] the harness ran and reported both arms
+
+-- 8. flag-off board byte-identical (pre-R2 tip vs this tree) --
+  ledger written by the module's own writer: exit=0
+  pre-R2 attach --mode off: exit=0, bytes=15118
+  R2     attach --mode off: exit=0, bytes=15118
+  byte-identical: True
+  [PASS] flag off: the board is byte-identical to the pre-R2 tip
+
+-- 9. the suite at this tip --
+  2925 passed in 58.96s
+  [PASS] the suite passes with no test lost
+
+== verdict: ALL PROOFS PASS ==

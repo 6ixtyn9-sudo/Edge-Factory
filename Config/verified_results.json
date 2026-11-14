@@ -1,0 +1,204 @@
+{
+  "schema": 1,
+  "purpose": "Operator-verified final scores that outrank every result donor and the shared settled overlay. Used by audit_recent_picks and auto_tickets so a single bad donor row (wrong score or wrong spelling) can never hold a pick as an alias-outcome conflict. These rows never affect source voting, picks, prices, certification, or notifications.",
+  "rows": [
+    {
+      "date": "2026-08-27",
+      "home": "Pafos",
+      "away": "Dinamo Tirana",
+      "hs": 4,
+      "gs": 2,
+      "outcome": "home",
+      "src": "operator_verified",
+      "verified_at": "2026-09-01",
+      "evidence": "Operator confirmed 4-2 final score (2026-08-27 Conference League second leg). forebet filed 2-2 draw; bettingclosed and scoutingstats both filed 4-2 home."
+    },
+    {
+      "date": "2026-08-22",
+      "home": "Fenerbahçe",
+      "away": "Konyaspor",
+      "hs": 4,
+      "gs": 2,
+      "outcome": "home",
+      "src": "source_verified",
+      "verified_at": "2026-09-01",
+      "evidence": "Süper Lig round 2, 2026-08-22: BBC Sport, ESPN and beIN Sports all report Fenerbahçe 4-2 Konyaspor (HT 3-1). A warehouse donor filed a conflicting score under an alternate spelling, holding the home pick in an alias-outcome conflict."
+    },
+    {
+      "date": "2026-06-07",
+      "home": "Tochigi SC",
+      "away": "Giravanz Kitakyushu",
+      "hs": 1,
+      "gs": 1,
+      "outcome": "draw",
+      "src": "source_verified",
+      "verified_at": "2026-10-07",
+      "evidence": "J2/J3 placement final, went to extra time. 90' score 1-1 (Watanabe 40', Kondo 60'); Nagai 97' made it 2-1 after extra time. Sofascore separates FT 1-1 from AET 2-1; SoccerPunter Full Time 1-1; the forebet archive row carries status=AET with 1-1. statarea filed the AET score 2-1. 1X2 settles on 90 minutes."
+    },
+    {
+      "date": "2026-08-01",
+      "home": "Samgurali",
+      "away": "Meshakhte Tkibuli",
+      "hs": 0,
+      "gs": 0,
+      "outcome": "draw",
+      "src": "source_verified",
+      "verified_at": "2026-10-07",
+      "evidence": "David Kipiani Cup R16; result 1-0 a.e.t. (Wikipedia 2026 Georgian Cup; worldfootball '1:0 aet'; futbol24). Extra time implies the sides were level at 90', so the 90' score was 0-0; forebet and zulubet filed 0-0, betexplorer and statarea filed the a.e.t. result. 1X2 settles on 90 minutes."
+    },
+    {
+      "date": "2026-09-23",
+      "home": "Kladno",
+      "away": "Banik Ostrava",
+      "hs": 1,
+      "gs": 1,
+      "outcome": "draw",
+      "src": "source_verified",
+      "verified_at": "2026-10-08",
+      "evidence": "MOL Cup round 3, 2026-09-23 at Stadion Frantiska Kloze: 90' score 1-1 (Skyba 42' for Banik, Jurcenko 53' for Kladno); Jurecka 119' made it 1-2 after extra time. LiveScore separates FT 1-1 from AET 1-2; FotMob records '1-2 After extra time' with the 119' goal listed separately; Eurofotbal gives '1:2 po prodlouzeni (0:1, 1:1)' and its live feed states the 90-minute result explicitly as Kladno - Banik Ostrava 1:1; Onlajny files '1:2 (po pr.)'. forebet filed the 90' score 1-1; bettingclosed filed the AET result 1-2. 1X2 settles on 90 minutes - same shape as the Tochigi SC and Samgurali rows above."
+    },
+    {
+      "date": "2026-09-27",
+      "home": "Isidro Metapán",
+      "away": "Cacahuatique",
+      "hs": 2,
+      "gs": 0,
+      "outcome": "home",
+      "src": "source_verified",
+      "verified_at": "2026-10-15",
+      "evidence": "Primera División Apertura, Round 12. Sofascore final 2-0 Isidro Metapán (goals S. Guerra 8', J. Posada 90'+7); Sofascore shows the kickoff as 26/09/2026 22:00, a display time-zone difference from the 27 Sep date in the local data. bettingclosed and vitibet filed 2-0; statarea filed 1-1, which does not match this fixture."
+    },
+    {
+      "date": "2026-10-05",
+      "home": "Montenegro",
+      "away": "Armenia",
+      "hs": 0,
+      "gs": 0,
+      "outcome": "draw",
+      "src": "source_verified",
+      "verified_at": "2026-10-15",
+      "evidence": "UEFA Nations League League C Group 2, 5 Oct 2026, Gradski Stadion: BBC Sport, VAVEL and Sofascore all report a 0-0 full-time result. ESPN's Montenegro U21 vs Armenia U21 1-1 on the same date is a different fixture (U21) and is not used."
+    },
+    {
+      "date": "2026-10-10",
+      "home": "Brusque",
+      "away": "Paysandu",
+      "hs": 1,
+      "gs": 1,
+      "outcome": "draw",
+      "src": "source_verified",
+      "verified_at": "2026-10-16",
+      "evidence": "Brasileirao Serie C 2026, 6th round (2nd phase, Group C), Arena Simon. Started Sat 10 Oct, suspended at 1-0 Paysandu (Italo 10') over stand-safety problems, completed Sun 11 Oct: 1-1 final (Brusque equaliser by Jeferson, 27' of the second half). Reported as 1-1 by FCF (fcf.com.br), O Liberal and ge.globo. The bettingclosed row filed 0-1 away under 10 Oct is wrong; the scoutingstats 1-1 row agrees with the final score."
+    },
+    {
+      "date": "2026-10-25",
+      "home": "Molde",
+      "away": "Fredrikstad",
+      "hs": 3,
+      "gs": 1,
+      "outcome": "home",
+      "src": "operator_verified",
+      "verified_at": "2026-10-26",
+      "evidence": "Eliteserien, 25 Oct 2026: Molde 3-1 Fredrikstad, four goals. BBC Sport's Eliteserien round-up files 3-1. The 2026-10-25 enhancement leg 'Molde vs Fredrikstad - Match Over 2.5 Goals @1.44' settled as a LOSS in run 40238094510, which no 3-1 score can produce; the score the grader used was never printed. Verified so any re-grade books Over 2.5 as a win."
+    },
+    {
+      "date": "2026-10-25",
+      "home": "Lillestrøm SK",
+      "away": "SK Brann",
+      "hs": 3,
+      "gs": 2,
+      "outcome": "home",
+      "src": "operator_verified",
+      "verified_at": "2026-10-26",
+      "evidence": "Eliteserien, 25 Oct 2026: Lillestrøm 3-2 Brann, five goals. BBC Sport's Eliteserien round-up files 3-2. The 2026-10-25 enhancement leg 'Lillestrøm SK vs SK Brann - Match Over 2.5 Goals @1.41' settled as a LOSS in run 40238094510, which no 3-2 score can produce. Verified so any re-grade books Over 2.5 as a win."
+    },
+    {
+      "date": "2026-10-27",
+      "home": "RSD Alcalá",
+      "away": "Las Palmas",
+      "hs": 1,
+      "gs": 1,
+      "outcome": "draw",
+      "score_period": "regulation",
+      "src": "operator_verified",
+      "verified_at": "2026-10-28",
+      "evidence": "Operator supplied two resolved bookmaker slips: Las Palmas 1x2 LOST; Alcala-Las Palmas Over 2.5 LOST. Independently verified 90 minutes plus stoppage time: 1-1; aggregate after extra time: 1-3. Canarias7 live report explicitly states 'Nos vamos a la prorroga (1-1)' before the extra-time goals; elDiario reports goals at 48, 67, 95 and 105 minutes. https://www.canarias7.es/deportes/ud-las-palmas/rsd-alcala-palmas-partido-goles-resultado-directo-20261027170037-di.html ; https://www.eldiario.es/canariasahora/Deportes/futbol/palmas-pasa-copa-prorroga_1_13620328.html . The shared overlay incorrectly exported bettingclosed_settled 1-3 as an ordinary away result. Applies only to regulation-time markets; does not alter the match's qualification outcome."
+    },
+    {
+      "date": "2026-10-30",
+      "home": "Casa Pia",
+      "away": "Sporting CP",
+      "hs": 0,
+      "gs": 2,
+      "outcome": "away",
+      "score_period": "regulation",
+      "src": "source_verified",
+      "verified_at": "2026-10-31",
+      "evidence": "BBC Sport scores/fixtures and Sporticos both report Casa Pia 0-2 Sporting CP, full time on 2026-10-30; goals at 13 and 90 minutes. Resolves a missing shared score, not a financial-history correction.",
+      "evidence_urls": [
+        "https://www.bbc.com/sport/football/scores-fixtures/2026-10-30",
+        "https://sporticos.com/en-gb/match/casa-pia-vs-sporting"
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "home": "Plymouth Parkway",
+      "away": "Berkhamsted",
+      "hs": 1,
+      "gs": 1,
+      "outcome": "draw",
+      "score_period": "regulation",
+      "src": "source_verified",
+      "verified_at": "2026-11-10",
+      "evidence": "BBC Sport reports Plymouth Parkway 1-1 Berkhamsted at full time; The FA reports 2-1 after extra time. The stored market is 1x2, so use the regulation-time score. https://www.bbc.co.uk/sport/football/live/cqvgjy1jg143t ; https://www.thefa.com/news/2026/nov/09/emirates-fa-cup-first-round-plymouth-parkway-berkhamsted-20261109"
+    },
+    {
+      "date": "2026-11-09",
+      "home": "Hvidovre",
+      "away": "Aarhus Fremad",
+      "hs": 3,
+      "gs": 0,
+      "outcome": "home",
+      "score_period": "regulation",
+      "src": "source_verified",
+      "verified_at": "2026-11-10",
+      "evidence": "Hvidovre beat Aarhus Fremad 3-0. https://bold.dk/fodbold/nyheder/topholdet-hvidovre-korte-aarhus-fremad-over/"
+    },
+    {
+      "date": "2026-11-09",
+      "home": "Pineto",
+      "away": "Vis Pesaro",
+      "hs": 1,
+      "gs": 0,
+      "outcome": "home",
+      "score_period": "regulation",
+      "src": "source_verified",
+      "verified_at": "2026-11-10",
+      "evidence": "Pineto beat Vis Pesaro 1-0. https://www.pinetocalcio.it/2026/11/09/12220/ ; https://www.sportabruzzo.com/2026/11/il-pineto-riparte-con-vigliotti-vis-pesaro-battuta-1-0-al-mariani-pavone/"
+    },
+    {
+      "date": "2026-11-09",
+      "home": "Kristiansund",
+      "away": "Vålerenga",
+      "hs": 1,
+      "gs": 0,
+      "outcome": "home",
+      "score_period": "regulation",
+      "src": "source_verified",
+      "verified_at": "2026-11-10",
+      "evidence": "BBC Sport and NRK report Kristiansund beat Vålerenga 1-0. https://www.bbc.com/sport/football/scores-fixtures/2026-11-09 ; https://www.nrk.no/sport/valerenga-tap-etter-sykdomskaos-_-kristiansund-klatret-bort-fra-nedrykk-1.18077765"
+    },
+    {
+      "date": "2026-11-12",
+      "home": "Águila",
+      "away": "Municipal Limeño",
+      "hs": 1,
+      "gs": 1,
+      "outcome": "draw",
+      "score_period": "regulation",
+      "src": "operator_verified",
+      "verified_at": "2026-11-13",
+      "evidence": "Diario El Salvador reports Águila 1-1 Municipal Limeño; Limeño equalized in stoppage time. https://diarioelsalvador.com/dedeportes/limeno-freno-la-clasificacion-del-aguila/875705"
+    }
+  ]
+}

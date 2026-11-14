@@ -1,0 +1,180 @@
+=== R2 evidence at tip e840e18 (e840e1820133e827ca471a67157e627f3ea52f7f) ===
+generated 2026-10-12T17:35:37ZZ by the commands in this file; every number below is that command's own output
+
+----------------------------------------------------------------
+== 1. CI-exact: the workflow's own regression command ==
+
+$ PYTHONPATH=src python3 -m pytest tests/ -q          # exactly daily.yml's regression-tests step
+.............................................                            [100%]
+2925 passed in 58.49s
+
+== 2. the stricter variant daily.yml does NOT run: shuffled order ==
+$ PYTHONPATH=src python3 -m pytest tests/ -q --randomly-seed=N   # N = 1,2,3,7,13
+  seed 1   2925 passed in 57.04s
+  seed 2   2925 passed in 58.99s
+  seed 3   2925 passed in 59.58s
+  seed 7   2925 passed in 56.16s
+  seed 13  2925 passed in 60.37s (0:01:00)
+
+  (the branch count before R2 was 2907; the R2 commits add 18 tests and lose
+   none - the pack's floor is >= 2907 and 2925 >= 2907. pytest-randomly is
+   NOT in requirements.txt, so the shuffled runs are a stronger local variant.)
+
+== 3. outbound count at this tip ==
+
+$ PYTHONPATH=src python3 handoff/incident_outbound_probe.py    # exit 0
+  artifact handoff/incident_2026-10-12_outbound_count.txt sha256:
+850cb1d4d50391709c628c96fb8064b5593da72988ec616e1527e2c48781503c  handoff/incident_2026-10-12_outbound_count.txt
+  byte-identical to the artifact committed with the incident memo (its
+  re-run at this tip changed nothing).
+
+== 4. the nine-file table at this tip ==
+
+$ for f in <the nine>; do git show HEAD:$f | sha256sum; done
+777a4440def3c093a529e3a037d0a2dd758a6d8e4a15e1cbf245f30cf81ef001  .gitignore
+ffb499377f7b2856661ddd97e5f50343c7f2d12c4d11a48d1bcc4854027188aa  docs/operator/BETEXPLORER-LICENSING.md
+9eb63ddcc3b8e7888fa87a03737fdce9ea37583a574c50e574f97940b67d25f0  scripts/capture_betexplorer.py
+d7462151f468051187634d5b37563e678ae018f39997dc2f76d438eb3feb1a16  scripts/clean_localdata.py
+81419280c1819cc6eca24c228a4a455cd9f6c760ada99e7f648002d5780f3732  scripts/picks_today.py
+5ea9a4e515d38eabcd7be76a06e71932970a80548dabe3423b22b722448d474c  src/edgefactory/sources/betexplorer_match_snapshot.py
+648f690c62062ff837914c3990e15cd1ca25cd237e8d489f45493bf9f76ae1fd  src/edgefactory/sources/betexplorer_odds.py
+bfbbc1d9cb80e98bd2ad7e583f33217b5b75798298c16a7294f45c59d36d5c44  tests/test_betexplorer_match_detail.py
+40c094f4345c96c0f6329842a9286913e7b33226c20ade4583d5cc98cb63d0fc  tests/test_betexplorer_politeness.py
+
+  vs the table published at 607de7a: eight rows identical, ONE moved -
+    scripts/picks_today.py  fca5051139c2... -> 81419280c181...
+  attributed to e457cfb 'lane: gate every leg on its slice floor, and print
+  the derivation' (the board line now prints floor + basis). The pack
+  predicted this move; the republished hash is the authority.
+
+== 5. never-contended / contended bundle check ==
+
+$ cd handoff/round5_form_h2h_2026-10-12 && sha256sum -c SHA256SUMS.txt
+a_census.py: FAILED
+a_identity_checks.py: FAILED
+intel_report.py: FAILED
+w1_probe.py: FAILED
+w3_identity_census.py: FAILED
+w4_probe.py: FAILED
+sha256sum: WARNING: 6 computed checksums did NOT match
+  26/32 OK; the six mismatches are NOT this round's and NOT the code under
+  review - they are the six PYTHON DRIVERS that took the shared guard
+  preamble in c466729 ('helper: one scratch redirect, guarded'). Measured:
+    file                    recorded(pub 2953b04)  c466729..now
+    a_census.py            d9dedd13b3906c79           25c86ed0056d2043
+    a_identity_checks.py   9e801dc6ae4b3220           416fadc88f03aa6f
+    intel_report.py        fc93fb72f1b51314           47f6b91be735ac52
+    w1_probe.py            b40b3ea0ea5e52ed           599149c2fa380732
+    w3_identity_census.py  a313d6ae0691527d           f9e99c709f731b8e
+    w4_probe.py            af35490533477507           1ca21801d6428567
+  The frozen SHA256SUMS.txt is NOT rewritten (that would re-sign a reviewed
+  artifact); the drift is named here instead, with its attributing commit.
+
+== 6. the C gate, raw ==
+
+=== C: patch-transfer gate at e840e18 ===
+
+$ sha256sum handoff/betexplorer-depth.patch; wc -c -l handoff/betexplorer-depth.patch
+edc6b09661f17311b1f8e045079cb40c51dea45c55c8c9c61be60016b8baf1fd  /home/user/Edge-Factory/handoff/betexplorer-depth.patch
+ 1908 96156 /home/user/Edge-Factory/handoff/betexplorer-depth.patch
+  on record: edc6b09661f1... / 96,156 B / 1,908 lines (this file),
+  operator's figure: e685e1a1... / 96,155 B. The +1 B was never byte-
+  resolved (round-2 note); the patch is accepted on functional evidence.
+
+$ git -C /tmp/c_patch_gate apply --numstat handoff/betexplorer-depth.patch
+6	0	.gitignore
+122	0	docs/operator/BETEXPLORER-LICENSING.md
+53	3	scripts/capture_betexplorer.py
+5	2	scripts/clean_localdata.py
+3	0	scripts/picks_today.py
+165	5	src/edgefactory/sources/betexplorer_match_snapshot.py
+575	34	src/edgefactory/sources/betexplorer_odds.py
+630	0	tests/test_betexplorer_match_detail.py
+38	2	tests/test_betexplorer_politeness.py
+
+  patch header says: 9 files changed, 1597 insertions(+), 46 deletions(-)
+
+$ git -C /tmp/c_patch_gate apply -3 handoff/betexplorer-depth.patch   # conflicts listed below
+Applied patch to '.gitignore' cleanly.
+Applied patch to 'docs/operator/BETEXPLORER-LICENSING.md' cleanly.
+Applied patch to 'scripts/capture_betexplorer.py' cleanly.
+Applied patch to 'scripts/clean_localdata.py' cleanly.
+error: repository lacks the necessary blob to perform 3-way merge.
+Falling back to direct application...
+Applied patch to 'src/edgefactory/sources/betexplorer_match_snapshot.py' cleanly.
+Applied patch to 'src/edgefactory/sources/betexplorer_odds.py' with conflicts.
+Falling back to direct application...
+Applied patch to 'tests/test_betexplorer_politeness.py' cleanly.
+U src/edgefactory/sources/betexplorer_odds.py
+
+  conflicted files (status 'UU') and their hunk count:
+    src/edgefactory/sources/betexplorer_odds.py  (3 conflict hunk(s))
+
+  files that applied CLEANLY:
+    .gitignore
+    docs/operator/BETEXPLORER-LICENSING.md
+    scripts/capture_betexplorer.py
+    scripts/clean_localdata.py
+    scripts/picks_today.py
+    src/edgefactory/sources/betexplorer_match_snapshot.py
+    tests/test_betexplorer_match_detail.py
+    tests/test_betexplorer_politeness.py
+
+  NOTE (the memo's record vs this measurement): the round-5 adjudication
+  expected the conflict on scripts/picks_today.py. Measured here and in
+  the round-2 post-mortem: picks_today.py applies CLEANLY and the only
+  conflict is src/edgefactory/sources/betexplorer_odds.py (3 hunks, all
+  'both sides added'). No repair is attempted; the discrepancy is
+  reported as it stands.
+
+== per-file sha256: tip / parent / patch post-image ==
+  .gitignore
+    tip        777a4440def3c093a529e3a037d0a2dd758a6d8e4a15e1cbf245f30cf81ef001
+    parent     aba37c6110fae9c184bfa28360a058a772397a5f9e93c80db396867beb476b06
+    post-image 777a4440def3c093a529e3a037d0a2dd758a6d8e4a15e1cbf245f30cf81ef001
+    verdict    IDENTICAL to the patch post-image (and changed by this patch)
+  docs/operator/BETEXPLORER-LICENSING.md
+    tip        ffb499377f7b2856661ddd97e5f50343c7f2d12c4d11a48d1bcc4854027188aa
+    parent     c7c9b50e5e0cd1e7234289619427fc88bad264701c6d109103d87399a4d0b148
+    post-image 15513fbc5e698baea2e56b23cbd50d6873f8851b5c7cd5840ee7b7defd44d0e1
+    verdict    DIFFERS from the post-image - later commits touching it: 24b04d0 pricing: the captured ledger reaches the board behind the flag;a4a5b29 capture: the reviewer's record-depth patch, applied via git am -3
+  scripts/capture_betexplorer.py
+    tip        9eb63ddcc3b8e7888fa87a03737fdce9ea37583a574c50e574f97940b67d25f0
+    parent     30e313d93f7ee7905f4d23c333b23f674e0d3f54452eaa2b17f1330b57cae509
+    post-image da8751e4f9380c949b3fe53efbbdcbdb21c5215142802af05705d5cc858cc308
+    verdict    DIFFERS from the post-image - later commits touching it: 979f7fb receipt: keep the row-refusal census the patch's whitelist dropped;a4a5b29 capture: the reviewer's record-depth patch, applied via git am -3
+  scripts/clean_localdata.py
+    tip        d7462151f468051187634d5b37563e678ae018f39997dc2f76d438eb3feb1a16
+    parent     2267f725944425b209941b96a1ec6e1f5407eea06f9178b2b7a176ea634f1e7b
+    post-image d7462151f468051187634d5b37563e678ae018f39997dc2f76d438eb3feb1a16
+    verdict    IDENTICAL to the patch post-image (and changed by this patch)
+  scripts/picks_today.py
+    tip        81419280c1819cc6eca24c228a4a455cd9f6c760ada99e7f648002d5780f3732
+    parent     789e49ce16ee7b098f62b8ed1f03a4f105e30ae219fd32f158c5e620925866b5
+    post-image 1bbd3a65c6c3b2da7adff54c9bbecab55669f0e750960f33e37dc39dddc7f50e
+    verdict    DIFFERS from the post-image - later commits touching it: e457cfb lane: gate every leg on its slice floor, and print the derivation;24b04d0 pricing: the captured ledger reaches the board behind the flag a4a5b29 capture: the reviewer's record-depth patch, applied via git am -3
+  src/edgefactory/sources/betexplorer_match_snapshot.py
+    tip        5ea9a4e515d38eabcd7be76a06e71932970a80548dabe3423b22b722448d474c
+    parent     e44ad8c0bf07992f2fd8891c4d6ed0b4cfdb3b76c3b08b19788a07de4f7895e3
+    post-image 4828bd6c889c99f3f3a76d5872bd7b39a7fb89c2b9673906186deba66a867b78
+    verdict    DIFFERS from the post-image - later commits touching it: 48ee148 capture: correct what the depth-region controls are;03cd867 capture: read the whole form block the page serves a4a5b29 capture: the reviewer's record-depth patch, applied via git am -3
+  src/edgefactory/sources/betexplorer_odds.py
+    tip        648f690c62062ff837914c3990e15cd1ca25cd237e8d489f45493bf9f76ae1fd
+    parent     0a84f5ec380928b48a6a20e9a1853c01c86e6bcb688dafa51db4ec2f913822d8
+    post-image fa45bafc6e955e1e4e466c13888b518352c4db72c5296efd6bd8742d90d49219
+    verdict    CONFLICTED - resolved by hand keeping both sides
+  tests/test_betexplorer_match_detail.py
+    tip        bfbbc1d9cb80e98bd2ad7e583f33217b5b75798298c16a7294f45c59d36d5c44
+    parent     (absent: added by this patch)
+    post-image 01a38ef24a31a7dfad0e2d476099722163e7f5672c1bc3883a36d97bf1e01725
+    verdict    DIFFERS from the post-image - later commits touching it: 7a32f7f tests: no test inherits another test's budget;a414726 receipt: restore the census test's dated claim and the state it steps on 979f7fb receipt: keep the row-refusal census the patch's whitelist dropped;a4a5b29 capture: the reviewer's record-depth patch, applied via git am -3
+  tests/test_betexplorer_politeness.py
+    tip        40c094f4345c96c0f6329842a9286913e7b33226c20ade4583d5cc98cb63d0fc
+    parent     e9fbf2e8badea598d97c6d9846e0ed2b49321d668f683f136f181c73a3b33167
+    post-image 40c094f4345c96c0f6329842a9286913e7b33226c20ade4583d5cc98cb63d0fc
+    verdict    IDENTICAL to the patch post-image (and changed by this patch)
+
+  The gate script writes its output to the bundle's own c_patch_gate.txt;
+  that file was restored to its committed content immediately after the run
+  (cmp against the pre-run copy: identical), so the frozen bundle is
+  untouched and its 32-file list was not re-signed.

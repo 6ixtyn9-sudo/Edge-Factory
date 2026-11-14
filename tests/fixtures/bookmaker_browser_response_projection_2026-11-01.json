@@ -1,0 +1,1199 @@
+[
+  {
+    "evidence_kind": "operator_supplied_browser_response",
+    "payload_scope": "selected_fields_projection",
+    "source_url": "https://statshub.sportradar.com/sportpesa/en/match/74303326",
+    "observed_at_utc": null,
+    "response": {
+      "queryUrl": "stats_match_tableslice/74303326",
+      "doc": [
+        {
+          "event": "stats_match_tableslice",
+          "_dob": 1790030426,
+          "_maxage": 600,
+          "data": []
+        }
+      ]
+    }
+  },
+  {
+    "evidence_kind": "operator_supplied_browser_response",
+    "payload_scope": "selected_fields_projection",
+    "source_url": "https://statshub.sportradar.com/sportpesa/en/match/74303326",
+    "observed_at_utc": null,
+    "response": {
+      "queryUrl": "stats_team_lastx/1963/20",
+      "doc": [
+        {
+          "event": "stats_team_lastx",
+          "_dob": 1793540024,
+          "_maxage": 600,
+          "data": {
+            "team": {
+              "_doc": "uniqueteam",
+              "_id": 1963,
+              "_sid": 1,
+              "_rcid": 13,
+              "sex": "m",
+              "teamtypeid": 0
+            },
+            "matches": [
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887122,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6243,
+                    "_sid": 1,
+                    "uid": 1968,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "22:30",
+                  "date": "28/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1793226600
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887104,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 678563,
+                    "_sid": 1,
+                    "uid": 1999,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "21:30",
+                  "date": "24/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1792877400
+                },
+                "periods": {
+                  "ft": {
+                    "home": 2,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 2,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 74781110,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "_seasonid": 137972,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 472186,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 1205408,
+                    "_sid": 1,
+                    "uid": 1961,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "00:30",
+                  "date": "22/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1792629000
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 1
+                  },
+                  "ap": {
+                    "home": 5,
+                    "away": 4
+                  }
+                },
+                "result": {
+                  "home": 5,
+                  "away": 4,
+                  "period": "ap"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887092,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 5905,
+                    "_sid": 1,
+                    "uid": 1967,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "22:30",
+                  "date": "17/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1792276200
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 2
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 2,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 74781108,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "_seasonid": 137972,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 1205408,
+                    "_sid": 1,
+                    "uid": 1961,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 472186,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "00:30",
+                  "date": "15/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1792024200
+                },
+                "periods": {
+                  "ft": {
+                    "home": 1,
+                    "away": 2
+                  }
+                },
+                "result": {
+                  "home": 1,
+                  "away": 2,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887064,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 5331,
+                    "_sid": 1,
+                    "uid": 1957,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "20:30",
+                  "date": "11/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1791750600
+                },
+                "periods": {
+                  "ft": {
+                    "home": 4,
+                    "away": 1
+                  }
+                },
+                "result": {
+                  "home": 4,
+                  "away": 1,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887044,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6247,
+                    "_sid": 1,
+                    "uid": 1955,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "00:30",
+                  "date": "09/10/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1791505800
+                },
+                "periods": {
+                  "ft": {
+                    "home": 1,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 1,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887030,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 5334,
+                    "_sid": 1,
+                    "uid": 5926,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "14:00",
+                  "date": "20/09/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1789912800
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 73903158,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "_seasonid": 137972,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 313485,
+                    "_sid": 1,
+                    "uid": 5257,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 472186,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "22:00",
+                  "date": "16/09/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1789596000
+                },
+                "periods": {
+                  "ft": {
+                    "home": 3,
+                    "away": 2
+                  },
+                  "ap": {
+                    "home": 6,
+                    "away": 6
+                  }
+                },
+                "result": {
+                  "home": 6,
+                  "away": 6,
+                  "period": "ap"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66887004,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 71345,
+                    "_sid": 1,
+                    "uid": 1981,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "21:30",
+                  "date": "12/09/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1789248600
+                },
+                "periods": {
+                  "ft": {
+                    "home": 2,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 2,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 73903098,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "_seasonid": 137972,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 472186,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 313485,
+                    "_sid": 1,
+                    "uid": 5257,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "22:00",
+                  "date": "09/09/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1788991200
+                },
+                "periods": {
+                  "ft": {
+                    "home": 1,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 1,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66886980,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 5903,
+                    "_sid": 1,
+                    "uid": 1958,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "21:30",
+                  "date": "06/09/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1788730200
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 73661984,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 283,
+                "_utid": 373,
+                "_seasonid": 139328,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 87103,
+                    "_sid": 1,
+                    "uid": 1968,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 88033,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "00:30",
+                  "date": "03/09/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1788395400
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66886966,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 1180252,
+                    "_sid": 1,
+                    "uid": 21982,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "21:30",
+                  "date": "30/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1788125400
+                },
+                "periods": {
+                  "ft": {
+                    "home": 1,
+                    "away": 1
+                  }
+                },
+                "result": {
+                  "home": 1,
+                  "away": 1,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 73661974,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 283,
+                "_utid": 373,
+                "_seasonid": 139328,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 88033,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 87103,
+                    "_sid": 1,
+                    "uid": 1968,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "00:30",
+                  "date": "27/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1787790600
+                },
+                "periods": {
+                  "ft": {
+                    "home": 3,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 3,
+                  "away": 0,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66886944,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 5319,
+                    "_sid": 1,
+                    "uid": 1974,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "19:00",
+                  "date": "23/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1787511600
+                },
+                "periods": {
+                  "ft": {
+                    "home": 4,
+                    "away": 1
+                  }
+                },
+                "result": {
+                  "home": 4,
+                  "away": 1,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 71805798,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "_seasonid": 137972,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 87066,
+                    "_sid": 1,
+                    "uid": 5991,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 472186,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "22:00",
+                  "date": "19/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1787176800
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 1
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 1,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66886918,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 18335,
+                    "_sid": 1,
+                    "uid": 1961,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "19:30",
+                  "date": "15/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1786822200
+                },
+                "periods": {
+                  "ft": {
+                    "home": 3,
+                    "away": 2
+                  }
+                },
+                "result": {
+                  "home": 3,
+                  "away": 2,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 71805784,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "_seasonid": 137972,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 472186,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 87066,
+                    "_sid": 1,
+                    "uid": 5991,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "22:00",
+                  "date": "12/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1786572000
+                },
+                "periods": {
+                  "ft": {
+                    "home": 1,
+                    "away": 1
+                  }
+                },
+                "result": {
+                  "home": 1,
+                  "away": 1,
+                  "period": "nt"
+                }
+              },
+              {
+                "_doc": "match",
+                "_doctype": "generic",
+                "_id": 66886904,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "_seasonid": 137706,
+                "teams": {
+                  "home": {
+                    "_doc": "team",
+                    "_id": 6172,
+                    "_sid": 1,
+                    "uid": 1963,
+                    "virtual": false
+                  },
+                  "away": {
+                    "_doc": "team",
+                    "_id": 5322,
+                    "_sid": 1,
+                    "uid": 1966,
+                    "virtual": false
+                  }
+                },
+                "tobeannounced": false,
+                "postponed": false,
+                "walkover": false,
+                "retired": false,
+                "disqualified": false,
+                "canceled": false,
+                "inlivescore": true,
+                "status": null,
+                "numberofperiods": 2,
+                "time": {
+                  "_doc": "time",
+                  "time": "19:00",
+                  "date": "09/08/26",
+                  "tz": "UTC",
+                  "tzoffset": 0,
+                  "uts": 1786302000
+                },
+                "periods": {
+                  "ft": {
+                    "home": 0,
+                    "away": 0
+                  }
+                },
+                "result": {
+                  "home": 0,
+                  "away": 0,
+                  "period": "nt"
+                }
+              }
+            ],
+            "tournaments": {
+              "83": {
+                "_doc": "tournament",
+                "_id": 83,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 83,
+                "_utid": 325,
+                "seasonid": 137706,
+                "currentseason": 137706,
+                "livetable": 103240,
+                "seasontype": "21"
+              },
+              "309": {
+                "_doc": "tournament",
+                "_id": 309,
+                "_sid": 1,
+                "_rcid": 393,
+                "_tid": 309,
+                "_utid": 384,
+                "seasonid": 137972,
+                "currentseason": 137972,
+                "livetable": false,
+                "seasontype": "26"
+              },
+              "283": {
+                "_doc": "tournament",
+                "_id": 283,
+                "_sid": 1,
+                "_rcid": 13,
+                "_tid": 283,
+                "_utid": 373,
+                "seasonid": 139328,
+                "currentseason": 139328,
+                "livetable": false,
+                "seasontype": "26"
+              }
+            },
+            "uniquetournaments": {
+              "325": {
+                "_doc": "uniquetournament",
+                "_id": 325,
+                "_utid": 325,
+                "_sid": 1,
+                "_rcid": 13,
+                "currentseason": 137706
+              },
+              "384": {
+                "_doc": "uniquetournament",
+                "_id": 384,
+                "_utid": 384,
+                "_sid": 1,
+                "_rcid": 393,
+                "currentseason": 137972
+              },
+              "373": {
+                "_doc": "uniquetournament",
+                "_id": 373,
+                "_utid": 373,
+                "_sid": 1,
+                "_rcid": 13,
+                "currentseason": 139328
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

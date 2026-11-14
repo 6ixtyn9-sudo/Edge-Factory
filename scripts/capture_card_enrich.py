@@ -1,0 +1,695 @@
+#!/usr/bin/env python3
+"""card_enrich — silent, weekly, budget-ledgered Boggio H2H capture (Phase 2).
+
+Operator-approved shape (2026-10-10), all of it binding and none of it widened
+here: the TOP-6 card fixtures by proximity to consensus certification, the
+``/api/v2/head-to-head/:id`` endpoint ONLY, ONE call per fixture, a staleness
+skip (a snapshot younger than 7 days is never refetched), a hard monthly budget
+that spans both key pools via a per-key counter, as-of stamps on every dated
+row, a per-call ledger, and a fail-closed budget: no
+``EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS`` means no calls at all.
+
+Two modes, and the distinction is the whole safety story:
+
+* default (PLAN) — spends ZERO vendor calls. It prints the mandatory pre-flight
+  budget math and the per-fixture decisions, then stops. Safe to dispatch on
+  any ref, and the only safe dispatch;
+* ``--execute`` — pays quota. It still cannot exceed the pre-flight allowance,
+  and every call it makes is written to ``localdata/card_enrich_call_ledger.jsonl``
+  before anything else is believed.
+
+Capture only: this script never registers a rule, never evaluates a predicate,
+never touches the pick path, gates, notifications, or any display column. The
+context snapshot it writes is shaped for ``edgefactory.context_rules`` so a
+later certification can consume it, and it stays inert until the pre-registered
+bars clear on their own.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+from edgefactory.identity import source_team_key, squad_marker_mismatch  # noqa: E402
+from edgefactory.sources import boggio  # noqa: E402
+
+CARD_LIMIT_DEFAULT = 6
+_MATCH_RULE = re.compile(r"^(?P<family>.*?)\s*avg_p>=(?P<threshold>\d+(?:\.\d+)?)$")
+
+
+def load_card(localdata: Path, day: str) -> list[dict]:
+    raw = json.loads((localdata / "picks_today.json").read_text(encoding="utf-8"))
+    rows = raw if isinstance(raw, list) else raw.get("rows", raw.get("picks", []))
+    return [r for r in rows if isinstance(r, dict) and str(r.get("date", ""))[:10] == day] \
+        if isinstance(rows, list) else []
+
+
+def margin(row: dict, *, registry: dict | None = None) -> float | None:
+    """How far this row clears its own consensus threshold - the proximity rank.
+
+    A fixture already 25 points past its bar does not need another evidence
+    source; one sitting on the line does. Rows that are below their threshold,
+    malformed, or unrankable return ``None`` and are never enriched: proximity
+    to certification means *on the line*, not "anywhere on the card".
+    """
+    rule = str(row.get("rule") or row.get("edge_rule") or "")
+    avg_p = row.get("avg_p")
+    if (row.get("probability_available") is False
+            or isinstance(avg_p, bool) or not isinstance(avg_p, (int, float))
+            or not math.isfinite(avg_p) or not 0 <= avg_p <= 100):
+        return None
+    if row.get("contract_schema") == "post_forebet_v1" or rule.startswith("pfc_"):
+        # Opaque IDs are not rule grammar. Resolve the exact, active recipe;
+        # never infer a floor from a display label or from another contract.
+        from edgefactory.consensus_contracts import validate_contract
+        try:
+            if (registry or {}).get("operating_contract") != "post_forebet_v1":
+                return None
+            edges = [e for e in (registry or {}).get("edges", [])
+                     if isinstance(e, dict) and e.get("contract_id") == row.get("contract_id")]
+            if len(edges) != 1:
+                return None
+            edge = edges[0]
+            identity = validate_contract(edge)
+            day = str(row.get("date") or "")[:10]
+            if (edge.get("status") != "certified" or edge["activated_as_of"] > day
+                    or row.get("contract_schema") != edge["contract_schema"]
+                    or rule != identity or row.get("edge_rule") != identity
+                    or row.get("market") != edge["market"]
+                    or sorted(row.get("sources_used", [])) != edge["sources"]):
+                return None
+            datetime.strptime(day, "%Y-%m-%d")
+            threshold = edge["threshold"]
+        except (AttributeError, KeyError, TypeError, ValueError):
+            return None
+    else:
+        # Retained archive rows do not reactivate the retired electorate or
+        # consume context quota once the operational registry has migrated.
+        if isinstance(registry, dict) and registry.get("operating_contract") == "post_forebet_v1":
+            return None
+        match = _MATCH_RULE.match(rule.strip())
+        if not match:
+            return None
+        threshold = float(match["threshold"])
+    return round(float(avg_p) - threshold, 3)
+
+
+def select_candidates(card: list[dict], *, limit: int,
+                      registry: dict | None = None) -> tuple[list[dict], list[dict]]:
+    """Pick the ``limit`` fixtures closest to certification. Returns (chosen, census).
+
+    One entry per fixture (the tightest margin on that fixture wins), so a
+    fixture with two markets can never eat two of the six budgeted calls.
+    """
+    best: dict[tuple[str, str], dict] = {}
+    skipped: dict[str, int] = {}
+    for row in card:
+        home, away = row.get("home"), row.get("away")
+        home_key, away_key = source_team_key(home), source_team_key(away)
+        if not home_key or not away_key:
+            skipped["unkeyable_team"] = skipped.get("unkeyable_team", 0) + 1
+            continue
+        if squad_marker_mismatch(home, away):
+            # A reserve/B-vs-first-team pairing is an identity hazard, not a
+            # fixture. It gets no call and no snapshot.
+            skipped["squad_marker_pair"] = skipped.get("squad_marker_pair", 0) + 1
+            continue
+        value = margin(row, registry=registry)
+        if value is None:
+            skipped["unrankable_rule"] = skipped.get("unrankable_rule", 0) + 1
+            continue
+        if value < 0:
+            skipped["below_threshold"] = skipped.get("below_threshold", 0) + 1
+            continue
+        fixture_key = f"{home_key}|{away_key}"
+        entry = best.get(fixture_key)
+        if entry is None or value < entry["margin"]:
+            best[fixture_key] = {
+                "fixture_key": fixture_key, "home": home, "away": away,
+                "home_key": home_key, "away_key": away_key,
+                "kickoff_utc": row.get("kickoff_utc"), "league": row.get("league"),
+                "date": str(row.get("date", ""))[:10], "margin": value,
+                "rule": str(row.get("rule") or row.get("edge_rule")),
+                "avg_p": row.get("avg_p"), "bucket": row.get("bucket"),
+            }
+    chosen = sorted(best.values(), key=lambda item: (item["margin"], item["fixture_key"]))[:limit]
+    census = [
+        {"fixture_key": item["fixture_key"], "margin": item["margin"],
+         "rule": item["rule"], "selected": item in chosen}
+        for item in sorted(best.values(), key=lambda item: (item["margin"], item["fixture_key"]))
+    ] or [{"skipped_census": skipped}]
+    if skipped:
+        census.append({"skipped_census": skipped})
+    return chosen, census
+
+
+def event_map(localdata: Path, days: list[str]) -> dict[tuple[str, str], dict]:
+    """Provider fixture ids from the shadow ledgers we ALREADY paid for.
+
+    Keyed by the same folded team pair the card uses. No vendor call here: the
+    listing's ``id`` is retained by ``sources/boggio.py`` precisely so this
+    resolution is free.
+    """
+    out: dict[tuple[str, str], dict] = {}
+    for day in days:
+        path = production_shadow_path(localdata, day)
+        try:
+            rows = json.loads(path.read_text(encoding="utf-8")).get("rows", [])
+        except (OSError, ValueError, TypeError, AttributeError):
+            continue
+        for row in rows if isinstance(rows, list) else []:
+            if not isinstance(row, dict):
+                continue
+            event_id = row.get("event_id")
+            home_key, away_key = source_team_key(row.get("home")), source_team_key(row.get("away"))
+            if not event_id or not home_key or not away_key:
+                continue
+            out.setdefault((home_key, away_key), {
+                "event_id": event_id, "kickoff": row.get("kickoff"),
+                "status": "pending_assumed_from_listing",
+            })
+    return out
+
+
+def resolve_from_listing(payload, *, day: str) -> dict[tuple[str, str], dict]:
+    """Pending, unexpired, future listing rows only - expired sample rows are NOT
+    valid stats keys (live-verified lesson) and stats endpoints reject past
+    fixtures outright."""
+    now_london = datetime.now(ZoneInfo("Europe/London"))
+    out: dict[tuple[str, str], dict] = {}
+    items = payload.get("data") if isinstance(payload, dict) else None
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict) or str(item.get("status", "")).lower() != "pending":
+            continue
+        if item.get("is_expired") is True:
+            continue
+        event_id = item.get("id")
+        if not isinstance(event_id, int) or isinstance(event_id, bool) or event_id <= 0:
+            continue
+        try:
+            start = datetime.fromisoformat(str(item.get("start_date") or "").replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            continue
+        start = start.replace(tzinfo=ZoneInfo("Europe/London")) if start.tzinfo is None \
+            else start.astimezone(ZoneInfo("Europe/London"))
+        if start <= now_london:
+            continue
+        home_key, away_key = source_team_key(item.get("home_team")), source_team_key(item.get("away_team"))
+        if not home_key or not away_key:
+            continue
+        out[(home_key, away_key)] = {"event_id": event_id, "kickoff": item.get("start_date"),
+                                     "listing_day": day, "start_london": start.isoformat()}
+    return out
+
+
+def last_observed_remaining(localdata: Path, *, month: str | None = None) -> dict[str, int]:
+    """Most recent current-window provider reading per key fingerprint."""
+    seen: dict[str, int] = {}
+    for entry in boggio.read_call_ledger(localdata, month=month):
+        remaining = entry.get("family_remaining")
+        fingerprint = entry.get("key")
+        if isinstance(remaining, int) and isinstance(fingerprint, str):
+            seen[fingerprint] = remaining
+    return seen
+
+
+def listing_attempted_today(localdata: Path, day: str) -> bool:
+    """Whether this lane already paid for its one listing call on ``day``."""
+    endpoint = boggio.H2H_ENDPOINT + ":listing"
+    return any(
+        str(entry.get("date", ""))[:10] == day
+        and entry.get("endpoint") == endpoint
+        and entry.get("charged") is True
+        for entry in boggio.read_call_ledger(localdata, month=boggio.family_month(day))
+    )
+
+
+def production_shadow_path(localdata: Path, day: str) -> Path:
+    """Where the production lane keeps the day's own rows - the retained ids."""
+    return localdata / f"boggio_shadow_{day}.json"
+
+
+def production_listing_entry(localdata: Path, day: str) -> dict | None:
+    """The production lane's free listing fetch for ``day``, from the shared ledger.
+
+    One entry means the very payload a paid listing would re-fetch has already
+    been bought once today, by the price lane, at no cost to this one.
+    """
+    for entry in boggio.read_call_ledger(localdata, month=boggio.family_month(day)):
+        if (str(entry.get("date", ""))[:10] == day
+                and entry.get("endpoint") == "boggio_production_listing"):
+            return entry
+    return None
+
+
+def _ring_attempt_count(exc: boggio.UpstreamBlocked) -> int:
+    """Read explicit contact evidence; an absent marker means no attempts."""
+    try:
+        return max(0, int(getattr(exc, "ring_attempts", 0) or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _provider_was_contacted(exc: boggio.UpstreamBlocked) -> bool:
+    """A blocked call is billable only when the ring proves a request was tried.
+
+    ``UpstreamBlocked`` also represents local guards (for example, no key is
+    configured), so the exception type by itself is not evidence of provider
+    contact. The Boggio ring attaches these attributes only after an attempt.
+    """
+    return _ring_attempt_count(exc) >= 1 or getattr(exc, "ring_key", None) is not None
+
+
+def _unresolved_detail(item: dict, pair: tuple[str, str],
+                       retained: dict[tuple[str, str], dict],
+                       listing_ids: dict[tuple[str, str], dict]) -> dict:
+    """Why one fixture stayed unresolved, as bounded counts and folded keys.
+
+    The question the 2026-10-12 receipt could not answer: was the pair absent
+    from the retained rows entirely, or present-but-differently-keyed?
+    """
+
+    def sharing(pairs):
+        return [f"{home}|{away}" for (home, away) in pairs
+                if home == pair[0] or away == pair[1]]
+
+    retained_near, listing_near = sharing(retained), sharing(listing_ids)
+    return {"fixture": item["fixture_key"],
+            "retained_pairs_sharing_a_key": len(retained_near),
+            "listing_pairs_sharing_a_key": len(listing_near) if listing_ids else None,
+            "nearest_retained": retained_near[:2],
+            "nearest_listing": listing_near[:2]}
+
+
+def plan_run(day: str, *, localdata: Path, limit: int,
+             bootstrap: dict[str, int], now: datetime | None = None) -> dict:
+    """Every decision that can cost money, taken offline. Never touches the network."""
+    card = load_card(localdata, day)
+    try:
+        registry = json.loads((localdata / "edges_consensus.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        registry = None
+    chosen, census = select_candidates(card, limit=limit, registry=registry)
+    snapshots = boggio.load_snapshots(localdata)
+    known = last_observed_remaining(localdata, month=boggio.family_month(day))
+    known.update({str(k): int(v) for k, v in (bootstrap or {}).items()})
+    ids = event_map(localdata, [day])
+    for item in chosen:
+        pair = (item["home_key"], item["away_key"])
+        item["event_id"] = (ids.get(pair) or {}).get("event_id")
+        item["stale_skip"] = not boggio.needs_capture(item["fixture_key"], snapshots, day=day)
+        item["needs_call"] = bool(not item["stale_skip"])
+        item["resolvable"] = item["event_id"] is not None
+    unresolved = [i for i in chosen if i["needs_call"] and not i["resolvable"]]
+    resolved_h2h = sum(1 for i in chosen if i["needs_call"] and i["resolvable"])
+    listing_used = listing_attempted_today(localdata, day)
+
+    # Receipt facts, resolved here and never re-derived from stdout later:
+    # whether the day's own rows are on disk, and whether the production lane
+    # already fetched this listing for free (the same payload a paid listing
+    # would re-buy).
+    shadow_present = production_shadow_path(localdata, day).exists()
+    production_listing = production_listing_entry(localdata, day)
+
+    # A paid listing buys the same provider payload the production lane already
+    # fetched for free. When that payload is on disk and its retained ids still
+    # did not match, paying again cannot resolve the fixture - it can only re-buy
+    # rows we already hold. The refusal is explicit and named; the paid call
+    # stays available when no day rows exist to resolve from (cache eviction).
+    listing_reason = ""
+    if unresolved:
+        if listing_used:
+            listing_reason = "listing_already_paid_today"
+        elif production_listing is not None and shadow_present:
+            listing_reason = "free_listing_present_zero_matches"
+        elif not shadow_present:
+            listing_reason = "shadow_file_absent"
+        else:
+            listing_reason = "no_production_listing_recorded_today"
+
+    # A listing is useful only when the preflight can cover both that call and
+    # at least one H2H it may unlock. Probe capacity through the same fail-closed
+    # budget function, then include the listing and every newly unlockable H2H
+    # in the actual preflight before execute() can touch the network.
+    suppress = listing_reason == "free_listing_present_zero_matches"
+    listing_capacity = boggio.preflight(
+        need_h2h=2, need_listing=0, localdata=localdata, day=day,
+        observed_remaining=known,
+    ) if unresolved and not listing_used and not suppress else None
+    need_listing = int(bool(
+        unresolved and not listing_used and not suppress and listing_capacity
+        and listing_capacity["allowed_calls"] > 1
+    ))
+    if (listing_reason in {"shadow_file_absent", "no_production_listing_recorded_today"}
+            and not need_listing):
+        listing_reason = "listing_capacity_insufficient"
+    need_h2h = resolved_h2h + (len(unresolved) if need_listing else 0)
+    preflight = boggio.preflight(need_h2h=need_h2h, need_listing=need_listing,
+                                localdata=localdata, day=day, observed_remaining=known)
+    # Freshness, measured against NOW rather than against the card date: the
+    # provider's stats endpoints are upcoming-fixture-only and the lane's own
+    # rule marks a post-kickoff capture ineligible, so a run on a card whose
+    # matches have already started would pay full price for zero usable rows.
+    now = now or datetime.now(timezone.utc)
+    pre_kickoff = sum(1 for i in chosen
+                      if (k := boggio._aware(i.get("kickoff_utc"))) is not None and k > now)
+    return {"pre_kickoff": pre_kickoff,
+            "day": day, "card_rows": len(card), "candidates": chosen, "census": census,
+            "unresolved": [i["fixture_key"] for i in unresolved],
+            "listing_used_today": listing_used, "preflight": preflight,
+            "need_h2h": need_h2h, "need_listing": need_listing,
+            "retained_pairs": len(ids), "retained_map": ids,
+            "shadow_file_present": shadow_present,
+            "free_listing_recorded_today": production_listing is not None,
+            "listing_reason": listing_reason}
+
+
+def execute(day: str, plan: dict, *, localdata: Path, log=print,
+            now: datetime | None = None) -> dict:
+    """Pay for the plan, in pre-flight order, one ledger line per call.
+
+    ``now`` is the observation clock, injectable for the same reason as in
+    ``main``: the stamp written here is what ``parse_head_to_head`` compares
+    against the kickoff to decide ``usable``, so a run whose clock is read from
+    the wall would pay for rows its own pre-kickoff rule then discards.
+    """
+    results = {
+        "calls": 0, "usable": 0, "statuses": [], "unattributed": [], "local_blocks": 0,
+        # The census is the durable answer to "what did this run's spend buy?".
+        # Counts, reasons and folded keys only; never a raw payload or a secret.
+        "decisions": {"staleness_skip": 0, "unresolved_id": 0, "budget_stop": 0,
+                      "lane_blocked_local": 0, "captured": 0, "capture_blocked": 0},
+        "unresolved_detail": [],
+        "listing": {"charged": False, "resolved_pairs": 0, "outcome": "not_planned",
+                    "reason": plan.get("listing_reason") or ""},
+    }
+    budget = dict(allowed=plan["preflight"]["allowed_calls"])
+    entries = boggio.read_call_ledger(localdata)
+    captured_at = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    listing_ids: dict[tuple[str, str], dict] = {}
+
+    # A listing call is only worth paying if a call it unlocks also fits in the
+    # budget: buying ids and then being unable to use them is a charged call that
+    # can never become a snapshot. When the money is that tight, degrade to zero.
+    if plan["need_listing"] and budget["allowed"] > 1:
+        try:
+            key, index, code, payload, headers = boggio.listing_call(day)
+            remaining = boggio.quota_remaining(headers)
+            listing_ids = resolve_from_listing(payload, day=day)
+            budget["allowed"] -= 1
+            results["calls"] += 1
+            boggio.record_call(entries, day=day, fixture_key="listing",
+                               endpoint=boggio.H2H_ENDPOINT + ":listing", pool_index=index, key=key,
+                               status=code, remaining=remaining, spent=True,
+                               what_bought=f"fixture-id resolution: {len(listing_ids)} pending unexpired rows")
+            results["listing"].update({"charged": True, "resolved_pairs": len(listing_ids),
+                                       "outcome": "charged"})
+            results["statuses"].append(f"listing http={code} resolved={len(listing_ids)}")
+        except boggio.UpstreamBlocked as exc:
+            if _provider_was_contacted(exc):
+                # A contacted listing may be billable even if it was rejected;
+                # consume its planned unit before continuing through the card.
+                budget["allowed"] -= 1
+                results["calls"] += 1
+                boggio.record_call(entries, day=day, fixture_key="listing",
+                                   endpoint=boggio.H2H_ENDPOINT + ":listing",
+                                   pool_index=getattr(exc, "ring_pool_index", None),
+                                   key=getattr(exc, "ring_key", None),
+                                   status=None, remaining=None, spent=True,
+                                   what_bought="listing rejected after provider contact; ids unresolved",
+                                   error=exc)
+                results["listing"].update({"charged": True, "resolved_pairs": 0,
+                                           "outcome": "blocked_after_contact"})
+                results["statuses"].append("listing contacted but blocked")
+            else:
+                results["local_blocks"] += 1
+                results["listing"]["outcome"] = "lane_blocked_local"
+                results["statuses"].append("listing blocked locally; request not sent")
+                log("ledger=card_enrich_listing verdict=lane_blocked_local calls_spent=0 "
+                    "note=no request was sent; budget untouched")
+
+    for item in plan["candidates"]:
+        if not item["needs_call"]:
+            results["decisions"]["staleness_skip"] += 1
+            log(f"ledger=card_enrich fixture={item['fixture_key']} decision=staleness_skip "
+                f"window_days={boggio.CARD_ENRICH_STALENESS_DAYS}")
+            continue
+        pair = (item["home_key"], item["away_key"])
+        event_id = item["event_id"] or (listing_ids.get(pair) or {}).get("event_id")
+        if not event_id:
+            results["decisions"]["unresolved_id"] += 1
+            results["unresolved_detail"].append(_unresolved_detail(
+                item, pair, plan.get("retained_map") or {}, listing_ids))
+            log(f"ledger=card_enrich fixture={item['fixture_key']} decision=unresolved_id "
+                f"calls_spent=0 note=no_matching_pending_listing_row")
+            continue
+        if budget["allowed"] <= 0:
+            results["decisions"]["budget_stop"] += 1
+            log(f"ledger=card_enrich fixture={item['fixture_key']} decision=budget_stop "
+                f"allowed_exhausted=1 calls_spent=0")
+            results["unattributed"].append(item["fixture_key"])
+            continue
+        try:
+            key, index, code, payload, headers = boggio.h2h_call(event_id)
+        except boggio.UpstreamBlocked as exc:
+            if not _provider_was_contacted(exc):
+                results["local_blocks"] += 1
+                results["decisions"]["lane_blocked_local"] += 1
+                results["statuses"].append(f"{item['fixture_key']} blocked locally; request not sent")
+                log(f"ledger=card_enrich fixture={item['fixture_key']} "
+                    "decision=lane_blocked_local call_spent=0 "
+                    "note=no request was sent; budget untouched")
+                continue
+            # A refused or half-delivered request is billable only after the ring
+            # proves contact; attribute it to the last pool the ring touched.
+            budget["allowed"] -= 1
+            results["calls"] += 1
+            results["decisions"]["capture_blocked"] += 1
+            touched = _ring_attempt_count(exc)
+            contact_detail = (f"{touched} pool(s) touched" if touched
+                              else "pool identified; attempt count unavailable")
+            boggio.record_call(entries, day=day, fixture_key=item["fixture_key"],
+                               endpoint=boggio.H2H_ENDPOINT,
+                               pool_index=getattr(exc, "ring_pool_index", None),
+                               key=getattr(exc, "ring_key", None),
+                               status=None, remaining=None, spent=True,
+                               what_bought=f"ring rejected the fixture ({contact_detail}); no payload",
+                               error=exc)
+            log(f"ledger=card_enrich fixture={item['fixture_key']} event_id={event_id} status=blocked")
+            continue
+        remaining = boggio.quota_remaining(headers)
+        snapshot = boggio.parse_head_to_head(payload, fixture={
+            "home": item["home"], "away": item["away"], "kickoff_utc": item["kickoff_utc"]},
+            captured_at=captured_at)
+        snapshot.update({"fixture_key": item["fixture_key"], "event_id": event_id,
+                         "selection": {"margin": item["margin"], "rule": item["rule"],
+                                       "avg_p": item["avg_p"], "bucket": item["bucket"]}})
+        budget["allowed"] -= 1
+        results["calls"] += 1
+        results["decisions"]["captured"] += 1
+        results["usable"] += 1 if snapshot.get("usable") else 0
+        results["statuses"].append(f"{item['fixture_key']} http={code}")
+        plan["snapshots"].append(snapshot)
+        # Ensure h2h_dominance appears early in what_it_bought (ledger truncation at 200 chars)
+        dom = snapshot['features'].get('h2h_dominance')
+        boggio.record_call(entries, day=day, fixture_key=item["fixture_key"],
+                           endpoint=boggio.H2H_ENDPOINT, pool_index=index, key=key, status=code,
+                           remaining=remaining, spent=True,
+                           what_bought=(f"identity_verified={snapshot['identity_verified']} "
+                                        f"usable={snapshot['usable']} h2h_dominance={dom} "
+                                        f"encounters={len(snapshot['encounters'])} "
+                                        f"features={sorted(snapshot['features'])} reason={snapshot['reason']}"))
+        log(f"ledger=card_enrich fixture={item['fixture_key']} event_id={event_id} pool={index + 1} "
+            f"http={code} family_remaining={remaining} encounters={len(snapshot['encounters'])} "
+            f"usable={snapshot['usable']} features={sorted(snapshot['features'])}")
+    kept = boggio.write_call_ledger(entries, localdata)
+    results["ledger_entries"] = kept
+    return results
+
+
+def _harvest_pool_readings(argv: list[str]) -> tuple[list[str], list[str]]:
+    """Pull --pool-remaining pairs out of argv BEFORE argparse sees them.
+
+    A pool label is the last four characters of a secret, and four characters can
+    legally start with '-'. Handing argparse a value that looks like a switch is
+    how a receipt becomes a usage error, and a receipt that dies on a usage error
+    buys nothing and explains nothing. So the pairs are read here, in both
+    ``--pool-remaining TAIL=N`` and ``--pool-remaining=TAIL=N`` forms.
+    """
+    kept, readings = [], []
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg.startswith("--pool-remaining="):
+            readings.append(arg.split("=", 1)[1])
+            i += 1
+            continue
+        if arg == "--pool-remaining":
+            if i + 1 < len(argv):
+                readings.append(argv[i + 1])
+                i += 2
+            else:
+                readings.append("")     # let the validator report the missing value
+                i += 1
+            continue
+        kept.append(arg)
+        i += 1
+    return kept, readings
+
+
+def _persist_receipt(day: str, plan: dict, results: dict, localdata: Path) -> Path:
+    """Write the day's receipt, census included.
+
+    Stdout is not a record: without this, a charged run that captured nothing
+    cannot be told apart from a quiet success once the log scrolls away.
+    """
+    outcome = {
+        "calls_charged": results["calls"],
+        "usable_snapshots": results["usable"],
+        "retained_pairs": plan["retained_pairs"],
+        "shadow_file_present": plan["shadow_file_present"],
+        "free_listing_recorded_today": plan["free_listing_recorded_today"],
+        "listing": results["listing"],
+        "decisions": results["decisions"],
+        "unresolved": results["unresolved_detail"],
+        "ledger_entries": results["ledger_entries"],
+    }
+    return boggio.persist_snapshots(day, plan["snapshots"], plan["preflight"], localdata=localdata,
+                                    notes=[f"need_h2h={plan['need_h2h']}",
+                                           f"unresolved={len(plan['unresolved'])}"],
+                                    outcome=outcome)
+
+
+def main(argv=None, *, now=None) -> int:
+    """``now`` is injectable so the freshness guard stays deterministic: a test
+    that borrowed the wall clock would rot the day its fixture date passed."""
+    argv, pool_readings = _harvest_pool_readings(list(sys.argv[1:] if argv is None else argv))
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--date", default=None, help="Card date (YYYY-MM-DD); default today, SAST")
+    parser.add_argument("--limit", type=int, default=CARD_LIMIT_DEFAULT)
+    # (accepted via --pool-remaining, harvested above so a '-'-leading pool label
+    # cannot be mistaken for a switch; normal runs use provider readings persisted locally)
+    parser.add_argument("--pool-remaining", action="append", default=None, metavar="FINGERPRINT=N",
+                        help="Operator-supplied provider header reading (family-remaining counter) used "
+                             "ONLY to plan, keyed by pool fingerprint or key tail from the receipt. "
+                             "Never a key value.")
+    parser.add_argument("--execute", action="store_true", help="Spend quota. Without it: plan only.")
+    parser.add_argument("--localdata", default=os.environ.get("EDGE_FACTORY_LOCALDATA")
+                        or str(ROOT / "localdata"))
+    parser.add_argument("--max-requests", type=int, default=7,
+                        help="Hard ceiling on physical calls per run, regardless of budget")
+    args = parser.parse_args(argv)
+
+    localdata = Path(args.localdata)
+    day = args.date or datetime.now(ZoneInfo("Africa/Johannesburg")).date().isoformat()
+    pruned = boggio.prune_snapshots(day, localdata=localdata)
+    if pruned:
+        print(f"ledger=card_enrich_prune removed={pruned} retention_days=14")
+    bootstrap: dict[str, int] = {}
+    for item in pool_readings + list(args.pool_remaining or []):
+        if "=" not in item:
+            parser.error("--pool-remaining expects FINGERPRINT=N")
+        fingerprint, _, value = item.partition("=")
+        try:
+            bootstrap[fingerprint.strip()] = max(0, int(value))
+        except ValueError:
+            parser.error(f"--pool-remaining value must be an integer, got {value!r}")
+
+    plan = plan_run(day, localdata=localdata, limit=max(1, args.limit),
+                    bootstrap=bootstrap, now=now)
+    plan["snapshots"] = []
+    boggio.print_preflight(plan["preflight"], log=print)
+    print(f"ledger=card_enrich_plan date={day} card_rows={plan['card_rows']} "
+          f"candidates={len(plan['candidates'])} need_h2h={plan['need_h2h']} "
+          f"need_listing={plan['need_listing']} unresolved={len(plan['unresolved'])} "
+          f"listing_used_today={int(plan['listing_used_today'])} verdict={plan['preflight']['verdict']} "
+          f"pre_kickoff_now={plan['pre_kickoff']}/{len(plan['candidates'])}")
+    if plan.get("listing_reason"):
+        print(f"ledger=card_enrich_listing decision={plan['listing_reason']} "
+              f"need_listing={plan['need_listing']} retained_pairs={plan['retained_pairs']} "
+              f"shadow_file_present={int(plan['shadow_file_present'])} "
+              f"free_listing_recorded_today={int(plan['free_listing_recorded_today'])}")
+    if plan["candidates"] and plan["pre_kickoff"] == 0:
+        print(f"ledger=card_enrich_caution every selected fixture has already kicked off "
+              f"(card date={plan['day']}, now={datetime.now(timezone.utc).isoformat(timespec='seconds')}). "
+              f"A plan is still free, but --execute would pay up to {plan['preflight']['need_total']} "
+              f"call(s) for snapshots the pre-kickoff rule marks unusable. Re-run against the "
+              f"current card after the next 09:00 SAST freeze instead.")
+    pools = plan["preflight"]["pool_labels"]
+    for fingerprint, tail in sorted(pools.items()):
+        print(f"ledger=card_enrich_pool fingerprint={fingerprint} key_tail=***{tail} "
+              f"allowance={plan['preflight']['allowance_by_key'].get(fingerprint, 0)} "
+              f"(to plan from a header reading you hold: --pool-remaining {fingerprint}=N "
+              f"or --pool-remaining {tail}=N; never pass a key)")
+    for item in plan["candidates"]:
+        print(f"ledger=card_enrich_candidate fixture={item['fixture_key']} margin={item['margin']} "
+              f"event_id={item['event_id']} staleness_skip={int(item['stale_skip'])} "
+              f"needs_call={int(item['needs_call'])}")
+    for line in plan["census"]:
+        print(f"ledger=card_enrich_rank {json.dumps(line, sort_keys=True)}")
+
+    if args.execute and plan["candidates"] and plan["pre_kickoff"] == 0:
+        # The caution is a guard, not a footnote: this exact spend is why the
+        # pre-kickoff rule exists, and nothing here should be paid for it.
+        print("ledger=card_enrich mode=execute calls_spent=0 verdict=all_fixtures_post_kickoff "
+              "note=refused; nothing was purchased (see the caution line above)")
+        return 0
+    if not args.execute:
+        print("ledger=card_enrich mode=plan_only calls_spent=0 "
+              "note=pass --execute to pay quota (budget- and ledger-gated)")
+        return 0
+    if plan.get("listing_reason") == "free_listing_present_zero_matches":
+        # The refusal is a result in its own right: it gets the same receipt a
+        # paid run would, so a later reader can see why nothing was bought.
+        results = execute(day, plan, localdata=localdata, now=now)
+        path = _persist_receipt(day, plan, results, localdata)
+        print("ledger=card_enrich_listing verdict=suppressed "
+              "reason=free_listing_present_zero_matches calls_spent=0 "
+              "note=the same-day listing payload is already on disk; re-buying it is refused")
+        print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
+              f"unresolved={len(plan['unresolved'])} note=free_listing_present_zero_matches "
+              f"shadow={path.name}")
+        return 0
+    if plan["preflight"]["allowed_calls"] <= 0:
+        if plan["preflight"]["verdict"] != "approved":
+            print(f"ledger=card_enrich mode=execute calls_spent=0 "
+                  f"verdict={plan['preflight']['verdict']} note=fails closed; nothing was purchased")
+            return 0
+        if plan["unresolved"] and not plan["need_listing"]:
+            reason = (plan.get("listing_reason")
+                      or ("one listing attempt was already used today" if plan["listing_used_today"]
+                          else "automatic listing requires more than one spendable call"))
+            print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
+                  f"unresolved={len(plan['unresolved'])} note={reason}; no call was purchased")
+            return 0
+        print("ledger=card_enrich mode=execute calls_spent=0 verdict=no_calls_needed "
+              "note=no fresh, resolvable fixture requires capture")
+        return 0
+    if plan["preflight"]["allowed_calls"] > args.max_requests:
+        print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=run_ceiling "
+              f"allowed={plan['preflight']['allowed_calls']} max_requests={args.max_requests} "
+              f"note=refusing an unplanned burst; lower the budget or raise the cap deliberately")
+        return 0
+    results = execute(day, plan, localdata=localdata, now=now)
+    path = _persist_receipt(day, plan, results, localdata)
+    if results["calls"] == 0 and results["local_blocks"]:
+        print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=lane_blocked_local "
+              f"note=no request was sent; budget untouched ledger_entries={results['ledger_entries']} "
+              f"shadow={path.name}")
+    else:
+        print(f"ledger=card_enrich mode=execute calls_spent={results['calls']} "
+              f"usable_snapshots={results['usable']} ledger_entries={results['ledger_entries']} "
+              f"shadow={path.name}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

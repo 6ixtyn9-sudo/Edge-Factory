@@ -1,0 +1,962 @@
+"""WhatsApp Business professional notification engine.
+
+Supports four dispatch mechanisms:
+1. Official Meta WhatsApp Cloud API (with auto Message Template fallback).
+2. Twilio WhatsApp API.
+3. Telegram Bot API (free, no per-message quota).
+4. CallMeBot API (Free personal operational alerts, quota-limited).
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+from edgefactory.util import honest_display_label, format_pick_probability, finite_probability, pick_probability_pct
+
+BUCKET_CLEAN = "CERTIFIED_CLEAN"
+BUCKET_CAUTION = "CAUTION"
+BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
+BUCKET_WL_CTX = "WATCHLIST_UNKNOWN_CTX"
+BUCKET_WL_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
+BUCKET_WL_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
+
+
+_SAST = timezone(timedelta(hours=2))  # South Africa has no DST: SAST is UTC+2.
+
+
+def format_kickoff(pick: dict[str, Any]) -> str:
+    """The kickoff to SHOW a human. The only kickoff display in the repo.
+
+    It is always the SAST wall clock derived from the zone-bearing
+    ``kickoff_utc``. The raw feed strings are never shown: they are local
+    renderings ("13-10, 16:45" UK-local, bare "12:00" Americas-local) that
+    disagree with each other, so showing them put two kickoff times on one
+    fixture. The raw text stays the pre-match guard's input and is untouched.
+    Display only: no guard, gate or join reads this.
+    """
+    value = pick.get("kickoff_sast")
+    if value not in (None, ""):
+        return str(value)
+    utc_text = str(pick.get("kickoff_utc") or "").strip()
+    if utc_text:
+        try:
+            stamp = datetime.fromisoformat(utc_text)
+        except ValueError:
+            stamp = None
+        if stamp is not None and stamp.tzinfo is not None:
+            return stamp.astimezone(_SAST).strftime("%Y-%m-%d %H:%M SAST")
+    return "n/a"
+
+
+def format_odds_display(pick: dict[str, Any]) -> str:
+    odds_val = pick.get("odds")
+    if odds_val is None:
+        return "@n/a"
+    try:
+        odds_str = f"@{float(odds_val):.2f}"
+    except (TypeError, ValueError):
+        odds_str = f"@{odds_val}"
+
+    source = pick.get("odds_source")
+    if source == "bzzoiro_odds" and pick.get("bookmaker"):
+        odds_str += f" ({pick['bookmaker']})"
+    elif source == "zulubet":
+        odds_str += " (zulubet)"
+    return odds_str
+
+
+def _pick_rule_label(pick: dict[str, Any]) -> str:
+    # Derive from the exact rule string — archived rows can carry a stale
+    # pre-qualifier display_rule (merge retains rows exactly).
+    return str(honest_display_label(pick))
+
+
+def bet_alert_eligible(pick: dict[str, Any]) -> bool:
+    """Honor explicit execution-price refusals, including legacy quarantines.
+
+    Rows predating price receipts retain their existing bucket behaviour.
+    This does not certify their model or change operational archives.
+    """
+    if pick.get("price_push_eligible") is False:
+        return False
+    if pick.get("price_evidence") in {
+        "SOURCE_FALLBACK", "SCOUTINGSTATS_SOLE", "SUSPECT_ALIAS_FUZZY", "UNMATCHED"
+    }:
+        return False
+    return str(pick.get("price_quarantine_reason") or pick.get("quarantine") or
+               "none").lower() == "none"
+
+
+def format_whatsapp_summary(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    is_late_slate_alert: bool = False,
+) -> str:
+    picks = [p for p in picks if bet_alert_eligible(p)]
+    lines: list[str] = []
+
+    if is_late_slate_alert:
+        lines.append(
+            f"🚨 *Edge Factory Late-Slate Alert* 🚨\n📅 Date: {target_date}\n⚡ Mode: Intraday Discovery Scan\n"
+        )
+        lines.append(f"Discovered {len(picks)} newly posted active fixture{'s' if len(picks) > 1 else ''}:\n")
+    else:
+        lines.append(f"⚽ *Edge Factory Official Picks* ⚽\n📅 Date: {target_date}\n📊 Mode: Morning Slate Ledger\n")
+
+    if not picks and not is_late_slate_alert:
+        lines.append("ℹ️ *No matching certified edges found for this window.*")
+        lines.append("Active scanners will naturally continue evaluating late-slate fixtures.")
+        lines.append("\n📲 Pushed to Supabase / GitHub operational archives.")
+        return "\n".join(lines)
+
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for p in picks:
+        b = p.get("bucket", "UNKNOWN")
+        buckets.setdefault(str(b), []).append(p)
+
+    clean_picks = buckets.get(BUCKET_CLEAN, [])
+    if clean_picks:
+        lines.append(f"✅ *CERTIFIED CLEAN* ({len(clean_picks)} Strong Edges)")
+        for p in sorted(clean_picks, key=lambda x: -(pick_probability_pct(x) or 0)):
+            match = str(p.get("match", "?"))
+            selection = str(p.get("pick", "?")).upper()
+            odds = format_odds_display(p)
+            ko = format_kickoff(p)
+            prob = format_pick_probability(p)
+            w_score = p.get("w_score")
+            w_str = f", w={w_score:.2f}" if w_score is not None else ""
+            rule = _pick_rule_label(p)
+            enh_label = p.get("enhancement_label")
+            enh_prob = finite_probability(p.get("enhancement_probability"))
+            
+            lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
+            if enh_label:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}")
+                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({f'{enh_prob:.1%}' if enh_prob is not None else 'unavailable'})\n")
+            else:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}\n")
+
+    caution_picks = buckets.get(BUCKET_CAUTION, [])
+    if caution_picks:
+        lines.append(f"⚠️ *CAUTION* ({len(caution_picks)} Qualitative / Unrated Context Edges)")
+        for p in sorted(caution_picks, key=lambda x: -(pick_probability_pct(x) or 0)):
+            match = str(p.get("match", "?"))
+            selection = str(p.get("pick", "?")).upper()
+            odds = format_odds_display(p)
+            ko = format_kickoff(p)
+            prob = format_pick_probability(p)
+            w_score = p.get("w_score")
+            w_str = f", w={w_score:.2f}" if w_score is not None else ""
+            rule = _pick_rule_label(p)
+            enh_label = p.get("enhancement_label")
+            enh_prob = finite_probability(p.get("enhancement_probability"))
+            
+            lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
+            if enh_label:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}")
+                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({f'{enh_prob:.1%}' if enh_prob is not None else 'unavailable'})\n")
+            else:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}\n")
+
+    skipped_count = sum(len(v) for k, v in buckets.items() if str(k).startswith("SKIPPED"))
+    watchlist_count = sum(len(v) for k, v in buckets.items() if str(k).startswith("WATCHLIST"))
+    if skipped_count or watchlist_count:
+        meta_str = "ℹ️ Other items evaluated: "
+        if watchlist_count:
+            meta_str += f"{watchlist_count} on Watchlist (No matched odds / unknown context). "
+        if skipped_count:
+            meta_str += f"{skipped_count} Skipped (Veto/Dead edges)."
+        lines.append(meta_str)
+
+    lines.append("\n📲 Live read models synced to your custom Supabase app.")
+    lines.append("⚠️ Flat stakes only. Bet only what you can afford to lose.")
+    return "\n".join(lines)
+
+
+def format_whatsapp_discovery_summary(target_date: str, picks: list[dict[str, Any]]) -> str:
+    lines: list[str] = [
+        f"🛰️ *Edge Factory Discovery Watchlist* 🛰️\n📅 Date: {target_date}\n⚠️ New same-day selections not present in the morning run\n"
+    ]
+
+    no_odds = [p for p in picks if p.get("bucket") == BUCKET_WL_ODDS]
+    unknown_ctx = [p for p in picks if p.get("bucket") == BUCKET_WL_CTX]
+
+    if no_odds:
+        lines.append(f"🔎 *NO MATCHED ODDS* ({len(no_odds)})")
+        for p in sorted(no_odds, key=lambda x: -(pick_probability_pct(x) or 0)):
+            lines.append(f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* @n/a")
+            lines.append(
+                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | Prob: {format_pick_probability(p)}\n"
+            )
+
+    if unknown_ctx:
+        lines.append(f"🧩 *UNKNOWN CONTEXT* ({len(unknown_ctx)})")
+        for p in sorted(unknown_ctx, key=lambda x: -(pick_probability_pct(x) or 0)):
+            lines.append(f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* {format_odds_display(p)}")
+            lines.append(
+                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | Prob: {format_pick_probability(p)}\n"
+            )
+
+    if not picks:
+        lines.append("ℹ️ No new same-day discovery-watchlist selections were found.")
+    else:
+        lines.append("ℹ️ These are discovery alerts only. The pipeline has not attached a fully actionable bet state yet.")
+    return "\n".join(lines)
+
+# ---------------------------------------------------------------------------
+# Telegram-native formatters
+#
+# The WhatsApp formatters above use *asterisks* for Markdown and pipe glyphs
+# that render as literal characters on Telegram (no parse mode is set because
+# our '*' characters are not valid Telegram MarkdownV2). These formatters emit
+# clean, human-readable plain text with consistent spacing and alignment.
+# ---------------------------------------------------------------------------
+
+
+def _tg_short_kickoff(kickoff: str) -> str:
+    """Render kickoff compactly for Telegram.
+
+    Accepts values like:
+      '08-08, 19:00'
+      '2026-08-08T21:00:00+02:00'
+      '13:30'
+      '2026-08-08 13:00:00'
+    Returns 'HH:MM' when a time is recognisable, else the original trimmed.
+    """
+    if not kickoff or kickoff == "n/a":
+        return "—"
+    k = str(kickoff).strip()
+    # 'YYYY-MM-DD HH:MM SAST' (the normalised rendering)
+    m = re.search(r"(\d{2}):(\d{2})\s*SAST$", k)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
+    # ISO datetime
+    m = re.search(r"T(\d{2}):(\d{2})", k)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
+    # 'YYYY-MM-DD HH:MM:SS'
+    m = re.search(r"(\d{2}):(\d{2})(?::\d{2})?$", k)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
+    # 'DD-MM, HH:MM'
+    m = re.search(r"(\d{1,2})-(\d{1,2}),?\s*(\d{2}):(\d{2})", k)
+    if m:
+        return f"{m.group(3)}:{m.group(4)}"
+    return k
+
+
+def _tg_pick_card(p: dict[str, Any]) -> str:
+    """A single Telegram pick rendered as a spaced three-line card."""
+    match = str(p.get("match", "?"))
+    selection = str(p.get("pick", "?")).upper()
+    ko = _tg_short_kickoff(format_kickoff(p))
+    prob = format_pick_probability(p)
+    rule = _pick_rule_label(p)
+    book = p.get("bookmaker") or ""
+    odds_val = p.get("odds")
+    if odds_val is None:
+        odds_txt = "no odds"
+    else:
+        try:
+            odds_txt = f"{float(odds_val):.2f}"
+        except (TypeError, ValueError):
+            odds_txt = str(odds_val)
+    book_txt = f"  ·  {book}" if book else ""
+    lines = [
+        f"  {match}",
+        f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob} · {ko} · {rule}]",
+    ]
+    # Enhancement / combo line. Mirror the txt report: only render when the
+    # EV selector attached a real captured price. Unpriced fallback picks
+    # (the legacy "Home O0.5 on every favourite" path) are hidden entirely —
+    # no price means no recommendation, no noise on Telegram.
+    enh_label = p.get("enhancement_label")
+    enh_prob = finite_probability(p.get("enhancement_probability"))
+    enh_priced = bool(p.get("enhancement_priced"))
+    if enh_label and enh_priced:
+        bits = [enhancement_marker(p), enh_label]
+        if enh_prob is not None:
+            try:
+                bits.append(f"{float(enh_prob):.0%}")
+            except (TypeError, ValueError):
+                pass
+        else:
+            bits.append("unavailable")
+        enh_price = p.get("enhancement_price")
+        enh_edge = p.get("enhancement_edge_sample")
+        if enh_price:
+            try:
+                bits.append(f"@ {float(enh_price):.2f}")
+            except (TypeError, ValueError):
+                pass
+        if enh_edge is not None:
+            try:
+                bits.append(f"edge {float(enh_edge):+.0%}")
+            except (TypeError, ValueError):
+                pass
+        enh_src = p.get("enhancement_price_source")
+        if enh_src:
+            bits.append(f"[{enh_src}]")
+        # First bit is the marker (no separator), rest join with spaces.
+        lines.append("     " + "  ".join(bits))
+    # Trailing blank line so picks are visually separated in the Telegram render.
+    lines.append("")
+    return "\n".join(lines)
+
+
+_TG_BUCKET_META = {
+    "CERTIFIED_CLEAN": ("✅", "CERTIFIED CLEAN", "Strong edges — pushable"),
+    "CAUTION": ("⚠️", "CAUTION", "Qualitative / unrated context"),
+    "SKIPPED_VETO": ("🚫", "SKIPPED_VETO", "Vetoed by context/purity"),
+    "WATCHLIST_NO_ODDS": ("🔎", "WATCHLIST_NO_ODDS", "No matched price yet"),
+    "WATCHLIST_UNCORROBORATED_PRICE": ("🧪", "WATCHLIST_UNCORROBORATED_PRICE", "ScoutingStats sole-source"),
+    "WATCHLIST_SUSPECT_PRICE": ("☣️", "WATCHLIST_SUSPECT_PRICE", "Fuzzy price match"),
+    "WATCHLIST_UNKNOWN_CTX": ("🧩", "WATCHLIST_UNKNOWN_CTX", "Unknown league context"),
+}
+
+
+def _tg_section_header(emoji: str, title: str, subtitle: str | None,
+                      record: str | None) -> list[str]:
+    head = f"{emoji}  {title}"
+    out = [head]
+    bits = []
+    if subtitle:
+        bits.append(subtitle)
+    if record:
+        bits.append(record)
+    if bits:
+        out.append("     " + "  ·  ".join(bits))
+    return out
+
+
+def format_telegram_official(target_date: str, picks: list[dict[str, Any]],
+                             is_late: bool = False) -> str:
+    """Clean Telegram render of the operational (CLEAN + CAUTION) slate."""
+    picks = [p for p in picks if bet_alert_eligible(p)]
+    lines: list[str] = []
+    if is_late:
+        lines.append("🚨  LATE-SLATE ALERT")
+        lines.append(f"     {target_date}  ·  intraday discovery scan")
+    else:
+        lines.append("⚽  EDGE FACTORY — OFFICIAL PICKS")
+        lines.append(f"     {target_date}  ·  morning slate")
+    lines.append("")
+
+    if not picks and not is_late:
+        lines.append("No certified edges for this window.")
+        lines.append("Late-slate fixtures are still being scanned.")
+        return "\n".join(lines)
+
+    by_bucket: dict[str, list[dict[str, Any]]] = {}
+    for p in picks:
+        by_bucket.setdefault(str(p.get("bucket", "UNKNOWN")), []).append(p)
+
+    for bucket in ("CERTIFIED_CLEAN", "CAUTION"):
+        rows = by_bucket.get(bucket, [])
+        if not rows:
+            continue
+        emoji, title, subtitle = _TG_BUCKET_META[str(bucket)]
+        lines.extend(_tg_section_header(emoji, title, subtitle, None))
+        lines.append(f"     {len(rows)} pick{'s' if len(rows) != 1 else ''}")
+        for p in sorted(rows, key=lambda x: -(pick_probability_pct(x) or 0)):
+            lines.append(_tg_pick_card(p))
+        lines.append("")
+
+    lines.append("Flat stakes only. Bet only what you can afford to lose.")
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.rstrip()
+
+
+def format_telegram_shadow(target_date: str, picks: list[dict[str, Any]],
+                           stats: dict[str, Any] | None = None,
+                           max_lines: int = 200) -> str:
+    """Clean Telegram render of the full shadow slate."""
+    picks = [p for p in picks if p.get("bucket") in SHADOW_BUCKETS]
+    lines: list[str] = []
+    lines.append("🌑  EDGE FACTORY — SHADOW SLATE")
+    lines.append(f"     {target_date}  ·  NOT pushed as bets")
+    lines.append("")
+
+    if not picks:
+        lines.append("No vetoed or watchlist selections today.")
+        return "\n".join(lines)
+
+    ordered = [
+        "SKIPPED_VETO",
+        "WATCHLIST_UNCORROBORATED_PRICE",
+        "WATCHLIST_SUSPECT_PRICE",
+        "WATCHLIST_NO_ODDS",
+        "WATCHLIST_UNKNOWN_CTX",
+    ]
+    shown = 0
+    for bucket in ordered:
+        if shown >= max_lines:
+            break
+        rows = sorted(
+            (p for p in picks if p.get("bucket") == bucket),
+            key=lambda x: -(pick_probability_pct(x) or 0),
+        )
+        if not rows:
+            continue
+        emoji, title, subtitle = _TG_BUCKET_META[str(bucket)]
+        record = format_stream_record(bucket, stats)
+        lines.extend(_tg_section_header(emoji, title, subtitle, record))
+        lines.append(f"     {len(rows)} selection{'s' if len(rows) != 1 else ''}")
+        for p in rows:
+            if shown >= max_lines:
+                break
+            lines.append(_tg_pick_card(p))
+            shown += 1
+        lines.append("")
+
+    if len(picks) > shown:
+        lines.append(f"… +{len(picks) - shown} more available in localdata/picks_next_2days.json")
+    lines.append("Research only. Each stream's rolling record is shown above its header.")
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.rstrip()
+
+
+def telegram_text_units(text: str) -> int:
+    # Conservative UTF-16 accounting also bounds astral emoji safely.
+    return len(text.encode("utf-16-le")) // 2
+
+
+def chunk_telegram_shadow(target_date, picks, stats=None, budget=3800):
+    """Pack complete cards with repeated research/bucket headers, never truncate."""
+    if not 512 <= budget <= 4096:
+        raise ValueError("Telegram budget must be between 512 and 4096")
+    chunks, group = [], []
+
+    def render(rows):
+        return format_telegram_shadow(target_date, rows, stats=stats,
+                                      max_lines=len(rows))
+
+    for pick in picks:
+        if pick.get("bucket") not in SHADOW_BUCKETS:
+            continue
+        candidate = render(group + [pick])
+        if telegram_text_units(candidate) <= budget:
+            group.append(pick)
+            continue
+        if group:
+            chunks.append(render(group))
+            group = []
+        single = render([pick])
+        if telegram_text_units(single) <= budget:
+            group = [pick]
+        else:
+            # Pathological single card: preserve every character in bounded
+            # continuations and repeat the research-only context on each.
+            prefix = f"SHADOW SLATE {target_date} — NOT pushed as bets (continued)\n"
+            room = budget - telegram_text_units(prefix)
+            part, used = "", 0
+            for char in single:
+                size = telegram_text_units(char)
+                if used + size > room:
+                    chunks.append(prefix + part)
+                    part, used = "", 0
+                part += char
+                used += size
+            if part:
+                chunks.append(prefix + part)
+    if group:
+        chunks.append(render(group))
+    return chunks or [render([])]
+
+
+def format_telegram_discovery(target_date: str, picks: list[dict[str, Any]]) -> str:
+    lines = [
+        "🛰️  EDGE FACTORY — DISCOVERY WATCHLIST",
+        f"     {target_date}  ·  not present in the morning run",
+        "",
+    ]
+    if not picks:
+        lines.append("No new same-day watchlist discoveries.")
+        return "\n".join(lines)
+    for p in sorted(picks, key=lambda x: -(pick_probability_pct(x) or 0)):
+        lines.append(_tg_pick_card(p))
+    lines.append("")
+    lines.append("Discovery alerts only — not yet fully actionable.")
+    return "\n".join(lines)
+
+
+def format_telegram_heartbeat(target_date: str, message: str) -> str:
+    return f"💚  Edge Factory heartbeat — {target_date}\n     {message}"
+
+
+
+def send_meta_whatsapp_cloud(
+    token: str,
+    phone_number_id: str,
+    recipient: str,
+    message_text: str,
+    template_name: str | None = None,
+) -> dict[str, Any]:
+    clean_recipient = "".join(filter(str.isdigit, str(recipient)))
+    url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    payload_text = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": clean_recipient,
+        "type": "text",
+        "text": {"preview_url": False, "body": message_text},
+    }
+    req = urllib.request.Request(url, data=json.dumps(payload_text).encode("utf-8"), headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8")
+        is_template_required = (
+            "131047" in err_body
+            or "Message templates are required" in err_body
+            or "outside of an active customer service window" in err_body
+        )
+        if not is_template_required or not template_name:
+            raise RuntimeError(f"WhatsApp Cloud API exact error: {exc.code} - {err_body}") from exc
+        payload_template = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": clean_recipient,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {"code": "en"},
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [{"type": "text", "text": message_text[:1024]}],
+                    }
+                ],
+            },
+        }
+        req_tmpl = urllib.request.Request(url, data=json.dumps(payload_template).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req_tmpl) as resp_tmpl:
+            return json.loads(resp_tmpl.read().decode("utf-8"))
+
+
+def send_twilio_whatsapp(
+    account_sid: str,
+    auth_token: str,
+    from_number: str,
+    recipient: str,
+    message_text: str,
+) -> dict[str, Any]:
+    clean_recipient = "".join(filter(str.isdigit, str(recipient)))
+    clean_from = "".join(filter(str.isdigit, str(from_number)))
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+    data = urllib.parse.urlencode(
+        {
+            "From": f"whatsapp:+{clean_from}",
+            "To": f"whatsapp:+{clean_recipient}",
+            "Body": message_text,
+        }
+    ).encode("utf-8")
+    import base64
+    auth_str = base64.b64encode(f"{account_sid}:{auth_token}".encode("utf-8")).decode("utf-8")
+    headers = {"Authorization": f"Basic {auth_str}", "Content-Type": "application/x-www-form-urlencoded"}
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    with urllib.request.urlopen(req) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def send_telegram_message(
+    bot_token: str,
+    chat_id: str,
+    message_text: str,
+    disable_preview: bool = True,
+) -> dict[str, Any]:
+    """Send all plain-text parts; success means every part was acknowledged.
+
+    Bound at the transport too: official/discovery messages do not all use
+    the shadow-card chunker. Preserve every character and split at newlines
+    when possible, with UTF-16 accounting for emoji. Never retry an already
+    accepted prefix here if a later part fails.
+    """
+    parts, start, used, newline = [], 0, 0, None
+    for index, char in enumerate(message_text):
+        size = telegram_text_units(char)
+        if used + size > 3800:
+            end = newline + 1 if newline is not None else index
+            parts.append(message_text[start:end])
+            start = end
+            used = telegram_text_units(message_text[start:index])
+            newline = None
+        used += size
+        if char == "\n":
+            newline = index
+    parts.append(message_text[start:])
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    accepted = []
+    for number, part in enumerate(parts, 1):
+        payload = {
+            "chat_id": str(chat_id),
+            "text": part,
+            "disable_web_page_preview": bool(disable_preview),
+        }
+        data = urllib.parse.urlencode(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+            if not body.get("ok"):
+                raise RuntimeError(f"Telegram API rejected message: {str(body)[:300]}")
+        except urllib.error.HTTPError as exc:
+            err_body = exc.read().decode("utf-8", "replace")
+            raise RuntimeError(
+                f"Telegram API error {exc.code} on part {number}/{len(parts)}; "
+                f"{len(accepted)} parts accepted: {err_body[:300]}"
+            ) from exc
+        except Exception as exc:
+            raise RuntimeError(
+                f"Telegram part {number}/{len(parts)} failed; "
+                f"{len(accepted)} parts accepted: {exc}"
+            ) from exc
+        accepted.append(body.get("result", {}))
+    if len(parts) > 1:
+        body["results"] = accepted
+    return body
+
+
+
+def callmebot_request_len(phone: str, apikey: str, message_text: str) -> int:
+    """Addendum 25.1: total GET request length CallMeBot receives, including
+    host/path/query overhead — the length the pipe actually sees. Returns a
+    LENGTH ONLY: the URL embeds phone + apikey and must never be logged."""
+    clean_phone = "".join(filter(str.isdigit, str(phone)))
+    url = (
+        f"https://api.callmebot.com/whatsapp.php?phone={clean_phone}"
+        f"&text={urllib.parse.quote(message_text)}&apikey={apikey}"
+    )
+    return len(url)
+
+
+# --- Addendum 25.2: provider-ack honesty --------------------------------------
+# 2026-08-04 incident: an Actions run wrote the shadow dedupe ledger although
+# nothing reached the handset. HTTP-200 from CallMeBot is NOT delivery
+# acceptance: the free API answers several failure modes (invalid key, expired
+# activation, throttle) with a 200-class body. We therefore classify the
+# response body and accept ONLY the observed success class. The raw body is
+# never logged — it echoes the message text and could echo request parameters.
+
+_CALLMEBOT_REJECT_HINTS = (
+    "error", "invalid", "fail", "not queued", "activat", "throttl", "exceed", "denied",
+)
+# 25.2.1: STRUCTURAL acceptance. The success body echoes the outbound text
+# ("Text to send: ..."), so a loose substring check confuses echo for ack —
+# reproduced on the deployed 25.2 classifier: bodies echoing 'Success' /
+# 'message queued', an 'unsuccessful' error, and a wrong-tag '<i>Message
+# queued.</i>' were ALL falsely accepted. The real ack carries the phrase as
+# markup: '<b>Message queued.</b>'. Our outbound text is WhatsApp markdown —
+# it never contains that HTML tag. Legacy 'Success' fixture passes only when
+# it IS the whole body. False-rejects fail closed (loud retry, no ledger);
+# false-accepts write false ledgers. Closed is the safe side.
+_CALLMEBOT_QUEUED_TAG = re.compile(r"<b>\s*message\s+queued\.?\s*</b>", re.IGNORECASE)
+
+
+def _callmebot_normalize(body: str | None) -> str:
+    """Strip HTML tags, collapse whitespace, lowercase. CallMeBot answers with
+    small HTML fragments ('<p>...<b>Message queued.</b>...')."""
+    if not body:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", str(body))
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def _callmebot_structurally_accepted(body: str) -> bool:
+    """25.2.1: the sharp signal. Real ack: '<b>Message queued.</b>' markup.
+    Legacy fixture: normalized body IS exactly 'success'. Nothing else."""
+    if _CALLMEBOT_QUEUED_TAG.search(str(body)):
+        return True
+    return _callmebot_normalize(body) == "success"
+
+
+def callmebot_body_category(body: str | None) -> str:
+    """Sanitized ack category for logs — one of accepted / error-class /
+    empty-body / unknown-class. Never the raw body."""
+    norm = _callmebot_normalize(body)
+    if not norm:
+        return "empty-body"
+    if any(h in norm for h in _CALLMEBOT_REJECT_HINTS):
+        return "error-class"
+    if _callmebot_structurally_accepted(body):
+        return "accepted"
+    return "unknown-class"
+
+
+def callmebot_body_accepted(body: str | None) -> bool:
+    """Addendum 25.2.1: accept only the observed success class — the
+    structural '<b>Message queued.</b>' tag (2026-08-04 production ack) or a
+    body that IS 'Success' — and never when an error hint is present anywhere
+    (an 'ERROR: message not queued' style body must not sneak through)."""
+    norm = _callmebot_normalize(body)
+    if not norm:
+        return False
+    if any(h in norm for h in _CALLMEBOT_REJECT_HINTS):
+        return False
+    return _callmebot_structurally_accepted(body)
+
+
+def send_callmebot_whatsapp(
+    apikey: str,
+    phone: str,
+    message_text: str,
+) -> str:
+    clean_phone = "".join(filter(str.isdigit, str(phone)))
+    encoded_text = urllib.parse.quote(message_text)
+    url = f"https://api.callmebot.com/whatsapp.php?phone={clean_phone}&text={encoded_text}&apikey={apikey}"
+    with urllib.request.urlopen(url) as resp:
+        body = resp.read().decode("utf-8", "replace")
+    if not callmebot_body_accepted(body):
+        # 25.2: exception carries the sanitized category ONLY — never the URL
+        # (embeds phone+key), never the raw body.
+        raise RuntimeError(f"CallMeBot ack rejected: {callmebot_body_category(body)}")
+    return body
+
+
+# --- Addendum 24: shadow slate (every stream reaches the phone) --------------
+BUCKET_VETO = "SKIPPED_VETO"
+SHADOW_BUCKETS = (
+    BUCKET_VETO,
+    BUCKET_WL_ODDS,
+    BUCKET_WL_UNCORROBORATED_PRICE,
+    BUCKET_WL_SUSPECT_PRICE,
+    BUCKET_WL_CTX,
+)
+SHADOW_MAX_LINES = 12
+# Addendum 25.1: CallMeBot carries text as a URL parameter, so ENCODED TEXT
+# length — not character count, not the full URL — is the budgeted unit here
+# (the full request adds ~90 chars of host/path/phone/apikey on top; the
+# dispatch log tracks both). Measured production cut (2026-08-04, received-
+# prefix reconstruction): ~1,415 encoded text chars ≈ ~1,500 full-URL chars.
+# Budget rule: encoded text <= ~0.78 x observed cut. The Addendum 25 estimate
+# ("~2k") was wrong; HANDOVER records the correction and the method.
+SHADOW_ENCODED_TEXT_BUDGET = 1100
+
+
+def encoded_len(text: str) -> int:
+    """URL-encoded length of text — the unit the CallMeBot pipe bills on."""
+    return len(urllib.parse.quote(text))
+
+
+def enhancement_marker(pick: dict[str, Any]) -> str:
+    """Addendum 25.1: state-honest combo marker, SHARED by the main and shadow
+    slate formatters (single helper, so the renderers cannot drift again).
+
+    🔥 is reserved for the actionable case: the enhancement TYPE is registry-
+    ELIGIBLE (price-history certified) AND the current fixture has a valid
+    captured price. Everything else — SHADOW/PAPER/BENCHED types, types with no
+    registry entry, or ELIGIBLE but currently unpriced — renders 🔬
+    (research-grade), because an unpriced current fixture is not an actionable
+    recommendation. Resolution happens upstream (notify injects _enh_status /
+    _enh_priced onto the pick); absent fields degrade to 🔬, never to 🔥."""
+    status = str(pick.get("_enh_status") or "")
+    priced = bool(pick.get("_enh_priced"))
+    return "🔥" if status == "ELIGIBLE" and priced else "🔬"
+
+
+def format_stream_record(bucket: str, stats: dict[str, Any] | None) -> str:
+    """One-line rolling 30d record for a stream label. Reads by_bucket from the
+    rolling audit payload; degrades to an honest 'no record yet' when absent."""
+    s = (stats or {}).get(bucket) or {}
+    n = s.get("settled_picks")
+    if not n:
+        return "30d: no settled record yet"
+    hr, roi = s.get("hit_rate"), s.get("roi")
+    hr_txt = f"{float(hr) * 100:.0f}% hit" if hr is not None else "hit n/a"
+    roi_txt = f"{float(roi) * 100:+.1f}% ROI" if roi is not None else "ROI n/a"
+    return f"30d: {hr_txt} · {roi_txt} ({int(n)} settled)"
+
+
+def _format_shadow_pick_line(p: dict[str, Any]) -> str:
+    """Addendum 25: one logical line per pick. Same information the old two-line
+    layout carried (odds · prob · KO · rule) plus the certified 🔥 combo token
+    when the engine has one. The per-line 'Stream:' label is gone — section
+    headers are restated on every chunk, so a line can never arrive stripped
+    of its stream context."""
+    line = (
+        f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* "
+        f"{format_odds_display(p)} · {format_pick_probability(p)} · "
+        f"KO {format_kickoff(p)} · {_pick_rule_label(p)}"
+    )
+    enh_label = p.get("enhancement_label")
+    enh_prob = finite_probability(p.get("enhancement_probability"))
+    if enh_label:
+        prob_txt = " (unavailable)"
+        if enh_prob is not None:
+            try:
+                prob_txt = f" ({float(enh_prob):.0%})"
+            except (TypeError, ValueError):
+                prob_txt = ""
+        line += f" · {enhancement_marker(p)} {enh_label}{prob_txt}"
+    return line
+
+
+def _shadow_blocks(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    stats: dict[str, Any] | None,
+    *,
+    max_lines: int = SHADOW_MAX_LINES,
+) -> tuple[list[str], list[tuple[str, list[str]]], list[str]]:
+    """Structural form of the slate: (header lines, [(section title, pick lines)],
+    footer lines). Single source of truth for both the flat formatter and the
+    Addendum 25 chunker, so they can never drift apart."""
+    picks = [p for p in picks if p.get("bucket") in SHADOW_BUCKETS]
+    header = [
+        "🌑 *Edge Factory Shadow Slate* 🌑",
+        f"📅 Date: {target_date}",
+        "⚠️ Shadow streams — NOT pushed as bets. Section labels = rolling 30d audit record.",
+        "",
+    ]
+    section_defs = [
+        ("🚫 *SKIPPED_VETO* (disagreement-vetoed)", BUCKET_VETO),
+        ("🔎 *WATCHLIST_NO_ODDS* (no matched price)", BUCKET_WL_ODDS),
+        ("🧪 *WATCHLIST_UNCORROBORATED_PRICE* (ScoutingStats-only price)",
+         BUCKET_WL_UNCORROBORATED_PRICE),
+        ("⚠️ *WATCHLIST_SUSPECT_PRICE* (fuzzy price match)",
+         BUCKET_WL_SUSPECT_PRICE),
+        ("🧩 *WATCHLIST_UNKNOWN_CTX* (unknown league context)", BUCKET_WL_CTX),
+    ]
+    sections: list[tuple[str, list[str]]] = []
+    shown = 0
+    for title, bucket in section_defs:
+        if shown >= max_lines:
+            break
+        rows = sorted(
+            (p for p in picks if p.get("bucket") == bucket),
+            key=lambda x: -(pick_probability_pct(x) or 0),
+        )
+        if not rows:
+            continue
+        pick_lines: list[str] = []
+        for p in rows:
+            if shown >= max_lines:
+                break
+            pick_lines.append(_format_shadow_pick_line(p))
+            shown += 1
+        if pick_lines:
+            sections.append((f"{title} — _{format_stream_record(bucket, stats)}_", pick_lines))
+    footer: list[str] = []
+    if not picks:
+        footer = ["ℹ️ Shadow slate empty — no vetoed or watchlist selections today."]
+    else:
+        if len(picks) > shown:
+            footer.append(f"… +{len(picks) - shown} more on the slate file (localdata/picks_next_2days.json)")
+        footer.append("ℹ️ Shown for transparency; graded per-stream in the rolling audit. Weight them yourself.")
+    return header, sections, footer
+
+
+def format_whatsapp_shadow_summary(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    stats: dict[str, Any] | None = None,
+    *,
+    max_lines: int = SHADOW_MAX_LINES,
+) -> str:
+    """Second daily message (Addendum 24, slim-lined in Addendum 25): SKIPPED_VETO
+    + WATCHLIST streams. These were not pushed as bets. Every section header
+    carries the stream's rolling 30d audit record so the operator can weight
+    streams themselves — calibration ≠ edge, and stream records differ (the
+    reason this exists: the veto stream was the most profitable stream of the
+    2026-08 window while receiving zero pushes)."""
+    header, sections, footer = _shadow_blocks(target_date, picks, stats, max_lines=max_lines)
+    lines: list[str] = list(header)
+    for title, pick_lines in sections:
+        lines.append(title)
+        lines.extend(pick_lines)
+        lines.append("")
+    lines.extend(footer)
+    return "\n".join(lines).rstrip("\n")
+
+
+def _fit_line(line: str, prefix_lines: list[str], budget: int) -> str:
+    """Addendum 25: hard-truncate a single line that cannot fit even in a fresh
+    chunk. ALWAYS marked '(cut)' — content is never silently dropped."""
+    if encoded_len("\n".join(prefix_lines + [line])) <= budget:
+        return line
+    keep = len(line)
+    while keep > 0:
+        cand = line[:keep].rstrip() + " …(cut)"
+        if encoded_len("\n".join(prefix_lines + [cand])) <= budget:
+            return cand
+        keep -= 8
+    return "…(cut)"
+
+
+def chunk_whatsapp_shadow_summary(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    stats: dict[str, Any] | None = None,
+    *,
+    budget: int = SHADOW_ENCODED_TEXT_BUDGET,
+    max_lines: int = SHADOW_MAX_LINES,
+) -> list[str]:
+    """Addendum 25: split the shadow slate into pipe-safe messages.
+
+    Invariants (battery-enforced, text-vs-behavior class):
+    - every chunk's URL-encoded length <= budget (CallMeBot bills encoded chars)
+    - atomic unit = one rendered line; slim picks are one line, so a split can
+      never tear a pick apart (the 2026-08-04 truncation failure mode)
+    - a section header is never orphaned at a chunk end; when a section spans
+      chunks its header is restated as '(cont.)'
+    - a single line that alone exceeds the budget is hard-truncated and MARKED
+    - chunks carry '(k/n)' numbering so completeness is visible from the phone
+    - when everything fits, the single chunk equals format_whatsapp_shadow_summary
+    """
+    header, sections, footer = _shadow_blocks(target_date, picks, stats, max_lines=max_lines)
+    chunks: list[list[str]] = []
+    cur: list[str] = list(header)
+
+    # Numbering (" — 🌑 (k/n)") is applied AFTER packing, so the packer must
+    # reserve encoded space for it — otherwise a chunk that fit when packed
+    # sails over budget once numbered (caught by the monster-slate test).
+    numbering_reserve = 48
+    eff_budget = budget - numbering_reserve if budget > 2 * numbering_reserve else budget
+
+    def fits(lines: list[str]) -> bool:
+        return encoded_len("\n".join(lines)) <= eff_budget
+
+    for title, pick_lines in sections:
+        # Orphan guard: a section header must share its chunk with >= 1 pick line.
+        if not fits(cur + [title, pick_lines[0]]):
+            chunks.append(cur)
+            cur = []
+        cur.append(title)
+        for ln in pick_lines:
+            if not fits(cur + [ln]):
+                chunks.append(cur)
+                cur = [f"{title} (cont.)"]
+                if not fits(cur + [ln]):
+                    ln = _fit_line(ln, cur, eff_budget)
+            cur.append(ln)
+        cur.append("")
+
+    for ln in footer:
+        if not fits(cur + [ln]):
+            chunks.append(cur)
+            cur = []
+        cur.append(ln)
+
+    chunks.append(cur)
+    n = len(chunks)
+    out: list[str] = []
+    for k, chunk_lines in enumerate(chunks, 1):
+        chunk_lines = list(chunk_lines)
+        if n > 1:
+            if k == 1:
+                chunk_lines[0] = f"{chunk_lines[0]} ({k}/{n})"
+            else:
+                chunk_lines[0] = f"{chunk_lines[0]} — 🌑 ({k}/{n})"
+        out.append("\n".join(chunk_lines).rstrip("\n"))
+    return out

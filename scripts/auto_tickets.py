@@ -1,0 +1,6688 @@
+#!/usr/bin/env python3
+"""AUTO TICKETS — ROLLING EDITION, PERCENT-ONLY (operator doctrine: no amounts).
+
+Everything this tool emits is a PERCENTAGE OF CAPITAL or a performance
+multiple. There are no units, no rand amounts, no stakes in currency — the
+operator maps percentages to money themselves.
+
+Performance model: capital starts at 100 (%) and rolls. Settlements move the
+bank percentage. A stake's printed denominator is always stated next to the
+number ("% of capital", "% of free bank"); "bank" alone means total bank,
+"free bank" = total bank minus committed (open) stakes.
+
+THE RECIPE (constants carry their validation receipts — see
+TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
+  LEGS      all playable-bucket picks with a verified execution price; the
+            explicit price_push_eligible safety bit is a data-integrity gate,
+            not an edge/bucket filter.
+  ORDER     Main: highest stated probability first (ties by odds).
+            ENH: cohort-ranked; stored model probability must be >=60%.
+  DEDUP     one match, one leg: after ranking, same-fixture duplicates
+            (date + folded side-pair incl. '&'->'and') are dropped and the
+            highest-stated twin survives (2026-09-22 Dagenham-and/& incident;
+            upstream ledger identity untouched — the guard protects the card).
+  ACCAS     Main: up to two barbell doubles, leg odds >=1.30, no add-ons.
+            ENH: up to three independent doubles. No fixture reuse or
+            stake redistribution. Captured old recipes remain replayable.
+  STAKE     1/4 of the free bank per day (STAKE_FRAC=0.25), split across the
+            accas built: per_acca mode gives each acca 1/8 (STAKE_FRAC /
+            MAX_ACCAS), capped at 1/4 in total. The sizing history below is
+            the audit that set the fraction, not the current value.
+            (2026-09-04 sizing audit: on the 52-day replay the growth-optimal
+            fraction is ~40%, and the growth curve is FLAT from 30-50% while
+            max drawdown climbs 62% -> 87%. 50% was past the peak: LOWER
+            growth AND higher risk. 1/3 keeps 96% of peak growth at 67% DD.
+            Raising the fraction stays rejected — 75% and 100% bust.)
+  PROFIT    no amounts are ever "withdrawn". Performance is tracked in %,
+            and a TAKE-PROFIT NOTIFICATION fires when the bank reaches
+            +100% above the cycle baseline (default): a loud 🔔 event is
+            printed on every subsequent run, recorded in state/performance,
+            and written to a persisted marker file. The cycle baseline then
+            resets to the current bank so the next target is +100% again.
+  VOLUME    OFF. The saturated-day stated-prob gate was audited on
+            2026-09-04 and proven to be a NO-OP in every configuration
+            (0/57 days changed for any threshold 0.00-0.95): the pool is
+            prob-sorted, so a prob filter only trims a suffix the top-6 never
+            reached, and the completeness fallback restored it anyway. The
+            machinery survives as GATE_MODE="acca" (per-acca conviction
+            gate, the only shape that can bite) and is PRE-REGISTERED, not
+            live — see the 2026-09-04 addendum, checkpoint ⑥.
+
+Slip lifecycle matches the production cadence: builds from 06:00 SAST,
+FREEZES at 09:00 (FREEZE_HOUR; later runs re-print), settles as results
+land — and ONLY a frozen slip settles: an unfrozen draft was still changing
+when its legs kicked off, so it is a recommendation, not a stake (the
+2026-10-26 enhancement card was booked as a bet this way). Every build runs
+the LIVE KICKOFF GUARD: a leg whose kickoff is
+missing/garbage, or clock-only (bare "HH:MM" or no-year day-month) in a
+league region whose clock is far from SAST (Americas / Asia-Pacific — the
+incident-#6 Vancouver class), or already started at build time, drops, and
+each run prints the skip census. Before the freeze hour the guard also drops
+a leg whose kickoff precedes that hour: the card was not final at kickoff, so
+the leg could never have been staked. The fail-closed KICKOFF PROOF CONTRACT
+exists as an OFF-by-default audit tool (replay_harness.py --kickoff-contract)
+— it is not the live rule. State persists in localdata/auto_tickets_state.json
+(gitignore exception exists).
+
+Usage (daily.py runs this bare — same entry point as always):
+  PYTHONPATH=src python3 scripts/auto_tickets.py            # settle + build/reprint today
+  PYTHONPATH=src python3 scripts/auto_tickets.py --status   # performance / history
+  PYTHONPATH=src python3 scripts/auto_tickets.py --backfill # replay ledger into state
+  PYTHONPATH=src python3 scripts/auto_tickets.py --today --force
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import json
+import math
+import os
+import re
+import sys
+import subprocess
+import time
+from functools import lru_cache
+from collections import Counter
+from collections.abc import Mapping
+from heapq import merge
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import NamedTuple
+from zoneinfo import ZoneInfo
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+LOCALDATA = ROOT / "localdata"
+
+# Both tripwires below grade buckets with the SHARED assay engine rather than a
+# private statistic, so this module imports it at the top. The engine's rules
+# are the repo's law: a Wilson lower bound rather than a raw hit rate, ROI
+# always alongside, walk-forward windows only.
+#
+# Never re-add a module-local wilson_lb here. One existed (z=1.645) with no
+# callers at all, and its only live effect was to SHADOW the engine's Z95 bound
+# for anything imported after it -- a floor quietly moved from 95% to 90%.
+from edgefactory.util import dated_artifact_files, dated_artifact_path
+from edgefactory.assay import context_verdict_league                # noqa: E402
+from edgefactory.assay import grade as assay_grade                  # noqa: E402
+from edgefactory.assay import wilson_lb                              # noqa: E402
+from edgefactory.config import GATES                                 # noqa: E402
+from edgefactory.enh_registry import check_enhancement_hit           # noqa: E402
+from edgefactory.util import (finite_probability, pick_probability_pct, ticket_receipt_path,
+                              read_ticket_receipt, write_ticket_receipt, compact_ticket_receipts)
+from edgefactory import acca_gate                                    # noqa: E402
+from edgefactory import price_sources as psrc                        # noqa: E402
+
+# Audit-only scored-candidate shadow grading ledger (observability only).
+# An import failure must never break ticket building: the glue helpers below
+# no-op when the module is unavailable, and every ledger write is wrapped so
+# an audit failure is reported on stderr without touching betting behaviour.
+try:
+    from edgefactory import scored_candidate_shadow as scs           # noqa: E402
+except Exception as _scs_import_error:  # pragma: no cover - defensive only
+    scs = None
+    print(f"scored-candidate shadow unavailable (audit-only; tickets "
+          f"unchanged): {_scs_import_error}", file=sys.stderr)
+
+# ---------------- cadence (unchanged from production) ----------------
+GENERATE_HOUR_START = 6    # local time — slips may START building on/after this hour
+FREEZE_HOUR = 9            # local time — the slip FREEZES on/after this hour.
+                             # Measured 2026-09-02: 09:00 freeze covers ~94% of leg
+                             # kickoffs (noon ~86%, de-facto-14:00 ~76%); morning slate
+                             # median-complete by 09:00; external cron's 09:00 SAST run
+                             # lands the marker ~09:23, ahead of every observed bet time.
+TZ = ZoneInfo("Africa/Johannesburg")
+_UTC = ZoneInfo("UTC")
+PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
+
+# ---------------------------------------------------------------------------
+# KICKOFF GUARDS (incident #6 — 2026-09-06, Vancouver Whitecaps).
+#
+# On 2026-09-06 the engine staked ACCA #3 on "Vancouver Whitecaps vs St.
+# Louis City" at 09:13 SAST. The match had kicked off at 2026-09-05 22:30 EDT
+# = 02:30 UTC = 04:30 SAST — over ~4h45m before the ticket printed. Sixth
+# ghost incident. The Vancouver row's kickoff field is the bare string
+# "22:30" — no date, no offset, no zone (odds_source scoutingstats_odds,
+# sole/uncorroborated). A row like that cannot say when the match starts, yet
+# the 2026-09-04 patch (league-substring -> IANA zone table + SAST-default
+# parsing) let it ride: it failed open on unprovable kickoffs AND mis-zoned
+# west-coast fixtures even when its lookup "succeeded". Deleted, not extended.
+#
+# TWO layers, deliberately different in strength:
+#
+# 1. LIVE guard (cmd_today, this file), narrowed 2026-09-06 round 2 after the
+#    region audit, and keyed to ingest normalisation from the 2026-09-06
+#    follow-up session (Task A): when the row carries a resolved
+#    `kickoff_utc` (an absolute instant emitted by picks_today.py — from the
+#    pick's own offset/Z string or from a same-fixture source row that
+#    declared one, e.g. scoutingstats "...Z" or vitibet "+02:00"; see
+#    picks_today.attach_kickoff_normalisation), the guard judges ONLY that
+#    instant: started at build -> drop (KO_SKIP_STARTED), still ahead -> ride.
+#    The region rule is the FALLBACK for rows whose kickoff is CLOCK-ONLY
+#    (bare "HH:MM" or yearless "DD-MM, HH:MM") AND whose league region's
+#    clock is far from SAST (Americas / Asia-Pacific — a bare "22:30" MLS
+#    clock read on the slate day is the incident class, off by up to 18h in
+#    the fatal direction) and which normalisation could NOT resolve, or when
+#    the kickoff is missing/garbage, or when the dated kickoff is already
+#    at/past build time. Clock-only rows from Europe / Africa ride on the
+#    SAST reading (their clocks are within ~1-2h of SAST; a wrong read errs
+#    by an hour or two, in the safe direction on the historical evidence).
+#    The region list ONLY answers "is the SAST reading of this clock
+#    trustworthy?" — it never computes a kickoff instant, so a mis-hit drops
+#    a leg that could have been bet (no-bet, harmless direction); it cannot
+#    fabricate a wrong time. Rows carrying a full calendar date with a year
+#    (naive "YYYY-MM-DD HH:MM" or an explicit-offset instant) are compared
+#    with parse_kickoff and drop when already started: the feeds render dated
+#    rows on a UTC+2 clock (Inter Miami's explicit +02:00 row; the wall-clock
+#    evidence in the 2026-09-06 HANDOVER addendum). That rendering is the
+#    feed contract — tested, never re-guessed from a league table. No 4h
+#    lead buffer on the live path.
+# 2. AUDIT contract (kickoff_contract; replay_harness.py --kickoff-contract,
+#    OFF by default): the fail-closed standard — a leg rides only when its
+#    kickoff is PROVEN by the row itself (explicit UTC offset/Z, or naive +
+#    row-carried kickoff_tz) and is at least KICKOFF_MIN_LEAD_HOURS ahead.
+#    This is the measurement instrument for the data-side fix (how many legs
+#    cannot prove themselves today), NOT the live betting rule.
+# ---------------------------------------------------------------------------
+KICKOFF_MIN_LEAD_HOURS = 4.0    # AUDIT-ONLY lead. Proven kickoffs must clear
+                                # this many hours or the audit contract drops
+                                # them (result feeds lag). Never the live
+                                # rule (2026-09-06 review).
+KO_SKIP_NO_DATE = "missing / unparseable kickoff"
+KO_SKIP_REMOTE_CLOCK = ("clock-only kickoff (bare time or no-year day-month) in a "
+                        "league region far from SAST — SAST rendering untrusted")
+KO_SKIP_UNPROVEN = "unprovable kickoff (no explicit offset or row-carried zone)"
+KO_SKIP_STARTED = "already started (dated kickoff at/past build time)"
+KO_SKIP_PRE_FREEZE = "kickoff precedes the card's own freeze hour (unplaceable)"
+KO_SKIP_TOO_CLOSE = f"audit: kickoff under {KICKOFF_MIN_LEAD_HOURS:g}h away or already started (provable)"
+
+# ---------------- the validated recipe (receipts, not knobs) ----------------
+STAKE_FRAC = 1.0 / 4.0     # ARMED 2026-09-09 with PAIRING=barbell, MAX_ACCAS=2.
+                           # Deliberate override of the pre-registered October bar
+                           # on IN-SAMPLE evidence: 4/4 and 5/5 on the mined 75
+                           # bet-days (full +0.0231, heavy +0.0113, pessimistic
+                           # +0.0023 log/day; maxDD 73%->49%; both blind halves
+                           # positive). ~90% of the settled level is optimism;
+                           # ridden legs beat the close only 12.3%. Revert = 1.0/10.0.
+STAKE_MODE = "per_acca"     # "per_day" preserves the validated fixed day risk;
+                           # "per_acca" risks a fixed fraction per ticket while
+                           # capping the day's total at STAKE_FRAC; unused stakes stay free.
+STAKE_PER_ACCA = None      # None -> STAKE_FRAC / MAX_ACCAS
+STAKE_WEIGHTS = None       # None -> equal; e.g. "3,2,1" changes sizing, never selection
+MAX_ACCAS = 2              # ARMED 2026-09-09 (barbell x2). Revert = 3.
+ENH_MAX_ACCAS = 3         # enhancement lane only (operator, 2026-10-14). Main stays MAX_ACCAS.
+MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live)
+LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
+MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
+PAIRING = "barbell"        # ARMED 2026-09-09. Revert = "consecutive".
+MIN_LEG_ODDS = 1.30        # min odds per leg, both lanes (operator 2026-10-14: 1.20 -> 1.30; was 2026-09-02..04 band evidence; the
+                           # replay harness A/Bs this knob — never inline the number)
+# Operator-confirmed selection rule (2026-10-31): widened-window completed ROI.
+# Historical ROI comparisons are retrospective, not a validated optimum. Old receipts
+# retain their captured options; optional add-ons are disabled for new cards.
+MAIN_RANK = "prob"
+MAIN_MIN_PROB = 0.0
+MAIN_ADDON_FLOOR = None
+MAIN_ADDON_CEILING = None
+MAIN_ADDON_MIN_PROB = 0.65
+MAIN_ADDON_RANK = "ev"
+ENH_MODEL_MIN_PROB = 0.60
+ENH_ML_DEFAULT = "0"       # cohort ordering; stored model scores still gate eligibility
+VOLUME_POOL = 12           # pool >= this -> volume regime (saturated day)
+VOLUME_MIN_PROB = 0.65     # stated-prob threshold used by the volume regime
+GATE_MODE = "off"          # how the volume regime bites on saturated days:
+                           #   "off"  - no gate
+                           #   "pool" - LEGACY pool-prefix filter. PROVEN NO-OP:
+                           #            the pool is prob-sorted, so the filter only
+                           #            ever trims a suffix, and the completeness
+                           #            fallback restores it. 0/57 days differ for
+                           #            ANY threshold 0.00-0.95 (audit 2026-09-04).
+                           #   "acca" - per-acca gate: on saturated days an acca
+                           #            rides only if BOTH legs clear VOLUME_MIN_PROB.
+                           #            Same 50% total risk, spread over fewer,
+                           #            higher-conviction accas. This one bites.
+TAKE_PROFIT_GAIN = 1.00    # bank reaches baseline + 100% -> TAKE-PROFIT NOTIFICATION
+BASE_PCT = 100.0           # capital starts at 100 (%) — everything is a percentage
+
+BUCKETS = {
+    "CERTIFIED_CLEAN",
+    "SKIPPED_VETO",
+    "WATCHLIST_UNKNOWN_CTX",
+    "WATCHLIST_UNCORROBORATED_PRICE",
+    # 2026-09-08 operator decision, taken against the evidence.
+    # In-season n=91, ROI -0.6%, 80% interval -11.3%..+9.8%. The
+    # bucket spread is reproduced by label-shuffling ~85-98% of the
+    # time depending on window. SUSPECT_PRICE and NO_ODDS stay OUT:
+    # they flag bad DATA, not weak edges.
+    "CAUTION",
+}
+BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
+
+STATE_FILE = LOCALDATA / "auto_tickets_state.json"
+
+
+# ---- lanes (2026-10-12) ----------------------------------------------------
+# The same rolling lifecycle drives more than one product. A lane is its own
+# state file, slip prefix, label and daily stake; everything else — the 09:00
+# write-once freeze, per-acca settlement, the percentage bank, the take-profit
+# notification marker and the artifact layout — is the SAME code path, so the
+# lanes cannot drift apart in behaviour or in how their numbers are computed.
+#
+# The enhancement lane (operator ruling 2026-10-12: "i need it to look like how
+# autobets presents it and to have the same lifecycle of autobets") is ADDITIVE:
+# it has its own state and its own artifact and never touches the main lane's.
+class Lane(NamedTuple):
+    """One lane's identity: where its state lives and what it calls itself."""
+    state_file: Path
+    slip_prefix: str
+    label: str
+    # Total deployed per bet-day as a fraction of FREE bank (same units and same
+    # meaning as STAKE_FRAC above). Percentages of capital throughout — never
+    # currency.
+    stake_frac: float
+
+
+MAIN_LANE = Lane(STATE_FILE, "auto_tickets", "AUTO TICKETS (ROLLING)", STAKE_FRAC)
+
+ENHANCEMENT_STATE_FILE = LOCALDATA / "enhancement_tickets_state.json"
+# Enables the enhancement lane's board builder. Unset, nothing about the
+# existing pipeline changes: no lane state is read, no artifact is written.
+ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
+ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "autobets_enh_tickets",
+                        "ENHANCEMENT TICKETS (ROLLING)", STAKE_FRAC)
+# Enhancement legs are ranked by the realized cohort hit rate (prob),
+# not by the model's stated hit rate. The main lane stays on "hitrate";
+# its selection is untouched.
+ENHANCEMENT_RANK = "prob"
+
+
+def enhancement_board_enabled() -> bool:
+    """True when the operator has switched the enhancement lane on."""
+    return os.environ.get(ENH_BOARD_FLAG) == "1"
+
+
+def state_path(lane: "Lane | None" = None) -> Path:
+    """Where a lane keeps its state.
+
+    The MAIN lane resolves ``STATE_FILE`` at CALL time, not import time: that
+    global is the seam every test and tool in the repo redirects to keep writes
+    out of the committed ledger, and a lane object captured at import would
+    silently ignore the redirect and write test slips into real state (the
+    2026-09-06 leak). An explicit lane uses its own file.
+    """
+    if lane is None or lane == MAIN_LANE:
+        return STATE_FILE
+    return lane.state_file
+
+# ---- daily freeze lock (2026-10-02, OP-01 T2) -------------------------------
+# A frozen card is the operator's placed bet. The old lock was a per-day
+# sidecar file `localdata/auto_tickets_<date>.frozen`; its durability depended
+# on that file surviving (gitignore allowlists, cache namespaces, cold
+# checkouts). When it did not survive, `frozen.exists()` read False and the
+# engine rebuilt a card for a date already staked — bets rotated under the
+# operator.
+#
+# The lock now lives inside the committed ticket state as a write-once
+# `frozen_by_date` book: once a date is in it, that date can never be
+# rewritten, by any path, including --force. The entry is written in the same
+# `save_state` call that persists the slip, so no later phase can land a card
+# for a date without its lock. Legacy sidecar files are still READ (compat,
+# and their timestamp is adopted on first touch) and are never deleted; new
+# ones are no longer created.
+FROZEN_BOOK_KEY = "frozen_by_date"
+# A force recut can invalidate a frozen card without mutating its audit
+# artifact or write-once freeze record. This separate book prevents a later
+# ordinary run from re-printing an unsafe, superseded card as if it were live.
+SUPERSEDED_BOOK_KEY = "superseded_by_date"
+
+
+def legacy_frozen_path(target: str, lane: "Lane | None" = None):
+    """The pre-T2 per-day marker file. Read-only from here on."""
+    return LOCALDATA / f"{(lane or MAIN_LANE).slip_prefix}_{target}.frozen"
+
+
+def frozen_entry(st: dict, target: str) -> dict | None:
+    """The write-once freeze record for ``target``, or None."""
+    book = (st or {}).get(FROZEN_BOOK_KEY) or {}
+    entry = book.get(str(target))
+    return entry if isinstance(entry, dict) else None
+
+
+def superseded_entry(st: dict, target: str) -> dict | None:
+    """The corrected result that superseded a frozen card, if any."""
+    book = (st or {}).get(SUPERSEDED_BOOK_KEY) or {}
+    entry = book.get(str(target))
+    return entry if isinstance(entry, dict) else None
+
+
+def record_superseded_no_bet(st: dict, target: str, when, *, reason: str,
+                            lane: "Lane | None" = None) -> dict:
+    """Record a force-recut no-bet without touching the frozen card.
+
+    The old slip remains available for audit and any already-placed bet must
+    not be silently deleted from the settlement ledger. The separate marker
+    only changes what a later ordinary run may present to the operator.
+    """
+    book = st.setdefault(SUPERSEDED_BOOK_KEY, {})
+    existing = book.get(str(target))
+    if isinstance(existing, dict):
+        return existing
+    frozen = frozen_entry(st, target) or {}
+    entry = {
+        "recorded_at": when.isoformat(timespec="seconds"),
+        "result": "NO BET",
+        "reason": reason,
+        "frozen_at": frozen.get("frozen_at"),
+        "audit_slip": f"localdata/{(lane or MAIN_LANE).slip_prefix}_{target}.txt",
+    }
+    book[str(target)] = entry
+    return entry
+
+
+def is_frozen(st: dict, target: str, lane: "Lane | None" = None) -> bool:
+    """True when the date is locked by state OR by a legacy marker file."""
+    return (frozen_entry(st, target) is not None
+            or legacy_frozen_path(target, lane).exists())
+
+
+def record_freeze(st: dict, target: str, when, lane: "Lane | None" = None) -> dict:
+    """Write-once freeze of ``target``. Never overwrites an existing entry.
+
+    Returns the entry in force — the pre-existing one if the date was already
+    locked, so callers (slip footer included) always print the original
+    freeze time rather than the time of the run that re-read it.
+    """
+    book = st.setdefault(FROZEN_BOOK_KEY, {})
+    existing = book.get(str(target))
+    if isinstance(existing, dict):
+        return existing                      # write-once: immutable
+    legacy = legacy_frozen_path(target, lane)
+    if legacy.exists():
+        stamp = (legacy.read_text() or "").strip()
+        entry = {"frozen_at": stamp or when.isoformat(timespec="seconds"),
+                 "final": True, "lock_source": "legacy_marker_file"}
+    else:
+        entry = {"frozen_at": when.isoformat(timespec="seconds"),
+                 "final": True, "lock_source": "state"}
+    book[str(target)] = entry
+    return entry
+
+
+def freeze_footer(entry: dict) -> str:
+    """The human artifact's final line: 'FROZEN AT HH:MM - FINAL'."""
+    stamp = str((entry or {}).get("frozen_at") or "")
+    hhmm = ""
+    try:
+        hhmm = datetime.fromisoformat(stamp).strftime("%H:%M")
+    except Exception:
+        part = stamp[11:16] if len(stamp) >= 16 else ""
+        hhmm = part if len(part) == 5 and part[2] == ":" else "??:??"
+    return f"FROZEN AT {hhmm} - FINAL"
+
+# ---- bucket P&L tripwire (2026-09-23, operator-directed, red-teamed) ----
+# The firing tripwire only asks "is this rule still firing?" — never "is
+# this door still paying?" This block grades every deployed bucket on its
+# trailing settled leg outcomes and throttles the deployment door
+# accordingly. Constants are policy-level and deliberately visible.
+#
+# GRADING DELEGATED TO THE SHARED ASSAY ENGINE (2026-09-23, operator
+# direction), exactly as for the shipped-slice ladder below. The door used to
+# grade on a private z-test of the mean (hit - stated_prob) residual, which is
+# the wrong question: a bucket can hit exactly as often as it promised and
+# still be a losing door. Measured on the live archives today, every judgeable
+# bucket read PAYING (z = +0.26, +0.79, +0.33, +0.51) while flat-stake ROI was
+# CAUTION-grade negative in three of them -- CAUTION -5.1%, SKIPPED_VETO -1.1%
+# lifetime / -4.2% recent over 566 legs, WATCHLIST_UNCORROBORATED_PRICE -2.5%.
+# A door that cannot see that is not a door.
+#
+# n and roi are the bucket's full settled history; recent_roi is the trailing
+# GATES.recent_window_days window, admitted only at GATES.min_recent_n. One
+# statistic, two populations: the door grades the whole candidate universe,
+# the ladder grades what actually shipped. PNL_MIN_N and PNL_Z_BENCH are
+# retired -- the engine's own graduated small-n floors and ROI bars do that
+# job -- while the weight ladder (1.0 / 0.5 / 0.0) is untouched.
+PNL_WINDOW_DAYS = GATES.recent_window_days  # recent-confirm window (was a private 21d)
+PNL_DEMOTE_STREAK = 2      # consecutive adverse days -> half stake
+PNL_BENCH_STREAK = 4       # consecutive daily VETO verdicts -> door closed
+PNL_DEMOTE_ON_CAUTION = False  # demote tier stays on VETO; flip to let CAUTION half-stake
+PNL_BENCH_ENABLED = True   # master kill-switch for the enforcement half only
+BUCKET_PNL_FILE = LOCALDATA / "auto_tickets_bucket_pnl.json"
+
+# ---- shipped-slice selection ladder (2026-09-23, operator-directed) ----
+# These are deliberately separate from the door-level P&L tripwire above:
+# the ladder changes ordering/filtering only; stakes remain the door's job.
+#
+# GRADING IS DELEGATED TO THE SHARED ASSAY ENGINE (2026-09-23, operator
+# direction: use "the same assay engine like i do on edges" on this surface
+# too). A bucket is a selection-role context group, which is exactly what
+# edgefactory.assay.context_verdict_league scores, so the ladder no longer
+# runs a private z-on-calibration-residual verdict. It speaks BOOST / ALLOW /
+# UNKNOWN / CAUTION / VETO on flat-stake ROI with the same graduated small-n
+# floors every other context in the system obeys, and it carries the hit
+# rate's Wilson lower bound and assay grade alongside as evidence.
+# Intended consequences: the engine's own n<12 floor replaces a private
+# SLICE_MIN_N; the recent-vs-full-history split replaces a fixed window that
+# existed only to reach n=12; and a bucket can now be REWARDED (BOOST) rather
+# than only punished. Calibration gap and z are still computed and printed --
+# they are the stated-probability honesty signal -- but they no longer decide
+# enforcement, because ROI is the quantity that actually kills a bankroll.
+SLICE_WINDOW_DAYS = GATES.recent_window_days  # recent_roi window: tracks the system-wide 30d recency convention
+SLICE_DEMOTE_STREAK = 2        # hysteresis: two qualifying days to demote
+SLICE_BENCH_STREAK = 4         # hysteresis: four VETO days to bench
+SLICE_DEMOTE_ON_CAUTION = True # soft first-cycle policy: CAUTION can demote, not only VETO
+SLICE_BENCH_ON_VETO = False    # conservative first cycle: no slice benches
+SLICE_DEMOTE_CAP = {"CAUTION": 0.70}  # only studied bucket/band cap
+SLICE_DEMOTE_SHRINK = 0.95     # generic rank-only fallback for other buckets
+SLICE_ENABLED = True           # kill-switch: evidence still reports, policy identity
+SLICE_LEDGER_FILENAME = "auto_tickets_slice_ledger.jsonl"
+SLICE_TRIPWIRE_FILENAME = "auto_tickets_slice_tripwire.json"
+
+
+def _assay_roi(wins, n_priced, profit):
+    """Flat-stake ROI over PRICED legs: ``pnl / n_priced``, never ``pnl / n``.
+
+    Shared by both tripwires and deliberately the same accounting as
+    ``assay_purity`` and ``decay_monitor.recent_stats``, so a bucket ROI, a
+    context ROI and an edge ROI mean one thing in this repo.
+    """
+    return round(profit / n_priced, 4) if n_priced else None
+
+
+def _pct(value):
+    """Report-facing percent for an ROI/gap that may not exist yet.
+
+    A tripwire line must never be the thing that breaks the daily build, and
+    ``None`` here is a real state (settled legs that carry no price), not a bug.
+    """
+    return "--" if value is None else f"{value:+.1%}"
+
+
+def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
+    """Grade every deployed bucket with the shared assay engine, advance the
+    VETO streak, persist the report, and return per-bucket deployment weights.
+
+    Population is the whole archived candidate universe per bucket, via
+    ``playable_legs`` — deliberately NOT the shipped slice the ladder below
+    grades. One statistic, two estimands: the door asks whether a bucket's edge
+    is real across everything it could ship, the ladder asks whether the cards
+    that actually went out held up.
+
+    Grading is delegated, not invented. ``n`` and ``roi`` are the bucket's full
+    settled history and ``recent_roi`` is the trailing ``PNL_WINDOW_DAYS``
+    window, admitted only once that window itself holds
+    ``GATES.min_recent_n`` settled legs, through
+    :func:`edgefactory.assay.context_verdict_league` — the same gate that
+    grades every purity context. Hit rate carries its Wilson lower bound and its
+    ``assay.grade``. A leg is counted for win/loss and ROI whether or not it
+    carries a stated probability; the stated probability only feeds the
+    calibration residual, where a missing rate would fabricate a fake -1 per
+    leg. In practice ``playable_legs`` already demands both a price and a rate,
+    so that guard is defensive rather than a behaviour change: what DID change
+    is that the residual no longer gets a vote on the verdict.
+
+    Streak semantics (red-team requirements, unchanged):
+    * the streak advances at most once per CALENDAR DAY, so same-day reruns
+      recompute the report but cannot compound it, and intraday pipeline runs
+      must not be able to bench anything;
+    * a VETO verdict increments the streak and anything else resets it, so a
+      closed door is EARNED by sustained evidence and never declared by
+      silence;
+    * the weight ladder itself is untouched and still frozen: streak >=
+      PNL_BENCH_STREAK while still VETO -> 0.0 (door closed); streak >=
+      PNL_DEMOTE_STREAK -> 0.5 (half stake); else 1.0.
+    """
+    path = Path(path or BUCKET_PNL_FILE)
+    archives = load_archived_picks() if archives is None else archives
+    settled = load_settled() if settled is None else settled
+    today_text = str(today_text)[:10]
+    recent_from = (datetime.strptime(today_text, "%Y-%m-%d")
+                   - timedelta(days=PNL_WINDOW_DAYS)).strftime("%Y-%m-%d")
+
+    def _blank():
+        return {"n": 0, "wins": 0.0, "profit": 0.0, "n_priced": 0,
+                "stated": 0.0, "sse_var": 0.0,
+                "rn": 0, "rwins": 0.0, "rprofit": 0.0, "rn_priced": 0}
+
+    stats: dict[str, dict] = {b: _blank() for b in sorted(BUCKETS)}
+    for row in archives:
+        day = str(row.get("date") or row.get("_archive_day") or "")[:10]
+        if day > today_text:
+            continue
+        for leg in playable_legs([row], day=day, settled=settled):
+            res = leg.get("result")
+            if res not in ("win", "loss"):
+                continue   # void/ungraded legs are invisible to P&L, never auto-loss
+            b = str((leg.get("row") or {}).get("bucket") or "")
+            if b not in stats:
+                continue
+            st = stats[b]
+            hit = 1.0 if res == "win" else 0.0
+            try:
+                odds = float(leg.get("odds") or 0.0)
+            except (TypeError, ValueError):
+                odds = 0.0
+            priced = odds > 0.0
+            profit = (odds - 1.0) if hit else -1.0
+            st["n"] += 1
+            st["wins"] += hit
+            if priced:
+                st["n_priced"] += 1
+                st["profit"] += profit
+            p = float(leg.get("prob") or 0.0)
+            if p > 0.0:
+                st["stated"] += p
+                st["sse_var"] += p * (1.0 - p)
+            if day >= recent_from:
+                st["rn"] += 1
+                st["rwins"] += hit
+                if priced:
+                    st["rn_priced"] += 1
+                    st["rprofit"] += profit
+
+    try:
+        prev = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        prev = {}
+    prev_eval = str(prev.get("last_eval") or "")[:10]
+    prev_b = (prev.get("buckets") or {})
+    verdicts: dict[str, dict] = {}
+    for b, st in stats.items():
+        n = st["n"]
+        wins = int(st["wins"])
+        roi = _assay_roi(wins, st["n_priced"], st["profit"])
+        recent_roi = (_assay_roi(int(st["rwins"]), st["rn_priced"], st["rprofit"])
+                      if st["rn"] >= GATES.min_recent_n else None)
+        verdict = context_verdict_league(n, roi, recent_roi)
+        # Calibration is kept as evidence about stated probabilities, but it no
+        # longer gates the door: a bucket can hit exactly as often as promised
+        # and still be a losing door, which is what the old z-test could not see.
+        resid_mean = (st["wins"] - st["stated"]) / n if n else 0.0
+        resid_var = st["sse_var"] / (n * n) if n else 0.0
+        z = (resid_mean / math.sqrt(resid_var)) if resid_var > 0 and n else None
+        n_streak = int((prev_b.get(b) or {}).get("streak") or 0)
+        if prev_eval < today_text:      # at most one streak step per day
+            adverse = (verdict == "VETO"
+                       or (PNL_DEMOTE_ON_CAUTION and verdict == "CAUTION"))
+            n_streak = n_streak + 1 if adverse else 0
+        weight = (0.0 if (n_streak >= PNL_BENCH_STREAK and verdict == "VETO")
+                  else 0.5 if n_streak >= PNL_DEMOTE_STREAK else 1.0)
+        verdicts[b] = {
+            "n": n,
+            "verdict": verdict,
+            "grade": assay_grade(wins, n) if n else "UNGRADED",
+            "hit": round(st["wins"] / n, 4) if n else None,
+            "wilson_lb": round(wilson_lb(wins, n), 4) if n else None,
+            "roi": roi,
+            "recent_n": st["rn"],
+            "recent_roi": recent_roi,
+            "stated": round(st["stated"] / n, 4) if n else None,
+            "gap": round(resid_mean, 4) if n else None,
+            "z": round(z, 3) if z is not None else None,
+            # roi_flat is profit per SETTLED leg (an unpriced leg charges -1);
+            # "roi" above is per PRICED leg, the assay_purity convention the
+            # engine is calibrated on. Playable legs always carry a price, so
+            # they agree in practice — both are reported so a price-data gap
+            # cannot hide inside the enforcement number.
+            "roi_flat": round(st["profit"] / n, 4) if n else None,
+            "would_bench": (not PNL_BENCH_ENABLED and verdict == "VETO"
+                            and n_streak >= PNL_BENCH_STREAK),
+            "streak": n_streak, "weight": weight,
+        }
+    report = {
+        "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
+        "last_eval": today_text,
+        "engine": "edgefactory.assay.context_verdict_league",
+        "grade_engine": "edgefactory.assay.grade",
+        "population": "all playable archived legs (candidate universe)",
+        "window_days": PNL_WINDOW_DAYS,
+        "window_from": recent_from,
+        "recent_min_n": GATES.min_recent_n,
+        "demote_streak": PNL_DEMOTE_STREAK, "bench_streak": PNL_BENCH_STREAK,
+        "demote_on_caution": PNL_DEMOTE_ON_CAUTION,
+        "enabled": PNL_BENCH_ENABLED,
+        "buckets": verdicts,
+    }
+    try:
+        path.write_text(json.dumps(report, indent=2))
+    except OSError:
+        pass
+    return ({b: v["weight"] for b, v in verdicts.items()} if PNL_BENCH_ENABLED
+            else {}), verdicts
+
+
+_SLICE_BUCKET_ORDER = tuple(sorted(BUCKETS))
+_SLICE_ROW_FIELDS = ("date", "home", "away", "match", "pick", "prob_stated",
+                     "odds", "bucket", "src", "seeded", "shadow")
+_SLICE_LINE_UNSAFE_RE = re.compile("[\u0085\u2028\u2029]")
+_SLIP_LEG_RE = re.compile(
+    r"^\s{3}(?P<match>.+?)\s+(?P<pick>[A-Za-z]+)\s+@\s+"
+    r"(?P<odds>[0-9]+(?:\.[0-9]+)?)\s+\(stated\s+"
+    r"(?P<prob>[0-9]+(?:\.[0-9]+)?)%\)"
+)
+
+
+def _slice_ledger_path(path=None):
+    return Path(path) if path is not None else LOCALDATA / SLICE_LEDGER_FILENAME
+
+
+def _slice_state_path(path=None):
+    return Path(path) if path is not None else LOCALDATA / SLICE_TRIPWIRE_FILENAME
+
+
+def _slice_day(value):
+    return str(value or "")[:10]
+
+
+def _slice_row_key(row):
+    """Identity for ledger replacement/double-count prevention.
+
+    The key deliberately follows the same structure-only fold as settlement
+    and card dedup. Raw display spelling is evidence, not fixture identity.
+    """
+    return _folded_leg_key(_slice_day(row.get("date")), row.get("home"),
+                           row.get("away"), row.get("pick"))
+
+
+def _slice_clean_row(row):
+    """Return exactly the frozen ledger schema; never persist a result."""
+    out = {
+        "date": _slice_day(row.get("date")),
+        "home": str(row.get("home") or ""),
+        "away": str(row.get("away") or ""),
+        "match": str(row.get("match") or ""),
+        "pick": str(row.get("pick") or "").upper(),
+        "prob_stated": finite_probability(row.get("prob_stated")),
+        "odds": float(row.get("odds") or 0.0),
+        "bucket": str(row.get("bucket") or ""),
+        "src": str(row.get("src") or ""),
+        "seeded": bool(row.get("seeded")),
+        "shadow": bool(row.get("shadow")),
+    }
+    return out
+
+
+def read_slice_ledger(path=None):
+    """Read the result-free ledger. Settlement is intentionally not cached."""
+    ledger = _slice_ledger_path(path)
+    try:
+        text = ledger.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    rows = []
+    # split("\n") not splitlines(): the writer emits only \n as a record
+    # separator, and splitlines() would also cut on U+0085/U+2028/U+2029 that
+    # survive in a row written by an older build.
+    for line in text.split("\n"):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict) or "result" in row:
+            continue
+        if any(k not in row for k in _SLICE_ROW_FIELDS):
+            continue
+        rows.append(_slice_clean_row(row))
+    return rows
+
+
+def _slice_line_escape(match):
+    return f"\\u{ord(match.group(0)):04x}"
+
+
+def write_slice_ledger(rows, path=None):
+    """Write one canonical JSON object per line, with no score/result field."""
+    ledger = _slice_ledger_path(path)
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    clean = [_slice_clean_row(row) for row in rows]
+    with ledger.open("w", encoding="utf-8") as fh:
+        for row in clean:
+            # ensure_ascii=False keeps the display spelling legible, but U+0085
+            # and U+2028/U+2029 are legal *inside* a JSON string while Python's
+            # str.splitlines() treats them as line breaks — a name carrying one
+            # would split its own record in two and the row would vanish as a
+            # silent JSON error. Escape exactly those, leave everything else raw.
+            blob = json.dumps(row, separators=(",", ":"), ensure_ascii=False)
+            fh.write(_SLICE_LINE_UNSAFE_RE.sub(_slice_line_escape, blob) + "\n")
+
+
+def upsert_slice_day(rows, target, path=None, *, allow_empty=False):
+    """Replace all real and shadow rows for one date, atomically by rewrite.
+
+    An empty replacement set is normally a NO-OP, not a clear (2026-09-23
+    review fix). Callers reach this with nothing to record for two very
+    different reasons: a force-repick that genuinely ships no card, and a
+    slip that failed to parse (unreadable file, or a leg line that no longer
+    matches the frozen print format). Treating both as "this day shipped
+    nothing" let a rerun between shipping and freezing delete the day's only
+    printed-probability evidence — permanently, since ``ensure_slice_seeded``
+    only seeds when the whole ledger is absent. A clear is therefore opt-in
+    via ``allow_empty``, and the callers pass it only when no slip exists for
+    the date at all.
+    """
+    target = _slice_day(target)
+    ledger = read_slice_ledger(path)
+    fresh = [_slice_clean_row(r) for r in rows
+             if _slice_day(r.get("date")) == target]
+    if not fresh and not allow_empty:
+        return [r for r in ledger if _slice_day(r.get("date")) == target]
+    existing = [r for r in ledger if _slice_day(r.get("date")) != target]
+    merged = existing + fresh
+    # Preserve first position while allowing a later real row to replace a
+    # same-key shadow row. The caller orders real rows before shadow rows.
+    out, positions = [], {}
+    for row in merged:
+        key = _slice_row_key(row)
+        if key in positions:
+            out[positions[key]] = row
+        else:
+            positions[key] = len(out)
+            out.append(row)
+    write_slice_ledger(out, path)
+    return out
+
+
+def _printed_prob_value(prob):
+    """Probability represented by the frozen ``.0%`` slip print."""
+    prob = finite_probability(prob)
+    return float(f"{prob:.0%}".rstrip("%")) / 100.0 if prob is not None else None
+
+
+def _archive_index_for_slice(archives):
+    """Identity-fold archive join; highest (avg_p, odds) wins a twin."""
+    index = {}
+    for row in archives:
+        day = _slice_day(row.get("date") or row.get("_archive_day"))
+        if not day:
+            continue
+        key = _folded_leg_key(day, row.get("home"), row.get("away"),
+                              row.get("pick"))
+        try:
+            score = (float(row.get("avg_p") or 0.0),
+                     float(row.get("odds") or 0.0))
+        except (TypeError, ValueError):
+            score = (0.0, 0.0)
+        prior = index.get(key)
+        if prior is None or score > prior[0]:
+            index[key] = (score, row)
+    return {key: row for key, (_score, row) in index.items()}
+
+
+def _slice_row_from_archive(day, printed_match, pick, prob, odds, archive_row,
+                            *, src="slip", seeded=False, shadow=False):
+    home = str(archive_row.get("home") or printed_match.split(" vs ", 1)[0])
+    away = str(archive_row.get("away") or printed_match.split(" vs ", 1)[-1])
+    return {
+        "date": day, "home": home, "away": away,
+        "match": f"{home} vs {away}", "pick": str(pick).upper(),
+        "prob_stated": finite_probability(prob), "odds": float(odds),
+        "bucket": str(archive_row.get("bucket") or ""), "src": src,
+        "seeded": bool(seeded), "shadow": bool(shadow),
+    }
+
+
+def parse_slip_slice_rows(slip_path, archive_index, existing_rows=None):
+    """Parse frozen evidence and resolve bucket/result identity separately.
+
+    ``existing_rows`` is used only by the frozen-rerun path. A real ledger row
+    is the print-time record, so it is copied before consulting the mutable
+    archive. Shadow rows are deliberately not eligible for that preservation:
+    when a real frozen leg is present, the archive-backed real row replaces the
+    shadow row through the normal upsert ordering.
+    """
+    # The filename is auto_tickets_YYYY-MM-DD.txt; avoid trusting a line's
+    # display date because the leg line itself intentionally has no date.
+    name_match = re.search(r"(\d{4}-\d{2}-\d{2})", Path(slip_path).name)
+    day = name_match.group(1) if name_match else ""
+    existing_by_key = {}
+    for row in existing_rows or ():
+        if _slice_day(row.get("date")) != day:
+            continue
+        key = _slice_row_key(row)
+        prior = existing_by_key.get(key)
+        # Prefer a real row if a hand-edited/legacy ledger contains both a
+        # shadow and a real row for the same fixture.
+        if prior is None or (prior.get("shadow") and not row.get("shadow")):
+            existing_by_key[key] = row
+
+    rows, unresolved = [], []
+    try:
+        lines = Path(slip_path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return rows, unresolved
+    for line_no, line in enumerate(lines, 1):
+        m = _SLIP_LEG_RE.match(line)
+        if not m:
+            continue
+        printed_match = m.group("match").strip()
+        parts = printed_match.split(" vs ", 1)
+        if len(parts) != 2:
+            unresolved.append({"file": str(slip_path), "line": line_no,
+                               "match": printed_match})
+            continue
+        home, away = parts
+        pick = m.group("pick").upper()
+        key = _folded_leg_key(day, home, away, pick)
+        existing = existing_by_key.get(key)
+        if existing is not None and not existing.get("shadow"):
+            # Do not even look up this key in the current archive. The bucket,
+            # odds, stated probability, spelling, source and flags are all
+            # print-time fields and must remain frozen together.
+            rows.append(_slice_clean_row(existing))
+            continue
+        archive_row = archive_index.get(key)
+        if archive_row is None:
+            unresolved.append({"file": str(slip_path), "line": line_no,
+                               "match": printed_match, "pick": pick})
+            continue
+        rows.append(_slice_row_from_archive(
+            day, printed_match, pick, float(m.group("prob")) / 100.0,
+            float(m.group("odds")), archive_row,
+        ))
+    return rows, unresolved
+
+
+def _replay_seed_rows(archives, settled, real_keys):
+    """Rebuild the pre-slip seed through today's planner, not a new selector."""
+    rows = []
+    days = sorted({_slice_day(p.get("date") or p.get("_archive_day"))
+                   for p in archives})
+    for day in days:
+        if not ("2026-06-25" <= day <= "2026-08-26"):
+            continue
+        pool = playable_legs(archives, day=day, settled=settled, floor=0.0)
+        # This is the replay harness's settled-universe convention: unresolved
+        # and void rows are not wager legs in the growth reconstruction.
+        pool = [leg for leg in pool if leg.get("result")]
+        if len(pool) < LEGS_PER_ACCA:
+            continue
+        plan = plan_day(pool, 100.0)
+        pool_by_key = {_leg_key(leg): leg for leg in pool}
+        for acca in plan:
+            for leg in acca.get("legs", []):
+                source = pool_by_key.get(_leg_key(leg))
+                if source is None:
+                    continue
+                row = source.get("row") or {}
+                item = _slice_row_from_archive(
+                    day, leg.get("match") or "", leg.get("pick"),
+                    finite_probability(leg.get("prob")), float(leg.get("odds") or 0.0), row,
+                    src="replay", seeded=True,
+                )
+                if _slice_row_key(item) in real_keys:
+                    continue
+                rows.append(item)
+    return rows
+
+
+def seed_slice_ledger(*, archives=None, settled=None, path=None,
+                      localdata=None, today_text=None):
+    """Create the deterministic replay+slip seed and return rows/unresolved.
+
+    Real rows use only frozen slip probabilities. Replay rows use current
+    ``avg_p`` through the live planner and are explicitly marked as a proxy.
+    """
+    archives = load_archived_picks() if archives is None else archives
+    settled = load_settled() if settled is None else settled
+    data_dir = LOCALDATA if localdata is None else Path(localdata)
+    archive_index = _archive_index_for_slice(archives)
+    real_rows, unresolved = [], []
+    for slip in dated_artifact_files(data_dir, "auto_tickets_*.txt"):
+        day_match = re.search(r"(\d{4}-\d{2}-\d{2})", slip.name)
+        if not day_match:
+            continue
+        day = day_match.group(1)
+        if not ("2026-08-27" <= day <= (today_text or "9999-12-31")):
+            continue
+        rows, missing = parse_slip_slice_rows(slip, archive_index)
+        real_rows.extend(rows)
+        unresolved.extend(missing)
+    real_keys = {_slice_row_key(row) for row in real_rows}
+    replay_rows = _replay_seed_rows(archives, settled, real_keys)
+    rows = sorted(replay_rows + real_rows,
+                  key=lambda r: (_slice_day(r["date"]), r["src"],
+                                 r["home"], r["away"], r["pick"]))
+    if path is not None or not _slice_ledger_path().exists():
+        write_slice_ledger(rows, path)
+    return rows, unresolved
+
+
+def ensure_slice_seeded(today_text, *, settled=None):
+    """Seed only when the result-free ledger is absent/empty."""
+    path = _slice_ledger_path()
+    if read_slice_ledger(path):
+        return read_slice_ledger(path), []
+    return seed_slice_ledger(today_text=today_text, path=path, settled=settled)
+
+
+def _slice_adverse(verdict):
+    """Which assay verdicts advance the demotion streak.
+
+    VETO always does. CAUTION does while the soft first-cycle policy is on,
+    which mirrors the ladder's earlier demote-on-COLD intent: rank a losing
+    bucket lower, do not shut it.
+    """
+    if SLICE_DEMOTE_ON_CAUTION:
+        return verdict in ("CAUTION", "VETO")
+    return verdict == "VETO"
+
+
+def _slice_action(bucket, verdict, demote_streak, bench_streak):
+    """Ladder action from the assay verdict plus hysteresis streaks."""
+    benched = (SLICE_BENCH_ON_VETO
+               and bench_streak >= SLICE_BENCH_STREAK
+               and verdict == "VETO")
+    demoted = demote_streak >= SLICE_DEMOTE_STREAK
+    if benched:
+        return "BENCHED"
+    if demoted:
+        return "DEMOTED"
+    return "FULL"
+
+
+def _slice_rank_caps(verdicts):
+    caps, benches = {}, set()
+    if not SLICE_ENABLED:
+        return caps, benches
+    for bucket, verdict in verdicts.items():
+        if verdict.get("action") == "BENCHED":
+            benches.add(bucket)
+        elif verdict.get("action") == "DEMOTED":
+            if bucket in SLICE_DEMOTE_CAP:
+                caps[bucket] = float(SLICE_DEMOTE_CAP[bucket])
+            else:
+                caps[bucket] = {"shrink": float(SLICE_DEMOTE_SHRINK)}
+    return caps, benches
+
+
+def compute_bucket_slice(today_text, *, path=None, state_path=None,
+                         settled=None):
+    """Grade each bucket's shipped slice with the shared assay engine.
+
+    The return value is ``(policy, verdicts)``. ``policy`` carries
+    ``rank_caps`` and ``bench_buckets`` for the current plan. Every score is
+    read through ``pick_result`` at call time, so settlement lag and voids are
+    handled exactly like the door tripwire.
+
+    Grading is not invented here. ``n`` and ``roi`` are the bucket's full
+    shipped history, ``recent_roi`` is the trailing ``SLICE_WINDOW_DAYS``
+    window admitted only once that window itself holds
+    ``GATES.min_recent_n`` settled legs, and the three go through
+    :func:`edgefactory.assay.context_verdict_league` — the same selection-role
+    context gate that produces the purity verdicts these buckets are built
+    from. The hit rate travels with its Wilson lower bound and its assay
+    grade, which is the engine's standing rule: a Wilson bound rather than a
+    raw hit rate, and ROI always alongside. So the ladder fails open below
+    n=12, needs a real loss rate to reach VETO, and can now report BOOST on a
+    bucket that deserves it.
+
+    Enforcement basis: printed-slip evidence only. Seeded replay rows carry an
+    ``avg_p`` proxy instead of the frozen slip print, so the two are different
+    estimands and replay is reported as context (``n_seeded``/``seed_gap``)
+    rather than pooled into a verdict — pooling flipped CAUTION's gap sign
+    from -3.9pp to +8.0pp. Shadow rows stay in the basis deliberately: a
+    demoted or benched bucket ships no legs, and counterfactual evidence is its
+    only route back to FULL.
+    """
+    today_text = _slice_day(today_text)
+    settled = load_settled() if settled is None else settled
+    recent_from = (datetime.strptime(today_text, "%Y-%m-%d")
+                   - timedelta(days=SLICE_WINDOW_DAYS)).strftime("%Y-%m-%d")
+
+    def _blank_stats():
+        return {"n": 0, "wins": 0.0, "stated": 0.0, "sse": 0.0,
+                "profit": 0.0, "n_priced": 0,
+                "rn": 0, "rwins": 0.0, "rprofit": 0.0, "rn_priced": 0}
+
+    # ``stats`` is the enforcement basis (printed-slip rows only);
+    # ``seed_stats`` is replay-proxy context, which can never move a verdict.
+    stats = {b: _blank_stats() for b in _SLICE_BUCKET_ORDER}
+    seed_stats = {b: _blank_stats() for b in _SLICE_BUCKET_ORDER}
+    for row in read_slice_ledger(path):
+        day = _slice_day(row.get("date"))
+        if day > today_text:
+            continue
+        prob = finite_probability(row.get("prob_stated"))
+        if prob is None:
+            continue
+        result = pick_result({"date": day, "home": row.get("home"),
+                              "away": row.get("away"),
+                              "pick": row.get("pick")}, settled)
+        if result not in ("win", "loss"):
+            continue
+        bucket = str(row.get("bucket") or "")
+        if bucket not in stats:
+            continue
+        st = seed_stats[bucket] if row.get("seeded") else stats[bucket]
+        hit = 1.0 if result == "win" else 0.0
+        try:
+            odds = float(row.get("odds") or 0.0)
+        except (TypeError, ValueError):
+            odds = 0.0
+        priced = odds > 0.0
+        profit = (odds - 1.0) if hit else -1.0
+        st["n"] += 1
+        st["wins"] += hit
+        st["stated"] += prob
+        st["sse"] += prob * (1.0 - prob)
+        if priced:
+            st["n_priced"] += 1
+            st["profit"] += profit
+        if day >= recent_from:
+            st["rn"] += 1
+            st["rwins"] += hit
+            if priced:
+                st["rn_priced"] += 1
+                st["rprofit"] += profit
+
+    state_file = _slice_state_path(state_path)
+    try:
+        prior = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        prior = {}
+    prior_eval = _slice_day(prior.get("last_eval"))
+    prior_buckets = prior.get("buckets") or {}
+    verdicts = {}
+    for bucket in _SLICE_BUCKET_ORDER:
+        st = stats[bucket]
+        sd = seed_stats[bucket]
+        n = st["n"]
+        wins = int(st["wins"])
+        roi = _assay_roi(wins, st["n_priced"], st["profit"])
+        recent_roi = (_assay_roi(int(st["rwins"]), st["rn_priced"], st["rprofit"])
+                      if st["rn"] >= GATES.min_recent_n else None)
+        verdict = context_verdict_league(n, roi, recent_roi)
+        gap = (st["wins"] - st["stated"]) / n if n else 0.0
+        z = gap / (math.sqrt(st["sse"]) / n) if n and st["sse"] > 0 else None
+        seed_gap = (sd["wins"] - sd["stated"]) / sd["n"] if sd["n"] else None
+        old = prior_buckets.get(bucket) or {}
+        demote = max(0, int(old.get("demote_streak") or old.get("streak") or 0))
+        bench = max(0, int(old.get("bench_streak") or 0))
+        if prior_eval < today_text:      # at most one streak step per day
+            demote = max(0, demote + (1 if _slice_adverse(verdict) else -1))
+            bench = max(0, bench + (1 if verdict == "VETO" else -1))
+        action = (_slice_action(bucket, verdict, demote, bench)
+                  if SLICE_ENABLED else "FULL")
+        verdicts[bucket] = {
+            "n": n,
+            # Enforcement basis vs replay-proxy context, side by side so the
+            # two estimands stay visible in every artifact.
+            "n_shipped": n,
+            "n_seeded": sd["n"],
+            "n_all": n + sd["n"],
+            "seed_gap": round(seed_gap, 4) if seed_gap is not None else None,
+            "seed_roi": _assay_roi(int(sd["wins"]), sd["n_priced"], sd["profit"]),
+            "verdict": verdict,
+            "grade": assay_grade(wins, n) if n else "UNGRADED",
+            "roi": roi,
+            "recent_n": st["rn"],
+            "recent_roi": recent_roi,
+            "hit": round(st["wins"] / n, 4) if n else None,
+            "wilson_lb": round(wilson_lb(wins, n), 4) if n else None,
+            "stated": round(st["stated"] / n, 4) if n else None,
+            # Calibration is evidence about stated probabilities, not a
+            # trigger: a bucket can be honest and still lose.
+            "gap": round(gap, 4) if n else None,
+            "z": round(z, 3) if z is not None else None,
+            "demote_streak": demote,
+            "bench_streak": bench,
+            "streak": demote,
+            "action": action,
+            "would_bench": (not SLICE_BENCH_ON_VETO and verdict == "VETO"
+                            and bench >= SLICE_BENCH_STREAK),
+            "rank_cap": (float(SLICE_DEMOTE_CAP[bucket])
+                          if action == "DEMOTED" and bucket in SLICE_DEMOTE_CAP
+                          else None),
+        }
+    rank_caps, bench_buckets = _slice_rank_caps(verdicts)
+    report = {
+        "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
+        "last_eval": today_text,
+        "engine": "edgefactory.assay.context_verdict_league",
+        "grade_engine": "edgefactory.assay.grade",
+        "recent_window_days": SLICE_WINDOW_DAYS,
+        "recent_from": recent_from,
+        "recent_min_n": GATES.min_recent_n,
+        "demote_streak": SLICE_DEMOTE_STREAK,
+        "bench_streak": SLICE_BENCH_STREAK,
+        "demote_on_caution": SLICE_DEMOTE_ON_CAUTION,
+        "bench_on_veto": SLICE_BENCH_ON_VETO,
+        "demote_cap": SLICE_DEMOTE_CAP,
+        "demote_shrink": SLICE_DEMOTE_SHRINK,
+        "enabled": SLICE_ENABLED,
+        "evidence_basis": "printed-slip only; seeded replay rows are context",
+        "buckets": verdicts,
+    }
+    try:
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+        state_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+    return ({"rank_caps": rank_caps,
+             "bench_buckets": tuple(sorted(bench_buckets)),
+             "enabled": SLICE_ENABLED}, verdicts)
+
+
+def _slice_table_lines(verdicts):
+    """Render the ladder's assay reading: engine columns first, calibration
+    evidence last, and the excluded replay block beside every line so what the
+    engine did NOT score stays visible."""
+    header = (f"SELECTION LADDER SLICE (assay context_verdict_league, "
+              f"recent {SLICE_WINDOW_DAYS}d, printed-slip evidence only):")
+    lines = [
+        header,
+        ("  bucket                                      n       roi    recent"
+         "      LB     grade  verdict demote bench action"),
+    ]
+    for bucket in _SLICE_BUCKET_ORDER:
+        v = verdicts[bucket]
+        roi, recent = _pct(v.get("roi")), _pct(v.get("recent_roi"))
+        gap = _pct(v.get("gap"))
+        lb = "--" if v.get("wilson_lb") is None else f"{v['wilson_lb']:.3f}"
+        seed = v.get("seed_roi")
+        seed_note = (f"  | replay ctx (excluded): n={v['n_seeded']} "
+                     f"roi={_pct(seed)} gap={_pct(v.get('seed_gap'))}"
+                     if v.get("n_seeded") and seed is not None
+                     else "  | replay ctx (excluded): none")
+        lines.append(f"  {bucket:38s} {v['n']:3d} {roi:>9s} {recent:>8s} "
+                     f"{lb:>7s} {v.get('grade', 'UNGRADED'):>8s} "
+                     f"{v['verdict']:8s} {v['demote_streak']:6d} "
+                     f"{v['bench_streak']:5d} {v['action']}"
+                     f"  [calib gap {gap}]{seed_note}")
+    if any(v.get("would_bench") for v in verdicts.values()):
+        lines.append("  NOTE: bench-on-VETO is switched off this cycle; the "
+                     "buckets above would have been benched on VETO streak.")
+    return lines
+
+
+def _slice_action_lines(verdicts):
+    lines = []
+    for bucket in _SLICE_BUCKET_ORDER:
+        v = verdicts[bucket]
+        if v["action"] == "FULL":
+            continue
+        if v["action"] == "DEMOTED":
+            detail = (f"rank cap {v['rank_cap']:.2f}"
+                      if v.get("rank_cap") is not None
+                      else f"rank shrink x{SLICE_DEMOTE_SHRINK:.2f}")
+        else:
+            detail = "door bench"
+        lines.append(
+            f"SELECTION LADDER: {bucket} {v['action'].lower()} | {detail} | "
+            f"slice streak {v['demote_streak']} | assay verdict {v['verdict']} "
+            f"(grade {v.get('grade', 'UNGRADED')}, roi {_pct(v.get('roi'))}) "
+            f"| n {v['n']}"
+        )
+    return lines
+
+
+def _slice_plan_rows(target, plan, pool_by_key, *, shadow=False):
+    rows = []
+    for acca in plan:
+        for leg in acca.get("legs", []):
+            source = pool_by_key.get(_leg_key(leg))
+            if source is None:
+                continue
+            source_row = source.get("row") or {}
+            home = str(source_row.get("home") or "")
+            away = str(source_row.get("away") or "")
+            rows.append({
+                "date": _slice_day(target),
+                "home": home, "away": away,
+                "match": f"{home} vs {away}",
+                "pick": str(leg.get("pick") or "").upper(),
+                "prob_stated": _printed_prob_value(leg.get("prob")),
+                "odds": float(leg.get("odds") or 0.0),
+                "bucket": str(source_row.get("bucket") or ""),
+                "src": "slip", "seeded": False, "shadow": bool(shadow),
+            })
+    return rows
+
+
+def _slice_shadow_rows(target, pure_plan, pool_by_key, real_keys,
+                       diminished_buckets):
+    rows = _slice_plan_rows(target, pure_plan, pool_by_key, shadow=True)
+    return [row for row in rows
+            if row["bucket"] in diminished_buckets
+            and _slice_row_key(row) not in real_keys]
+
+
+def parse_kickoff(pick):
+    """SETTLEMENT parser + dated-row comparison for the live guard. NOT a bet-time proof.
+
+    Used for settlement bookkeeping (void-age) and by the LIVE kickoff guard
+    to compare rows whose kickoff carries a full calendar date: the feeds
+    render dated kickoffs on a UTC+2 clock (== Africa/Johannesburg), and the
+    guard drops legs already started at build time. It defaults naive
+    timestamps to Africa/Johannesburg and therefore must NEVER be used as a
+    zone *proof* — a bare time-only kickoff ("22:30", the incident-#6 class)
+    has no date, and no zone may be assumed for it. Proven-instant logic
+    lives in `parse_kickoff_proven` (audit contract only)."""
+    raw = pick.get("kickoff_canonical") or pick.get("kickoff") or ""
+    day = str(pick.get("date") or "")[:10]
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
+                "%d-%m, %H:%M", "%d-%m, %H:%M:%S", "%H:%M"):
+        try:
+            if fmt in ("%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
+                year = day[:4] or "1900"
+                dt = datetime.strptime(f"{raw} {year}", f"{fmt} %Y")
+            else:
+                dt = datetime.strptime(raw, fmt)
+            if fmt == "%H:%M":
+                try:
+                    dt = dt.replace(year=int(day[:4]), month=int(day[5:7]), day=int(day[8:10]))
+                except ValueError:
+                    return None
+            elif fmt in ("%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
+                try:
+                    base = datetime.strptime(day, "%Y-%m-%d").date()
+                except ValueError:
+                    return None
+                cands = []
+                for y in (int(day[:4]) - 1, int(day[:4]), int(day[:4]) + 1):
+                    try:
+                        c = dt.replace(year=y)
+                    except ValueError:
+                        continue
+                    cands.append((abs((c.date() - base).days), c))
+                if not cands:
+                    return None
+                dt = min(cands, key=lambda t: t[0])[1]
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=TZ)
+            return dt
+        except ValueError:
+            continue
+    return None
+
+
+def kickoff_has_usable_date(pick) -> bool:
+    """Does the row's kickoff carry a usable calendar date at all?
+
+    True for a full ISO/naive date ("2026-09-06T20:15:00+02:00",
+    "2026-09-06 15:30:00"). A yearless day-month listing ("05-09, 22:30")
+    also counts as dated for parsing purposes — its region trust is decided
+    separately (see kickoff_clock_region_is_remote). False for bare clock
+    times ("22:30"), missing kickoffs and garbage.
+    """
+    raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
+    if not raw:
+        return False
+    return bool(re.match(r"^\d{4}-\d{2}-\d{2}", raw)
+                or re.match(r"^\d{1,2}-\d{1,2},\s*\d{1,2}:\d{2}", raw))
+
+
+# Clock-only kickoff rows (bare "HH:MM", yearless "DD-MM, HH:MM") carry no
+# date/zone of their own: the engine reads the clock on the slate day in
+# SAST. That reading is trustworthy only when the league's local clock is
+# close to SAST. This list is NOT a kickoff-time computation — it only
+# answers "is the SAST rendering of this clock safe to trust?" and a wrong
+# answer drops a leg that could have been bet (harmless direction), it can
+# never fabricate a wrong kickoff instant. Scope: Americas (clocks 4-11h
+# west of SAST; a bare evening clock read on the slate day is the incident
+# #6 failure, e.g. 22:30 EDT = 04:30 SAST next day) and Asia-Pacific (clocks
+# 5-9h east of SAST; a bare evening clock reads up to 9h late). Europe /
+# Africa clocks sit within ~1-2h of SAST and are trusted. The 2026-09-06
+# region audit: 8 of 47 historical bare ridden legs were in this class and
+# carry every historical near-miss (Suwon 08-07, Bolivar 08-12, Deportivo
+# Moron 08-15, Broadmeadow 08-16, Penarol 08-16, Seattle 08-20, Sporting KC
+# 08-30, Toluca 08-31 — plus Vancouver 09-06 itself).
+_REMOTE_CLOCK_REGION_HINTS = (
+    # Americas
+    "usa", "united states", "mls", "major league soccer", "canada",
+    "mexico", "liga mx", "honduras", "costa rica", "guatemala",
+    "el salvador", "panama", "nicaragua", "peru", "colombia", "ecuador",
+    "bolivia", "paraguay", "uruguay", "chile", "argentina", "brazil",
+    "venezuela", "sudamericana", "libertadores",
+    # Asia-Pacific
+    "japan", "j-league", "south korea", "korea", "k-league", "china",
+    "australia", "new zealand", "thailand", "vietnam", "indonesia",
+    "malaysia", "philippines", "singapore", "india", "hong kong", "taiwan",
+)
+
+
+def kickoff_clock_region_is_remote(pick) -> bool:
+    """Is this row's league region one whose local clock is far from SAST?
+
+    Boolean only — it never computes or infers a kickoff time. Region text
+    comes from the row's own league fields (league / league_raw /
+    odds_league, incl. ctx). International cup strings (Champions League,
+    friendlies, ...) without a region signal return False (kept; their bare
+    clocks have only ~1-2h class error and the audit command lists every
+    kept clock-only row for review).
+    """
+    vals = [pick.get("league"), pick.get("league_raw"), pick.get("odds_league")]
+    ctx = pick.get("ctx") or {}
+    vals += [ctx.get("league"), ctx.get("league_raw")]
+    text = " ".join(str(v or "") for v in vals).lower()
+    return any(hint in text for hint in _REMOTE_CLOCK_REGION_HINTS)
+
+
+def _kickoff_is_clock_only(raw: str) -> bool:
+    """bare 'HH:MM' or yearless day-month 'DD-MM, HH:MM' — no year, no zone."""
+    return bool(re.match(r"^\d{1,2}:\d{2}(:\d{2})?$", raw)
+                or re.match(r"^\d{1,2}-\d{1,2},\s*\d{1,2}:\d{2}", raw))
+
+
+_ZONED_ISO_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})$"
+)
+
+
+def _zoned_instant_utc(value) -> datetime | None:
+    """UTC datetime from an EXPLICIT zone-bearing ISO string (offset or Z).
+
+    None for anything naive or unparseable — a naive rendering names no zone,
+    and defaulting one to Africa/Johannesburg is the incident-#6 fault class.
+    """
+    raw = str(value or "").strip()
+    if not raw or not _ZONED_ISO_RE.match(raw):
+        return None
+    text = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    # tolerate "+0200" (no colon) if a source ever emits it
+    text = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", text)
+    if "+" not in text and "-" not in text[10:]:
+        return None
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        return None
+    return dt.astimezone(_UTC)
+
+
+def kickoff_utc_from_archived_row(row) -> tuple[str | None, str | None]:
+    """Reconstruct what ingest normalisation WOULD have emitted for an
+    ARCHIVED row (replay/audit only — picks_today.py emits the real fields
+    live). Returns ``(kickoff_utc_iso, source)`` or ``(None, None)``.
+
+    Two and only two archive-preserved witnesses are accepted:
+      - the row's own kickoff string is a zoned ISO instant
+        (source "offset_passthrough"); or
+      - the row's price came from the scoutingstats feed and its
+        odds_captured_at is a zoned ISO instant. The scoutingstats odds
+        adapter has NO capture timestamp: it stores the fixture's starting_at
+        kickoff string INTO captured_at (picks_today._scoutingstats_rows_to_odds
+        sets captured_at = row kickoff), so for this one provider the archived
+        odds_captured_at IS the odds row's kickoff — the same string ingest
+        normalisation sees in data["scoutingstats"] at fetch time (source
+        "derived_odds_row").
+
+    Anything else is NOT resolved here: bzzoiro / betexplorer / theoddsapi
+    odds_captured_at values are true capture timestamps (never kickoffs), and
+    sibling prediction rows (vitibet "+02:00", bzzoiro event_date) are not
+    archived — their witness existed only in the fetch-time data dict, so the
+    live normalisation rescues those legs but history cannot replay them.
+    """
+    raw = str(row.get("kickoff_canonical") or row.get("kickoff") or "").strip()
+    if raw:
+        dt = _zoned_instant_utc(raw)
+        if dt is not None:
+            return dt.isoformat(), "offset_passthrough"
+    if str(row.get("odds_source") or "") == "scoutingstats_odds":
+        captured = str(row.get("odds_captured_at") or "").strip()
+        if captured:
+            dt = _zoned_instant_utc(captured)
+            if dt is not None:
+                return dt.isoformat(), "derived_odds_row"
+    return None, None
+
+
+def freeze_floor(target: str, now) -> datetime | None:
+    """The first instant a card for ``target`` can be a PLACED bet — or None.
+
+    A card is only final at FREEZE_HOUR on its own date, so a fixture that
+    kicks off before that instant can never be part of a bet the operator was
+    able to place: by the time the card stopped changing, the match was over or
+    under way. The 2026-10-26 enhancement card proved the cost — drafted at
+    00:00 SAST, both legs finished by 06:42, and the settlement booked a bet
+    that the operator never placed (his confirmation: "i only placed main
+    accas, i did not place enh").
+
+    Returns the floor only while the build itself still runs BEFORE it; once
+    the freeze hour has passed the card is final and the ordinary "already
+    started" rule is the right instrument. None for a historical/replayed date.
+    """
+    if not 0 <= FREEZE_HOUR <= 23:
+        return None            # an unreachable freeze hour defines no floor
+    local = now.astimezone(TZ)
+    if str(target) != local.strftime("%Y-%m-%d"):
+        return None
+    floor = datetime.strptime(str(target), "%Y-%m-%d").replace(
+        tzinfo=TZ, hour=FREEZE_HOUR)
+    return floor if local < floor else None
+
+
+def live_kickoff_guard(pool, now, freeze_floor_at=None):
+    """The LIVE kickoff guard (incident #6 fix; region-narrowed after the
+    2026-09-06 round-2 audit, then keyed to ingest normalisation in Task A).
+
+    0a. When the build still runs before the target date's FREEZE_HOUR, a row
+       whose kickoff precedes that floor drops: the card was not final yet at
+       kickoff, so no placement was possible (see ``freeze_floor``).
+
+    0. A row carrying a resolved ``kickoff_utc`` (emitted by picks_today's
+       ingest normalisation from an explicit zone-bearing witness) is judged
+       ONLY on that absolute instant: already at/past build time -> drop as
+       started; still ahead -> ride. No region guess is needed for it.
+    Then, for rows normalisation could NOT resolve:
+    1. Drops legs with a missing/garbage kickoff.
+    2. Drops CLOCK-ONLY kickoffs (bare "HH:MM", yearless "DD-MM, HH:MM")
+       whose league region's clock is far from SAST (Americas / Asia-
+       Pacific): a bare "22:30" MLS clock read on the slate day is the
+       Vancouver incident class. Clock-only rows from Europe/Africa ride
+       (their clocks are within ~1-2h of SAST).
+    3. Drops dated legs already at/past build time (dated rows compared on
+       the feeds' UTC+2 rendering via parse_kickoff).
+
+    Returns ``(kept_legs, drops)`` where drops maps reason -> fixture names.
+    The region list NEVER computes a kickoff — a mis-hit drops a bettable
+    leg (harmless), it cannot fabricate a wrong time. This is deliberately
+    NOT the fail-closed proof standard — that lives in ``kickoff_contract``
+    as the off-by-default audit instrument.
+    """
+    drops: dict[str, list[str]] = {}
+    rideable, kept = [], []
+    for leg in pool:
+        pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        ku = _zoned_instant_utc(pick.get("kickoff_utc"))
+        if ku is not None:
+            if freeze_floor_at is not None and ku < freeze_floor_at.astimezone(_UTC):
+                drops.setdefault(KO_SKIP_PRE_FREEZE, []).append(leg["match"])
+            elif ku.astimezone(TZ) < now.astimezone(TZ):
+                drops.setdefault(KO_SKIP_STARTED, []).append(leg["match"])
+            else:
+                kept.append(leg)
+            continue
+        raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
+        if not raw or (not kickoff_has_usable_date(pick) and not _kickoff_is_clock_only(raw)):
+            drops.setdefault(KO_SKIP_NO_DATE, []).append(leg["match"])
+            continue
+        if _kickoff_is_clock_only(raw) and kickoff_clock_region_is_remote(pick):
+            drops.setdefault(KO_SKIP_REMOTE_CLOCK, []).append(leg["match"])
+            continue
+        rideable.append(leg)
+    started = []
+    for leg in rideable:
+        pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        kt = parse_kickoff(pick)
+        if kt is not None and freeze_floor_at is not None and kt < freeze_floor_at:
+            drops.setdefault(KO_SKIP_PRE_FREEZE, []).append(leg["match"])
+        elif kt is not None and kt.astimezone(TZ) < now.astimezone(TZ):
+            started.append(leg)
+        else:
+            kept.append(leg)
+    if started:
+        drops[KO_SKIP_STARTED] = [l["match"] for l in started]
+    return kept, drops
+
+
+def parse_kickoff_proven(pick) -> datetime | None:
+    """A kickoff PROVEN by the row itself, as UTC — or None. Never infers.
+
+    Accepts, in order:
+      - ``pick["kickoff_utc"]`` — an absolute instant that ingest
+        normalisation emitted from an explicit zone-bearing witness
+        (the pick's own offset/Z string, or a same-fixture source row that
+        declared one; provenance is recorded in ``kickoff_source`` /
+        ``kickoff_witness``, so the proof is reproducible from the row);
+      - an ISO instant with an explicit offset or Z in the kickoff itself
+        ("2026-09-06T20:15:00+02:00" is 20:15 SAST; "…T02:30:00Z" is
+        02:30 UTC); or
+      - a naive datetime that ALSO names a timezone as data in the row
+        (`pick["kickoff_tz"]`, an IANA zone such as "America/Vancouver").
+
+    Naive timestamps without an explicit zone return None: the source's zone
+    is not known, and the old default of stamping Africa/Johannesburg is
+    precisely the fault that let a 04:30 SAST kickoff look like 22:30 SAST.
+    A zone that belongs to a stadium/league belongs in the data — never in a
+    hand-maintained league-substring table. `parse_kickoff` (SAST-defaulting)
+    exists for settlement bookkeeping only and is unusable for this proof.
+    """
+    ku = str(pick.get("kickoff_utc") or "").strip()
+    if ku:
+        dt = _zoned_instant_utc(ku)
+        if dt is not None:
+            return dt
+    raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
+    if not raw:
+        return None
+    text = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        # Naive. Provable only when (a) the string names a full calendar date
+        # and (b) the row carries its own timezone. No assumptions otherwise.
+        if not re.match(r"^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}", text):
+            return None
+        zname = str(pick.get("kickoff_tz") or "").strip()
+        if not zname:
+            return None
+        try:
+            dt = dt.replace(tzinfo=ZoneInfo(zname))
+        except Exception:
+            return None
+    return dt.astimezone(_UTC)
+
+
+def kickoff_contract(pool, build_at, *, min_lead_hours=None):
+    """AUDIT-ONLY fail-closed kickoff standard (incident #6); NOT the live rule.
+
+    Used by ``replay_harness.py --kickoff-contract`` to measure how much of
+    history could NOT prove its kickoffs (the data-side fix's size). A leg
+    rides only if its kickoff can be PROVEN (an absolute instant
+    carried by the row) to be at least ``min_lead_hours`` (default
+    KICKOFF_MIN_LEAD_HOURS) after ``build_at``. Cannot prove it -> the leg is
+    dropped and counted, with up to three fixture names per reason.
+
+    Returns ``(kept_legs, census)`` where census maps reason -> fixture list.
+    No league dict, no substring lookup, no defaulted timezone anywhere.
+    The LIVE path uses ``live_kickoff_guard`` instead — deliberately weaker
+    in exactly the way the 2026-09-06 review demanded (dated rows ride on
+    the feeds' UTC+2 rendering; only undatable and already-started legs
+    drop).
+    """
+    min_lead = KICKOFF_MIN_LEAD_HOURS if min_lead_hours is None else float(min_lead_hours)
+    build_utc = build_at.astimezone(_UTC)
+    kept, dropped = [], {}
+    for leg in pool:
+        pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        kt = parse_kickoff_proven(pick)
+        if kt is None:
+            dropped.setdefault(KO_SKIP_UNPROVEN, []).append(leg["match"])
+            continue
+        lead_h = (kt - build_utc).total_seconds() / 3600.0
+        if lead_h < min_lead:
+            dropped.setdefault(KO_SKIP_TOO_CLOSE, []).append(
+                f"{leg['match']} (proven {kt.astimezone(TZ).strftime('%Y-%m-%d %H:%M %Z')})")
+            continue
+        kept.append(leg)
+    return kept, dropped
+
+
+def canonical_build_instant(day: str) -> datetime:
+    """The archive's canonical bet-build instant for a date: FREEZE_HOUR:00
+    SAST — the ~09:0x cron freeze run that produced each day's final slip.
+    History is evaluated at ONE well-defined instant (parity snapshot and
+    strict-contract replays), never at cron jitter.
+    """
+    base = datetime.strptime(str(day)[:10], "%Y-%m-%d")
+    return base.replace(hour=FREEZE_HOUR, minute=0, second=0, microsecond=0, tzinfo=TZ)
+
+
+def format_skip_census(total_in, kept, census, *, title="KICKOFF GUARD") -> list[str]:
+    """One printed block per run: how many legs were dropped from the build
+    pool, and why (the live guard's skip census; the audit contract passes
+    its own title)."""
+    n_dropped = sum(len(v) for v in census.values())
+    out = [f"{title} — {kept}/{total_in} qualifying legs kept; "
+           f"{n_dropped} dropped:"]
+    for reason in sorted(census):
+        names = census[reason]
+        more = f" (+{len(names) - 3} more)" if len(names) > 3 else ""
+        shown = ", ".join(names[:3])
+        out.append(f"  • {len(names)} {reason.lower()}: {shown}{more}")
+    if not census:
+        out.append("  • none — every qualifying leg carries a provable kickoff.")
+    return out
+
+
+def leg_price_disclosure(leg) -> str:
+    """What kind of price this leg is printing, in the operator's words.
+
+    A named-book quote says so. An average-book aggregate and a model fair
+    price both say explicitly that they are NOT a named-book execution quote,
+    because that is the single most dangerous thing a ticket could imply.
+    """
+    row = leg.get("row") or {}
+    stated = str(row.get("price_disclosure") or "").strip()
+    if stated:
+        return stated
+    return psrc.donor_disclosure(row.get("odds_source"), row.get("bookmaker"))
+
+
+def _fixture_selection_key(obj: dict) -> tuple[str, str]:
+    """Stable identity shared by slate rows, playable legs and plan legs."""
+    match = str(obj.get("match") or "").strip()
+    if not match:
+        match = f"{obj.get('home')} vs {obj.get('away')}"
+    selection = str(obj.get("pick") or obj.get("selection") or "").upper()
+    return match, selection
+
+
+def execution_source_rejection(source_name) -> tuple[str, str] | None:
+    """One existing source policy for both live ticket lanes; no new registry."""
+    source_name = str(source_name or "").strip()
+    if not psrc.resolvable(source_name):
+        return "price_source_unregistered", f"odds_source={source_name or 'missing'}"
+    if not psrc.spec(source_name).can_execute():
+        return "price_source_not_execution_eligible", f"odds_source={source_name}"
+    return None
+
+
+def playable_leg_rejection(
+    row: dict,
+    *,
+    day: str | None = None,
+    floor: float | None = None,
+    execution_safe: bool = False,
+) -> tuple[str, str] | None:
+    """Return the first live candidate-gate rejection as a machine code.
+
+    This is the single source of truth used by both :func:`playable_legs` and
+    the operator rejection ledger.  Keeping the predicate and its explanation
+    together prevents a safeguard from silently dropping a leg while the
+    diagnostic claims a different reason.
+    """
+    floor = MIN_LEG_ODDS if floor is None else floor
+    row_day = str(row.get("date") or row.get("_archive_day") or "")[:10]
+    if day is not None and row_day != day:
+        return "date_mismatch", f"candidate date {row_day or 'missing'} != {day}"
+    bucket = str(row.get("bucket") or "")
+    if bucket not in BUCKETS:
+        return "bucket_veto", f"bucket {bucket or 'missing'} is not ticket-eligible"
+    quarantine = str(
+        row.get("price_quarantine_reason") or row.get("quarantine") or "none"
+    ).strip().lower()
+    if quarantine in BAD_QUARANTINE and not row.get("odds_replaced"):
+        return "price_quarantine", f"quarantine={quarantine}"
+    if (str(row.get("price_evidence") or "").upper() == "SUSPECT_ALIAS_FUZZY"
+            and not row.get("odds_replaced")):
+        return "price_quarantine", "price_evidence=SUSPECT_ALIAS_FUZZY"
+    if execution_safe:
+        source_name = str(row.get("odds_source") or "").strip()
+        source_rejection = execution_source_rejection(source_name)
+        if source_rejection is not None:
+            return source_rejection
+        if row.get("price_push_eligible") is False:
+            return "price_push_ineligible", "price_push_eligible=false"
+        if psrc.require_corroboration():
+            sufficient = row.get("price_corroboration_sufficient")
+            if sufficient is None:
+                sufficient = row.get("price_corroborated") is not False
+            if not sufficient:
+                return "corroboration_required", "independent price corroboration is insufficient"
+    market = str(row.get("market") or "1x2").lower()
+    if market != "1x2":
+        return "market_not_ticket_eligible", f"market={market or 'missing'}"
+    selection = str(row.get("pick") or "").lower()
+    if selection in ("over", "under", "yes", "no"):
+        return "selection_not_ticket_eligible", f"selection={selection}"
+    probability = pick_probability_pct(row)
+    if probability is None or probability == 0:
+        return "missing_probability", "avg_p is unavailable, invalid or zero"
+    try:
+        odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
+    except (TypeError, ValueError):
+        odds = 0.0
+    if not math.isfinite(odds) or odds <= 1.0:
+        return "invalid_odds", f"decimal_odds={row.get('odds')!r}"
+    if odds < floor:
+        return "min_odds_floor", f"decimal_odds={odds:.2f} < floor={floor:.2f}"
+    return None
+
+
+def build_rejection_ledger(
+    rows: list[dict],
+    *,
+    day: str | None,
+    selected=(),
+    floor: float | None = None,
+    staged: dict[tuple[str, str], tuple[str, str]] | None = None,
+    default_rule: tuple[str, str] = (
+        "stake_ladder_not_selected",
+        "candidate cleared earlier gates but was not selected for an executable acca",
+    ),
+) -> list[dict]:
+    """Explain every push-eligible candidate absent from the printed slip.
+
+    One JSON object is emitted per rejected leg.  ``staged`` carries decisions
+    made after the row-level price gate (kickoff, tripwire and slice policy);
+    ``default_rule`` names the branch-level terminal decision (for example a
+    write-once supersede lock or the stake ladder's minimum-leg rule).
+    """
+    selected_keys = {_fixture_selection_key(obj) for obj in selected}
+    staged = staged or {}
+    ledger: list[dict] = []
+    for row in rows:
+        row_day = str(row.get("date") or row.get("_archive_day") or "")[:10]
+        if day is not None and row_day != day:
+            continue
+        if row.get("price_push_eligible") is not True:
+            continue
+        key = _fixture_selection_key(row)
+        if key in selected_keys:
+            continue
+        reason = playable_leg_rejection(row, day=day, floor=floor, execution_safe=True)
+        if reason is None:
+            reason = staged.get(key, default_rule)
+        try:
+            odds = float(row.get("odds"))
+        except (TypeError, ValueError):
+            odds = None
+        ledger.append({
+            "fixture": key[0],
+            "selection": key[1],
+            "odds": odds,
+            "rule": reason[0],
+            "detail": reason[1],
+        })
+    ledger.sort(key=lambda item: (item["fixture"], item["selection"]))
+    return ledger
+
+
+def _shadow_selected_info(accas, *, target: str) -> dict:
+    """Selected-leg lookup for the shadow ledger, keyed like plan legs."""
+    info: dict = {}
+    for acca_index, acca in enumerate(accas or [], 1):
+        for leg_index, leg in enumerate(acca.get("legs", [])):
+            info[_fixture_selection_key(leg)] = {
+                "acca_id": f"{target}:acca{acca_index}",
+                "acca_leg_index": leg_index,
+                "stake_pct_of_capital": acca.get("stake_pct"),
+                "price_used_if_selected": leg.get("odds"),
+            }
+    return info
+
+
+def _shadow_record_scored(target: str, slate: list[dict]):
+    """AUDIT-ONLY: persist every scored slate candidate BEFORE selection.
+
+    Returns a run handle ({'run_id': ...}) or None. Must never raise and
+    must never change the pool, the plan, or any printed output.
+    """
+    if scs is None:
+        return None
+    try:
+        return scs.record_ticket_build(day=target, slate_rows=slate,
+                                       root=LOCALDATA)
+    except Exception as exc:  # noqa: BLE001 - audit must never break tickets
+        print(f"shadow ledger scored write failed (audit-only; tickets "
+              f"unchanged): {exc}", file=sys.stderr)
+        return None
+
+
+def _shadow_record_outcome(run, target: str, slate: list[dict], *,
+                           selected=None, staged=None,
+                           default_rule: tuple[str, str],
+                           final_status: str, bank_pct=None) -> None:
+    """AUDIT-ONLY: append final selected/rejected status for every scored
+    slate candidate after selection completed. Reasons are derived from the
+    live gate predicate (playable_leg_rejection), the staged policy
+    decisions and the branch-level terminal rule — never invented."""
+    if scs is None:
+        return
+    try:
+        run_id = (run or {}).get("run_id") or scs.new_run_id("ticket_build")
+        rows = scs.build_ticket_status_rows(
+            slate, day=target,
+            selected=selected, staged=staged, default_rule=default_rule,
+            gate=lambda row: playable_leg_rejection(
+                row, day=target, execution_safe=True),
+            key_of=_fixture_selection_key,
+            final_ticket_status=final_status,
+            bank_pct=bank_pct,
+        )
+        scs.record_ticket_outcome(day=target, run_id=run_id,
+                                  status_rows=rows,
+                                  final_ticket_status=final_status,
+                                  root=LOCALDATA, bank_pct=bank_pct)
+    except Exception as exc:  # noqa: BLE001 - audit must never break tickets
+        print(f"shadow ledger status write failed (audit-only; tickets "
+              f"unchanged): {exc}", file=sys.stderr)
+
+
+def _rejection_ledger_lines(ledger: list[dict] | None) -> list[str]:
+    return [
+        "REJECTION LEDGER:",
+        *([f"  {json.dumps(item, sort_keys=True)}" for item in (ledger or [])]
+          or ["  []"]),
+    ]
+
+
+def price_supply_report(
+    rows,
+    day=None,
+    qualifying=None,
+    *,
+    rejection_ledger: list[dict] | None = None,
+) -> list[str]:
+    """Why a day produced no ticket: "no odds" vs "odds rejected by policy".
+
+    The old abstention message said only how many qualifying legs survived,
+    so a day with 22 donor-priced candidates and a policy rejection looked
+    exactly like a day with no prices at all. This block separates price
+    SUPPLY from price POLICY.
+    """
+    named = average = fair = priced = execution_safe_n = 0
+    for row in rows:
+        if day is not None and str(row.get("date") or row.get("_archive_day") or "")[:10] != day:
+            continue
+        try:
+            odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
+        except (TypeError, ValueError):
+            odds = 0.0
+        if odds <= 1.0:
+            continue
+        priced += 1
+        kind = str(row.get("price_odds_kind")
+                   or psrc.spec(row.get("odds_source")).odds_kind or "")
+        if kind == psrc.ODDS_KIND_BOOKMAKER:
+            named += 1
+        elif kind == psrc.ODDS_KIND_PROVIDER_AVERAGE:
+            average += 1
+        elif kind == psrc.ODDS_KIND_FAIR:
+            fair += 1
+        source_name = str(row.get("odds_source") or "").strip()
+        if (row.get("price_push_eligible") is not False
+                and psrc.known(source_name)
+                and psrc.spec(source_name).can_execute()):
+            execution_safe_n += 1
+    qualifying = len(rows) if qualifying is None else qualifying
+    return [
+        "PRICE SUPPLY:",
+        f"  named-book execution prices: {named}",
+        f"  average-bookmaker donor prices: {average}",
+        f"  fair-price donor prices: {fair}",
+        f"  total donor-priced candidates: {priced}",
+        f"  execution-safe candidates: {execution_safe_n}",
+        f"  qualifying legs: {qualifying}",
+        f"  required legs: {LEGS_PER_ACCA}",
+        "  " + psrc.policy_line(),
+    ] + _donor_supply_lines(day) + _rejection_ledger_lines(rejection_ledger)
+
+
+def _donor_supply_lines(day: str | None) -> list[str]:
+    """Show capture/scored/matched donor counts on every ticket day.
+
+    The pick build persists the source-health contract before auto-tickets
+    runs. Reading that receipt here keeps the card diagnostic truthful even
+    when the donor captured many rows that joined zero fixtures.
+    """
+    if not day:
+        return []
+    path = dated_artifact_path(LOCALDATA, f"source_health_{str(day)[:10]}.json")
+    try:
+        payload = json.loads(path.read_text())
+        sources = payload.get("sources", {})
+    except (OSError, ValueError, TypeError):
+        return ["  donor capture/match counters: source-health receipt unavailable"]
+    lines = ["  donor capture/match counters:"]
+    counters = (
+        ("betbetter", "bb_raw", "bb_scored", "bb_matched"),
+        ("boggio", "bg_raw", "bg_scored", "bg_matched"),
+        ("betminer", "bm_raw", "bm_scored", "bm_matched"),
+        ("pinnapi_odds", "pa_raw", "pa_matched", "pa_matched"),
+        ("sharpapi_odds", "sa_raw", "sa_matched", "sa_matched"),
+    )
+    for name, raw, scored, matched in counters:
+        row = sources.get(name) or {}
+        lines.append(
+            f"    {name}: captured={int(row.get(raw) or 0)} "
+            f"scored={int(row.get(scored) or 0)} "
+            f"matched={int(row.get(matched) or 0)}"
+        )
+    return lines
+
+
+def load_archived_picks():
+    out = []
+    for f in dated_artifact_files(LOCALDATA, "picks_*.json"):
+        m = PICK_RE.match(f.name)
+        if not m:
+            continue
+        try:
+            rows = json.loads(f.read_text())
+        except Exception:
+            continue
+        if isinstance(rows, list):
+            for r in rows:
+                r.setdefault("_archive_day", m.group(1))
+            out.extend(rows)
+    return out
+
+
+# Settled-donor priority order — mirrors audit_recent_picks.load_results_index.
+# BetExplorer is the widest-league donor (lowest priority): it fills fixtures
+# the probability sources never captured, but loses to them on a conflict.
+_SETTLED_SOURCES = [
+    (1, "forebet_settled"),
+    (2, "bettingclosed_settled"),
+    (3, "zulubet_settled"),
+    (4, "statarea_settled"),
+    (5, "scoutingstats_settled"),
+    (6, "vitibet_settled"),
+    (7, "betexplorer_settled"),
+]
+
+
+class _SettledOutcomes(Mapping):
+    """Read-only facts for one invocation, indexed without changing tie order.
+
+    Keep entries/scores with their outcome map so settlement consumers share
+    ONE donor build and the same ambiguity/identity decisions. No cross-run
+    cache: a later invocation must observe newly landed results.
+    """
+
+    def __init__(self, outcomes, entries, scores, period_blocks=()):
+        self._outcomes = outcomes
+        self.entries = entries
+        self.scores = scores
+        self.period_blocks = list(period_blocks)
+        self._by_date = {}
+        for position, (key, outcome) in enumerate(outcomes.items()):
+            self._by_date.setdefault(key[0], []).append((position, key, outcome))
+
+    def __getitem__(self, key):
+        return self._outcomes[key]
+
+    def __iter__(self):
+        return iter(self._outcomes)
+
+    def __len__(self):
+        return len(self._outcomes)
+
+    def items(self):
+        return self._outcomes.items()
+
+    def items_for_dates(self, days):
+        # Merge by ORIGINAL insertion position, not date. Equal fuzzy scores
+        # must keep the same winner as the old full-map scan.
+        buckets = (self._by_date[d] for d in days if d in self._by_date)
+        for _, key, outcome in merge(*buckets, key=lambda row: row[0]):
+            yield key, outcome
+
+
+def _build_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
+    """(key_to_outcome, entries_by_date, scores_by_key) from the same donors.
+
+    Uncached scan; callers go through `_collect_settled_facts`, which rebuilds
+    this only when an input's content identity changed.
+
+    key_to_outcome is the exact-lookup map (warehouse wins on conflict, then
+    overlay fills gaps). entries_by_date keeps the FULL home/away names per
+    date so alias-conflict detection can see every spelling of a fixture.
+    scores_by_key carries the (hs, gs) behind those outcomes on exactly the
+    keys that survive the ambiguity guard, for legs whose outcome is decided
+    by the SCORE and not by the 1x2 verdict (the enhancement lane's markets).
+    """
+    from edgefactory.util import norm_team
+
+    started = time.perf_counter()
+    print("settlement_facts status=building", file=sys.stderr, flush=True)
+    key_to: dict = {}
+    entries: dict[str, list[dict]] = {}
+    scores: dict = {}
+    EMPTY_KEY_TIERS_DROPPED.clear()
+    EMPTY_KEY_FIXTURES.clear()
+    from edgefactory.settlement import (warehouse_regulation_rows, filter_regulation_rows,
+                                        regulation_fixture_key)
+    donors, period_holds = [], []
+    localdata = Path(root) / "localdata" if root is not None else LOCALDATA
+    wh = localdata / "warehouse.duckdb"
+    if wh.exists():
+        con = None
+        try:
+            import duckdb
+            con = duckdb.connect(str(wh), read_only=True)
+            donors, period_holds = warehouse_regulation_rows(con)
+        except Exception as exc:
+            print(f"settlement_regulation_read_warning={type(exc).__name__}", file=sys.stderr)
+        finally:
+            if con is not None:
+                con.close()
+    try:
+        data = json.loads((localdata / "settled_results.json").read_text())
+        donors.extend(r for r in data.get("rows", []) if isinstance(r, dict))
+        from edgefactory.settlement import load_period_holds
+        period_holds.extend(load_period_holds(localdata / "settled_results.json"))
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
+    donors, period_holds = filter_regulation_rows(donors, period_holds)
+    for r in donors:
+        d = str(r["date"])[:10]
+        home, away = r.get("home"), r.get("away")
+        for hk, ak in _result_write_keys(home, away):
+            key_to.setdefault((d, hk, ak), r["outcome"])
+            scores.setdefault((d, hk, ak), (r["hs"], r["gs"]))
+        entries.setdefault(d, []).append({"home": str(home), "away": str(away), "outcome": r["outcome"]})
+    # A period hold can only be resolved by a donor on its own date. Avoid
+    # deriving regulation identities for years of unrelated settled fixtures.
+    hold_dates = {str(r.get("date") or "")[:10] for r in period_holds}
+    resolved_periods = {regulation_fixture_key(r) for r in donors
+                        if str(r.get("date") or "")[:10] in hold_dates}
+    period_blocks = [r for r in period_holds if regulation_fixture_key(r) not in resolved_periods]
+    # Operator-verified scores outrank every donor and the overlay. Overwrite
+    # the verified key AND every key written by an alias-matching donor before
+    # purging those entries from the alias scan. Purging entries alone is not
+    # enough: an alternate spelling may have populated a distinct exact key
+    # in key_to, which pick_result consults before the alias-conflict scan.
+    from edgefactory.settlement import load_verified_results
+    verified = (load_verified_results(Path(root) / "Config" / "verified_results.json")
+                if root is not None else load_verified_results())
+    for v in verified:
+        d = v["date"]
+        period_blocks = [r for r in period_blocks if not (r["date"] == d
+                         and _same_club_names(r["home"], v["home"])
+                         and _same_club_names(r["away"], v["away"]))]
+        alias_entries = _alias_candidate_entries(
+            {"date": d, "home": v["home"], "away": v["away"]}, entries
+        )
+        for donor in alias_entries:
+            for hkey, akey in _result_write_keys(donor.get("home"), donor.get("away")):
+                key_to[(d, hkey, akey)] = v["outcome"]
+                scores[(d, hkey, akey)] = (v["hs"], v["gs"])
+        for h9, a9 in _result_write_keys(v["home"], v["away"]):
+            key_to[(d, h9, a9)] = v["outcome"]
+            scores[(d, h9, a9)] = (v["hs"], v["gs"])
+        alias_ids = {id(e) for e in alias_entries}
+        entries[d] = [e for e in entries.get(d, []) if id(e) not in alias_ids]
+        entries.setdefault(d, []).append(
+            {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
+        )
+    dropped, detail = _drop_ambiguous_result_keys(key_to, entries)
+    # A score may only be read on a key the outcome map itself still trusts:
+    # an ambiguous key was refused outright, and a refused key must never
+    # answer a market either.
+    scores = {k: v for k, v in scores.items() if k in key_to}
+    SETTLED_KEY_NAMES.clear()
+    for day, rows in entries.items():
+        for e in rows:
+            hn, an = str(e.get("home") or ""), str(e.get("away") or "")
+            for hk, ak in _result_write_keys(hn, an):
+                SETTLED_KEY_NAMES.setdefault((day, hk, ak), set()).add((hn, an))
+    AMBIGUOUS_SETTLEMENT_KEYS.clear()
+    AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
+    # Operator-visible counter: these legs can NEVER settle automatically,
+    # so they must not accumulate silently as "pending forever".
+    #
+    # The counter deliberately reports only the keys that leave a leg
+    # stranded, not every key the guard refused. A truncated key dropped
+    # in favour of a full-width key that settles the same fixture is a
+    # repair; counting it here would make a fix look like a regression
+    # and bury the handful of cases that really do need an operator.
+    _report_ambiguous_settlement(len(AMBIGUOUS_PENDING_KEYS),
+                                 AMBIGUOUS_PENDING_KEYS)
+    print(f"settlement_empty_key_dropped={len(EMPTY_KEY_TIERS_DROPPED)}",
+          file=sys.stderr)
+    if EMPTY_KEY_FIXTURES:
+        print(f"settlement_nameless_fixture={len(EMPTY_KEY_FIXTURES)}",
+              file=sys.stderr)
+    outcomes = _SettledOutcomes(key_to, entries, scores, period_blocks)
+    print(f"settlement_regulation_period_holds={len(period_blocks)}", file=sys.stderr)
+    print(f"settlement_facts status=ready keys={len(outcomes)} dates={len(entries)} "
+          f"seconds={time.perf_counter() - started:.1f}", file=sys.stderr, flush=True)
+    return outcomes, entries, scores
+
+
+# Keys that covered two different real fixtures in the last load; kept for
+# the report/summary so an operator can resolve them.
+AMBIGUOUS_SETTLEMENT_KEYS: list = []
+_AMBIGUOUS_DETAIL_PRINTED = False
+
+
+def _same_club_names(a: str, b: str) -> bool:
+    """Deterministic 'these two spellings are one club' test.
+
+    Mirrors the collapse-side link test (curated aliases, the width-24
+    source key, curated abbreviation expansion, structural containment).
+    No similarity scoring: "Blackburn Rovers"/"Blackburn" link,
+    "Manchester City"/"Manchester United" do not.
+    """
+    from edgefactory.entities import canonical_team
+    from edgefactory.identity import source_team_key
+    from edgefactory.util import (MIN_IDENTITY_KEY_LEN, expand_team_token,
+                                  fold_ascii, markers_conflict,
+                                  strip_squad_markers)
+
+    if fold_ascii(a) == fold_ascii(b):
+        return True
+    # a youth/reserve/women's squad is never the same entity as its senior
+    # side, however much of the name they share
+    if markers_conflict(a, b):
+        return False
+    if canonical_team(a) == canonical_team(b):
+        return True
+    sa, sb = source_team_key(a), source_team_key(b)
+    if sa and sa == sb and len(sa) >= MIN_IDENTITY_KEY_LEN:
+        return True
+    ta = {
+        expand_team_token(t)
+        for t in re.findall(r"[a-z0-9]+", fold_ascii(strip_squad_markers(a)))
+    }
+    tb = {
+        expand_team_token(t)
+        for t in re.findall(r"[a-z0-9]+", fold_ascii(strip_squad_markers(b)))
+    }
+    ta.discard("")
+    tb.discard("")
+    if not ta or not tb:
+        return False
+    # structural containment: one name is the other plus descriptors
+    if ta <= tb or tb <= ta:
+        return True
+    # one abbreviated word, everything else identical at full length
+    return _abbreviated_token_link(ta, tb)
+
+
+# An abbreviation must keep at least this many characters before it may be
+# paired with a longer token. One-letter stubs ("A" vs "Arsenal") carry no
+# evidence and would link half the catalogue.
+_MIN_ABBREVIATION_LEN = 2
+
+
+def _abbreviated_token_link(ta: set[str], tb: set[str]) -> bool:
+    """One name writes a word in full, the other abbreviates it.
+
+    Result feeds truncate the final word of long club names to fit a
+    column: "Accrington St" for "Accrington Stanley", "Nottingham For"
+    for "Nottingham Forest". Those are one club, but every token test
+    above declares them different because the words are not equal.
+
+    The rule is deliberately narrow and carries no notion of similarity,
+    distance or score, so it cannot be tuned into fuzzy matching:
+
+    * at least one token must be shared and equal at FULL length, so the
+      names already agree on their substantive part;
+    * the leftover tokens must pair ONE-TO-ONE, each pair being a strict
+      prefix relation (one token is the opening of the other, and they
+      are not equal);
+    * an abbreviation must retain two or more characters.
+
+    What it links: Accrington St/Stanley, Nottingham For/Forest.
+    What it refuses, by construction rather than by tuning: Manchester
+    City/Utd and Adelaide City/Cobras (neither leftover opens the
+    other), Juventud Unida SL/Univ. and Ferroviario Nacala/Nampula
+    (same: "sl" does not open "univ", "nacala" does not open "nampula").
+    """
+    shared = ta & tb
+    if not shared:
+        return False                       # nothing agrees at full length
+    rest_a, rest_b = sorted(ta - shared), sorted(tb - shared)
+    if not rest_a or not rest_b or len(rest_a) != len(rest_b):
+        return False                       # no one-to-one pairing possible
+    taken: set[str] = set()
+    for short in rest_a:
+        matches = [
+            other for other in rest_b
+            if other not in taken
+            and min(len(short), len(other)) >= _MIN_ABBREVIATION_LEN
+            and short != other
+            and (other.startswith(short) or short.startswith(other))
+        ]
+        if len(matches) != 1:
+            return False                   # unmatched, or ambiguous pairing
+        taken.add(matches[0])
+    return len(taken) == len(rest_b)
+
+
+def _fixtures_are_distinct(idents: list) -> bool:
+    """True only when the names behind one key are really different fixtures."""
+    first = idents[0]
+    for other in idents[1:]:
+        if not (_same_club_names(first[0], other[0])
+                and _same_club_names(first[1], other[1])):
+            return True
+    return False
+
+
+def _report_ambiguous_settlement(dropped: int, detail: list) -> None:
+    """Operator-visible counter, printed every load; detail printed once.
+
+    Settlement facts are reloaded several times per run and the detail is
+    identical each time; the 2026-10-05 run emitted the same 20-line block
+    five times. The counter still prints on every load so the number is
+    never hidden; AMBIGUOUS_SETTLEMENT_KEYS always holds the full list.
+    """
+    global _AMBIGUOUS_DETAIL_PRINTED
+
+    print(f"settlement_ambiguous_pending={dropped}", file=sys.stderr)
+    if not detail or _AMBIGUOUS_DETAIL_PRINTED:
+        return
+    _AMBIGUOUS_DETAIL_PRINTED = True
+    for day, teams in detail[:5]:
+        print(f"!! AMBIGUOUS SETTLEMENT KEY {day}: {teams} "
+              "— one ledger key, two real fixtures with different results; "
+              "resolve manually or add a curated alias", file=sys.stderr)
+    if len(detail) > 5:
+        print(f"   (+{len(detail) - 5} more ambiguous key(s); full list in "
+              "AMBIGUOUS_SETTLEMENT_KEYS)", file=sys.stderr)
+
+
+def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]:
+    """Refuse to settle on a key that covers TWO different real fixtures.
+
+    The frozen result keys are width-9 (``mancheste`` covers Manchester
+    City AND Manchester United; ``barcelona`` covers Barcelona and
+    Barcelona SC). Fail closed on those: delete the key so the legs stay
+    pending for manual verification, never guess which was meant.
+
+    Two conditions are required, and BOTH matter:
+
+    1. the names behind the key are not the same club. Result feeds spell
+       one club many ways on the same day ("Blackburn Rovers" /
+       "Blackburn", "Sheffield Wed" / "Sheffield Wednesday"); treating
+       those as a fixture conflict dropped ~24k keys in the 2026-10-05
+       run, pushed every affected leg into the O(n) similarity fallback
+       and turned a normal run into a 63-minute one;
+    2. the outcomes actually disagree. If every row behind the key says
+       "home", nothing can be mis-settled no matter whose fixture it is.
+
+    Condition 2 is sound ONLY for a key specific enough to name one
+    fixture. On a truncated nine-character key it is not: agreement is
+    measured over the rows the archive happens to hold, so if one of the
+    clubs sharing the key has a result and the other does not yet, the
+    key looks unanimous and quietly answers for the missing fixture. Any
+    truncated key covering more than one real fixture on a date is
+    therefore refused outright, whatever the outcomes say. Those legs do
+    not go unsettled: the full-width tiers are tried first and name the
+    fixture exactly.
+    """
+    by_key: dict[tuple, dict] = {}
+    for day, rows in entries.items():
+        for e in rows:
+            home, away = str(e.get("home") or ""), str(e.get("away") or "")
+            outcome = e.get("result", e.get("outcome"))
+            for hk, ak, narrow in _result_write_key_specs(home, away):
+                slot = by_key.setdefault(
+                    (day, hk, ak),
+                    {"names": [], "outcomes": set(), "narrow": True})
+                if (home, away) not in slot["names"]:
+                    slot["names"].append((home, away))
+                slot["outcomes"].add(outcome)
+                # A key reachable from any specific tier is specific.
+                slot["narrow"] = slot["narrow"] and narrow
+
+    dropped = 0
+    superseded = 0
+    detail: list = []
+    narrow_detail: list = []
+    pending_detail: list = []
+    for key, slot in by_key.items():
+        names = slot["names"]
+        if len(names) < 2 or key not in key_to:
+            continue
+        if not _fixtures_are_distinct(names):
+            continue                      # one club, several spellings
+        if not slot["narrow"] and len(slot["outcomes"]) < 2:
+            continue                      # same verdict: nothing to mis-settle
+        del key_to[key]
+        entry = (key[0], sorted(f"{h} vs {a}" for h, a in names))
+        if slot["narrow"]:
+            # Truncated key over genuinely different fixtures: unusable
+            # even when today's rows agree. A full-width tier names these
+            # fixtures exactly, so the leg still settles; the key is
+            # superseded rather than lost. Counted in the same total so
+            # the refusal can never be under-reported, and listed
+            # separately so a rise here is not mistaken for new damage.
+            superseded += 1
+            narrow_detail.append(entry)
+        else:
+            dropped += 1
+            pending_detail.append(entry)
+            detail.append(entry)
+    NARROW_KEY_SUPERSEDED.clear()
+    NARROW_KEY_SUPERSEDED.extend(narrow_detail)
+    AMBIGUOUS_PENDING_KEYS.clear()
+    AMBIGUOUS_PENDING_KEYS.extend(pending_detail)
+    _report_narrow_key_supersession(superseded, narrow_detail)
+    return dropped, detail
+
+
+# Truncated keys refused because they covered several real fixtures. The
+# fixtures behind them still settle on a full-width key.
+NARROW_KEY_SUPERSEDED: list = []
+
+# Refused keys that leave a leg with nothing to settle against: a
+# specific key covering two genuinely different fixtures whose results
+# disagree. This is the subset an operator has to resolve by hand.
+AMBIGUOUS_PENDING_KEYS: list = []
+
+
+def _report_narrow_key_supersession(count: int, detail: list) -> None:
+    """Counter plus named receipt for truncated keys refused in favour of
+    the specific tier.
+
+    Kept separate from ``settlement_ambiguous_pending`` on purpose: these
+    keys are replaced by a better one rather than lost, so folding them
+    into the pending counter would report a repair as a regression.
+
+    The names are printed for the same reason the pending list prints
+    them. Once the specific tier exists, the pending counter goes to zero
+    for this class of key BY CONSTRUCTION, so a zero there proves
+    nothing on its own. Naming the keys that moved into this bucket is
+    what makes the repair checkable: an operator can see a key they
+    previously had to resolve by hand arrive here instead of vanishing.
+
+    Detail prints once per process, like the pending list, because the
+    settlement facts are reloaded several times per run.
+    """
+    global _SUPERSEDED_DETAIL_PRINTED
+
+    print(f"settlement_narrow_key_superseded={count}", file=sys.stderr)
+    if not detail or _SUPERSEDED_DETAIL_PRINTED:
+        return
+    _SUPERSEDED_DETAIL_PRINTED = True
+    for day, teams in detail[:5]:
+        print(f"!! SUPERSEDED NARROW KEY {day}: {teams} "
+              "— one truncated key over several real fixtures; "
+              "now settled on distinct wide keys", file=sys.stderr)
+    if len(detail) > 5:
+        print(f"   (+{len(detail) - 5} more superseded key(s); full list in "
+              "NARROW_KEY_SUPERSEDED)", file=sys.stderr)
+
+
+_SUPERSEDED_DETAIL_PRINTED = False
+
+
+def _settled_facts_identity(root):
+    """Content identity of every input `_build_settled_facts` reads.
+
+    `size+mtime` is NOT enough: a same-length rewrite inside the filesystem's
+    timestamp granularity (the settlement test suite does exactly that) would
+    silently serve a stale index. Small JSON inputs are therefore hashed; the
+    warehouse is keyed on (size, mtime_ns) because it is large and re-reading
+    it to hash would cost more than the rebuild it avoids. Missing inputs are
+    represented explicitly so their later appearance invalidates.
+    """
+    import hashlib
+    localdata = Path(root) / "localdata" if root is not None else LOCALDATA
+    config = Path(root) / "Config" if root is not None else ROOT / "Config"
+    digest = {}
+    for name, path in (("settled_results", localdata / "settled_results.json"),
+                       ("verified_results", config / "verified_results.json"),
+                       ("verified_dispositions", config / "verified_event_dispositions.json")):
+        try:
+            digest[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            digest[name] = None
+    try:
+        stat = (localdata / "warehouse.duckdb").stat()
+        digest["warehouse"] = (stat.st_size, stat.st_mtime_ns)
+    except OSError:
+        digest["warehouse"] = None
+    return tuple(sorted(digest.items()))
+
+
+# One-entry memo. Two entries would be needed to serve load_settled(root=...)
+# and load_settled() from the same process; production uses one root per
+# process, and a per-root dict would retain a second full index in memory.
+_SETTLED_FACTS_MEMO: dict = {}
+
+
+def _republish(target, saved) -> None:
+    """Restore a module-level inventory in place, preserving its container type.
+
+    `EMPTY_KEY_FIXTURES` is a set and the others are lists; callers hold the
+    live object, so it must be mutated rather than rebound.
+    """
+    target.clear()
+    if hasattr(target, "update"):
+        target.update(saved)
+    else:
+        target.extend(saved)
+
+
+def invalidate_settled_facts() -> None:
+    """Drop the memoised index (test isolation / explicit refresh)."""
+    _SETTLED_FACTS_MEMO.clear()
+
+
+def _collect_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
+    """Settlement index, rebuilt only when an input actually changed.
+
+    The index was rebuilt on every call (main grading, ENH timing, ML lookup,
+    parity: 3-4x per run, each a full donor scan that grows with history).
+    Identical inputs now reuse one build for the life of the process.
+
+    Reuse must not change OBSERVABLE behaviour. `_build_settled_facts` clears
+    and repopulates the module-level refusal inventories
+    (`AMBIGUOUS_SETTLEMENT_KEYS`, `EMPTY_KEY_TIERS_DROPPED`,
+    `EMPTY_KEY_FIXTURES`) and prints their counters, so a reused load replays
+    those exact publishes rather than leaving the previous (possibly mutated)
+    state in place. The returned maps are treated as read-only shared facts.
+    """
+    identity = _settled_facts_identity(root)
+    cached = _SETTLED_FACTS_MEMO.get(identity)
+    if cached is not None:
+        outcomes, entries, scores, inventories = cached
+        at_ambiguous, tiers, fixtures = inventories
+        _republish(AMBIGUOUS_SETTLEMENT_KEYS, at_ambiguous)
+        _republish(EMPTY_KEY_TIERS_DROPPED, tiers)
+        _republish(EMPTY_KEY_FIXTURES, fixtures)
+        print("settlement_facts status=reused "
+              f"keys={len(outcomes)} dates={len(entries)}", file=sys.stderr, flush=True)
+        return outcomes, entries, scores
+    outcomes, entries, scores = _build_settled_facts(root=root)
+    _SETTLED_FACTS_MEMO.clear()  # never retain a second full index
+    _SETTLED_FACTS_MEMO[identity] = (outcomes, entries, scores,
+                                     (list(AMBIGUOUS_SETTLEMENT_KEYS),
+                                      list(EMPTY_KEY_TIERS_DROPPED),
+                                      list(EMPTY_KEY_FIXTURES)))
+    return outcomes, entries, scores
+
+
+
+
+def load_settled(*, root=None):
+    """Settled outcomes: warehouse donors first, shared overlay fills gaps.
+
+    Keeps auto-ticket grading on the same result facts as the audit instead of
+    overlay-only, so BetExplorer-settled fixtures grade here too. Reuses the
+    in-process index while its inputs are unchanged; the returned map is shared
+    and must not be mutated.
+    """
+    return (_collect_settled_facts(root=root) if root is not None
+            else _collect_settled_facts())[0]
+
+
+def load_settled_entries():
+    """Per-date list of {home, away, outcome} for alias-conflict detection."""
+    return _collect_settled_facts()[1]
+
+
+def load_settled_scores():
+    """{(day, home_key, away_key): (hs, gs)} — the scores behind load_settled().
+
+    Same donors, same key space and the same ambiguity refusal as the outcome
+    map, so a market that grades from it cannot settle a fixture the 1x2 map
+    would have refused.
+    """
+    return _collect_settled_facts()[2]
+
+
+def _goal_pair(hs, gs):
+    """(int hs, int gs) or None — a half score is no score at all."""
+    if hs is None or gs is None:
+        return None
+    try:
+        return (int(hs), int(gs))
+    except (TypeError, ValueError):
+        return None
+
+
+@lru_cache(maxsize=200_000)
+def _fold_cached(s: str) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", s)
+                   if unicodedata.category(c) != "Mn").lower().strip()
+
+
+def _fold(s):
+    # Pure string transform, so it caches safely. The settlement fallback
+    # folds every key in the map on every call; the specific key tier made
+    # that map larger, and re-folding it each time is the whole cost.
+    # Coerced here rather than inside the cache so an unhashable argument
+    # behaves exactly as it did before.
+    return _fold_cached(str(s))
+
+
+# Rescheduled fallback window — mirrors the audit's ±3-day rescheduled scan.
+# A fixture that moved 2 days (Hønefoss W 08-29 -> 08-31) still grades here;
+# ±1 day missed it and froze the acca on a result the audit had already seen.
+RESCHEDULE_WINDOW_DAYS = 3
+
+
+_ALIAS_INDEX = None
+
+
+def _alias_index() -> dict:
+    """Curated team-name aliases, normalised into norm_team key space.
+
+    Data, not fuzz: a wrong entry can only fail to find a result, never
+    silently change one, because the exact lookup in pick_result runs first
+    and this is consulted only after it returns None. Edit
+    localdata/team_aliases.json to add a group.
+    """
+    global _ALIAS_INDEX
+    if _ALIAS_INDEX is None:
+        from edgefactory.util import norm_team
+        try:
+            groups = json.loads((LOCALDATA / "team_aliases.json").read_text())
+        except Exception:
+            groups = []
+        idx: dict = {}
+        for g in groups:
+            keys = {norm_team(str(n)) for n in g if str(n).strip()}
+            keys.discard("")
+            for k in keys:
+                idx.setdefault(k, set()).update(keys)
+        _ALIAS_INDEX = idx
+    return _ALIAS_INDEX
+
+
+def _alias_variants(key: str) -> set:
+    return set(_alias_index().get(key, ())) | {key}
+
+
+# Legs that a distinct-entity marker kept out of the similarity fallback.
+MARKER_GUARDED_LEGS: list[str] = []
+
+
+def _note_marker_guarded_leg(pick: dict) -> None:
+    """Record a leg the marker boundary kept out of the similarity fallback.
+
+    Only reported when the LEG carries a distinct-entity marker: a senior
+    pick skipping a women's/reserve result key is the guard doing routine
+    work, not an operator-actionable pending leg.
+    """
+    from edgefactory.util import squad_markers
+
+    if not (squad_markers(pick.get("home") or "")
+            or squad_markers(pick.get("away") or "")):
+        return
+    label = f"{pick.get('date')} {pick.get('home')} vs {pick.get('away')}"
+    if label not in MARKER_GUARDED_LEGS:
+        MARKER_GUARDED_LEGS.append(label)
+        print(f"settlement_marker_guarded={len(MARKER_GUARDED_LEGS)} :: {label} "
+              "(marked squad: no exact canonical result, and the similarity "
+              "fallback may not cross a youth/reserve/women's boundary)",
+              file=sys.stderr)
+
+
+def _report_marker_guarded_settlement() -> None:
+    """Operator-visible summary for marker-guarded pending legs.
+
+    Per-leg messages print only when the guard fires. The summary prints once
+    at the end of settlement/ticket commands even when the count is zero, so
+    production logs show that the guard is wired and quiet rather than absent.
+    """
+    print(f"settlement_marker_guarded_pending={len(MARKER_GUARDED_LEGS)}",
+          file=sys.stderr)
+
+
+def _key_markers(key: object) -> frozenset:
+    """Squad markers encoded in a canonical key's ``_w`` / ``_u21`` suffix."""
+    return frozenset(str(key or "").split("_")[1:])
+
+
+# (day, home_key, away_key) -> {(raw home, raw away)} for the results that
+# were actually loaded. Lets the marker guard below compare REAL names
+# instead of guessing from a marker-blind key.
+SETTLED_KEY_NAMES: dict = {}
+
+
+def _narrow_result_keys(home: object, away: object) -> set:
+    """The truncated nine-character keys for a fixture, if any."""
+    return {(hk, ak)
+            for hk, ak, _blind, narrow in _exact_result_key_specs(
+                home, away, include_legacy_blind=True)
+            if narrow}
+
+
+def _names_behind_key_are_other_clubs(day: str, hk: str, ak: str,
+                                      raw_home: object,
+                                      raw_away: object) -> bool:
+    """True when every fixture filed under this key is a different club.
+
+    Returns False when the names are unknown, so rows written before the
+    name index existed keep settling.
+    """
+    names = SETTLED_KEY_NAMES.get((day, hk, ak))
+    if not names or not raw_home or not raw_away:
+        return False
+    return not any(_same_club_names(hn, raw_home)
+                   and _same_club_names(an, raw_away)
+                   for hn, an in names)
+
+
+def _narrow_key_blocks(day: str, hk: str, ak: str,
+                       raw_home: object, raw_away: object) -> bool:
+    """True when a truncated key must not answer for this leg.
+
+    Refusing truncated keys that cover two filed fixtures is not enough
+    on its own. The dangerous case is the one where only ONE of the
+    colliding fixtures has been filed: the bucket looks unanimous, the
+    guard sees nothing to resolve, and a leg for the OTHER club falls
+    through to the same nine characters and inherits a result that
+    belongs to its neighbour. "Manchester United vs Arsenal" quietly
+    settles on Manchester City's row.
+
+    So a truncated key is checked against the names actually stored
+    behind it: it may answer only for a club it really holds. This is
+    the same deterministic link test used everywhere else, not a
+    similarity score. When the names are unknown (rows written in the
+    legacy epoch, before the name index existed) the key still answers,
+    so old slips keep settling.
+    """
+    return _names_behind_key_are_other_clubs(day, hk, ak, raw_home, raw_away)
+
+
+def _marker_boundary_blocks(mh, ma, d, h, a) -> bool:
+    """True when this candidate result may not settle a marked leg.
+
+    The similarity fallback compares MARKER-BLIND keys ("turkeyu21" vs
+    "turkey" scores exactly 0.80, the acceptance bar; norm_team strips
+    ``u21``/``b``/``w`` outright), so without this guard a youth, reserve
+    or women's leg could be graded with the senior side's result. The
+    chain therefore stops at a distinct-entity marker boundary:
+
+    * when the real names behind the key are known, the marker sets must
+      match exactly;
+    * otherwise only an EXPLICIT conflict blocks (the candidate key
+      carries a marker suffix that differs), so legacy-epoch rows written
+      under marker-blind keys keep settling.
+    """
+    from edgefactory.util import squad_markers
+
+    names = SETTLED_KEY_NAMES.get((d, h, a))
+    if names:
+        return not any(squad_markers(hn) == mh and squad_markers(an) == ma
+                       for hn, an in names)
+    cand_h, cand_a = _key_markers(h), _key_markers(a)
+    if cand_h or cand_a:
+        return cand_h != mh or cand_a != ma
+    # Unknown-name, markerless candidate keys are the old collision surface
+    # (Turkey U21 -> turkey). A marked leg may not fall back across that
+    # boundary; it needs a marker-aware exact or level-tolerant key.
+    if mh or ma:
+        return True
+    return False
+
+
+def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
+    from datetime import timedelta as _td
+    from difflib import SequenceMatcher
+    try:
+        base = datetime.strptime(day, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    cands = {str(base + _td(days=o))
+             for o in range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1)}
+    # Curated aliases before fuzzy: "Hearts" and "Heart of Midlothian" score
+    # ~0.44 on SequenceMatcher and never clear the 0.8 bar (2026-09-06: a
+    # winning acca sat unresolved and was 5 days from auto-voiding).
+    mh, ma = (markers or (frozenset(), frozenset()))
+    blocked = False
+    hv, av = _alias_variants(home), _alias_variants(away)
+    if len(hv) > 1 or len(av) > 1:
+        for d in sorted(cands):
+            for h2 in hv:
+                for a2 in av:
+                    if _marker_boundary_blocks(mh, ma, d, h2, a2):
+                        blocked = True
+                        continue
+                    oc = settled.get((d, h2, a2))
+                    if oc is not None:
+                        return oc
+    fh, fa = _fold(home), _fold(away)
+    best, best_oc = 0.0, None
+    candidates = (settled.items_for_dates(cands)
+                  if isinstance(settled, _SettledOutcomes) else settled.items())
+    for (d, h, a), oc in candidates:
+        if d not in cands:
+            continue
+        if _marker_boundary_blocks(mh, ma, d, h, a):
+            blocked = True
+            continue
+        rh = SequenceMatcher(None, fh, _fold(h)).ratio()
+        if rh < 0.8:
+            continue
+        ra = SequenceMatcher(None, fa, _fold(a)).ratio()
+        if ra >= 0.8 and rh + ra > best:
+            best, best_oc = rh + ra, oc
+    if best_oc is None and blocked and pick is not None:
+        _note_marker_guarded_leg(pick)
+    return best_oc
+
+
+SECOND_TEAM_MARKERS = frozenset({
+    "b", "res", "youth", "u20", "u21", "u22", "u23", "u2x",
+})
+
+
+# Width of the settlement key tiers. The narrow width is the historical
+# one: nine characters, which is shorter than most club names and so
+# cannot tell "Adelaide City" from "Adelaide Cobras" (both "adelaidec").
+# The specific tier keeps the full-width identity key instead and is
+# tried first; the narrow tier survives only as a guarded fallback for
+# legs frozen before the specific tier existed.
+SPECIFIC_KEY_WIDTH = 24
+NARROW_KEY_WIDTH = 9
+
+
+def _squad_aware_norm_key(name: object, *, legacy: bool = False,
+                          width: int = NARROW_KEY_WIDTH) -> str:
+    """``norm_team`` key built from club stem plus explicit squad suffix.
+
+    The legacy miner key strips markers such as U21/B/W.  For settlement we
+    keep the historical stem function but append the marker suffix so a
+    senior row and a squad row no longer share one result key.
+    """
+    return _squad_aware_norm_key_cached(str(name or ""), legacy, width)
+
+
+@lru_cache(maxsize=200_000)
+def _squad_aware_norm_key_cached(name: str, legacy: bool, width: int) -> str:
+    # Pure spelling/marker work, NOT result facts or registry-dependent aliases.
+    # A club recurs across years/opponents and all result-key passes. Cache by
+    # TEAM rather than fixture pair so a large corpus cannot thrash the existing
+    # pair-key cache into repeatedly parsing the same club's squad markers.
+    from edgefactory.util import (norm_team, norm_team_legacy,
+                                  squad_marker_suffix, strip_squad_markers)
+
+    suffix = squad_marker_suffix(name)
+    if legacy and not suffix:
+        # Frozen pre-2026-10-05 behaviour for unmarked names: diacritics were
+        # deleted, not transliterated (Beşiktaş -> beikta).
+        return norm_team_legacy(str(name or ""), width)
+    stem = strip_squad_markers(name)
+    base = (norm_team_legacy if legacy else norm_team)(stem, width)
+    return base + suffix
+
+
+@lru_cache(maxsize=200_000)
+def _exact_result_key_specs_cached(home: str, away: str, include_legacy_blind: bool) -> tuple:
+    return tuple(_exact_result_key_specs_uncached(home, away, include_legacy_blind))
+
+
+def _exact_result_key_specs(home: object, away: object, *,
+                            include_legacy_blind: bool = False) -> list[tuple[str, str, bool]]:
+    """Deterministic exact key spaces plus a read-only legacy-blind flag.
+
+    ``legacy_blind=True`` keys reproduce the pre-squad-suffix norm_team
+    spaces. They are lookup-only compatibility keys and are never written
+    into the freshly built settled-result map.
+    """
+    return list(_exact_result_key_specs_cached(
+        str(home or ""), str(away or ""), bool(include_legacy_blind)))
+
+
+def _exact_result_key_specs_uncached(home: object, away: object,
+                                     include_legacy_blind: bool = False
+                                     ) -> list[tuple[str, str, bool]]:
+    """Deterministic EXACT key spaces for a result/pick fixture.
+
+    Ordered MOST SPECIFIC FIRST, because a shorter key is a weaker claim
+    of identity and must never be consulted while a stronger one can
+    answer:
+
+    1. canonical at full width: transliteration + curated explicit
+       aliases (so a result recorded as "Turkey" grades a pick captured
+       as "Türkiye"), keeping enough characters to separate "Adelaide
+       City" from "Adelaide Cobras";
+    2. full-width norm_team built from club stem + squad suffix;
+    3. the historical nine-character canonical key;
+    4. the historical nine-character norm_team key;
+    5. frozen pre-2026-10-05 norm_team_legacy, also nine characters.
+
+    Tiers 3-5 are TRUNCATED: nine characters is shorter than most club
+    names, so one such key routinely covers several real clubs. They are
+    retained only so legs frozen before the full-width tiers existed can
+    still settle, and they are tagged ``narrow`` so the loader can refuse
+    them whenever their bucket is not unambiguous.
+
+    Optional legacy-blind keys are tagged and kept out of write paths so
+    they cannot recreate the senior/youth identity collision. Exact
+    dictionary keys only — no fuzzy matching is introduced here.
+    """
+    from edgefactory.util import canonical_team_key, norm_team, norm_team_legacy
+
+    wide = SPECIFIC_KEY_WIDTH
+    # (home key, away key, legacy_blind, narrow)
+    specs = [
+        (canonical_team_key(home, wide), canonical_team_key(away, wide),
+         False, False),
+        (_squad_aware_norm_key(home, width=wide),
+         _squad_aware_norm_key(away, width=wide), False, False),
+        (canonical_team_key(home), canonical_team_key(away), False, True),
+        (_squad_aware_norm_key(home), _squad_aware_norm_key(away), False, True),
+        (_squad_aware_norm_key(home, legacy=True),
+         _squad_aware_norm_key(away, legacy=True), False, True),
+    ]
+    if include_legacy_blind:
+        specs.extend([
+            (norm_team(home), norm_team(away), True, True),
+            (norm_team_legacy(str(home or "")),
+             norm_team_legacy(str(away or "")), True, True),
+        ])
+    out: list[tuple[str, str, bool, bool]] = []
+    seen: set[tuple[str, str]] = set()
+    for hk, ak, legacy_blind, narrow in specs:
+        key = (hk, ak)
+        if key in seen:
+            continue
+        # A key a wider tier already produced is not a truncation at all:
+        # the name simply fits, so it keeps the stronger tier's standing.
+        seen.add(key)
+        out.append((hk, ak, legacy_blind, narrow))
+    return out
+
+
+def _key_component_is_usable(part: object) -> bool:
+    """A key half must actually say something about a club.
+
+    Names made only of structure words and punctuation ("Athletic Club",
+    "Atletico FC", "B.93") normalise to the empty string. Writing that
+    into the settled map files every one of them under the same key:
+    eleven clubs shared ``('','')`` in the current archive, and whichever
+    row was written last answered for all of them. An empty half is not a
+    weak key, it is the absence of one, so it is never written and never
+    looked up.
+    """
+    return bool(str(part or "").strip())
+
+
+def _result_write_key_specs(home: object, away: object
+                            ) -> list[tuple[str, str, bool]]:
+    """Write-safe keys tagged ``narrow`` (truncated nine-character tier)."""
+    return [
+        (hk, ak, narrow)
+        for hk, ak, legacy_blind, narrow in _exact_result_key_specs(home, away)
+        if not legacy_blind
+        and _key_component_is_usable(hk) and _key_component_is_usable(ak)
+    ]
+
+
+def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
+    """Write-safe exact result keys: no legacy-blind, no empty component."""
+    return [(hk, ak) for hk, ak, _narrow in _result_write_key_specs(home, away)]
+
+
+def _exact_result_lookup_specs(home: object, away: object) -> list[tuple[str, str, bool]]:
+    """Read specs including tagged legacy-blind compatibility keys."""
+    return [
+        (hk, ak, legacy_blind)
+        for hk, ak, legacy_blind, _narrow in _exact_result_key_specs(
+            home, away, include_legacy_blind=True)
+        if _key_component_is_usable(hk) and _key_component_is_usable(ak)
+    ]
+
+
+def _result_write_keys(home: object, away: object) -> list[tuple[str, str]]:
+    """Keys that may be written into the current settled-result map.
+
+    Counts, rather than silently discards, the fixtures whose name gives
+    no usable key at all, so the loss is visible to an operator.
+    """
+    specs = _exact_result_key_specs(home, away)
+    keys = [(hk, ak) for hk, ak, legacy_blind, _n in specs if not legacy_blind]
+    usable = _exact_result_keys(home, away)
+    if len(usable) < len(keys):
+        EMPTY_KEY_TIERS_DROPPED.append((str(home or ""), str(away or "")))
+    if keys and not usable:
+        EMPTY_KEY_FIXTURES.add((str(home or ""), str(away or "")))
+    return usable
+
+
+# Key tiers refused because a component normalised to nothing, and the
+# fixtures left with no usable key at all. Both surfaced next to
+# settlement_ambiguous_pending so the loss is never silent.
+EMPTY_KEY_TIERS_DROPPED: list = []
+EMPTY_KEY_FIXTURES: set = set()
+
+
+def _replace_key_markers(key: str, markers: frozenset[str]) -> str:
+    base = str(key or "").split("_")[0]
+    return base + (("_" + "_".join(sorted(markers))) if markers else "")
+
+
+def _level_marker_variants(markers: frozenset[str]) -> set[frozenset[str]]:
+    """Second-team marker family variants, preserving other boundaries.
+
+    A U20/U21/U23/U2x/youth/reserve/B row may look like a sibling level in
+    another feed.  We try that family only when a second-team marker is
+    already present; the empty senior marker set is never introduced.
+    """
+    second = set(markers) & set(SECOND_TEAM_MARKERS)
+    if not second:
+        return {markers}
+    fixed = set(markers) - set(SECOND_TEAM_MARKERS)
+    return {frozenset(fixed | {m}) for m in SECOND_TEAM_MARKERS}
+
+
+def _level_tolerant_lookup(settled, day: str, home: object, away: object,
+                           markers: tuple[frozenset[str], frozenset[str]]):
+    """Lookup across the second-team marker family with a uniqueness guard.
+
+    This never crosses the senior boundary: markerless sides stay markerless.
+    If several sibling-level results disagree on the same day, the function
+    returns ``None`` (fail closed) rather than choosing one.
+    """
+    mh, ma = markers
+    if not ((set(mh) & set(SECOND_TEAM_MARKERS))
+            or (set(ma) & set(SECOND_TEAM_MARKERS))):
+        return None
+
+    candidates: dict[tuple[str, str], object] = {}
+    for hk, ak in _result_write_keys(home, away):
+        base_h, base_a = str(hk).split("_")[0], str(ak).split("_")[0]
+        for hv in _level_marker_variants(mh):
+            for av in _level_marker_variants(ma):
+                # keep at least one second-team marker on every side that
+                # originally had one; senior keys are never synthesized.
+                if (set(mh) & set(SECOND_TEAM_MARKERS)
+                        and not (set(hv) & set(SECOND_TEAM_MARKERS))):
+                    continue
+                if (set(ma) & set(SECOND_TEAM_MARKERS)
+                        and not (set(av) & set(SECOND_TEAM_MARKERS))):
+                    continue
+                key = (day, _replace_key_markers(base_h, hv),
+                       _replace_key_markers(base_a, av))
+                if key in settled:
+                    candidates[(key[1], key[2])] = settled[key]
+    outcomes = {v for v in candidates.values() if v is not None}
+    if len(outcomes) == 1:
+        return next(iter(outcomes))
+    return None
+
+
+def pick_result(pick, settled):
+    from edgefactory.util import norm_team, squad_markers
+    day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
+    home = norm_team(pick.get("home") or "")
+    away = norm_team(pick.get("away") or "")
+    # Exact lookups across the deterministic key spaces (canonical alias,
+    # transliterated, frozen legacy) BEFORE any existing fallback.
+    outcome = None
+    mh = squad_markers(pick.get("home") or "")
+    ma = squad_markers(pick.get("away") or "")
+    raw_home, raw_away = pick.get("home") or "", pick.get("away") or ""
+    narrow_keys = _narrow_result_keys(raw_home, raw_away)
+    for hk, ak, legacy_blind in _exact_result_lookup_specs(raw_home, raw_away):
+        # The pre-squad-suffix key spaces are compatibility-only.  A marked
+        # leg may not read them because that is exactly the senior/youth
+        # collision this guard is here to prevent.
+        if legacy_blind and (mh or ma):
+            continue
+        if _marker_boundary_blocks(mh, ma, day, hk, ak):
+            continue
+        if ((hk, ak) in narrow_keys
+                and _narrow_key_blocks(day, hk, ak, raw_home, raw_away)):
+            continue
+        outcome = settled.get((day, hk, ak))
+        if outcome is not None:
+            break
+    if outcome is None:
+        outcome = _level_tolerant_lookup(settled, day, raw_home, raw_away, (mh, ma))
+    if outcome is not None and outcome not in ("home", "away", "draw"):
+        return "void"
+    if outcome is None:
+        # Marker boundary: the similarity fallback compares MARKER-BLIND
+        # keys ("turkeyu21" vs "turkey" scores 0.80, exactly at the bar),
+        # so a youth/women's/reserve leg could be settled with the senior
+        # side's result. Those legs settle on the canonical marked key or
+        # not at all.
+        outcome = _lookup_fallback(
+            settled, day, home, away,
+            markers=(mh, ma),
+            pick=pick)
+    if outcome is not None and outcome not in ("home", "away", "draw"):
+        return "void"
+    if outcome is None:
+        return None
+    sel = str(pick.get("pick") or "").lower()
+    return "win" if outcome == sel else "loss"
+
+
+def _ngram_sim(s1: str, s2: str, n: int = 2) -> float:
+    """Bigram Jaccard similarity (same rule as the audit's fuzzy matcher)."""
+    def grams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i:i + n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+    g1, g2 = grams(s1), grams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
+
+
+_ALIAS_MIN_SIM = 0.40  # matches the audit's _FUZZY_MIN_SIM
+_ALIAS_SIDE_MIN_SIM = 0.30  # per-side floor: key collisions (W-suffix teams) are not aliases
+
+
+def _alias_candidate_entries(pick, entries_by_date) -> list[dict]:
+    """Entries on the pick's date that alias-match both sides (orientation-
+    checked). Mirrors the audit's ``_alias_candidate_results`` so the verified
+    override can purge every spelling of a fixture, not just one normalized
+    pair."""
+    from edgefactory.util import markers_conflict, norm_team
+
+    day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
+    home = str(pick.get("home") or "")
+    away = str(pick.get("away") or "")
+    home_keys = {norm_team(home)}
+    away_keys = {norm_team(away)}
+    out: list[dict] = []
+    for e in entries_by_date.get(day, []):
+        rh = str(e.get("home") or "")
+        ra = str(e.get("away") or "")
+        # A youth / reserve / women's side is a different squad even when the
+        # 9-letter key collides ("Slovan Bratislava U19" vs "Slovan Bratislava").
+        if markers_conflict(home, rh) or markers_conflict(away, ra):
+            continue
+        hk = norm_team(rh)
+        ak = norm_team(ra)
+        if not (hk in home_keys or ak in away_keys or hk in away_keys or ak in home_keys):
+            continue
+        sim_hh = _ngram_sim(home, rh)
+        sim_aa = _ngram_sim(away, ra)
+        if min(sim_hh, sim_aa) < _ALIAS_SIDE_MIN_SIM:
+            continue
+        if not (sim_hh > _ngram_sim(home, ra) and sim_aa > _ngram_sim(away, rh)):
+            continue
+        if _ngram_sim(f"{home} {away}", f"{rh} {ra}") < _ALIAS_MIN_SIM:
+            continue
+        out.append(e)
+    return out
+
+
+def alias_outcome_conflict(pick, entries_by_date) -> bool:
+    """True when the fixture is filed under several spellings on its date with
+    differing outcomes (Pafos vs Dinamo Tirana 2-2 draw vs 4-2 home).
+
+    Fail-closed: a conflict keeps the leg unresolved instead of silently
+    first-winning one spelling. Pre-filtered by shared team key, then
+    orientation-checked by bigram similarity so genuinely different fixtures
+    sharing a key fragment do not trigger a conflict.
+    """
+    outcomes = {
+        str(e.get("outcome") or "")
+        for e in _alias_candidate_entries(pick, entries_by_date)
+        if str(e.get("outcome") or "") in ("home", "away", "draw")
+    }
+    return len(outcomes) > 1
+
+
+# ---------------- state (all percentages of capital) ----------------
+def _history_row_digest(row: dict) -> str:
+    """Hash witness of one settled bet-day, so a reconciliation names its row."""
+    return hashlib.sha256(json.dumps(row, sort_keys=True, default=str)
+                          .encode("utf-8")).hexdigest()
+
+
+def _apply_settled_enhancement_reconciliations(st: dict, localdata: Path) -> bool:
+    """Undo a settlement that booked a bet the operator never placed.
+
+    This is the deliberate counterpart to ``_apply_unplaced_enhancement_resets``:
+    that receipt path withdraws an UNPLACED card *before* it can settle and
+    refuses outright once history exists ("settled history exists;
+    reconciliation required"). When the settlement has already landed, the only
+    honest repair is a receipt that names the exact history row it removes.
+
+    It is scoped to one date, one lane and one witnessed row, and it fails
+    closed: an unknown row, a changed row (hash mismatch), a bank that does not
+    equal the documented reversal, or a second receipt for the same date all
+    raise rather than adjust money. Nothing else is re-derived — the reversal is
+    the row's own ``returned_pct - staked_pct``, exactly what settlement added —
+    and every later bet-day's close is rechained from the corrected bank.
+    """
+    changed = False
+    pattern = "autobets_enh_tickets_20??-??-??_settled_reconciliation.json"
+    for path in sorted(localdata.glob(pattern)):
+        raw = path.read_bytes()
+        receipt = json.loads(raw)
+        target = str(receipt.get("date") or "")
+        if (re.fullmatch(r"\d{4}-\d{2}-\d{2}", target) is None
+                or path.name != f"autobets_enh_tickets_{target}_settled_reconciliation.json"
+                or receipt.get("schema") != 1
+                or receipt.get("action") != "reconcile_unplaced_enhancement_settlement"
+                or receipt.get("lane") != "enh"
+                or receipt.get("confirmed_none_placed") is not True):
+            raise ValueError(f"invalid settled-enhancement reconciliation receipt: {path.name}")
+        approved = datetime.fromisoformat(str(receipt.get("approved_at")))
+        if approved.tzinfo is None:
+            raise ValueError(f"reconciliation {target} refused: unzoned approval timestamp")
+        expected_row = receipt.get("history_row_sha256")
+        if not isinstance(expected_row, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_row):
+            raise ValueError(f"reconciliation {target} refused: no row witness")
+        identity = hashlib.sha256(raw).hexdigest()
+        book = st.get("settled_enhancement_reconciliations") or {}
+        if book.get(target, {}).get("receipt_sha256") == identity:
+            continue
+        if target in book:
+            raise ValueError(f"reconciliation {target} refused: a different receipt already applied")
+        rows = [h for h in st.get("history", []) if str(h.get("date")) == target]
+        if len(rows) != 1:
+            raise ValueError(f"reconciliation {target} refused: "
+                             f"{len(rows)} settled row(s) for that date")
+        row = rows[0]
+        if _history_row_digest(row) != expected_row:
+            raise ValueError(f"reconciliation {target} refused: settled row changed since approval")
+        staked = float(row.get("staked_pct") or 0.0)
+        returned = float(row.get("returned_pct") or 0.0)
+        for name, stored, given in (("staked_pct", staked, receipt.get("staked_pct")),
+                                    ("returned_pct", returned, receipt.get("returned_pct"))):
+            if given is None or abs(float(given) - stored) > 1e-6:
+                raise ValueError(f"reconciliation {target} refused: {name} differs from the receipt")
+        if not st.get("bank"):
+            raise ValueError(f"reconciliation {target} refused: no live bank to reverse")
+        before = round(float(st["bank"]), 4)
+        after = round(before - (returned - staked), 4)
+        documented = receipt.get("bank_after_reconcile")
+        if documented is None or abs(float(documented) - after) > 1e-4:
+            raise ValueError(f"reconciliation {target} refused: reversal lands at {after:.4f}%, "
+                             f"receipt documents {documented}%")
+        st["history"] = [h for h in st["history"] if str(h.get("date")) != target]
+        st["bank"] = after
+        _rechain_from(st, target)
+        st.setdefault("settled_enhancement_reconciliations", {})[target] = {
+            "receipt_sha256": identity,
+            "approved_at": receipt["approved_at"],
+            "confirmed_none_placed": True,
+            "removed_row_sha256": expected_row,
+            "removed": {"date": target, "staked_pct": staked, "returned_pct": returned},
+            "bank_before_pct": before,
+            "bank_after_pct": after,
+        }
+        changed = True
+        print(f"ENHANCEMENT_RECONCILIATION {target}: unplaced settlement reversed; "
+              f"bank {before:.4f}% -> {after:.4f}%")
+    return changed
+
+
+def repair_enhancement_reporting_closes(st: dict) -> bool:
+    """Repair only the witnessed Oct-25 stale reporting chain, never money.
+
+    The old verified-result regrader credited the 6.1814 payout but left the
+    daily closes unchanged. Later code fixes do not revisit already-corrected
+    legs. Scope this repair to that exact booked win and offset, check the
+    repaired end against the existing bank, and preserve the old closes.
+    """
+    rows = sorted(st.get("history") or [], key=lambda h: h["date"])
+    index = next((i for i, h in enumerate(rows) if h["date"] == "2026-10-25"), None)
+    if index is None or index == 0:
+        return False
+    row, previous = rows[index], rows[index - 1]
+    witnessed = any(
+        a.get("won") is True and a.get("stake_pct") == 3.288
+        and a.get("odds") == 1.88 and a.get("returned_pct") == 6.1814
+        and any(l.get("match") == "Lillestrøm SK vs SK Brann"
+                and l.get("result") == "win"
+                and l.get("label") == "Match Over 2.5 Goals"
+                for l in a.get("legs", []))
+        for a in row.get("accas", []))
+    if not witnessed or "close_pct" not in row:
+        return False
+    expected = previous.get("close_pct", previous["bank_pct"]) + row["returned_pct"] - row["staked_pct"]
+    if abs(expected - row["close_pct"] - 6.1814) > 0.0002:
+        return False
+    trial = copy.deepcopy(st)
+    _rechain_from(trial, "2026-10-25")
+    last = max(trial["history"], key=lambda h: h["date"])
+    if abs(last["close_pct"] - st["bank"]) > 0.001:
+        raise ValueError("ENH reporting-close repair does not reconcile to existing bank")
+    corrections = []
+    by_date = {h["date"]: h for h in trial["history"]}
+    for h in st["history"]:
+        after = by_date[h["date"]].get("close_pct")
+        if h["date"] >= "2026-10-25" and h.get("close_pct") != after:
+            corrections.append({"date": h["date"], "before": h.get("close_pct"), "after": after})
+            h["close_pct"] = after
+    st.setdefault("integrity_recovery", {})["reporting_close_correction"] = {
+        "reason": "Oct-25 verified 6.1814 payout was already credited; stale reporting closes only",
+        "bank_unchanged": st["bank"], "corrections": corrections,
+        "stakes_results_open_slips_and_freezes": "unchanged"}
+    return True
+
+
+def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
+    """Apply committed operator receipts BEFORE enhancement settlement.
+
+    This is a date-scoped cancellation of explicitly UNPLACED recommendations,
+    not --reset/backfill, a bank rollback or a general freeze override. Old cache
+    copies are invalidated once; replacement cards frozen after approval survive.
+    Settled history is never removed or recalculated. Unknown artifacts fail
+    closed rather than being mistaken for the withdrawn, hash-witnessed ticket.
+    """
+    changed = False
+    for path in sorted(localdata.glob("autobets_enh_tickets_20??-??-??_reset.json")):
+        raw = path.read_bytes()
+        receipt = json.loads(raw)
+        target = receipt["date"]
+        if (date.fromisoformat(target).isoformat() != target
+                or path.name != f"autobets_enh_tickets_{target}_reset.json"
+                or receipt.get("schema") != 1
+                or receipt.get("action") != "reset_unplaced_enhancement"
+                or receipt.get("lane") != "enh"
+                or receipt.get("confirmed_none_placed") is not True):
+            raise ValueError(f"invalid unplaced-enhancement reset receipt: {path.name}")
+        cutoff = datetime.fromisoformat(receipt["approved_at"])
+        expected = receipt["withdrawn_ticket_sha256"]
+        if cutoff.tzinfo is None or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+            raise ValueError(f"invalid reset approval/witness: {path.name}")
+        identity = hashlib.sha256(raw).hexdigest()
+        book = st.get("unplaced_enhancement_resets") or {}
+        if book.get(target, {}).get("receipt_sha256") == identity:
+            continue
+        frozen = frozen_entry(st, target)
+        if frozen:
+            stamp = datetime.fromisoformat(frozen["frozen_at"])
+            if stamp.tzinfo is None:
+                raise ValueError("cannot reset an enhancement freeze without an aware timestamp")
+            if stamp > cutoff:
+                continue  # an explicitly newer replacement, not the withdrawn card
+        if any(str(h.get("date")) == target for h in st.get("history", [])):
+            raise ValueError(f"enhancement reset {target} refused: settled history exists; reconciliation required")
+        slip = dated_artifact_path(localdata, f"autobets_enh_tickets_{target}.txt")
+        if slip.exists() and hashlib.sha256(slip.read_bytes()).hexdigest() != expected:
+            raise ValueError(f"enhancement reset {target} refused: active artifact differs from approved ticket")
+        recut = localdata / f"autobets_enh_tickets_{target}_force_recut.txt"
+        if recut.exists():
+            raise ValueError(f"enhancement reset {target} refused: review the existing force-recut artifact")
+        if st:
+            # Unplaced recommendations are removed, not retained as old bets.
+            # Keep only the cache-invalidation marker; bank/history stay intact.
+            st["open_slips"] = [x for x in st.get("open_slips", []) if str(x.get("date")) != target]
+            st.get(FROZEN_BOOK_KEY, {}).pop(target, None)
+            st.get(SUPERSEDED_BOOK_KEY, {}).pop(target, None)
+            st.setdefault("unplaced_enhancement_resets", {})[target] = {
+                "receipt_sha256": identity, "approved_at": receipt["approved_at"],
+                "confirmed_none_placed": True,
+            }
+            changed = True
+        # Both are old recommendation locks, never proof of a placed bet.
+        slip.unlink(missing_ok=True)
+        (localdata / f"autobets_enh_tickets_{target}.frozen").unlink(missing_ok=True)
+        print(f"ENHANCEMENT_RESET {target}: unplaced ticket withdrawn; bank/history unchanged")
+    return changed
+
+
+def load_state(lane: "Lane | None" = None) -> dict:
+    try:
+        st = json.loads(state_path(lane).read_text())
+    except FileNotFoundError:
+        st = {}
+    except (ValueError, OSError) as exc:
+        raise RuntimeError(f"unreadable financial state; refusing bank reset: {state_path(lane)}") from exc
+    if not st and lane is not None:
+        report = state_path(lane).parent / f"{lane.slip_prefix}_performance.json"
+        if report.exists() and json.loads(report.read_text()).get("bet_days", 0):
+            raise RuntimeError("financial state missing despite published history; recovery required, not a fresh 100% bank")
+    if st and any(k in st and (isinstance(st[k], bool) or not isinstance(st[k], (int, float))
+                              or not math.isfinite(st[k])) for k in ("bank", "base_pct", "cycle_base")):
+        raise RuntimeError("invalid financial state; refusing non-finite bank/base")
+    if lane is not None and lane.state_file == ENHANCEMENT_LANE.state_file:
+        # Reconciliation first: it corrects a settlement that should never
+        # have been booked, so any withdrawal receipt for the same date is then
+        # judged against a state that no longer claims the bet.
+        if _apply_settled_enhancement_reconciliations(st, state_path(lane).parent) and st:
+            save_state(st, lane)
+        if _apply_unplaced_enhancement_resets(st, state_path(lane).parent) and st:
+            save_state(st, lane)
+        if repair_enhancement_reporting_closes(st):
+            save_state(st, lane)
+    if not st:
+        return {}
+    slips = st.get("open_slips") or []
+    if slips:
+        seen, order = {}, []
+        for sl in slips:
+            d = sl.get("date")
+            if d not in seen:
+                seen[d] = sl; order.append(d)
+        st["open_slips"] = [seen[d] for d in order]
+    return st
+
+
+def save_state(st: dict, lane: "Lane | None" = None) -> None:
+    import tempfile
+    path = state_path(lane)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Atomic writes avoid a partial JSON file turning a later run into a reset.
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as f:
+        tmp = Path(f.name)
+        json.dump(st, f, indent=2, default=str)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
+def fresh_state() -> dict:
+    return {"base_pct": BASE_PCT, "bank": BASE_PCT, "cycle_base": BASE_PCT,
+            "open_slips": [], "history": [], "events": []}
+
+
+def effective_bank(st, exclude_date=None) -> float:
+    """Bank minus committed (open) stakes — in % of capital.
+
+    `exclude_date`: when sizing a date's own slip, that date's existing
+    entry must NOT count as committed capital — upsert_slip deletes and
+    replaces it (Task E, 2026-09-06: a force-repick counted its own morning
+    draft as live money and converged to bank/4 instead of bank/3). Stakes
+    on OTHER dates stay committed: they are genuinely live and settlement
+    has not yet returned them.
+    """
+    committed = 0.0
+    for s in st.get("open_slips", []):
+        if exclude_date is not None and str(s.get("date") or "")[:10] == str(exclude_date)[:10]:
+            continue
+        committed += s.get("staked_pct", 0.0)
+    return st["bank"] - committed
+
+
+def take_profit_target(st) -> float:
+    return st["cycle_base"] * (1.0 + TAKE_PROFIT_GAIN)
+
+
+# ---------------- selection / planning ----------------
+def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=False):
+    """Return the validated priced leg pool.
+
+    Bucket policy remains deliberately broad.  ``execution_safe=True`` is
+    used by the live ticket builder to apply the explicit price-integrity
+    quarantine: an audit-only quote must not become a ticket.  Replay and
+    historical audit callers keep the legacy default so this operational
+    safety correction cannot rewrite the frozen parity baseline.
+
+    `floor` overrides MIN_LEG_ODDS (replay harness only — live callers pass
+    nothing so the validated floor applies). Never inline the number: the
+    2026-09-04 audit found the harness had to regex-strip a hardcoded floor
+    out of this function's source, which silently made lower-floor A/Bs
+    no-ops. One constant, one code path.
+    """
+    floor = MIN_LEG_ODDS if floor is None else floor
+    out = []
+    for p in rows:
+        if playable_leg_rejection(
+            p, day=day, floor=floor, execution_safe=execution_safe,
+        ) is not None:
+            continue
+        ap = p.get("avg_p")
+        odds = float(p.get("odds"))
+        res = pick_result(p, settled) if settled is not None else None
+        out.append({"match": f"{p.get('home')} vs {p.get('away')}",
+                    "pick": str(p.get("pick") or "").upper(),
+                    "prob": float(ap) / 100.0, "odds": odds,
+                    "result": res, "row": p})
+    out.sort(key=lambda l: (l["prob"], l["odds"]), reverse=True)
+    return out
+
+
+# ACCA PRICE-EVIDENCE GATE. Dynamic, live, with hysteresis (edgefactory.acca_gate).
+# Each price-evidence label is blocked from ACCAS when its trailing 30-day
+# hit rate is clearly below the implied rate (z <= -2.0, at least 60 settled
+# legs), and unblocked only once z recovers to >= 0. The label set is no longer
+# hard-coded. The decision is stepped once per run date from the audit ledger
+# written earlier in the same daily run. Singles are not built, and this gate
+# does not change the bucket policy in BUCKETS. The replay harness does not
+# call this helper, so its frozen baseline is unchanged.
+def acca_price_evidence_gate(pool, blocked_labels=frozenset()):
+    """Split a leg pool into (kept, blocked) by price-evidence label."""
+    blocked_labels = frozenset(str(x).strip().upper() for x in blocked_labels)
+    kept, blocked = [], []
+    for leg in pool:
+        label = str((leg.get("row") or {}).get("price_evidence") or "").strip().upper()
+        (blocked if label in blocked_labels else kept).append(leg)
+    return kept, blocked
+
+
+# EDGE_FACTORY_ACCA_GATE_LOG lets the test suite point this at a scratch file;
+# production leaves it unset and the log lives in localdata/.
+ACCA_GATE_LOG = Path(os.environ.get("EDGE_FACTORY_ACCA_GATE_LOG") or (LOCALDATA / "acca_gate_log.jsonl"))
+
+
+def log_acca_gate_run(target, gate_status, gate_labels, blocked_legs, pool_size=None, path=None):
+    """Append one line per run: the gate's status, the blocked label set, the pool
+    size it checked, and every leg the gate removed. An empty ``blocked_legs``
+    with ``pool_size`` set means no leg carried a blocked label.
+
+    Logging must never stop ticket placement: any failure is reported on stderr
+    and the run continues. Two same-day runs both append to this file; git merges
+    of it are not handled (no merge logic beyond ``git add``), so a conflict
+    there needs a manual resolve."""
+    try:
+        _write_acca_gate_run(target, gate_status, gate_labels, blocked_legs, pool_size, path)
+    except Exception as exc:  # noqa: BLE001 - logging must not break placement
+        print(f"WARNING: acca gate log not written ({type(exc).__name__}: {exc})", file=sys.stderr)
+
+
+def _write_acca_gate_run(target, gate_status, gate_labels, blocked_legs, pool_size, path):
+    record = {
+        "run_at": datetime.now(TZ).isoformat(timespec="seconds"),
+        "target": target,
+        "status": gate_status,
+        "blocked_labels": sorted(gate_labels),
+        "pool_size": pool_size,
+        "blocked_count": len(blocked_legs),
+        "blocked_legs": [
+            {
+                "match": leg.get("match"),
+                "pick": leg.get("pick"),
+                "odds": leg.get("odds"),
+                "prob": leg.get("prob"),
+                "label": (leg.get("row") or {}).get("price_evidence"),
+                "bucket": (leg.get("row") or {}).get("bucket"),
+            }
+            for leg in blocked_legs
+        ],
+    }
+    path = Path(path) if path is not None else ACCA_GATE_LOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as fh:
+        fh.write(json.dumps(record, default=str) + "\n")
+
+
+def _rule_of(leg):
+    """The miner rule behind a leg, when the archived row is still attached."""
+    return str((leg.get("row") or {}).get("rule") or "")
+
+
+def _rank_capped_probability(leg, rank_caps):
+    """Effective ordering probability for the selection ladder.
+
+    Numeric values are hard caps (the studied CAUTION 0.70 cap). A mapping
+    ``{"shrink": factor}`` is the generic rank-only fallback for a bucket
+    without a studied cap. The raw probability remains the first tiebreaker,
+    so a cap never changes the printed evidence or score.
+    """
+    raw = float(leg["prob"])
+    bucket = str((leg.get("row") or {}).get("bucket") or "")
+    if bucket not in rank_caps:
+        return raw
+    spec = rank_caps[bucket]
+    if isinstance(spec, dict) and "shrink" in spec:
+        return raw * float(spec["shrink"])
+    return min(raw, float(spec))
+
+
+def _implied_hit_chance(leg) -> float:
+    """The settled hit chance a leg's floor was derived from.
+
+    Every enhancement floor is ``1 / Wilson-LB95(hit rate) + ENHANCEMENT_FLOOR_MARGIN``
+    (enh_registry / enh_team_floors), so inverting the floor recovers the hit
+    rate. A leg with no usable floor has no evidence and ranks last (0.0).
+    """
+    from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN
+    floor = leg.get("floor")
+    if not isinstance(floor, (int, float)) or isinstance(floor, bool) \
+            or float(floor) <= ENHANCEMENT_FLOOR_MARGIN:
+        return 0.0
+    return 1.0 / (float(floor) - ENHANCEMENT_FLOOR_MARGIN)
+
+
+def rank_legs(pool, rank="prob", rank_caps=None):
+    """Order the pool. ``rank_caps=None`` is the live identity path.
+
+    ``prob`` remains the live stated-probability order. When ``rank_caps`` is
+    supplied, only its effective ordering key changes; ``(raw prob, odds)``
+    preserves deterministic ordering among capped ties. Other rank modes are
+    unchanged. This is selection-only: the returned leg dictionaries and
+    their raw ``prob`` fields are untouched.
+    """
+    if rank == "probcap" and rank_caps is None:
+        # A variant that cannot differ from baseline is a bug, not a result.
+        # Caps apply for rank in ("prob", "probcap"), so probcap with no caps
+        # is byte-identical to plain prob order -- the same silent no-op class
+        # the 2026-09-04 floor-strip audit found in this harness. Refuse the
+        # comparison instead of reporting it.
+        raise ValueError(
+            "rank='probcap' without rank_caps is an identity order: it cannot "
+            "differ from rank='prob'. Pass rank_caps (the ladder's caps) or "
+            "drop the rank.")
+    if rank == "hitrate":
+        key = lambda l: (_implied_hit_chance(l), l["prob"], l["odds"])  # noqa: E731
+    elif rank == "ev":
+        key = lambda l: (l["prob"] * l["odds"], l["prob"], l["odds"])   # noqa: E731
+    elif rank == "rule3way":
+        key = lambda l: (_rule_of(l).startswith("3way"),                # noqa: E731
+                         l["prob"], l["odds"])
+    elif rank_caps is not None and rank in ("prob", "probcap"):
+        key = lambda l: (_rank_capped_probability(l, rank_caps),         # noqa: E731
+                         l["prob"], l["odds"])
+    else:
+        key = lambda l: (l["prob"], l["odds"])                          # noqa: E731
+    return sorted(pool, key=key, reverse=True)
+
+
+def _fixture_fold(s) -> str:
+    """Fold a team name for the intra-card SAME-FIXTURE guard (2026-09-22
+    Dagenham incident), delegating to the shared identity module so the
+    card guard and the upstream capture seam use ONE fold definition
+    ('&' -> 'and' -> dropped glue token, accent/case folding). See
+    edgefactory/identity.py."""
+    from edgefactory.identity import TEAM_STRUCTURE_NOISE, team_identity_words
+
+    # Club-structure tokens ("FC", "SK", "Club", ...) and "KV" (Belgian
+    # "Koninklijke Voetbalclub") do not change which club is meant, so they
+    # are dropped for the guard only. The shared identity fold keeps them:
+    # global removal would merge distinct squads such as "Arsenal" and
+    # "Arsenal W". A name made only of such tokens is kept as-is.
+    words = team_identity_words(s).split()
+    kept = [w for w in words if w not in TEAM_STRUCTURE_NOISE and w != "kv"]
+    return " ".join(kept or words)
+
+
+def _fixture_key(leg) -> tuple[str, str, str]:
+    """(date, folded home, folded away) — the guard's fixture identity."""
+    row = leg.get("row") or {}
+    home = row.get("home") or ""
+    away = row.get("away") or ""
+    if not home and not away:
+        parts = str(leg.get("match") or "").split(" vs ", 1)
+        if len(parts) == 2:
+            home, away = parts
+    date = str(row.get("date") or row.get("_archive_day") or "")[:10]
+    return (date, _fixture_fold(home), _fixture_fold(away))
+
+
+def dedup_fixture_legs(ranked_pool) -> tuple[list, list]:
+    """Drop later-ranked legs that share a fixture with an already-kept leg.
+    Deterministic: the HIGHEST-RANKED duplicate survives. Two legs of one
+    match on one card is correlated exposure masquerading as independent
+    bets — a staking error, never an edge."""
+    seen: set[tuple] = set()
+    kept, dropped = [], []
+    for leg in ranked_pool:
+        k = _fixture_key(leg)
+        if k in seen:
+            dropped.append(leg)
+            continue
+        seen.add(k)
+        kept.append(leg)
+    return kept, dropped
+
+
+def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
+    """Group ranked legs into accas. "consecutive" = live (1+2, 3+4, 5+6);
+    "barbell" pairs strongest with weakest (1+6, 2+5, 3+4) to equalise acca
+    odds — an A/B candidate only."""
+    k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
+    if pairing == "barbell" and k == 2:
+        n = len(legs) - len(legs) % 2
+        return [[legs[i], legs[n - 1 - i]] for i in range(n // 2)]
+    accas = [legs[i:i + k] for i in range(0, len(legs), k)]
+    return [a for a in accas if len(a) == k]
+
+
+def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
+                 max_accas=None, legs_per_acca=None, volume_pool=None,
+                 volume_min=None, gate_mode=None, fallback=True,
+                 saturated_accas=None, min_accas=None, fixture_report=None, enhancements=False, ml_enabled=None):
+    """THE selection recipe — one code path for live and for the replay harness.
+
+    Every knob defaults to the validated live value; the harness passes
+    overrides. Returns a list of accas (each a list of legs), no staking.
+    `min_accas` is a card-level gate: a smaller card is NO BET. After ranking,
+    same-fixture duplicates are dropped (one match can never ride a card
+    twice, 2026-09-22); callers may pass `fixture_report={}` to receive the
+    dropped matches for the build log.
+    """
+    floor = MIN_LEG_ODDS if floor is None else floor
+    k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
+    max_accas = MAX_ACCAS if max_accas is None else max_accas
+    min_accas = MIN_ACCAS if min_accas is None else min_accas
+    pairing = PAIRING if pairing is None else pairing
+    volume_pool = VOLUME_POOL if volume_pool is None else volume_pool
+    volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
+    gate_mode = GATE_MODE if gate_mode is None else gate_mode
+
+    pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
+                     rank_caps=rank_caps)
+    ml_ranking = (enhancements and rank == "prob" and rank_caps is None
+                  and (os.environ.get('EDGE_FACTORY_ENH_ML', ENH_ML_DEFAULT) == '1' if ml_enabled is None else ml_enabled)
+                  and any(finite_probability(l.get('ml_rank_probability')) is not None for l in pool))
+    if fixture_report is not None and enhancements:
+        fixture_report.update(ml_ranking_active=bool(ml_ranking), capacity_rescue_checked=False,
+                              capacity_rescue_changed=False)
+    if ml_ranking:
+        # Separate estimands: scored legs first, ordered only against other
+        # model scores; cohort-only legs retain their baseline order behind
+        # them. A zero ML score is still scored, not a missing prediction.
+        pool = sorted(pool, key=lambda l: (
+            (ml := finite_probability(l.get('ml_rank_probability'))) is not None,
+            ml if ml is not None else l['prob'],
+            l['prob'], l['odds']), reverse=True)
+    if enhancements:
+        # Keep competing markets until complete tickets have competed. Drop
+        # only duplicate fixture/market quotes here, not every alternative.
+        unique, fixture_dupes, seen = [], [], set()
+        for leg in pool:
+            context = (leg.get("cohort_evidence") or {}).get("price_context") or {}
+            key = (_fixture_key(leg), leg.get("market"), leg.get("price_book"), context.get("source"))
+            if key in seen:
+                fixture_dupes.append(leg)
+            else:
+                seen.add(key)
+                unique.append(leg)
+        pool = unique
+    else:
+        pool, fixture_dupes = dedup_fixture_legs(pool)
+    if fixture_report is not None:
+        fixture_report["dropped"] = [l["match"] for l in fixture_dupes]
+    saturated = len(pool) >= volume_pool
+    if saturated and saturated_accas:
+        max_accas = saturated_accas
+    max_legs = max_accas * k
+
+    if saturated and gate_mode == "pool":
+        # LEGACY (pre-2026-09-04 threshold was MAX_LEGS*2, also a no-op).
+        # Documented no-op — kept only so the harness can reproduce
+        # pre-2026-09-04 behaviour with fallback=False (which does bite).
+        gated = [l for l in pool if l["prob"] >= volume_min]
+        if len(gated) >= max_legs or not fallback:
+            pool = gated
+
+    if enhancements:
+        # Leg admission already checked the cohort payout and current quote.
+        # Unknown cross-fixture dependence is not a worst-case payout veto.
+        # Reuse the shared rank/dedup/pair recipe within executable book/source
+        # groups; keep alternatives until a complete card can be assembled.
+        accas, used = [], set()
+        positions = {id(leg): i for i, leg in enumerate(pool)}
+        fixture_keys = {id(leg): _fixture_key(leg) for leg in pool}
+
+        def pair_order(pair):
+            return tuple(sorted(positions[id(l)] for l in pair))
+
+        def completion(groups, limit, blocked=frozenset()):
+            """Exact capacity witness up to three pairs, not a joint score.
+
+            A maximal greedy matching either fills the request immediately,
+            or its <=4 endpoints cover every edge. Keep all cover-cover edges
+            and at most 2*limit outside neighbours per cover vertex. Any
+            discarded matched neighbour can be replaced by a retained unused
+            one: a limit-pair matching uses at most 2*limit vertices. This
+            bounds the rescue graph to <=30 edges for limit=3, regardless of
+            the quote population. Search depth is at most three.
+            """
+            if limit <= 0:
+                return []
+            groups = [[l for l in group if fixture_keys[id(l)] not in blocked]
+                      for group in groups]
+            greedy, taken = [], set()
+            for group in groups:
+                free = [l for l in group if fixture_keys[id(l)] not in taken]
+                for pair in pair_legs(free, "consecutive", 2):
+                    greedy.append(pair)
+                    taken.update(fixture_keys[id(l)] for l in pair)
+                    if len(greedy) == limit:
+                        return greedy
+            if not greedy:
+                return []
+            # Greedy is maximal. Every group now has <=1 uncovered fixture;
+            # a failed limit=3 request also means each group has <=5 fixtures.
+            edges = {}
+            for group in groups:
+                for i, left in enumerate(group):
+                    for right in group[i + 1:]:
+                        pair = [left, right]
+                        key = frozenset(fixture_keys[id(l)] for l in pair)
+                        if key not in edges or pair_order(pair) < pair_order(edges[key]):
+                            edges[key] = pair
+            neighbours = {v: set() for v in taken}
+            kernel = []
+            for pair in sorted(edges.values(), key=pair_order):
+                a, b = (fixture_keys[id(l)] for l in pair)
+                if a in taken and b in taken:
+                    kernel.append((pair, frozenset((a, b))))
+                else:
+                    inside, outside = (a, b) if a in taken else (b, a)
+                    if len(neighbours[inside]) < 2 * limit:
+                        neighbours[inside].add(outside)
+                        kernel.append((pair, frozenset((a, b))))
+
+            def search(start, used, needed):
+                if not needed:
+                    return []
+                for i in range(start, len(kernel)):
+                    pair, fixtures = kernel[i]
+                    if fixtures.isdisjoint(used):
+                        tail = search(i + 1, used | fixtures, needed - 1)
+                        if tail is not None:
+                            return [pair] + tail
+                return None
+
+            for size in range(limit, len(greedy), -1):
+                found = search(0, frozenset(), size)
+                if found is not None:
+                    return found
+            return greedy
+
+        while len(accas) < max_accas and k == 2:
+            groups = {}
+            for leg in pool:
+                evidence = leg.get("cohort_evidence") or {}
+                context = evidence.get("price_context") or {}
+                if (evidence.get("basis") != "cohort_payout_bound"
+                        or not context.get("book") or not context.get("source")
+                        or _fixture_key(leg) in used):
+                    continue
+                groups.setdefault((context["book"], context["source"]), []).append(leg)
+            candidates, ranked_groups = [], []
+            remaining = max_accas - len(accas)
+            for group in groups.values():
+                unique, _ = dedup_fixture_legs(group)
+                ranked_groups.append(unique)
+                candidates.extend(pair_legs(unique[:remaining * k], pairing, k))
+            if not candidates:
+                break
+            # Compare complete executable pairs in the existing ranked order,
+            # not by an invented joint probability or worst-case return.
+            chosen = min(candidates, key=pair_order)
+            if ml_ranking and remaining in (2, 3):
+                if fixture_report is not None:
+                    fixture_report["capacity_rescue_checked"] = True
+                original_chosen = chosen
+                # ENH builds up to THREE accas; MAX_ACCAS=2 is Main's default.
+                # Keep the original recipe choice whenever it cannot reduce
+                # achievable capacity. Exact flag-off/no-score recipes stay
+                # untouched. Rescue can depart from barbell/consecutive.
+                blocked = {fixture_keys[id(l)] for l in chosen}
+                follow = completion(ranked_groups, remaining - 1, blocked)
+                if len(follow) < remaining - 1:
+                    best = completion(ranked_groups, remaining)
+                    if len(best) > 1 + len(follow):
+                        for pair in sorted(candidates, key=pair_order):
+                            blocked = {fixture_keys[id(l)] for l in pair}
+                            if len(completion(ranked_groups, len(best) - 1, blocked)) == len(best) - 1:
+                                chosen = pair
+                                break
+                        else:
+                            chosen = min(best, key=pair_order)
+                if fixture_report is not None and chosen != original_chosen:
+                    fixture_report["capacity_rescue_changed"] = True
+            accas.append(chosen)
+            used.update(_fixture_key(leg) for leg in chosen)
+    else:
+        accas = pair_legs(pool[:max_legs], pairing, k)
+
+    if saturated and gate_mode == "acca":
+        # Per-acca conviction gate: an acca rides only if EVERY leg clears the
+        # threshold. Total risk is unchanged (STAKE_FRAC is split across the
+        # surviving accas) — this trades diversification for conviction.
+        kept = [a for a in accas if all(l["prob"] >= volume_min for l in a)]
+        if kept or not fallback:
+            accas = kept
+        # else: card-completeness fallback — an empty card is not an opinion.
+    if len(accas) < min_accas:
+        return []
+    return accas
+
+
+def _stake_weights(weights, n):
+    """Return `n` positive numeric weights without touching card selection."""
+    if weights is None:
+        return None
+    if isinstance(weights, str):
+        try:
+            parsed = [float(v.strip()) for v in weights.split(",") if v.strip()]
+        except ValueError as exc:
+            raise ValueError("stake weights must be comma-separated numbers") from exc
+    else:
+        try:
+            parsed = [float(v) for v in weights]
+        except (TypeError, ValueError) as exc:
+            raise ValueError("stake weights must be a sequence of numbers") from exc
+    if len(parsed) < n:
+        raise ValueError(f"need at least {n} stake weights, got {len(parsed)}")
+    parsed = parsed[:n]
+    if any(not math.isfinite(v) or v <= 0 for v in parsed):
+        raise ValueError("stake weights must be finite and greater than zero")
+    return parsed
+
+
+def _main_pool_floor():
+    return (MIN_LEG_ODDS if MAIN_ADDON_FLOOR is None
+            else min(MIN_LEG_ODDS, MAIN_ADDON_FLOOR))
+
+
+def _model_probability_floor(value):
+    value = float(value)
+    if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+        raise ValueError("model probability floor must be a finite fraction in [0, 1]")
+    return value
+
+
+def _passes_model_probability_floor(leg, minimum):
+    score = finite_probability(leg.get("ml_rank_probability"))
+    return not minimum or (score is not None and score >= minimum)
+
+
+def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
+             stake_per_acca=None, weights=None, bucket_weights=None,
+             min_prob=0.0, addon_floor=None, addon_ceiling=None,
+             addon_min_prob=0.0, addon_rank="ev", model_min_prob=0.0, **overrides):
+    """Select a card and size it in one production/replay code path.
+
+    ``per_day`` (live default) deploys STAKE_FRAC across however many accas
+    were selected. ``per_acca`` deploys STAKE_PER_ACCA for each ticket, while
+    never exceeding STAKE_FRAC in total. Optional weights redistribute that
+    mode's total across accas; they cannot affect which legs are selected.
+    Selection overrides are forwarded to :func:`select_accas`.
+
+    ``bucket_weights`` (optional) is the P&L-tripwire deployment throttle:
+    legs from a fully-benched (0.0) bucket are made invisible to selection
+    (the door is closed — selection composes only from surviving buckets);
+    afterwards acca weight = min over its legs' bucket weights, and a
+    demoted (0.5) acca is staked at half. Empty/None means all doors open —
+    the replay harness passes nothing and therefore replays true to history.
+
+    Optional min_prob filters before base selection. Optional add-on bounds
+    append one unused ranked candidate per double AFTER sizing; no extra
+    candidate means the double and stake survive unchanged. Old receipts
+    omit these options and therefore retain their original decisions.
+    """
+    # Optional settings preserve legacy receipts and explicit experiments.
+    # Missing model scores fail a mandatory model floor; never impute zero.
+    model_min_prob = _model_probability_floor(model_min_prob)
+    if model_min_prob and not overrides.get("enhancements", False):
+        raise ValueError("model probability floor requires the enhancement lane")
+    if model_min_prob:
+        pool = [l for l in pool if _passes_model_probability_floor(l, model_min_prob)]
+    min_prob, addon_min_prob = float(min_prob), float(addon_min_prob)
+    if any(not math.isfinite(p) or not 0.0 <= p <= 1.0
+           for p in (min_prob, addon_min_prob)):
+        raise ValueError("probability floors must be finite fractions in [0, 1]")
+    adding = addon_floor is not None or addon_ceiling is not None
+    if adding:
+        if addon_floor is None or addon_ceiling is None:
+            raise ValueError("both add-on price bounds are required")
+        addon_floor, addon_ceiling = float(addon_floor), float(addon_ceiling)
+        if (not math.isfinite(addon_floor) or not math.isfinite(addon_ceiling)
+                or not 1.0 < addon_floor < addon_ceiling):
+            raise ValueError("invalid add-on price band")
+        if addon_rank not in ("ev", "prob"):
+            raise ValueError("add-on rank must be 'ev' or 'prob'")
+        if (overrides.get("enhancements", False)
+                or overrides.get("legs_per_acca", LEGS_PER_ACCA) != 2):
+            raise ValueError("add-ons require Main base doubles")
+    pool = [l for l in pool if l["prob"] >= min_prob]
+    stake_frac = STAKE_FRAC if stake_frac is None else float(stake_frac)
+    stake_mode = STAKE_MODE if stake_mode is None else stake_mode
+    weights = STAKE_WEIGHTS if weights is None else weights
+    if stake_per_acca is None:
+        stake_per_acca = STAKE_PER_ACCA
+    if stake_per_acca is None:
+        stake_per_acca = stake_frac / MAX_ACCAS
+    stake_per_acca = float(stake_per_acca)
+    if stake_mode not in ("per_day", "per_acca"):
+        raise ValueError("stake_mode must be 'per_day' or 'per_acca'")
+    if not math.isfinite(stake_frac) or stake_frac < 0:
+        raise ValueError("stake_frac must be finite and non-negative")
+    if not math.isfinite(stake_per_acca) or stake_per_acca < 0:
+        raise ValueError("stake_per_acca must be finite and non-negative")
+
+    if bucket_weights:
+        # Door closed before selection ever sees the pool: benching must
+        # rebuild the whole card from surviving buckets, not just veto the
+        # tickets that happened to contain a benched leg post-hoc (that
+        # would throw away perfectly good survivor accas).
+        pool = [l for l in pool
+                if float(bucket_weights.get(
+                    str((l.get("row") or {}).get("bucket") or ""), 1.0)) > 0.0]
+    accas = select_accas(pool, **overrides)
+    if bucket_weights:
+        acca_weights = [
+            min(float(bucket_weights.get(
+                str((l.get("row") or {}).get("bucket") or ""), 1.0))
+                for l in a)
+            for a in accas]
+    else:
+        acca_weights = [1.0] * len(accas)
+    if not accas or bank_pct <= 0:
+        return []
+
+    if stake_mode == "per_day":
+        total_frac = stake_frac
+    else:
+        total_frac = min(stake_frac, stake_per_acca * len(accas))
+    parsed_weights = _stake_weights(weights, len(accas))
+    if parsed_weights is None:
+        # Keep the live-default arithmetic byte-for-byte compatible with the
+        # old plan_day implementation.
+        stake_pcts = [bank_pct * total_frac / len(accas)] * len(accas)
+    else:
+        weight_total = sum(parsed_weights)
+        stake_pcts = [bank_pct * total_frac * w / weight_total for w in parsed_weights]
+
+    # Ticket stakes ship at four decimals. Independent rounding of a weighted
+    # card can otherwise put it 0.0001 above the promised hard day cap.
+    stake_pcts = [round(v, 4) for v in stake_pcts]
+    rounded_cap = round(bank_pct * total_frac, 4)
+    excess = round(sum(stake_pcts) - rounded_cap, 4)
+    if excess > 0:
+        stake_pcts[-1] = round(stake_pcts[-1] - excess, 4)
+
+    plan = []
+    for a, stake_pct, aw in zip(accas, stake_pcts, acca_weights):
+        prod = 1.0
+        for l in a:
+            prod *= l["odds"]
+        acca = {"legs": [{**{k: l[k] for k in ("match", "pick", "prob", "odds")},
+                          "result": l.get("result"),
+                          # Preserve the winning alternative's identity for
+                          # evidence carry; "over" alone is not a market.
+                          **({"market": l.get("market"), "price_book": l.get("price_book"),
+                             "price_source": l.get("price_source")}
+                             if overrides.get("enhancements", False) else {})} for l in a],
+                "odds": round(prod, 2),
+                "stake_pct": round(stake_pct * aw, 4) if aw < 1.0 else stake_pct}
+        if aw < 1.0:
+            acca["bench_weight"] = aw
+        plan.append(acca)
+    if adding:
+        # Reserve ALL base fixtures before assigning extras. Each double may
+        # receive one extra, never a fixture already used elsewhere on the card.
+        # Selection uses only admitted candidates/probabilities/prices, not results.
+        # Use admitted base legs, not rendered legs: rendered legs omit
+        # row.date, which would otherwise let a dated alternative quote evade
+        # the same-fixture guard.
+        used = {_fixture_key(l) for a in accas for l in a}
+        candidates = [l for l in pool
+                      if addon_floor <= l["odds"] < addon_ceiling
+                      and l["prob"] >= addon_min_prob
+                      and _fixture_key(l) not in used]
+        candidates, _ = dedup_fixture_legs(rank_legs(
+            candidates, addon_rank, rank_caps=overrides.get("rank_caps")))
+        for acca in plan:
+            extra = next((l for l in candidates if _fixture_key(l) not in used), None)
+            if extra is None:
+                continue  # preserve the original double AND its original stake
+            acca["legs"].append({k: extra.get(k) for k in
+                                 ("match", "pick", "prob", "odds", "result")})
+            acca["odds"] = round(math.prod(l["odds"] for l in acca["legs"]), 2)
+            used.add(_fixture_key(extra))
+    return plan
+
+
+# Decision-time replay uses the SAME gates and planner, with captured policy
+# outputs instead of recomputing historical policies from today's registries.
+def ticket_planner_options(lane="main") -> dict:
+    options = dict(floor=MIN_LEG_ODDS, rank=ENHANCEMENT_RANK if lane == "enh" else MAIN_RANK,
+                pairing=PAIRING, max_accas=ENH_MAX_ACCAS if lane == "enh" else MAX_ACCAS,
+                min_accas=MIN_ACCAS, legs_per_acca=LEGS_PER_ACCA,
+                volume_pool=VOLUME_POOL, volume_min=VOLUME_MIN_PROB,
+                gate_mode=GATE_MODE, fallback=True, saturated_accas=None,
+                stake_frac=ENHANCEMENT_LANE.stake_frac if lane == "enh" else STAKE_FRAC,
+                stake_mode=STAKE_MODE,
+                stake_per_acca=(STAKE_PER_ACCA if STAKE_PER_ACCA is not None
+                                else (ENHANCEMENT_LANE.stake_frac if lane == "enh" else STAKE_FRAC)
+                                / MAX_ACCAS), weights=STAKE_WEIGHTS,
+                enhancements=lane == "enh",
+                ml_enabled=os.environ.get("EDGE_FACTORY_ENH_ML", ENH_ML_DEFAULT) == "1")
+    if lane == "main":
+        options.update(min_prob=MAIN_MIN_PROB, addon_floor=MAIN_ADDON_FLOOR,
+                       addon_ceiling=MAIN_ADDON_CEILING,
+                       addon_min_prob=MAIN_ADDON_MIN_PROB, addon_rank=MAIN_ADDON_RANK)
+    if lane == "enh":
+        options["model_min_prob"] = ENH_MODEL_MIN_PROB
+    return options
+
+
+def ticket_decision_context(lane, target, now, slate, pool, bank_eff, *,
+                            policy=None, past=(), known_results=None, bank=None, bank_state=None):
+    """Snapshot the validated-admission boundary; no future outcomes or reads.
+
+    `pool` is the live execution-safe admission output, including competing ENH
+    quotes and retained models. Raw slate is retained too, but replay does NOT
+    claim to re-mine cohorts or refetch/reauthorize historical provider quotes.
+    """
+    return copy.deepcopy(dict(
+        lane=lane, date=target, build_at=now.isoformat(), slate=slate, pool=pool,
+        bank_eff=bank_eff, bank_total=bank, policy=policy or {},
+        bank_state=bank_state,
+        past=sorted([list(pair) for pair in past]), known_results=known_results,
+        freeze_floor=(freeze_floor(target, now).isoformat()
+                      if freeze_floor(target, now) is not None else None),
+        options=ticket_planner_options(lane)))
+
+
+def prepare_ticket_pool(context):
+    """Pure shared live/replay gating AFTER execution-safe price admission."""
+    pool = copy.deepcopy(context["pool"])
+    now = datetime.fromisoformat(context["build_at"])
+    target = context["date"]
+    if context["lane"] == "enh":
+        withdrawn = apply_enhancement_timing(
+            pool, now, target, {}, known_results=context["known_results"],
+            freeze_floor_at=(datetime.fromisoformat(context["freeze_floor"])
+                             if context.get("freeze_floor") else None))
+        minimum = _model_probability_floor(context["options"].get("model_min_prob", 0.0))
+        if minimum:
+            for leg in pool:
+                if leg.get("verdict") == "fire" and not _passes_model_probability_floor(leg, minimum):
+                    leg["verdict"] = "below_model_probability_floor"
+                    leg["withdrawn_reason"] = f"stored model probability unavailable or below {minimum:.0%}"
+                    withdrawn.setdefault(leg["withdrawn_reason"], []).append(leg.get("match"))
+        return dict(legs=pool, pool=enhancement_pool(pool), withdrawn=withdrawn)
+    if context["lane"] != "main":
+        raise ValueError("unknown ticket lane")
+    census, rejections = {}, []
+
+    def reject(legs, rule, detail, label=None, names=None):
+        if legs:
+            rejections.append((legs, rule, detail))
+            census[label or detail] = names or [l["match"] for l in legs]
+
+    initial = list(pool)
+    pool, drops = live_kickoff_guard(
+        pool, now, freeze_floor_at=(datetime.fromisoformat(context["freeze_floor"])
+                                    if context.get("freeze_floor") else None))
+    for reason, names in drops.items():
+        reject([l for l in initial if l["match"] in set(names)], "kickoff_guard", reason,
+               names=names)
+    reject([l for l in pool if l.get("result")], "already_settled",
+           "result is already known", "already settled (result known)")
+    pool = [l for l in pool if not l.get("result")]
+    past = {tuple(pair) for pair in context["past"]}
+
+    def previous(leg):
+        row = leg["row"]
+        return (str(row.get("home") or "").strip().lower(),
+                str(row.get("away") or "").strip().lower()) in past
+
+    reject([l for l in pool if previous(l)], "earlier_slate_fixture",
+           "fixture already appeared on an earlier slate and has kicked off",
+           "fixture already on an earlier day's slate (kicked off)")
+    pool = [l for l in pool if not previous(l)]
+    min_prob = context["options"].get("min_prob", 0.0)
+    reject([l for l in pool if l["prob"] < min_prob], "main_probability_floor",
+           f"stated probability below {min_prob:.0%}")
+    pool = [l for l in pool if l["prob"] >= min_prob]
+    base_pool = list(pool)
+    policy = context["policy"]
+    pnl_weights = policy["pnl_weights"]
+    benched = [l for l in pool if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
+    reject(benched, "tripwire_bucket_benched",
+           f"P&L tripwire bucket bench streak >= {PNL_BENCH_STREAK} days",
+           f"P&L tripwire: bucket benched (VETO streak >= {PNL_BENCH_STREAK} days)",
+           sorted(f"{l['match']} [{l['row'].get('bucket')}]" for l in benched))
+    pool = [l for l in pool if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
+    slice_benched = set(policy["slice_policy"].get("bench_buckets") or ())
+    benched = [l for l in pool if str(l["row"].get("bucket") or "") in slice_benched]
+    reject(benched, "selection_ladder_bucket_benched",
+           "selection ladder bench_buckets policy vetoed the bucket",
+           "SELECTION LADDER: slice bucket benched",
+           sorted(f"{l['match']} [{l['row'].get('bucket')}]" for l in benched))
+    pool = [l for l in pool if str(l["row"].get("bucket") or "") not in slice_benched]
+    gate_pool_size = len(pool)
+    pool, blocked = acca_price_evidence_gate(pool, set(policy["gate_labels"]))
+    reject(blocked, "acca_price_evidence_gate",
+           "price-evidence label is blocked from accas (dynamic gate, 30-day z <= -2 with hysteresis)",
+           "ACCA PRICE-EVIDENCE GATE: blocked label",
+           sorted(f"{l['match']} [{(l['row'].get('price_evidence') or '').upper()}]" for l in blocked))
+    return dict(pool=pool, base_pool=base_pool, census=census, rejections=rejections,
+                price_gate_blocked=blocked, gate_pool_size=gate_pool_size)
+
+
+def plan_ticket_decision(context, *, prepared=None, fixture_report=None):
+    """One live/replay call path for policy gates, selection and actual sizing."""
+    prepared = prepare_ticket_pool(context) if prepared is None else prepared
+    options = dict(context["options"])
+    if context["lane"] == "main":
+        policy = context["policy"]
+        options.update(bucket_weights=policy["pnl_weights"],
+                       rank_caps=policy["slice_policy"].get("rank_caps") or None)
+    trace = (fixture_report if fixture_report is not None else
+             {} if context["lane"] == "enh" else None)
+    plan = plan_day(prepared["pool"], context["bank_eff"],
+                    fixture_report=trace, **options)
+    if context["lane"] == "enh":
+        _carry_lane_evidence(plan, prepared["pool"])
+        # Retain the actual policy used, not a later environment flag.
+        active = trace.get("ml_ranking_active", False)
+        for acca in plan:
+            for leg in acca["legs"]:
+                leg["ml_ordering_active"] = bool(active)
+                leg["ranking_basis"] = ("model" if active and finite_probability(
+                    leg.get("ml_rank_probability")) is not None else "cohort")
+    else:
+        # Keep execution identity on FUTURE frozen/settled legs too, not just
+        # in the replay receipt. Prices, selections and stakes are unchanged.
+        for acca in plan:
+            for leg in acca["legs"]:
+                meta = next(l for l in prepared["pool"] if _leg_key(l) == _leg_key(leg)
+                            and l["odds"] == leg["odds"])
+                row = meta.get("row") or {}
+                leg.update(market=row.get("market") or "1x2",
+                           price_book=row.get("bookmaker"), price_source=row.get("odds_source"))
+    return plan
+
+
+def ticket_card_identity(plan, pool=None):
+    """Full execution identity, order-insensitive within/between accas.
+
+    Result/probability fields are deliberately not identities. Quote provenance
+    is compared separately via the receipt hash; market/book/source must not
+    disappear merely because two contracts share one quoted price.
+    """
+    cards = []
+    for acca in plan:
+        legs = []
+        for leg in acca.get("legs", []):
+            meta = leg
+            if pool is not None:
+                meta = next((l for l in pool if l["match"] == leg["match"]
+                             and str(l["pick"]).upper() == str(leg["pick"]).upper()
+                             and l["odds"] == leg["odds"]
+                             and (not leg.get("market") or l.get("market") == leg["market"])
+                             and (not leg.get("price_book") or l.get("price_book") == leg["price_book"])
+                             and (not leg.get("price_source") or l.get("price_source") == leg["price_source"])), leg)
+            row = meta.get("row") or {}
+            legs.append((str(leg["match"]), str(meta.get("market") or row.get("market") or "1x2"),
+                         str(leg["pick"]).upper(), float(leg["odds"]),
+                         str(meta.get("price_book") or row.get("bookmaker") or ""),
+                         str(meta.get("price_source") or row.get("odds_source") or "")))
+        cards.append((sorted(legs), float(acca["odds"]), float(acca["stake_pct"])))
+    return sorted(cards)
+
+
+def decision_receipt_path(target, lane="main"):
+    prefix = "auto_tickets" if lane == "main" else "autobets_enh_tickets"
+    return ticket_receipt_path(LOCALDATA, f"{prefix}_{target}_decision.json")
+
+
+def _decision_digest(payload):
+    encoder = json.JSONEncoder(sort_keys=True, separators=(",", ":"), allow_nan=False)
+    hasher = hashlib.sha256()
+    for chunk in encoder.iterencode(payload):
+        hasher.update(chunk.encode("utf-8"))
+    return hasher.hexdigest()
+
+
+def ticket_execution_provenance():
+    """Observed checkout/config at receipt capture, not inferred from event SHA."""
+    repo = Path(__file__).resolve().parent.parent
+    try:
+        proc = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo,
+                              capture_output=True, text=True, timeout=5)
+        head = proc.stdout.strip() if proc.returncode == 0 else None
+    except (OSError, subprocess.TimeoutExpired):
+        head = None
+    hashes = {}
+    for name in ("Config/verified_results.json", "src/edgefactory/consensus_contracts.py",
+                 "src/edgefactory/enh_registry.py"):
+        try:
+            hashes[name] = hashlib.sha256((repo / name).read_bytes()).hexdigest()
+        except OSError:
+            hashes[name] = None
+    return dict(checkout_head_at_capture=head, file_sha256=hashes,
+                event_sha=os.environ.get("GITHUB_SHA"), run_id=os.environ.get("GITHUB_RUN_ID"),
+                scope="checkout/files at receipt capture; not proof of earlier subprocess revisions")
+
+
+def write_decision_receipt(context, plan, *, frozen=False):
+    """Audit only; never replace frozen evidence or repair a financial state.
+
+    Drafts track the latest real build. Force recuts never reach this writer
+    for a frozen date. A failure is explicit but cannot cancel a live ticket.
+    """
+    try:
+        compact_ticket_receipts(LOCALDATA)
+        path = decision_receipt_path(context["date"], context["lane"])
+        if path.exists():
+            old = read_ticket_receipt(path)
+            is_frozen = old.get("status") == "frozen"
+            del old
+            if is_frozen:
+                return
+        prepared = prepare_ticket_pool(context)
+        payload = dict(schema=1, execution_provenance=ticket_execution_provenance(), engine_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                       boundary="execution_safe_admission_to_ticket",
+                       status="frozen" if frozen and plan else "draft" if plan else "no_bet",
+                       context=context, plan=plan,
+                       card_identity=ticket_card_identity(plan, prepared["pool"]))
+        payload["sha256"] = _decision_digest(payload)
+        write_ticket_receipt(path, json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False))
+    except Exception as exc:
+        print(f"::warning::DECISION RECEIPT NOT PERSISTED: {type(exc).__name__}: {exc}", file=sys.stderr)
+
+
+def ml_paper_score_lookup(scores, *, now=None):
+    """Exact regulation results on the leg's SAST kickoff day, never card day.
+
+    No +/-day, truncated-name or receipt-date rescue. The shared result store
+    is date/pair keyed, not provider-event keyed: that remaining limitation is
+    explicit, and ambiguous exact aliases stay unresolved. UTC/SAST calendar
+    boundaries stay unresolved until stronger donor event/timezone evidence
+    exists. A future kickoff cannot settle against an already-present score.
+    """
+    from datetime import UTC
+
+    from edgefactory.odds_normalization import parse_zoned_timestamp
+    def lookup(candidate):
+        kickoff = parse_zoned_timestamp(candidate.get('kickoff_utc'))
+        at = now if now is not None else datetime.now(TZ)
+        if kickoff is None or at.tzinfo is None or kickoff >= at:
+            return None
+        if kickoff.astimezone(UTC).date() != kickoff.astimezone(TZ).date():
+            return None  # donor calendar basis is unproven; never guess
+        day = kickoff.astimezone(TZ).date().isoformat()
+        values = {scores[(day, hk, ak)]
+                  for hk, ak, narrow in _result_write_key_specs(
+                      candidate['home'], candidate['away'])
+                  if not narrow and (day, hk, ak) in scores}
+        return next(iter(values)) if len(values) == 1 else None
+    return lookup
+
+
+def _run_ml_paper():
+    """Independent paper lifecycle; never read/write live state or live plans."""
+    if os.environ.get('EDGE_FACTORY_ML_PAPER', '1') != '1':
+        return
+    try:
+        from edgefactory import ml_paper
+        now = datetime.now(TZ)
+        history = ml_paper.receipts(LOCALDATA)
+        lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
+        # Consume only existing, timestamped model/forecast rows. The future
+        # planner is the existing engine, not a new feed or a future-data fill.
+        slate, found = [], False
+        for path in [LOCALDATA / "picks_today.json", *sorted(LOCALDATA.glob("picks_next_*days.json"))]:
+            if not path.exists():
+                continue
+            rows = json.loads(path.read_text())
+            if not isinstance(rows, list):
+                raise TypeError(f"invalid ML forecast slate: {path.name}")
+            slate.extend(rows)
+            found = True
+        if found:
+            row = ml_paper.capture_rolling({"build_at": now.isoformat(), "slate": slate},
+                root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
+                source_guard=execution_source_rejection, min_leg_odds=1.0)
+        else:
+            ml_paper.migrate_receipts(LOCALDATA)
+            row = None  # absent input is not a fabricated NO BET decision
+        ml_paper.publish(LOCALDATA, lookup)
+        card = row or ml_paper.latest_card(LOCALDATA)
+        if card is not None:
+            # Report the complete day's immutable publications, not merely a
+            # last NO BET/addition that could hide earlier outstanding tickets.
+            daily_card = LOCALDATA / f"{ml_paper.PREFIX}_{card['date']}.txt"
+            print(daily_card.read_text())
+        return True
+    except Exception as exc:
+        print(f"::warning::autobets_ML unavailable; live lanes unchanged: "
+              f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        return False
+
+
+# ---------------- settlement + take-profit notification ----------------
+def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None):
+    """Move the bank by the settled P&L (all %) and fire the TAKE-PROFIT
+    NOTIFICATION when performance reaches the cycle target. No amounts are
+    withdrawn — the operator acts on the notification. Returns event lines.
+
+    ``lane`` only chooses the notification marker's filename, so each lane
+    leaves its own ``<prefix>_takeprofit_<date>.json`` receipt while the bank
+    arithmetic and the notification rule stay one implementation.
+    """
+    events = []
+    st["bank"] += ret_pct - staked_pct
+    if st["bank"] >= take_profit_target(st):
+        gain_pct = st["bank"] - st["cycle_base"]
+        st["cycle_base"] = st["bank"]
+        note = (f"🔔 TAKE-PROFIT: performance +{gain_pct:.1f}% of capital this cycle "
+                f"(bank now {st['bank']:.1f}%). ACT ON YOUR PLAN — bank it. "
+                f"Next notification at {take_profit_target(st):.1f}%.")
+        st["events"].append({"date": when, "action": "TAKE_PROFIT_NOTIFICATION",
+                             "gain_pct": round(gain_pct, 2),
+                             "bank_after_pct": round(st["bank"], 2),
+                             "next_target_pct": round(take_profit_target(st), 2)})
+        marker = LOCALDATA / f"{(lane or MAIN_LANE).slip_prefix}_takeprofit_{when}.json"
+        try:
+            marker.write_text(json.dumps(st["events"][-1], indent=2))
+        except Exception:
+            pass
+        events.append(note)
+    return events
+
+
+def _settled_leg_record(leg, result):
+    """One leg as the history keeps it: what was bet, and how it resolved.
+
+    The stored result is what the grader decided (win / loss / void / conflict /
+    None), so the performance report can say which leg made an acca win or lose.
+    """
+    rec = {"match": leg.get("match"), "pick": leg.get("pick"),
+           "odds": leg.get("odds"), "result": result}
+    if leg.get("label"):
+        rec["label"] = leg.get("label")
+    keys = ["market", "price_book", "price_source", "price_at", "price_provenance", "fixture_key"]
+    if any(k in leg for k in ("cohort_evidence", "ml_rank_probability", "ml_model_key")):
+        keys += ["prob", "cohort_evidence", "ml_rank_probability", "ml_model_key", "ml_model_schema",
+                 "ranking_basis", "ml_ordering_active", "floor", "floor_basis", "league", "shadow", "price_kickoff"]
+    for key in keys:
+        if key in leg:
+            rec[key] = copy.deepcopy(leg[key])
+    return rec
+
+
+def _record_acca_settlement(st, slip_date, acca):
+    """Append/update a per-day history entry for one settled acca.
+
+    Per-acca settlement means a day's accas can settle across several runs (a
+    stuck leg no longer freezes the whole day's stake). History stays grouped
+    by date so the performance report still reads one line per bet-day. Each
+    acca keeps its own stake, return and leg results so the report can show
+    what drove the win or loss (entries written before this carry no legs).
+    """
+    won = bool(acca["won"])
+    ret = round(acca["stake_pct"] * acca["odds"] if won else 0.0, 4)
+    results = list(acca.get("results") or [])
+    legs = [_settled_leg_record(l, results[i] if i < len(results) else None)
+            for i, l in enumerate(acca.get("legs") or [])]
+    rec = {"odds": acca["odds"], "won": won,
+           "stake_pct": round(acca["stake_pct"], 4),
+           "returned_pct": ret, "legs": legs}
+    for h in st["history"]:
+        if h["date"] == slip_date:
+            h["staked_pct"] = round(h["staked_pct"] + acca["stake_pct"], 4)
+            h["returned_pct"] = round(h["returned_pct"] + ret, 4)
+            h["accas"].append(rec)
+            h["bank_pct"] = round(st["bank"], 4)
+            _rechain_from(st, slip_date)
+            return
+    row = {
+        "date": slip_date,
+        "staked_pct": round(acca["stake_pct"], 4),
+        "returned_pct": ret,
+        "accas": [rec],
+        "bank_pct": round(st["bank"], 4),
+    }
+    st["history"].append(row)
+    _rechain_from(st, slip_date)
+
+
+def _rechain_from(st, slip_date) -> None:
+    """Recompute ``close_pct`` for every bet-day on or after ``slip_date``.
+
+    A bet-day's close is the previous bet-day's close plus its net P&L (returned
+    minus staked, over every acca on the day). ``bank_pct`` is a snapshot of the
+    live bank at the moment an acca settles, so it can include a later-settled
+    day's P&L (the 13 Oct row was stored 18.88 low because the 14 Oct acca #1
+    had already lost). The chain is therefore rebuilt in date order whenever any
+    day is written, so a late settlement on an earlier day also corrects every
+    later close. The anchor is the close of the last bet-day before
+    ``slip_date``; rows written before ``close_pct`` existed anchor on
+    ``bank_pct``. With no earlier bet-day, the first row's snapshot is the close.
+    """
+    prev_close = None
+    # Intentional: a later day's stored close is rewritten when an earlier day settles late.
+    for h in sorted(st["history"], key=lambda h: h["date"]):
+        if h["date"] < slip_date:
+            prev_close = h.get("close_pct", h["bank_pct"])
+            continue
+        if prev_close is None:
+            h["close_pct"] = round(h["bank_pct"], 4)
+        else:
+            h["close_pct"] = round(prev_close + h["returned_pct"] - h["staked_pct"], 4)
+        prev_close = h["close_pct"]
+
+
+def _folded_leg_key(day, home, away, pick):
+    """Folded identity key for leg<->archive matching (2026-09-23 stale-slip
+    fix): exact display strings mismatch across naming generations
+    ('Muharraq SC vs Manama Club' vs 'Muharraq vs Manama'), which silently
+    froze the 2026-09-10 slip for 13 days because the 5-day void timer
+    lives behind the row-found branch. Structure-stripped identity keys
+    ('SC', 'Club' tokens out) make the match generation-proof; two
+    same-club fixtures on one date cannot co-occur in one slate.
+
+    Resolves curated aliases too (2026-10-06 Türkiye/Turkey settlement
+    orphan). Structure-stripping folds spelling; it cannot fold a RENAME.
+    "Türkiye" and "Turkey" transliterate to 'turkiye' and 'turkey' - two
+    different words for one country - so the Italy fixture of 2026-10-05
+    was filed under one spelling in the archive and the other on the frozen
+    slip, and the leg could never be found. The curated exonym table in
+    edgefactory.identity already carried the pair; this key simply was not
+    consulting it, because it called the alias-free base fold. Using the
+    alias-resolving key adds no new names: it reuses the same evidence-
+    seeded table the rest of the join layer already trusts."""
+    from edgefactory.identity import source_team_key
+
+    return (str(day)[:10], source_team_key(home), source_team_key(away),
+            str(pick or "").upper())
+
+
+def leg_lookup_key(slip_date, leg):
+    """Settlement lookup key for one frozen leg.
+
+    Prefers the identifier stamped onto the leg when the slip FROZE. The
+    match string is a display artefact, not an identity: settlement used to
+    split "A vs B" back apart at grading time, so any respelling of the
+    fixture between freeze and settlement orphaned the leg permanently.
+    Yesterday's run logged 'superseded 11 archived row(s) with fresh picks',
+    so rows genuinely are rewritten during the day while the frozen slip
+    keeps the old wording - the window is real, not theoretical.
+
+    Falls back to parsing the text, with alias tolerance, so slips frozen
+    before this field existed still settle. Returns None when the leg
+    carries no usable identity at all; the caller treats that as 'not
+    found' and the void timer applies as before.
+    """
+    if not isinstance(leg, dict):
+        return None
+    pick = leg.get("pick")
+    stored = leg.get("fixture_key")
+    if isinstance(stored, (list, tuple)) and len(stored) >= 3:
+        day, home, away = stored[0], stored[1], stored[2]
+        if home or away:
+            return _folded_leg_key(str(day or slip_date), home, away, pick)
+    parts = str(leg.get("match") or "").split(" vs ")
+    if len(parts) != 2:
+        return None
+    return _folded_leg_key(slip_date, parts[0], parts[1], pick)
+
+
+# Legs whose index row was found by a compatibility key rather than by the
+# recomputed one. Empty in normal operation; a non-empty list means stored
+# identities predate a fold change and had to be migrated at read. Each
+# entry is an audit record (both keys, slip day, resolved fixture) - see
+# _compat_record - and every entry is ALSO journaled as a settlement line,
+# so a run log reconstructs the migration without re-running the resolver.
+LEGACY_KEY_HITS: list[dict] = []
+
+# Candidates the corroboration guard refused: the matched row's own spelling
+# does not reproduce the stored pre-fold key, so the score belongs to a
+# different fixture (another club of the name, or a rename). Recorded, and
+# journaled, because a refusal holds the leg - it must never be silent.
+LEGACY_KEY_REFUSED: list[dict] = []
+
+# Sunset (dated TODO, 2026-10-12). This tier exists only for slips frozen
+# BEFORE the word fold (commit 4204ceb "identity: fold the Utd abbreviation
+# and join the evidenced spellings"). auto_tickets' void timer is 5 days and
+# no slip outlives its fixtures by more than that, so the tier has no work to
+# do once the last pre-fold slip is off the book. REMOVE it - the migrated
+# candidate in leg_lookup_keys, _compat_refusal, both trails and the summary
+# line - when BOTH hold, read off the settlement run logs:
+#   * the per-run "compat keys: N hit(s)" summary reads 0 hit(s) for 14
+#     consecutive settlement runs (N=14: one fortnight, twice the void timer
+#     plus slack for a weekend of skipped runs), and
+#   * no open slip's stored fixture_key fails the current fold (grep the lane
+#     state files' fixture_key values; every one must be reproduced by
+#     source_team_key on its own day).
+# Reprint both checks: PYTHONPATH=src .venv/bin/python handoff/n1_persisted_keys.py
+# (churn section) and any settlement run log (summary line).
+
+
+def leg_lookup_keys(slip_date, leg) -> list[tuple]:
+    """Every index key a frozen leg may be filed under, best first.
+
+    ``leg_lookup_key`` answers with the identity the CURRENT fold computes.
+    A leg frozen before a fold change carries the key the OLD fold computed,
+    and re-folding cannot recover the new one when the change was a WORD
+    fold: the stored key is one glued word, so there is no token left to
+    fold (``source_team_key("newcastleutd")`` is unchanged, while the archive
+    now files that club as ``newcastleunited``). The primary key is always
+    first, so a leg whose identity did not move resolves exactly as before;
+    the migrated spelling follows as a read-only compatibility candidate.
+
+    Only the STORED key is migrated, never the display text: a slip whose
+    text path produced the key is recomputed under the current rule already.
+    """
+    primary = leg_lookup_key(slip_date, leg)
+    if primary is None:
+        return []
+    keys = [primary]
+    stored = leg.get("fixture_key") if isinstance(leg, dict) else None
+    if isinstance(stored, (list, tuple)) and len(stored) >= 3 and (stored[1] or stored[2]):
+        from edgefactory.identity import migrate_folded_key
+
+        home, away = migrate_folded_key(stored[1]), migrate_folded_key(stored[2])
+        if (home, away) != (stored[1], stored[2]):
+            migrated = _folded_leg_key(str(stored[0] or slip_date), home, away,
+                                       leg.get("pick"))
+            if migrated != primary:
+                keys.append(migrated)
+    return keys
+
+
+def _prefold_leg_key(day, home, away, pick):
+    """The leg key the PRE-fold rule computed (alias resolution, no token
+    fold). Used only to corroborate a stored key against the row a
+    compatibility candidate matched - never to build an index or a lookup
+    order, so the forward path has exactly one key function.
+    """
+    from edgefactory.identity import source_team_key
+
+    return (str(day)[:10], source_team_key(home, fold_tokens=False),
+            source_team_key(away, fold_tokens=False), str(pick or "").upper())
+
+
+def _compat_refusal(leg, row):
+    """Why a compatibility hit must NOT be taken, or None when it may.
+
+    The migrated key is the only lever that finds a leg frozen before a WORD
+    fold, and by construction that same key also names a DIFFERENT club that
+    folds onto it - a same-day ``Sutton Utd`` against a ``Sutton United``,
+    which no key function can tell apart. The guard therefore asks the
+    matched row to corroborate the stored identity: the row's OWN spelling
+    must still produce the stored key under the pre-fold rule. A row that
+    does not (another club of the name, or a club renamed since the freeze)
+    is refused and the leg is held for the void timer, exactly like a missing
+    row - the score of a different fixture is never attributed to it.
+    """
+    if not isinstance(leg, dict):
+        return None
+    stored = leg.get("fixture_key")
+    if not (isinstance(stored, (list, tuple)) and len(stored) >= 3):
+        # A text-path leg was recomputed under the current rule; there is no
+        # stored pre-fold identity to corroborate.
+        return None
+    day = str(stored[0] or "")[:10]
+    pre = _prefold_leg_key(day, row.get("home"), row.get("away"), leg.get("pick"))
+    stored_pair = (str(stored[1] or ""), str(stored[2] or ""))
+    if (pre[1], pre[2]) == stored_pair:
+        return None
+    return (f"matched row's own pre-fold key {pre[1]!r}/{pre[2]!r} does not "
+            f"reproduce the stored {stored_pair[0]!r}/{stored_pair[1]!r}")
+
+
+def _compat_record(slip, leg, primary, matched, row, reason=None):
+    """One audit record: both keys, the slip's day and the resolved fixture.
+
+    A counter is not a trail: this is what makes a compatibility settlement
+    reconstructible without re-running the resolver.
+    """
+    rec = {
+        "slip_date": str(slip.get("date") or "")[:10],
+        "primary": tuple(primary) if primary else None,
+        "matched": tuple(matched) if matched else None,
+        "stored": tuple(leg.get("fixture_key") or ()) or None,
+        "fixture": [str(row.get("date") or row.get("_archive_day") or "")[:10],
+                    row.get("home"), row.get("away")],
+        "pick": str(row.get("pick") or (leg.get("pick") if isinstance(leg, dict)
+                                        else "") or "").upper(),
+        "match": (leg.get("match") if isinstance(leg, dict) else None),
+    }
+    if reason:
+        rec["refused_because"] = reason
+    return rec
+
+
+def _compat_line(verdict, record):
+    label = "matched" if verdict == "matched" else "REFUSED"
+    line = (f"compat key {label}: slip {record['slip_date']} "
+            f"stored {record['stored']} missed primary {record['primary']}; "
+            f"candidate {record['matched']} -> fixture "
+            f"{record['fixture'][0]} {record['fixture'][1]} vs "
+            f"{record['fixture'][2]} [{record['pick']}]")
+    if record.get("refused_because"):
+        line += f" - {record['refused_because']}; held, never re-attributed"
+    return line
+
+
+def _slip_day_anchor(slip_date):
+    """Slip-date timestamp used as the 5-day void-timer fallback when a
+    kickoff is missing/unparseable (or the archive row is entirely
+    absent). Slip dates are the fixtures' own day by construction."""
+    try:
+        return datetime.strptime(str(slip_date)[:10], "%Y-%m-%d").replace(tzinfo=TZ)
+    except ValueError:
+        return None
+
+
+_ONE_X_TWO_SELECTIONS = frozenset({"home", "away", "draw"})
+
+# "Match Over 2.5 Goals" -> match_over_25, "Home Team Over 0.5 Goals" ->
+# home_over_05, "Away Team Under 2.5 Goals" -> away_under_25. The registry's
+# market names are exactly these strings, so a leg frozen before the market
+# field existed can still be graded from its own label instead of being held.
+_ENH_LABEL_RE = re.compile(
+    r"^(match|home team|away team)\s+(over|under)\s+(\d+(?:\.\d+)?)\s*goals?$", re.I)
+_ENH_LABEL_SCOPE = {"match": "match", "home team": "home", "away team": "away"}
+
+# Every market-graded leg settled from a score, named. A wrong score behind a
+# booked loss is invisible in the "settled acca legs=[...]" line; this receipt
+# puts the score, the fixture key and the verdict next to each other in the run
+# log (2026-10-25: Molde 3-1 and Lillestrøm 3-2 were booked as Over-2.5 losses,
+# and nothing in the log showed the score the grader had actually used).
+MARKET_LEG_SETTLED: list = []
+
+
+def selection_market(leg: dict):
+    """The registry market a leg's own label names, or None.
+
+    Used only when the leg carries no ``market``: older slips stored the label
+    ("Match Over 2.5 Goals") and the selection ("over") but not the market key.
+    """
+    label = str(leg.get("label") or "").strip()
+    if label.lower().startswith("both teams to score"):
+        return "btts_yes" if str(leg.get("pick") or "").lower() in ("yes", "home", "away") else "btts_no"
+    match = _ENH_LABEL_RE.match(label)
+    if not match:
+        return None
+    scope = _ENH_LABEL_SCOPE[match.group(1).lower()]
+    line = match.group(3).replace(".", "")        # 2.5 -> 25, 0.5 -> 05
+    return f"{scope}_{match.group(2).lower()}_{line}"
+
+
+def market_graded_selection(leg: dict) -> bool:
+    """True when only the score can grade this leg.
+
+    A selection that is not a 1x2 outcome ("over", "under", "yes") can never
+    equal the archive's outcome column, so grading such a leg from the archived
+    pick row booked a LOSS on every resolved fixture whatever the score was.
+    Those legs resolve from the score, or not at all.
+    """
+    if str(leg.get("market") or "").strip().lower() not in ("", "1x2"):
+        return True
+    return str(leg.get("pick") or "").strip().lower() not in _ONE_X_TWO_SELECTIONS
+
+
+def _receipt_market_leg(day, market, selection, hs, gs, key, result) -> None:
+    MARKET_LEG_SETTLED.append((day, market, selection, f"{hs}-{gs}", key, result))
+    print(f"settled_market_leg {day} {market} {selection!r} score={hs}-{gs} "
+          f"key={key[0]}/{key[1]} result={result}", file=sys.stderr)
+
+
+def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
+    """win / loss / "conflict" / None for one enhancement leg, from its score.
+
+    ``loss`` is honest the moment the score is in: the market did not land.
+    ``None`` means "not known yet" — the caller holds the leg and lets the
+    existing void timer close it out, so a missing score behaves exactly
+    like a missing 1x2 row. A fixture filed under spellings whose outcomes
+    disagree is refused as "conflict" and held, fail-closed, like the 1x2
+    path; nothing here ever guesses which spelling was meant.
+    """
+    home, away = leg.get("home"), leg.get("away")
+    if not (home and away):
+        row = leg.get("row") or {}
+        home, away = row.get("home"), row.get("away")
+    if not (home and away):
+        parts = str(leg.get("match") or "").split(" vs ")
+        if len(parts) != 2:
+            return None
+        home, away = parts
+    day = str(slip_date)[:10]
+    stored = leg.get("fixture_key")
+    if isinstance(stored, (list, tuple)) and len(stored) >= 3 and (stored[1] or stored[2]):
+        day = str(stored[0] or day)[:10]
+        home, away = stored[1], stored[2]
+    if entries_by_date and alias_outcome_conflict(
+            {"date": day, "home": home, "away": away}, entries_by_date):
+        return "conflict"
+    market = leg.get("market") or selection_market(leg)
+    selection = str(leg.get("pick") or "")
+    candidates = [day]
+    try:
+        base = datetime.strptime(day, "%Y-%m-%d").date()
+        # The slip's own day first, then nearby days by distance (+1, -1, +2,
+        # -2, ...). A same-named fixture on an earlier date must never be
+        # graded in place of the fixture that was actually staked.
+        offsets = sorted(range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1),
+                         key=lambda o: (abs(o), o < 0))
+        candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d") for o in offsets]
+    except ValueError:
+        pass
+    # The staked day first. Only when the fixture is not on that day do the
+    # nearby days count, and then every one of them must agree on the leg.
+    from edgefactory.util import squad_markers
+
+    markers = (squad_markers(home), squad_markers(away))
+    narrow_keys = _narrow_result_keys(home, away)
+    verdicts: set[bool] = set()
+    for d in candidates:
+        for hk, ak in _result_write_keys(home, away):
+            # The same identity guards the 1x2 path already applies. Without
+            # them a truncated nine-character key answered a market leg with a
+            # NEIGHBOUR's score, and a wrong score is a booked loss.
+            if _marker_boundary_blocks(markers[0], markers[1], d, hk, ak):
+                continue
+            if ((hk, ak) in narrow_keys
+                    and _narrow_key_blocks(d, hk, ak, home, away)):
+                continue
+            pair = scores.get((d, hk, ak))
+            if pair is None:
+                continue
+            hit = check_enhancement_hit(market, selection, pair[0], pair[1])
+            if hit is None:
+                return None          # no scoring rule for this market: hold it
+            if d == day:
+                _receipt_market_leg(d, market, selection, pair[0], pair[1],
+                                    (hk, ak), "win" if hit else "loss")
+                return "win" if hit else "loss"
+            verdicts.add(bool(hit))
+            break
+    if not verdicts:
+        return None
+    if len(verdicts) > 1:
+        return "conflict"
+    return "win" if verdicts.pop() else "loss"
+
+
+def _leg_fixture_names(leg: dict):
+    """(home, away) as written on the frozen leg, or (None, None)."""
+    home, away = leg.get("home"), leg.get("away")
+    if not (home and away):
+        row = leg.get("row") or {}
+        home, away = row.get("home"), row.get("away")
+    if not (home and away):
+        parts = str(leg.get("match") or "").split(" vs ")
+        if len(parts) == 2:
+            home, away = parts
+    return home, away
+
+
+def _verified_leg_result(leg: dict, day: str, verified: list):
+    """win / loss that an operator-verified final score gives this leg, else None.
+
+    Matching is by date and by club identity on both sides, using the same
+    deterministic link test as settlement, so a verified row cannot be applied
+    to a differently-spelled neighbour.
+    """
+    home, away = _leg_fixture_names(leg)
+    if not (home and away):
+        return None
+    for row in verified:
+        if str(row.get("date") or "")[:10] != day:
+            continue
+        if not (_same_club_names(row.get("home"), home)
+                and _same_club_names(row.get("away"), away)):
+            continue
+        from edgefactory.settlement import regulation_score
+        pair = regulation_score(row)
+        if pair is None:
+            continue
+        hs, gs = pair
+        if str(row.get("outcome") or "") != ("home" if hs > gs else "away" if hs < gs else "draw"):
+            continue
+        if market_graded_selection(leg):
+            market = leg.get("market") or selection_market(leg)
+            hit = check_enhancement_hit(market, str(leg.get("pick") or ""), hs, gs)
+            return None if hit is None else ("win" if hit else "loss")
+        outcome = str(row.get("outcome") or "")
+        if outcome not in ("home", "away", "draw"):
+            return None
+        return "win" if str(leg.get("pick") or "").lower() == outcome else "loss"
+    return None
+
+
+def regrade_verified_settlements(st: dict, *, verified=None) -> list[str]:
+    """Re-book settled legs that an operator-verified score contradicts.
+
+    Donor rows never move money that has already been booked: a donor may be
+    wrong, and that is a research finding, not a correction. Only
+    ``Config/verified_results.json`` -- final scores an operator has checked
+    against the evidence and committed -- can rewrite a settled leg result.
+    That is the difference between the 2026-10-25 card being graded from what
+    the feeds happened to hold and being graded from what the matches finished.
+
+    Everything is printed as a before/after receipt, the affected day's totals
+    are rebuilt from its accas, and every later day's bank is shifted by the
+    same delta so the ladder stays arithmetically closed. Running it twice
+    changes nothing.
+    """
+    from edgefactory.settlement import load_verified_results
+
+    if verified is None:
+        verified = load_verified_results()
+    if not verified or not st.get("history"):
+        print("regrade_verified_changes=0", file=sys.stderr)
+        return []
+
+    lines: list[str] = []
+    shift = 0.0
+    for row in st["history"]:
+        day = str(row.get("date") or "")[:10]
+        row_shift = 0.0
+        for acca in row.get("accas") or []:
+            corrected_legs = copy.deepcopy(acca.get("legs") or [])
+            results, touched = [], False
+            for leg in corrected_legs:
+                result = leg.get("result")
+                corrected = _verified_leg_result(leg, day, verified)
+                if corrected is not None and corrected != result:
+                    lines.append(
+                        f"regrade_verified {day} {leg.get('match')} "
+                        f"{leg.get('pick')!r} {result} -> {corrected} "
+                        "(operator-verified final score)")
+                    leg["result"] = result = corrected
+                    touched = True
+                results.append(result)
+            if not touched:
+                continue
+            if "loss" not in results and any(result not in ("win", "loss") for result in results):
+                lines.append(
+                    f"regrade_verified_held {day} acca @{acca.get('odds')}: "
+                    "a leg is void or pending, day left exactly as booked")
+                continue
+            acca["legs"] = corrected_legs
+            won = all(result == "win" for result in results)
+            old_delta = (float(acca.get("returned_pct") or 0.0)
+                         - float(acca.get("stake_pct") or 0.0))
+            acca["won"] = won
+            acca["returned_pct"] = (round(float(acca.get("stake_pct") or 0.0)
+                                          * float(acca.get("odds") or 0.0), 4)
+                                    if won else 0.0)
+            new_delta = (float(acca["returned_pct"])
+                         - float(acca.get("stake_pct") or 0.0))
+            row_shift += new_delta - old_delta
+            lines.append(f"regrade_verified_acca {day} @{acca.get('odds')} "
+                         f"won={won} returned={acca['returned_pct']}%")
+        if row_shift:
+            accas = row.get("accas") or []
+            row["staked_pct"] = round(sum(float(a.get("stake_pct") or 0.0) for a in accas), 4)
+            row["returned_pct"] = round(sum(float(a.get("returned_pct") or 0.0) for a in accas), 4)
+        if row_shift or shift:
+            if isinstance(row.get("bank_pct"), (int, float)):
+                row["bank_pct"] = round(float(row["bank_pct"]) + shift + row_shift, 4)
+            if isinstance(row.get("close_pct"), (int, float)):
+                row["close_pct"] = round(float(row["close_pct"]) + shift + row_shift, 4)
+        shift += row_shift
+
+    if not lines:
+        print("regrade_verified_changes=0", file=sys.stderr)
+        return []
+    before = st.get("bank")
+    if isinstance(before, (int, float)):
+        st["bank"] = round(float(before) + shift, 4)
+        lines.append(f"regrade_verified_bank {before:.4f}% -> {st['bank']:.4f}%")
+    print(f"regrade_verified_changes={sum(1 for line in lines if line.startswith('regrade_verified '))}",
+          file=sys.stderr)
+    return lines
+
+
+def _rescheduled_leg_result(day: str, pick: dict, settled: dict):
+    """win / loss for a 1X2 pick whose fixture was played within ±3 days.
+
+    Only used after the pick's own date found nothing. Every settled row for
+    the same squads on a nearby date must agree on the 1X2 outcome; agreement
+    settles the pick on the match that was actually played, disagreement is
+    "conflict" (held, never guessed), and no rows is None (not known yet).
+    Squad markers are already part of the exact keys, so a youth or women's
+    side cannot pick up the senior club's row here.
+    """
+    try:
+        base = datetime.strptime(day, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    keys = _result_write_keys(pick.get("home"), pick.get("away"))
+    outcomes: set[str] = set()
+    for off in sorted(range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1),
+                      key=lambda o: (abs(o), o < 0)):
+        if off == 0:
+            continue
+        nd = (base + timedelta(days=off)).strftime("%Y-%m-%d")
+        for hk, ak in keys:
+            outcome = settled.get((nd, hk, ak))
+            if outcome is not None:
+                outcomes.add(str(outcome))
+                break
+    if not outcomes:
+        return None
+    if len(outcomes) > 1:
+        return "conflict"
+    outcome = outcomes.pop()
+    if outcome not in ("home", "away", "draw"):
+        return None
+    sel = str(pick.get("pick") or "").lower()
+    return "win" if outcome == sel else "loss"
+
+
+def settle_open_slips(st, settled, archives=None, entries_by_date=None,
+                      lane: "Lane | None" = None, scores=None):
+    """Grade every acca whose outcome is decided; the bank moves per acca.
+
+    An acca settles as soon as all its legs resolve — a single stuck leg no
+    longer freezes the whole day's stake. A settled LOSING leg decides the
+    acca immediately (bookmaker rules): stuck or void-pending legs cannot
+    change that, so the loss is booked at once instead of waiting up to
+    5 days behind the void horizon. A leg whose fixture is filed under
+    several spellings with differing outcomes is held open (fail-closed) and
+    surfaced as a conflict — unless another leg is already a settled loss,
+    which decides the acca regardless; a conflict never counts as a loss.
+
+    Two leg shapes resolve here, decided by the leg itself, never by which
+    lane called: a leg carrying ``market`` is an enhancement leg and is
+    graded by its MARKET's score (``scores``, loaded on demand); every other
+    leg is the 1x2 leg the archive index has always graded.
+    """
+    if archives is None:
+        archives = load_archived_picks()
+    if entries_by_date is None:
+        entries_by_date = (settled.entries if isinstance(settled, _SettledOutcomes)
+                           else load_settled_entries())
+    if scores is None and isinstance(settled, _SettledOutcomes):
+        scores = settled.scores
+    index = {}
+    for p in archives:
+        day = str(p.get("date") or p.get("_archive_day") or "")[:10]
+        index[_folded_leg_key(day, p.get("home"), p.get("away"), p.get("pick"))] = p
+    lines, still_open = [], []
+    run_hits = run_refusals = 0
+    withheld = []
+    for slip in st["open_slips"]:
+        # ONLY A FROZEN CARD IS A PLACED BET. A slip drafted at 00:00 SAST and
+        # never frozen was still changing when its legs kicked off, so it is a
+        # recommendation, not a stake; grading it moved the bank (and the
+        # win/loss record) with money the operator never committed. The
+        # 2026-10-26 enhancement card settled this way at 06:42 and had to be
+        # reconciled out by hand. Unfrozen slips stay open and are named on
+        # every run rather than silently discarded, so a missed freeze is
+        # visible instead of becoming a phantom settlement.
+        if not is_frozen(st, str(slip["date"]), lane):
+            withheld.append(str(slip["date"]))
+            still_open.append(slip)
+            continue
+        open_accas = []
+        for a in slip["accas"]:
+            legres = []
+            conflicts = []
+            for l in a["legs"]:
+                # A market selection can only be graded from the score. Reading
+                # the archived pick row instead compared a 1x2 outcome with
+                # "over"/"under", which is never equal, so every resolved
+                # fixture booked a LOSS whatever the score was (2026-10-25:
+                # Molde 3-1 and Lillestrøm 3-2 both booked as Over-2.5 losses).
+                market_leg = market_graded_selection(l)
+                p = None
+                if not market_leg:
+                    keys = leg_lookup_keys(slip["date"], l)
+                    for leg_key in keys:
+                        p = index.get(leg_key)
+                        if p is None:
+                            continue
+                        if leg_key != keys[0]:
+                            # A compatibility candidate. Primary-first by the
+                            # loop order above; taken only when the matched row
+                            # corroborates the stored identity (A1b).
+                            refusal = _compat_refusal(l, p)
+                            record = _compat_record(slip, l, keys[0], leg_key, p,
+                                                    reason=refusal)
+                            if refusal is not None:
+                                LEGACY_KEY_REFUSED.append(record)
+                                run_refusals += 1
+                                lines.append(_compat_line("refused", record))
+                                p = None
+                            else:
+                                LEGACY_KEY_HITS.append(record)
+                                run_hits += 1
+                                lines.append(_compat_line("matched", record))
+                        break
+                home, away = _leg_fixture_names(l)
+                period_uncertain = any(
+                    abs((date.fromisoformat(str(b["date"])[:10]) - date.fromisoformat(str(slip["date"])[:10])).days) <= 2
+                    and _same_club_names(home, b["home"]) and _same_club_names(away, b["away"])
+                    for b in getattr(settled, "period_blocks", ()))
+                if period_uncertain:
+                    r = "conflict"
+                    conflicts.append(f"{l['match']} (regulation-time score unproven)")
+                elif p is None:
+                    r = None
+                    if market_leg:
+                        # An enhancement leg: its market is the bet, so the
+                        # archived 1x2 row cannot grade it. Grade the market
+                        # from the score behind the fixture; no score means
+                        # "not known yet", exactly like a missing row.
+                        if scores is None:
+                            scores = load_settled_scores()
+                        r = enhancement_leg_result(l, slip["date"], scores,
+                                                   entries_by_date)
+                        if r == "conflict":
+                            conflicts.append(l["match"])
+                    anchor = _slip_day_anchor(slip["date"])
+                    if r is None and anchor is not None and (datetime.now(TZ) - anchor).days >= 5:
+                        # Missing archive row AND slip older than the void
+                        # horizon: fail closed on the slip-date timer.
+                        r = "void"
+                elif alias_outcome_conflict(p, entries_by_date):
+                    # Fail-closed: donors disagree across spellings. Hold the
+                    # leg instead of first-winning the exact-key spelling.
+                    r = "conflict"
+                    conflicts.append(l["match"])
+                else:
+                    r = pick_result(p, settled)
+                    if r is None:
+                        # Played on a nearby date (rescheduled): settle on the
+                        # actual result only when every spelling agrees.
+                        r = _rescheduled_leg_result(
+                            str(p.get("date") or p.get("_archive_day") or slip["date"])[:10],
+                            p, settled)
+                        if r == "conflict":
+                            conflicts.append(l["match"])
+                    if r is None:
+                        kt = parse_kickoff(p)
+                        anchor = kt if kt is not None else _slip_day_anchor(slip["date"])
+                        if anchor is not None and (datetime.now(TZ) - anchor).days >= 5:
+                            r = "void"
+                legres.append(r)
+            a = dict(a)
+            a["results"] = legres
+            resolved = legres and all(r in ("win", "loss", "void") for r in legres)
+            early = False
+            if resolved:
+                live = [l for l, r in zip(a["legs"], legres) if r != "void"]
+                if not live:
+                    a["won"] = True; a["odds"] = 1.0          # all void: stake back
+                else:
+                    a["won"] = all(r == "win" for r in legres if r != "void")
+                    a["odds"] = round(math.prod(l["odds"] for l in live), 2)  # book-style: void drops out
+            elif any(r == "loss" for r in legres):
+                # Early-loss settlement (2026-10-02): a settled LOSING leg
+                # decides the acca now, bookmaker rules — no stuck, conflicted
+                # or void-pending leg can change that outcome. Booking the
+                # loss behind the 5-day void horizon only delayed the trading
+                # truth (bank height + committed stake): the 2026-09-27 ghost
+                # acca held ~15.5% of capital open for days with a known Kano
+                # Pillars loss. A "conflict" leg never counts as a loss —
+                # conflicting donors are untrusted data, not a decided result,
+                # so conflict-only accas still hold fail-closed below.
+                a["won"] = False
+                early = True
+            else:
+                a["won"] = None
+            if a["won"] is None:
+                if conflicts:
+                    lines.append(
+                        f"held {slip['date']} acca @{a['odds']:.2f}: conflict on "
+                        f"{', '.join(conflicts)} (donor spellings disagree on outcome)"
+                    )
+                open_accas.append(a)
+                continue
+            ret = a["stake_pct"] * a["odds"] if a["won"] else 0.0
+            ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"], lane)
+            _record_acca_settlement(st, slip["date"], a)
+            lines.append(f"settled {slip['date']} acca @{a['odds']:.2f} legs={legres}: bank {st['bank']:.1f}%"
+                         + (" (decided by settled loss leg"
+                            + (f"; conflict(s) noted: {', '.join(conflicts)}" if conflicts else "")
+                            + ")" if early else "")
+                         + ((" | " + " | ".join(ev)) if ev else ""))
+        if open_accas:
+            slip = dict(slip)
+            slip["accas"] = open_accas
+            slip["staked_pct"] = round(sum(a["stake_pct"] for a in open_accas), 4)
+            still_open.append(slip)
+    st["open_slips"] = still_open
+    # The sunset criterion's observable: one line per settlement run, so
+    # "no hits for N runs" is readable off the run log without re-running
+    # anything. The human-readable per-leg trail goes to `lines` (matched /
+    # refused, with both keys and the resolved fixture) because each entry is
+    # a settlement event.
+    # Printed (not appended to `lines`) for the same reason as the other
+    # settlement_* run scalars above: `lines` is the settlement EVENT list
+    # callers assert on, and this counter must appear on EVERY run - zero
+    # included - because "no hits for N consecutive runs" is the sunset
+    # criterion read off the run log.
+    print(f"settlement_compat_key_hits={run_hits} refused={run_refusals}",
+          file=sys.stderr)
+    # Zero-included for the same reason as the counter above: "an unfrozen slip
+    # was withheld" must be readable off the run log, and its absence too.
+    print("settlement_unfrozen_withheld="
+          + (",".join(sorted(set(withheld))) if withheld else "none"),
+          file=sys.stderr)
+    if withheld:
+        lines.append("held " + ", ".join(sorted(set(withheld)))
+                     + ": card never frozen (not a placed bet) — settlement withheld")
+    # Route the write the same way the read was routed: a lane settles into
+    # its OWN state file. (Caught by the §5 run-1-freezes/run-2-settles
+    # proof: without the lane here the settlement landed in the main lane's
+    # bank and the lane's own file kept its pre-settle numbers.)
+    save_state(st, lane)
+    return lines
+
+
+# ---------------- commands ----------------
+def cmd_backfill(args, st):
+    """Replay the archived ledger through the engine (analysis / seeding)."""
+    settled = load_settled()
+    archives = load_archived_picks()
+    days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10] for p in archives})
+    days = [d for d in days if d < str(args.to or date.today()) and (not args.from_ or d >= args.from_)]
+    st = fresh_state() if (args.reset or not st) else st
+    print(f"backfilling {days[0]}..{days[-1]} ({len(days)} days) from bank {st['bank']:.1f}%")
+    for d in days:
+        pool = [l for l in playable_legs(archives, day=d, settled=settled) if l["result"]]
+        if len(pool) < LEGS_PER_ACCA:
+            continue
+        plan = plan_day(pool, effective_bank(st))
+        if not plan:
+            continue
+        staked = sum(a["stake_pct"] for a in plan)
+        ret = sum(a["stake_pct"] * a["odds"] for a in plan
+                  if all(l.get("result") == "win" for l in a["legs"]))
+        _apply_settlement(st, ret, staked, d)
+        row = {"date": d, "staked_pct": round(staked, 4),
+               "returned_pct": round(ret, 4),
+               "accas": [{"odds": a["odds"],
+                          "won": all(l.get("result") == "win" for l in a["legs"])}
+                         for a in plan],
+               "bank_pct": round(st["bank"], 4)}
+        st["history"].append(row)
+        _rechain_from(st, d)
+        if st["bank"] < 1.0:
+            print(f"  BUSTED on {d} (bank {st['bank']:.1f}%)")
+            break
+    save_state(st)
+    print_status(st)
+
+
+def _stamp_fixture_keys(plan, target):
+    """Freeze each leg's fixture identity ALONGSIDE its display text.
+
+    The slip is the thing that outlives the day, so identity has to be
+    captured at the moment it is written and never re-derived afterwards.
+    Taken from the originating archive row where the leg still carries one,
+    because that is the spelling the result will eventually be filed under;
+    otherwise from the printed text, which is at least the spelling in hand.
+    Display text is left exactly as printed - it is the audit's provenance.
+    """
+    for acca in plan or []:
+        for leg in acca.get("legs", []) or []:
+            if not isinstance(leg, dict) or leg.get("fixture_key"):
+                continue
+            row = leg.get("row") or {}
+            home, away = row.get("home"), row.get("away")
+            day = str(row.get("date") or row.get("_archive_day") or target)[:10]
+            if not home and not away:
+                parts = str(leg.get("match") or "").split(" vs ")
+                if len(parts) != 2:
+                    continue
+                home, away, day = parts[0], parts[1], str(target)[:10]
+            leg["fixture_key"] = [day, str(home or ""), str(away or "")]
+
+
+def upsert_slip(st, target, plan, freeze_at=None, lane: "Lane | None" = None):
+    """Persist the card. When ``freeze_at`` is given the write-once freeze
+    entry for ``target`` is recorded in the SAME state write, so a card can
+    never be persisted for a date whose lock lands later (or not at all).
+
+    ``lane`` routes the write to that lane's state file and freeze book. The
+    default is the main lane, so every existing call site keeps its exact
+    behaviour; the enhancement lane passes itself, which is what keeps its
+    card, its lock and its bank in its own file.
+    """
+    st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
+    _stamp_fixture_keys(plan, target)
+    st["open_slips"].append({"date": target, "accas": plan,
+                             "staked_pct": round(sum(a["stake_pct"] for a in plan), 4)})
+    entry = (record_freeze(st, target, freeze_at, lane)
+             if freeze_at is not None else None)
+    save_state(st, lane)
+    return entry
+
+
+def _leg_key(l) -> tuple[str, str]:
+    return (str(l.get("match") or ""), str(l.get("pick") or "").upper())
+
+
+def _superseded_no_bet_lines(target: str, prior: dict | None, frozen: dict | None) -> list[str]:
+    """Record a force recut when the corrected plan is an honest no-bet.
+
+    The frozen slip remains write-once and is never overwritten. The note is
+    printed and, by the caller, written to a separate recut report so the
+    operator can see which card was superseded even though no replacement
+    legs qualified.
+    """
+    if not prior:
+        return []
+    frozen_at = str((frozen or {}).get("frozen_at") or "unknown")
+    return [
+        "FORCE RE-CUT — superseded the prior same-day card; corrected result is NO BET:",
+        f"  original frozen slip retained: localdata/auto_tickets_{target}.txt",
+        f"  original frozen_at retained: {frozen_at}",
+        f"  superseded card had {len(prior.get('accas') or [])} acca(s); no replacement legs qualified",
+        "  write-once freeze semantics preserved; the frozen slip was not edited",
+    ]
+
+
+def _replacement_lines(prior, plan) -> list[str]:
+    """Leg-level diff of a slip being replaced.
+
+    Returns [] when the card is materially identical — same legs, same acca
+    positions, same stake. A silent repick prints nothing and the ticket
+    reads exactly like any other day. Only real changes are announced, and
+    only the parts that changed.
+    """
+    def index(accas):
+        return {(l["match"], l["pick"]): (i, l["odds"])
+                for i, a in enumerate(accas, 1) for l in a.get("legs", [])}
+    old_accas = prior.get("accas", [])
+    old, new = index(old_accas), index(plan)
+    dropped = [k for k in old if k not in new]
+    added = [k for k in new if k not in old]
+    moved = [k for k in new if k in old and old[k][0] != new[k][0]]
+    old_tot = round(float(prior.get("staked_pct")
+                          or sum(a.get("stake_pct", 0.0) for a in old_accas)), 4)
+    new_tot = round(sum(a["stake_pct"] for a in plan), 4)
+    stake_moved = abs(new_tot - old_tot) >= 5e-5
+    if not (dropped or added or moved or stake_moved):
+        return []
+    L = []
+    if dropped:
+        L.append(f"  DROPPED ({len(dropped)}) — if you already placed these, the engine will NOT grade them")
+        for m, pk in dropped:
+            L.append(f"      {m:44s} {pk:5s} @{old[(m, pk)][1]:.2f}")
+    if added:
+        L.append(f"  ADDED ({len(added)})")
+        for m, pk in added:
+            L.append(f"      {m:44s} {pk:5s} @{new[(m, pk)][1]:.2f}")
+    if moved:
+        L.append(f"  MOVED ({len(moved)}) — same bet, different acca")
+        for m, pk in moved:
+            L.append(f"      {m:44s} {pk:5s} @{new[(m, pk)][1]:.2f}"
+                     f"   acca {old[(m, pk)][0]} → {new[(m, pk)][0]}")
+    if stake_moved:
+        L.append(f"  total stake {old_tot:.4f}% → {new_tot:.4f}% of capital")
+    return L
+
+
+def _printable_price_board(l, pool_by_key) -> list[dict]:
+    """The pick row behind a printed leg (plan accas carry only the four
+    printed keys; the pool leg holds the full enriched row)."""
+    leg = pool_by_key.get(_leg_key(l))
+    if leg is None:
+        return []
+    return (leg.get("row") or {}).get("price_board") or []
+
+
+def _log_printed_price_boards(target: str, plan: list[dict],
+                              pool_by_key: dict) -> int:
+    """Task F (2026-09-06): append-only persistence of every price every
+    source was showing at build time for every PRINTED leg, with source name
+    and value. One JSON line per printed leg per run — never overwritten, no
+    manual entry anywhere. Lines carry the engine's own printed odds/source
+    beside the board so the actual-vs-quoted comparison needs no archive.
+    Returns the number of legs logged."""
+    records = []
+    for i, a in enumerate(plan, 1):
+        for l in a.get("legs", []):
+            leg = pool_by_key.get(_leg_key(l))
+            row = (leg or {}).get("row") or {}
+            records.append({
+                "date": str(target)[:10],
+                "printed_at": datetime.now(TZ).replace(microsecond=0).isoformat(),
+                "acca": i,
+                "match": l.get("match"),
+                "pick": str(l.get("pick") or "").upper(),
+                "engine_odds": l.get("odds"),
+                "odds_source": row.get("odds_source"),
+                "price_evidence": row.get("price_evidence"),
+                "price_board": row.get("price_board") or [],
+            })
+    if not records:
+        return 0
+    month = str(target)[:7]
+    path = LOCALDATA / f"price_board_{month}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for r in records:
+            fh.write(json.dumps(r, default=str) + "\n")
+    return len(records)
+
+
+def _board_coverage_lines(target: str, plan: list[dict],
+                          pool_by_key: dict) -> list[str]:
+    """Task F: what the next-slate capture should cover. Every printed leg
+    whose pick row was enriched at build carries its full price board, so on
+    live slates coverage is 100% by construction — this prints the actual
+    count for the card being written and the expectation for future slates."""
+    n_legs = sum(len(a.get("legs", [])) for a in plan)
+    if not n_legs:
+        return []
+    boards = [_printable_price_board(l, pool_by_key)
+              for a in plan for l in a.get("legs", [])]
+    covered = sum(1 for b in boards if b)
+    sources: Counter = Counter()
+    for b in boards:
+        for e in b:
+            s = str(e.get("source") or "unknown")
+            if s and not e.get("chosen"):
+                sources[s] += 1
+    src_txt = ", ".join(f"{s} {n}" for s, n in sources.most_common()) or "none (only the engine's own price)"
+    month = str(target)[:7]
+    return [
+        f"PRICE BOARD (automatic capture, Task F): build-time board persisted "
+        f"for {covered} of {n_legs} printed legs",
+        *([f"  corroborating sources on the card: {src_txt}"] if covered else []),
+        f"  record: localdata/price_board_{month}.jsonl — expected coverage on "
+        f"the next slate: 100% of printed legs with an odds source",
+    ]
+
+
+def _leg_text_key(s: str) -> str:
+    """Whitespace-collapsed text, so printed column padding never matters."""
+    return " ".join(s.split())
+
+
+def _slip_leg_keys(text: str) -> dict[str, str]:
+    """The staked legs of a printed slip, keyed by the text before the price.
+
+    A leg line is indented, carries ' @ ', and is not a refused [NO BET] line.
+    Both lanes print legs this way, so one parser serves both.
+    """
+    keys: dict[str, str] = {}
+    for line in (text or "").splitlines():
+        if line.startswith("   ") and " @ " in line and "[NO BET]" not in line:
+            keys.setdefault(_leg_text_key(line.split(" @ ")[0]), line.strip())
+    return keys
+
+
+def _recut_diff_lines(frozen_text: str, recut: dict[str, str]) -> list[str]:
+    """What is staked on the frozen card versus what the re-cut would stage.
+
+    The staked side comes from the frozen slip TEXT, the artifact that always
+    persists. The state file is gitignored and absent in a fresh CI checkout.
+    """
+    if not frozen_text:
+        return ["  frozen slip text missing; leg diff not computed"]
+    staked = _slip_leg_keys(frozen_text)
+    only_frozen = [k for k in staked if k not in recut]
+    only_recut = [k for k in recut if k not in staked]
+    out = [f"  STAKED on the frozen card, NOT on the re-cut ({len(only_frozen)}) "
+           "— still graded as placed:"]
+    out += [f"      {staked[k]}" for k in only_frozen]
+    out.append(f"  ON THE RE-CUT ONLY ({len(only_recut)}) — not on the frozen card:")
+    out += [f"      {recut[k]}" for k in only_recut]
+    return out
+
+
+def _main_recut(st: dict, target: str, now, plan: list[dict], slip_txt: Path) -> int:
+    """--force on a frozen main-lane date: supersede it with a recut report.
+
+    The frozen slip, its open slip (what was placed) and its slice evidence are
+    left exactly as they were. Only the sibling ``_force_recut.txt`` is written.
+    """
+    frozen_text = slip_txt.read_text(encoding="utf-8") if slip_txt.exists() else ""
+    footer = re.search(r"FROZEN AT (\d\d:\d\d)", frozen_text)
+    frozen_at = f"{footer.group(1)} (from the slip)" if footer else "unknown"
+    recut: dict[str, str] = {}
+    for a in plan:
+        for l in a.get("legs", []):
+            recut.setdefault(_leg_text_key(f"{l['match']} {l['pick']}"),
+                             f"{l['match']}  {l['pick']} @ {l['odds']:.2f}")
+    lines = [
+        f"AUTO TICKETS FORCE RE-CUT — {target}",
+        "=" * 62,
+        f"SUPERSEDES the frozen card (frozen_at {frozen_at}). The frozen slip was NOT edited:",
+        f"  localdata/{slip_txt.name}",
+        "  the frozen card is what was staked and stays the settlement record.",
+        "  nothing was placed or settled from this re-cut; it is for the operator's decision.",
+        *_recut_diff_lines(frozen_text, recut),
+        "",
+    ]
+    for i, a in enumerate(plan, 1):
+        lines.append(f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital")
+        for l in a["legs"]:
+            lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  "
+                         f"(stated {l['prob']:.0%})")
+        lines.append("")
+    text = "\n".join(lines)
+    recut_path = LOCALDATA / f"auto_tickets_{target}_force_recut.txt"
+    recut_path.write_text(text, encoding="utf-8")
+    print(text)
+    print(f"\nSTATUS: SUPERSEDED — frozen card retained; re-cut written to "
+          f"localdata/{recut_path.name}")
+    return 0
+
+
+def cmd_today(args, st, *, settled=None):
+    settled = load_settled() if settled is None else settled
+    now = datetime.now(TZ)
+    target = args.date or now.strftime("%Y-%m-%d")
+    slip_txt = dated_artifact_path(LOCALDATA, f"auto_tickets_{target}.txt")
+    slate_error = None
+    try:
+        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
+        if not isinstance(slate, list):
+            raise ValueError("top-level value is not a list")
+    except Exception as exc:
+        slate = []
+        slate_error = exc
+    if is_frozen(st, target) and not args.force:
+        superseded = superseded_entry(st, target)
+        if superseded is not None:
+            # The original frozen text is immutable audit evidence, not a
+            # current betting instruction. Never re-print its stale prices
+            # after a force recut has established an honest no-bet. The
+            # diagnostic is nevertheless rebuilt from the latest persisted
+            # slate: immutability must not make the no-bet opaque.
+            ledger = build_rejection_ledger(
+                slate,
+                day=target,
+                floor=_main_pool_floor(),
+                default_rule=(
+                    "superseded_card_locked",
+                    "write-once card is already superseded; non-force rerun cannot create replacement legs",
+                ),
+            )
+            _shadow_run = _shadow_record_scored(target, slate)
+            _shadow_record_outcome(
+                _shadow_run, target, slate,
+                default_rule=(
+                    "superseded_card_locked",
+                    "write-once card is already superseded; non-force rerun "
+                    "cannot create replacement legs",
+                ),
+                final_status="superseded_no_bet", bank_pct=st.get("bank"),
+            )
+            print(f"TICKETS SUPERSEDED — corrected result for {target}: NO BET")
+            print("=" * 62)
+            print(f"  original frozen slip retained for audit: {slip_txt}")
+            print(f"  original frozen_at retained: {superseded.get('frozen_at') or 'unknown'}")
+            print("  do not place the superseded selections; no replacement card was created")
+            print(f"  rerun with --force only after a new, verified slate is available")
+            return 0
+        # A frozen rerun must not move ladder streaks, but it still upserts
+        # today's real evidence row from the frozen slip. No line in the slip
+        # is rewritten; the parser consumes the frozen leg print verbatim.
+        ensure_slice_seeded(target, settled=settled)
+        archive_index = _archive_index_for_slice(load_archived_picks())
+        frozen_rows, _unresolved = parse_slip_slice_rows(
+            slip_txt, archive_index, existing_rows=read_slice_ledger(),
+        )
+        upsert_slice_day(frozen_rows, target)
+        frozen_slip = next(
+            (item for item in st.get("open_slips", [])
+             if str(item.get("date") or "")[:10] == str(target)[:10]),
+            {},
+        )
+        selected = [
+            leg for acca in frozen_slip.get("accas", []) for leg in acca.get("legs", [])
+        ]
+        ledger = build_rejection_ledger(
+            slate,
+            day=target,
+            floor=_main_pool_floor(),
+            selected=selected,
+            default_rule=(
+                "frozen_card_not_selected",
+                "candidate is not on the immutable frozen card",
+            ),
+        )
+        _shadow_run = _shadow_record_scored(target, slate)
+        _shadow_record_outcome(
+            _shadow_run, target, slate,
+            selected=_shadow_selected_info(frozen_slip.get("accas"),
+                                           target=target),
+            default_rule=(
+                "frozen_card_not_selected",
+                "candidate is not on the immutable frozen card",
+            ),
+            final_status="frozen", bank_pct=st.get("bank"),
+        )
+        print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
+        print("=" * 62)
+        if slip_txt.exists():
+            print(slip_txt.read_text())
+        recut_file = LOCALDATA / f"auto_tickets_{target}_force_recut.txt"
+        if recut_file.exists():
+            print(f"\nSUPERSEDED — a forced re-cut was recorded for this date. "
+                  f"The card above is still what was staked; review the re-cut "
+                  f"before acting: localdata/{recut_file.name}")
+        return 0
+    if str(target) == now.strftime("%Y-%m-%d") and now.hour < GENERATE_HOUR_START and not args.force:
+        print(f"NOT YET — TICKETS START BUILDING AT {GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
+        print(f"(now {now.strftime('%H:%M')} local)")
+        return 0
+    if slate_error is not None:
+        print(f"cannot read picks_today.json: {slate_error}")
+        return 1
+    prior_slip = next(
+        (dict(s) for s in st.get("open_slips", [])
+         if str(s.get("date") or "")[:10] == str(target)[:10]),
+        None,
+    )
+    prior_frozen = frozen_entry(st, target)
+    # AUDIT-ONLY (scored-candidate shadow): persist every scored candidate on
+    # the slate BEFORE any selection/guard runs. A ledger failure is reported
+    # on stderr and ignored — it must never change the pool or the card.
+    shadow_run = _shadow_record_scored(target, slate)
+    # Admit the sub-floor add-on band through the SAME execution-price gates;
+    # plan_day still builds its base doubles at MIN_LEG_ODDS, never at 1.20.
+    pool = playable_legs(slate, day=target, settled=settled,
+                         floor=_main_pool_floor(), execution_safe=True)
+    total_in = len(pool)
+    census: dict[str, list[str]] = {}
+    staged_rejections: dict[tuple[str, str], tuple[str, str]] = {}
+
+    def stage_rejections(legs, rule: str, detail: str) -> None:
+        for leg in legs:
+            staged_rejections[_fixture_selection_key(leg)] = (rule, detail)
+    # Capture policy OUTPUTS at this decision, never recompute them later from
+    # a newer ledger. The pure adapter below is also the replay entry point.
+    past = {(str(a.get("home") or "").strip().lower(),
+             str(a.get("away") or "").strip().lower())
+            for a in load_archived_picks()
+            if str(a.get("date") or a.get("_archive_day") or "")[:10] < target}
+    pnl_weights, pnl_verdicts = compute_bucket_pnl(target, settled=settled)
+    ensure_slice_seeded(target, settled=settled)
+    slice_policy, slice_verdicts = compute_bucket_slice(target, settled=settled)
+    gate_labels, gate_status = acca_gate.refresh(target)
+    print(f"ACCA PRICE-EVIDENCE GATE: {gate_status}")
+    decision_context = ticket_decision_context(
+        "main", target, now, slate, pool, effective_bank(st, exclude_date=target),
+        bank=st["bank"], past=past,
+        bank_state=dict(bank=st["bank"], open_slips=st.get("open_slips", [])),
+        policy=dict(pnl_weights=pnl_weights, slice_policy=slice_policy,
+                    gate_labels=sorted(gate_labels), gate_status=gate_status,
+                    slate_error=str(slate_error) if slate_error is not None else None))
+    prepared_decision = prepare_ticket_pool(decision_context)
+    base_pool = prepared_decision["base_pool"]
+    plan_pool = prepared_decision["pool"]
+    census.update(prepared_decision["census"])
+    for rejected, rule, detail in prepared_decision["rejections"]:
+        stage_rejections(rejected, rule, detail)
+    log_acca_gate_run(target, gate_status, gate_labels,
+                      prepared_decision["price_gate_blocked"],
+                      pool_size=prepared_decision["gate_pool_size"])
+
+    # The shadow plan is a second pure call. It deliberately strips both the
+    # slice caps and the door bench/weights, then keeps only diminished-bucket
+    # legs and removes any key already represented by today's real plan.
+    diminished = {b for b, v in slice_verdicts.items()
+                  if v.get("action") in ("DEMOTED", "BENCHED")}
+    bank_eff = effective_bank(st, exclude_date=target)
+    shadow_rows = []
+    pure_shadow_plan = None
+    base_pool_by_key = {_leg_key(l): l for l in base_pool}
+    if diminished and len(base_pool) >= LEGS_PER_ACCA:
+        pure_shadow_plan = plan_day(list(base_pool), bank_eff,
+                                    fixture_report={}, **ticket_planner_options("main"))
+
+    census_lines = format_skip_census(total_in, len(plan_pool), census)
+    if not any(census.values()):
+        census_lines = []
+    if len(plan_pool) < LEGS_PER_ACCA:
+        # --force-repick replaces prior same-day real+shadow rows even when
+        # the new final plan is empty — but only if nothing actually shipped
+        # for this date. A printed slip on disk is the frozen record of legs
+        # already at the bookmaker, and that evidence must survive.
+        upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
+        recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
+        if args.force and prior_slip:
+            record_superseded_no_bet(
+                st, target, now,
+                reason="registered execution-price gate left fewer than two qualifying legs",
+            )
+            save_state(st)
+        ledger = build_rejection_ledger(
+            slate,
+            day=target,
+            floor=_main_pool_floor(),
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_minimum_legs",
+                f"{len(plan_pool)} qualifying leg(s) < required {LEGS_PER_ACCA}",
+            ),
+        )
+        _shadow_record_outcome(
+            shadow_run, target, slate,
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_minimum_legs",
+                f"{len(plan_pool)} qualifying leg(s) < required {LEGS_PER_ACCA}",
+            ),
+            final_status="no_bet", bank_pct=st.get("bank"),
+        )
+        # Keep policy/rejection details available to the force-recut audit,
+        # but do not mix operator diagnostics into the customer-facing card.
+        audit_lines = census_lines + price_supply_report(
+            slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+        ) + recut_lines
+        output_lines = [
+            f"AUTO TICKETS (ROLLING) — {target}",
+            "=" * 62,
+            f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+            f"(x{st['bank']/st['base_pct']:.2f}) = free bank {bank_eff:.1f}%",
+            *_slice_table_lines(slice_verdicts),
+            "",
+            f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}",
+            "(bank stays unbet)",
+            "All figures are percentages of capital. Round to your bookmaker's minimum stake. "
+            "Bet only what you can afford to lose.",
+        ]
+        text = "\n".join(output_lines)
+        print(text)
+        if recut_lines:
+            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(
+                "\n".join(audit_lines) + "\n"
+            )
+        if not is_frozen(st, target):
+            write_decision_receipt(decision_context, [])
+        return 0
+
+    fixture_report: dict[str, list[str]] = {}
+    plan = plan_ticket_decision(decision_context, prepared=prepared_decision,
+                                fixture_report=fixture_report)
+    if not plan:
+        upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
+        recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
+        if args.force and prior_slip:
+            record_superseded_no_bet(
+                st, target, now,
+                reason="no executable plan remained after price and policy gates",
+            )
+            save_state(st)
+        ledger = build_rejection_ledger(
+            slate,
+            day=target,
+            floor=_main_pool_floor(),
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_no_executable_acca",
+                "stake ladder could not form the configured executable acca set",
+            ),
+        )
+        _shadow_record_outcome(
+            shadow_run, target, slate,
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_no_executable_acca",
+                "stake ladder could not form the configured executable acca set",
+            ),
+            final_status="no_bet", bank_pct=st.get("bank"),
+        )
+        audit_lines = census_lines + price_supply_report(
+            slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+        ) + recut_lines
+        output_lines = [
+            f"AUTO TICKETS (ROLLING) — {target}",
+            "=" * 62,
+            f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+            f"(x{st['bank']/st['base_pct']:.2f}) = free bank {bank_eff:.1f}%",
+            *_slice_table_lines(slice_verdicts),
+            "",
+            "NO BET TODAY — plan empty",
+            "All figures are percentages of capital. Round to your bookmaker's minimum stake. "
+            "Bet only what you can afford to lose.",
+        ]
+        text = "\n".join(output_lines)
+        print(text)
+        if recut_lines:
+            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(
+                "\n".join(audit_lines) + "\n"
+            )
+        if not is_frozen(st, target):
+            write_decision_receipt(decision_context, [])
+        return 0
+    if is_frozen(st, target) and args.force:
+        # A frozen card is final. --force writes a re-cut report beside it and
+        # touches nothing else: the open slip (what was placed), the slice
+        # evidence for the frozen card, and the frozen text all stay as they are.
+        return _main_recut(st, target, now, plan, slip_txt)
+    # Task E (2026-09-06): a force-repick REPLACES the target date's own
+    # existing slip (upsert below deletes it) — so its stake was excluded
+    # from committed capital above. The slip prints the card as-is.
+    pool_by_key = base_pool_by_key
+    real_rows = _slice_plan_rows(target, plan, pool_by_key)
+    real_keys = {_slice_row_key(row) for row in real_rows}
+    if pure_shadow_plan is not None:
+        shadow_rows = _slice_shadow_rows(
+            target, pure_shadow_plan, pool_by_key, real_keys, diminished,
+        )
+    upsert_slice_day(real_rows + shadow_rows, target)
+    # ``prior_slip`` was captured before upsert above. This is an append-to-
+    # output audit note only; the write-once freeze entry is deliberately
+    # untouched by --force.
+    replacement_lines = _replacement_lines(prior_slip, plan) if prior_slip else []
+    # Freeze decision is taken BEFORE the state-persist phase and executed
+    # inside it (single save_state), never after the slip is on disk.
+    should_freeze = (str(target) == now.strftime("%Y-%m-%d")
+                     and now.hour >= FREEZE_HOUR and not args.force)
+    freeze_record = upsert_slip(st, target, plan,
+                                freeze_at=now if should_freeze else None)
+    write_decision_receipt(decision_context, plan, frozen=should_freeze)
+    _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
+    committed = st["bank"] - bank_eff
+    lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
+             f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
+             f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
+             f"next take-profit notification at {take_profit_target(st):.1f}%"]
+    # Tripwire and ladder actions have already been applied to the plan.  The
+    # normal card intentionally renders only the concise ladder table; the
+    # detailed verdicts remain in their existing ledgers/operator helpers.
+    lines.extend(_slice_table_lines(slice_verdicts))
+    lines.append("")
+    selected_legs = [leg for acca in plan for leg in acca.get("legs", [])]
+    ledger = build_rejection_ledger(
+        slate,
+        day=target,
+        floor=_main_pool_floor(),
+        selected=selected_legs,
+        staged=staged_rejections,
+    )
+    _shadow_record_outcome(
+        shadow_run, target, slate,
+        selected=_shadow_selected_info(plan, target=target),
+        staged=staged_rejections,
+        default_rule=(
+            "stake_ladder_not_selected",
+            "candidate cleared earlier gates but was not selected for an "
+            "executable acca",
+        ),
+        final_status="frozen" if (should_freeze and freeze_record) else "draft",
+        bank_pct=st.get("bank"),
+    )
+    # Compute the audit records above without rendering them on the normal
+    # ticket.  Price supply, rejection, replacement and dedup diagnostics are
+    # operator detail rather than instructions to the bettor.
+    for i, a in enumerate(plan, 1):
+        lines.append(f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
+                     f"({a['stake_pct']/bank_eff:.1%} of free bank)")
+        for l in a["legs"]:
+            lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  (stated {l['prob']:.0%})")
+        lines.append("")
+    day_staked = sum(a["stake_pct"] for a in plan)
+    lines.append(f"deploying {STAKE_FRAC:.0%} of free bank today "
+                 f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
+                 f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
+    lines.append("All figures are percentages of capital. Round to your bookmaker's minimum stake. "
+                 "Bet only what you can afford to lose.")
+
+
+    if should_freeze and freeze_record:
+        lines.append("")
+        lines.append(freeze_footer(freeze_record))
+    txt = "\n".join(lines)
+    print(txt)
+    slip_txt.write_text(txt)
+    if should_freeze and freeze_record:
+        print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} slip; later runs re-print unchanged "
+              f"(write-once lock in {STATE_FILE.name}: {FROZEN_BOOK_KEY}[{target}]).")
+    else:
+        print(f"\nSTATUS: ⏳ DRAFT — regenerates each run until the {FREEZE_HOUR:02d}:00 freeze.")
+    return 0
+
+
+def print_status(st):
+    if not st:
+        print("no state yet — run bare (starts today at 100%) or --backfill to replay history")
+        return
+    accas = [a for h in st["history"] for a in h["accas"]]
+    w = sum(1 for a in accas if a["won"])
+    print(f"bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) · "
+          f"bet-days {len(st['history'])} · accas {w}W/{len(accas)-w}L · "
+          f"open slips {len(st['open_slips'])} · next take-profit at {take_profit_target(st):.1f}%")
+    for e in st.get("events", []):
+        print(f"  🔔 {e['date']}: TAKE-PROFIT — +{e['gain_pct']:.1f}% that cycle "
+              f"(bank {e['bank_after_pct']:.1f}%, next target {e['next_target_pct']:.1f}%)")
+    for h in st["history"][-10:]:
+        acc = " ".join(f"@{a['odds']:.2f}{'W' if a['won'] else 'L'}" for a in h["accas"])
+        print(f"  {h['date']}  {acc:40s} bank {h['bank_pct']:7.1f}%")
+
+
+# ---------------- enhancement lane (2026-10-12, ADDITIVE) ----------------
+# The operator's ruling: "i need it to look like how autobets presents it and
+# to have the same lifecycle of autobets" and "i dont want them to change the
+# system have now … additional". So this lane keeps its own state and artifact,
+# its legs are priced from the enhancement price already on the board, and it
+# reuses the SAME freeze / settle / bank / take-profit / renderer lifecycle
+# above rather than a lookalike copy of it.
+#
+# Gate (operator ruling 2026-10-12): "betting on ev will lead us to not bet at
+# all, we have the track record of enhanced, we know what wins more, we just
+# need prices above a certain threshold, like how autobets does it." A leg
+# fires on its market's settled floor alone — ENHANCEMENT_PRICE_FLOORS in
+# edgefactory.enh_registry. There is NO EV veto here; enhancement_breakeven and
+# enhancement_edge_sample stay on the row as information only.
+# A SKIPPED_VETO parent is ticket-eligible under BUCKETS, so these legs ARE
+# staked. The tag only says where the leg came from; it does not mean paper.
+ENH_SHADOW_TAG = " [SKIPPED_VETO parent]"
+
+
+def _enh_price(pick: dict):
+    """The pick's captured enhancement price, or None when it is not a price."""
+    price = pick.get("enhancement_price")
+    if isinstance(price, (int, float)) and not isinstance(price, bool) \
+            and math.isfinite(float(price)) and float(price) > 1.0:
+        return float(price)
+    return None
+
+
+def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
+                     floors: dict | None = None, team_floors: dict | None = None,
+                     execution_safe: bool = False) -> list[dict]:
+    """One selected-market leg with the shared realized-evidence verdict.
+
+    Live execution prices the exact-parent all-outcome cohort (n >= 30)
+    against an original executable quote. No exact-price history is required.
+    execution_safe=False retains
+    descriptive historical counterfactuals, not current staking permission.
+    Apply the shared
+    MIN_LEG_ODDS minimum. No model fallback, EV veto, price floor or ceiling.
+    Floor/slice tables remain descriptive metadata only, never eligibility.
+    The live builder passes execution_safe=True: the enhancement's own source
+    must satisfy the SAME source policy as main; contradictory price metadata
+    and an unnamed named-book quote cannot become a ticket. Parent 1X2 price
+    permissions are not evidence about a separately quoted enhancement.
+    Historical descriptive callers retain their explicit legacy default.
+    """
+    from edgefactory.enh_registry import (ceiling_for, floor_for, floor_for_slice,
+                                          enhancement_cohort_evidence, enhancement_ml_probability)
+    from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
+    from edgefactory.enh_pricing import BETEXPLORER_SOURCE, betexplorer_price_rejection
+    try:
+        from edgefactory.enh_pricing import MARKET_PRICE_MAP
+    except Exception:
+        MARKET_PRICE_MAP = {}
+
+    # Supersede older builds of the SAME fixture/contract/selection only.
+    # Different contracts still compete; unknown build times prove no recency.
+    parents = {}
+    for parent in slate or []:
+        stamp = _zoned_instant_utc(parent.get("built_at_utc"))
+        key = ((_fixture_key({"row": parent}), parent.get("contract_id"), str(parent.get("pick") or ""))
+               if stamp and isinstance(parent.get("contract_id"), str) else (id(parent),))
+        previous = parents.get(key)
+        if previous is None or (stamp is not None and stamp > _zoned_instant_utc(previous.get("built_at_utc"))):
+            parents[key] = parent
+    expanded = []
+    for parent in parents.values():
+        alternatives = [n for n in parent.get("event_notes", []) if isinstance(n, dict)
+                        and n.get("enhancement_price") is not None]
+        if not any(n.get("market") == parent.get("recommended_enhancement") for n in alternatives):
+            expanded.append(parent)
+        for note in alternatives:
+            candidate = dict(parent, recommended_enhancement=note.get("market"),
+                             enhancement_probability=None,
+                             enhancement_label=note.get("label"),
+                             enhancement_cohort_rate=note.get("cohort_rate"),
+                             enhancement_cohort_n=note.get("cohort_n"),
+                             enhancement_cohort_contract_id=note.get("cohort_contract_id"),
+                             enhancement_cohort_as_of_exclusive=note.get("cohort_as_of_exclusive"))
+            for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                        "enhancement_price_at", "enhancement_price_kickoff",
+                        "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection",
+                        "enhancement_quote_alternatives"):
+                candidate[key] = note.get(key)
+            expanded.append(candidate)
+    # A quote variant changes only pricing fields, never fixture/cohort identity.
+    # Each variant still traverses the SAME execution checks below.
+    if execution_safe:
+        variants = []
+        fields = ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                  "enhancement_price_at", "enhancement_price_kickoff", "enhancement_price_provenance",
+                  "enhancement_priced", "enhancement_price_rejection")
+        for candidate in expanded:
+            offers = candidate.get("enhancement_quote_alternatives")
+            for quote in offers if isinstance(offers, list) else ():
+                if isinstance(quote, dict):
+                    variants.append(dict(candidate, **{k: quote.get(k) for k in fields}))
+        expanded.extend(variants)
+    legs: list[dict] = []
+    for pick in expanded:
+        market = pick.get("recommended_enhancement")
+        if not market:
+            continue
+        price = _enh_price(pick)
+        is_team_under = market in TEAM_UNDERS
+        entry: dict = {}
+        if is_team_under:
+            # Team unders take their floor from the side-keyed evidence table
+            # (enh_team_floors); the static table has no team entries by design.
+            side = "1" if str(pick.get("pick") or "").lower() == "home" else "2"
+            entry = (team_floors or {}).get(f"{market}|{side}") or {}
+            leg_floor = entry.get("floor")
+            leg_basis = entry.get("basis") or "none"
+        elif floors:
+            leg_floor, leg_basis = floor_for_slice(floors, market, pick.get("league"))
+        else:
+            leg_floor, leg_basis = floor_for(market), "inherited"
+        evidence = enhancement_cohort_evidence(pick)
+        priced_evidence = enhancement_cohort_evidence(
+            pick, priced=True, root=registry_root or LOCALDATA.parent) if evidence and execution_safe else None
+        if evidence is None:
+            verdict = "no_cohort_evidence"
+        elif price is None:
+            mapped = MARKET_PRICE_MAP.get(market, "missing")
+            # "Unpriceable" means no feed maps the market at all (goal_range_2_3,
+            # or a missing mapping). A team total IS mapped (tt_*, OddsPapi), so
+            # when it has no price today it is "unpriced": OddsPapi answered HTTP
+            # 429 from 2026-10-04, so later days are unpriced, not unpriceable.
+            verdict = "unpriceable" if mapped is None else "unpriced"
+        elif execution_safe and (source_rejection := execution_source_rejection(
+                pick.get("enhancement_price_source"))) is not None:
+            verdict = source_rejection[0]
+        elif execution_safe and (pick.get("enhancement_priced") is False
+                                 or pick.get("enhancement_price_rejection")):
+            verdict = "price_evidence_rejected"
+        elif (execution_safe and psrc.spec(pick.get("enhancement_price_source")).named_bookmaker
+              and (not isinstance(pick.get("enhancement_price_book"), str)
+                   or not pick["enhancement_price_book"].strip())):
+            verdict = "price_bookmaker_missing"
+        elif (execution_safe
+              and psrc.spec(pick.get("enhancement_price_source")).family == psrc.spec(BETEXPLORER_SOURCE).family
+              and (be_rejection := betexplorer_price_rejection(
+                  pick, execution_at=datetime.now(TZ))) is not None):
+            verdict = be_rejection
+        else:
+            # No arbitrary price ceiling or global-rate EV. The actual quote
+            # must clear the operator's relaxed 0.8 uncertainty-bound screen.
+            if price < MIN_LEG_ODDS:
+                verdict = "below_min_odds"
+            elif execution_safe and priced_evidence is None:
+                verdict = "invalid_execution_quote_context"
+            elif execution_safe and priced_evidence["cohort_lower_bound"] * price <= 0.8:
+                verdict = "payout_not_supported"
+            else:
+                verdict = "fire"
+        legs.append({
+            "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
+            "home": pick.get("home"), "away": pick.get("away"),
+            # The source row travels with the leg: the recipe's same-fixture
+            # guard reads ``row``, and the freeze stamps identity from it.
+            "row": pick,
+            "fixture_key": _folded_leg_key(
+                pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
+            "market": market,
+            "label": pick.get("enhancement_label") or str(market).replace("_", " ").upper(),
+            "probability": (priced_evidence["rate"] if priced_evidence else
+                            evidence["rate"] if evidence and not execution_safe else None),
+            "cohort_evidence": priced_evidence or evidence,
+            "ml_rank_probability": (enhancement_ml_probability(pick, market)
+                                    if evidence is not None else None),
+            "ml_model_key": (((pick.get('statistical_profile') or {}).get('ml_model') or {})
+                             .get('model_key')),
+            "ml_model_schema": (((pick.get('statistical_profile') or {}).get('ml_model') or {})
+                                .get('schema')),
+            "price": price,
+            "price_book": pick.get("enhancement_price_book"),
+            "price_source": pick.get("enhancement_price_source"),
+            "price_at": pick.get("enhancement_price_at"),
+            "price_kickoff": pick.get("enhancement_price_kickoff"),
+            "price_provenance": pick.get("enhancement_price_provenance"),
+            "bucket": str(pick.get("bucket") or ""),
+            "rule": str(pick.get("rule") or pick.get("display_rule") or ""),
+            "league": str(pick.get("league") or ""),
+            "floor": leg_floor,
+            "floor_basis": leg_basis,
+            "ceiling": ceiling_for(market),
+            "verdict": verdict,
+            "shadow": str(pick.get("bucket") or "") == "SKIPPED_VETO",
+        })
+    # Firing legs first, strongest stated probability first — the same ordering
+    # discipline the main lane uses to fill a bounded day.
+    legs.sort(key=lambda l: (l["verdict"] != "fire",
+                             -(l["probability"] if isinstance(l["probability"], (int, float)) else 0.0)))
+    return legs
+
+
+def _enh_slice_lines(root: Path | None = None) -> list[str]:
+    """The settled slice table: by market, then by bucket, then by rule."""
+    from edgefactory.enh_registry import (UNATTRIBUTED, market_track_record,
+                                          slice_for_market)
+    root = root or ROOT
+    rows = [r for r in market_track_record(root) if r["n"]]
+    if not rows:
+        return []
+    lines = ["ENHANCEMENT SLICE (settled, registry)",
+             f"  {'by market':<18}{'n':>6}{'hits':>7}{'rate':>8}{'breakeven':>12}{'profit':>10}"]
+    for r in rows:
+        be = f"{r['breakeven']:.3f}" if r["breakeven"] else "—"
+        lines.append(f"  {r['market']:<18}{r['n']:>6}{r['hits']:>7}"
+                     f"{r['rate'] * 100:>7.1f}%{be:>12}{r['profit']:>+9.2f}u")
+    for r in rows:
+        if r.get("records_truncated"):
+            lines.append(f"  INCOMPLETE {r['market']}: slices retain {r['retained_n']}/{r['n']}; no certification/derived floor from this sample")
+    for key, title in (("bucket", "by bucket"), ("rule", "by rule")):
+        merged: dict[str, dict] = {}
+        for r in rows:
+            for value, slot in slice_for_market(root, r["market"], key).items():
+                agg = merged.setdefault(value, {"n": 0, "hits": 0, "profit": 0.0})
+                agg["n"] += slot["n"]
+                agg["hits"] += slot["hits"]
+                agg["profit"] = round(agg["profit"] + slot["profit"], 6)
+        if not merged:
+            continue
+        lines.append(f"  {title}")
+        for value, agg in sorted(merged.items(), key=lambda kv: (-kv[1]["n"], kv[0])):
+            rate = (agg["hits"] / agg["n"]) if agg["n"] else 0.0
+            label = value if value != UNATTRIBUTED else f"{value} (pre-2026-10-12)"
+            lines.append(f"    {label:<28}{agg['n']:>5}{agg['hits']:>7}"
+                         f"{rate * 100:>7.1f}%{agg['profit']:>+9.2f}u")
+    return lines
+
+
+def _market_selection(market: str | None) -> str:
+    """The selection a market's name carries.
+
+    ``match_over_35`` -> ``over``; ``btts_yes`` -> ``yes``; ``home_over_15``
+    -> ``home``. The scorer reads it (it decides orientation for the team
+    totals) and the card prints it, so it cannot be a guess.
+    """
+    name = str(market or "")
+    if name.startswith("btts_"):
+        return name.split("_", 1)[1]
+    for side in ("home", "away"):
+        if name.startswith(side + "_"):
+            return side
+    for sel in ("over", "under"):
+        if f"_{sel}_" in name:
+            return sel
+    return name
+
+
+def apply_enhancement_timing(legs: list[dict], now, target: str, scores, *,
+                             known_results=None, freeze_floor_at=...) -> dict:
+    """Withdraw firing enhancement legs that can no longer be bet.
+
+    The enhancement lane had no kickoff guard, so a card drafted at 07:28 SAST
+    still listed legs that had kicked off at 02:30, 04:30 and 05:00. The main
+    lane runs ``live_kickoff_guard`` on its pool; this runs the same guard on
+    the enhancement pool, and also withdraws a leg whose score is already known
+    (the match is finished). A withdrawn leg keeps its row and carries a
+    ``withdrawn_reason``; its verdict stops it from firing.
+
+    Returns ``{reason: [match, ...]}`` for the run log.
+    """
+    firing = [l for l in legs if l.get("verdict") == "fire"]
+    kept, drops = live_kickoff_guard(firing, now,
+                                     freeze_floor_at=(freeze_floor(target, now) if freeze_floor_at is ...
+                                                      else freeze_floor_at))
+    kept_ids = {id(l) for l in kept}
+    report: dict[str, list[str]] = {}
+    for reason, names in drops.items():
+        report.setdefault(reason, []).extend(names)
+    for leg in firing:
+        if id(leg) in kept_ids:
+            continue
+        reason = next((r for r, names in drops.items() if leg.get("match") in names),
+                      "kickoff guard")
+        leg["verdict"] = "kickoff_guard"
+        leg["withdrawn_reason"] = reason
+    for index, leg in enumerate(legs):
+        if leg.get("verdict") != "fire":
+            continue
+        probe = dict(leg, pick=_market_selection(leg.get("market")))
+        result = (known_results[index] if known_results is not None
+                  else enhancement_leg_result(probe, target, scores or {}))
+        if result in ("win", "loss"):
+            leg["verdict"] = "result_known"
+            leg["withdrawn_reason"] = "result already known"
+            report.setdefault("result already known", []).append(leg.get("match"))
+    return report
+
+
+def enhancement_pool(legs: list[dict]) -> list[dict]:
+    """The firing legs, in the shared recipe's own leg shape.
+
+    The recipe reads ``match``/``pick``/``prob``/``odds`` and the same-fixture
+    guard reads ``row``; those five keys are the whole contract, so this pool
+    is the same shape the main lane feeds the recipe. The rest travels with
+    the leg because the card prints it as that leg's evidence — including
+    ``floor_basis`` and ``league``, without which the card could name a floor
+    but not the slice that set it.
+    """
+    pool = []
+    for leg in legs or []:
+        if leg.get("verdict") != "fire":
+            continue
+        prob = finite_probability(leg.get("probability"))
+        if prob is None:
+            continue
+        pool.append({
+            "match": leg.get("match"),
+            "pick": _market_selection(leg.get("market")),
+            "prob": float(prob),
+            "ml_rank_probability": leg.get("ml_rank_probability"),
+            "ml_model_key": leg.get("ml_model_key"),
+            "ml_model_schema": leg.get("ml_model_schema"),
+            "odds": leg.get("price"),
+            "row": leg.get("row") or {},
+            "cohort_evidence": leg.get("cohort_evidence"),
+            "market": leg.get("market"),
+            "label": leg.get("label"),
+            "floor": leg.get("floor"),
+            "floor_basis": leg.get("floor_basis"),
+            "league": leg.get("league"),
+            "price_book": leg.get("price_book"),
+            "price_source": leg.get("price_source"),
+            "price_at": leg.get("price_at"),
+            "price_kickoff": leg.get("price_kickoff"),
+            "price_provenance": leg.get("price_provenance"),
+            "shadow": bool(leg.get("shadow")),
+        })
+    return pool
+
+
+def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
+    """Restore the lane's own per-leg facts on the card legs.
+
+    The recipe ships the four keys a ticket needs and drops everything else,
+    so without this the market, the floor and the book would be gone before
+    the slip freezes — and the settle grades a leg BY ITS MARKET, so losing
+    that field is losing the bet itself. ``(match, pick)`` identifies a
+    legacy carded leg. Live plans also retain market/book, because competing
+    alternatives on the same fixture can share a selection. ``floor_basis`` and ``league`` ride
+    along with ``floor`` so the frozen card says which slice set the number
+    and which slice it was (the derivation is evidence, and evidence that is
+    dropped before the freeze cannot be audited afterwards).
+    """
+    by_key = {(str(l.get("match")), str(l.get("pick")), l.get("odds")): l for l in pool}
+    for acca in plan or []:
+        for leg in acca.get("legs", []):
+            if leg.get("market"):
+                meta = next((l for l in pool if
+                             l.get("match") == leg.get("match")
+                             and l.get("pick") == leg.get("pick")
+                             and l.get("market") == leg.get("market")
+                             and l.get("price_book") == leg.get("price_book")
+                             and (not leg.get("price_source") or l.get("price_source") == leg["price_source"])
+                             and l.get("odds") == leg.get("odds")), None)
+            else:  # Legacy descriptive plans did not carry market identity.
+                meta = by_key.get((str(leg.get("match")), str(leg.get("pick")), leg.get("odds")))
+            if not meta:
+                continue
+            for key in ("prob", "cohort_evidence", "ml_rank_probability", "ml_model_key", "ml_model_schema",
+                        "market", "label", "floor", "floor_basis", "league",
+                        "price_book", "price_source", "price_at", "price_kickoff",
+                        "price_provenance", "shadow"):
+                leg[key] = meta.get(key)
+
+
+def _enh_floor_lines(floors: dict | None) -> list[str]:
+    """The day's derived floor table, as the artifact prints it.
+
+    Every row is one slice: its level, its settled evidence (n, Wilson LB), the
+    number that evidence derives (1 / LB + margin), the floor actually applied
+    and where it came from. A team row is labelled ``team`` and its candidate is
+    REPORTED, never applied — a team slice never deviates. The header carries the
+    margin, the gate and the registry's own slice attribution, so the table is
+    re-derivable from the registry commit plus the numbers on the lines.
+    """
+    if not floors or not floors.get("rows"):
+        return ["FLOORS (registry floors unavailable — the operator's table applies)"]
+    cov = floors.get("coverage") or {}
+    out = [f"FLOORS (derived for {floors.get('as_of')} · margin "
+           f"{float(floors.get('margin') or 0):.3f} · gate n>="
+           f"{floors.get('min_n')} + Wilson LB · registry attribution "
+           f"{cov.get('with_league', 0)}/{cov.get('records', 0)} records with a league "
+           f"({float(cov.get('league_pct') or 0):.1f}%))"]
+    out.append(f"  {'slice':36s} {'n':>4s} {'wilsonLB':>8s} {'derived':>8s} "
+               f"{'floor':>7s}  basis")
+    for row in floors["rows"]:
+        label = str(row.get("name") or row.get("market") or "")
+        if row.get("level") == "league":
+            label = f"{row['market']} / {label}"
+        elif row.get("level") == "team":
+            label = f"{row['market']} / {row.get('league') or '-'} / {label}"
+        floor_txt = "none" if row.get("floor") is None else f"{row['floor']:.4f}"
+        cand = row.get("candidate_floor")
+        cand_txt = "-" if cand is None else f"{cand:.4f}"
+        out.append(f"  {label[:36]:36s} {row.get('n', 0):4d} "
+                   f"{float(row.get('wilson_lb') or 0):8.4f} {cand_txt:>8s} "
+                   f"{floor_txt:>7s}  {row.get('basis')}"
+                   + ("" if row.get("level") != "team" else " (report-only)"))
+    counts = floors.get("counts") or {}
+    out.append(f"  {counts.get('market', 0)} market row(s), {counts.get('league', 0)} "
+               f"league row(s), {counts.get('team', 0)} of "
+               f"{counts.get('team_slices', 0)} team slice(s) shown (report-only, never "
+               f"consulted) · deviating: {counts.get('market_basis', 0)} market, "
+               f"{counts.get('league_basis', 0)} league")
+    return out
+
+
+def _distinct_fixture_count(legs: list[dict]) -> int:
+    """How many DIFFERENT matches a set of legs covers.
+
+    An acca needs distinct fixtures, so the eligibility count that decides
+    NO BET must be a fixture count. Counting quotes instead told the operator
+    "16 eligible legs" on 2026-10-26 when sixteen books were pricing one match
+    (Santa Clara vs Benfica): the NO BET verdict was right, the number read
+    like sixteen chances and was not even two.
+    """
+    seen = set()
+    for leg in legs or []:
+        row = leg.get("row") if isinstance(leg.get("row"), dict) else {}
+        key = leg.get("fixture_key") or row.get("fixture_key")
+        if not key:
+            home = str(row.get("home") or "").strip().lower()
+            away = str(row.get("away") or "").strip().lower()
+            if home and away:
+                key = (home, away)
+            else:
+                key = str(leg.get("match") or "").strip().lower()
+        seen.add(tuple(key) if isinstance(key, (list, tuple)) else key)
+    return len(seen)
+
+
+def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
+                               plan: list[dict], now, *,
+                               should_freeze: bool, freeze_record: dict | None,
+                               bank_eff: float, fixture_report: dict | None = None,
+                               root: Path | None = None,
+                               floors: dict | None = None) -> str:
+    """The lane's artifact — autobets' acca card, on the lane's own bank.
+
+    Same header, same acca block, same stake line and same footer as the main
+    lane's slip, because the operator's ruling is that the lane IS autobets
+    with enhancement legs. The per-leg line shows only match, pick, price and
+    realized rate — no registry brackets, no floor brackets, no [SKIPPED_VETO]
+    tag. One summary no-bet line when nothing qualifies.
+    """
+    root = root or ROOT
+    committed = st["bank"] - bank_eff
+    lines = [f"{ENHANCEMENT_LANE.label} — {target}",
+             "=" * 62,
+     f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+     f"(x{st['bank'] / st['base_pct']:.2f}) = free bank {bank_eff:.1f}% + "
+     f"committed {committed:.1f}% · next take-profit notification at "
+     f"{take_profit_target(st):.1f}%"]
+    # Acca blocks — one line per leg: match, pick, price, realized rate.
+    # No registry or floor brackets; "stated" → "realized" per rule 3.
+    if plan:
+        for i, a in enumerate(plan, 1):
+            shadow = any(l.get("shadow") for l in a["legs"])
+            lines.append(
+                f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
+                f"({a['stake_pct'] / bank_eff:.1%} of free bank)" + (ENH_SHADOW_TAG if shadow else ""))
+            for l in a["legs"]:
+                # realized cohort rate from the card, not the registry
+                evidence = l.get("cohort_evidence") or {}
+                rate = evidence.get("rate")
+                if type(rate) in (int, float) and math.isfinite(rate) and 0 <= rate <= 1:
+                    detail = f" @ {l['odds']:.2f} (parent cohort {rate:.0%}, n={evidence['n']}; not fixture probability)"
+                else:
+                    detail = f" @ {l['odds']:.2f} (realized evidence unavailable)"
+                basis = l.get("ranking_basis")
+                score = finite_probability(l.get("ml_rank_probability"))
+                if basis == "model" and score is not None:
+                    detail += (f" (rank: model {score:.3f} [{l.get('ml_model_schema') or 'schema unavailable'} "
+                               f"{str(l.get('ml_model_key') or 'key unavailable')[:12]}]; ordering only)")
+                elif basis == "cohort":
+                    detail += (" (rank: cohort in unscored group; scored candidates rank first)"
+                               if l.get("ml_ordering_active") else
+                               " (rank: cohort; model ordering not used)")
+                else:
+                    detail += " (ranking provenance unavailable)"
+                lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
+            lines.append("")
+    else:
+        # Eligibility = priced at or above the minimum, on DISTINCT FIXTURES:
+        # the acca is staked on matches, so that is what the count reports.
+        # Quotes are stated alongside it, because "16 books, one match" is the
+        # fact that explains the verdict rather than contradicting it.
+        firing = [l for l in legs if l.get("verdict") == "fire"]
+        quotes = len(firing)
+        eligible = _distinct_fixture_count(firing)
+        noun = "fixture" if eligible == 1 else "fixtures"
+        quote_txt = "1 priced quote" if quotes == 1 else f"{quotes} priced quotes"
+        counted = f"{eligible} eligible {noun}" + (
+            "" if quotes == eligible else f" ({quote_txt})")
+        if eligible < LEGS_PER_ACCA:
+            lines.append(f"NO BET — only {counted}, need {LEGS_PER_ACCA} for an acca")
+        else:
+            lines.append(f"NO BET — {counted}, but no supported complete acca")
+        lines.append("(bank stays unbet; a lone leg is never a single)")
+        lines.append("Quote/payout evidence: " + json.dumps(dict(Counter(
+            l.get("verdict", "unknown") for l in legs)), sort_keys=True))
+        if eligible >= LEGS_PER_ACCA:
+            lines.append("No complete same-book/source acca on distinct fixtures; no joint probability estimated.")
+        lines.append("")
+    if plan:
+        model_legs = [l for a in plan for l in a["legs"] if l.get("ranking_basis") == "model"]
+        if model_legs:
+            schemas = sorted({l.get("ml_model_schema") or "schema unavailable" for l in model_legs})
+            keys = {l["ml_model_key"] for l in model_legs if l.get("ml_model_key")}
+            lines.append(f"ML-ACTIVE on card: {', '.join(schemas)}; retained model keys={len(keys)}; ordering only, not admission evidence")
+        elif any(l.get("ml_ordering_active") for a in plan for l in a["legs"]):
+            lines.append("ML-ACTIVE pool policy; card uses only cohort-key legs from the unscored group")
+        elif all(l.get("ranking_basis") == "cohort" for a in plan for l in a["legs"]):
+            lines.append("ML-INACTIVE on card (cohort ordering)")
+        else:
+            lines.append("ML ordering on card: provenance unavailable (legacy record)")
+    # Deploy line, footer — identical to main slip.
+    if plan:   # a no-bet card states no deployment
+        day_staked = sum(a["stake_pct"] for a in plan)
+        lines.append(f"deploying {day_staked / bank_eff if bank_eff > 0 else 0:.1%} of free bank today "
+                     f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
+                     f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
+    lines.append("All figures are percentages of capital. Round to your bookmaker's "
+                 "minimum stake. Bet only what you can afford to lose.")
+    if should_freeze and freeze_record:
+        lines.append("")
+        lines.append(freeze_footer(freeze_record))
+    return "\n".join(lines)
+def _frozen_text_on_disk(slip_txt: Path) -> bool:
+    """A frozen slip on disk locks its date even when the state file is absent.
+
+    The enhancement state is gitignored, so a fresh checkout has no freeze book.
+    The frozen slip is the one artifact that always persists, and its
+    ``FROZEN AT`` footer is the lock of last resort.
+    """
+    return slip_txt.exists() and "FROZEN AT " in slip_txt.read_text(encoding="utf-8")
+
+
+_RECUT_SLATE_RE = re.compile(r"^  slate sha256: ([0-9a-f]{12}|none)$", re.M)
+
+
+def _slate_sha() -> str | None:
+    """Fingerprint of today's picks_today.json (the slate a re-cut is built from)."""
+    try:
+        return hashlib.sha256((LOCALDATA / "picks_today.json").read_bytes()).hexdigest()[:12]
+    except OSError:
+        return None
+
+
+def _recut_notice(recut_file: Path) -> str:
+    """The SUPERSEDED pointer, with the re-cut's provenance checked against today's slate.
+
+    A re-cut is only as current as the slate it was built from. A file with no
+    slate stamp, or a stamp from a different picks_today.json, is shown as such,
+    so an old re-cut is never presented as the corrected card.
+    """
+    text = recut_file.read_text(encoding="utf-8")
+    result = "RECUT" if "[ACCA #" in text else "NO BET"
+    stamp = _RECUT_SLATE_RE.search(text)
+    now_sha = _slate_sha()
+    if stamp is None:
+        status = ("UNVERIFIED — this re-cut carries no slate stamp, so it cannot be "
+                  "matched to today's picks. Do not act on its legs until it is re-cut.")
+    elif stamp.group(1) != now_sha:
+        status = (f"STALE — built from a different picks_today.json (sha {stamp.group(1)}; "
+                  f"now {now_sha or 'missing'}). Its legs may no longer match the slate.")
+    else:
+        status = "CURRENT — built from today's picks_today.json."
+    return (f"\nSUPERSEDED — a forced re-cut ({result}) was recorded for this date. "
+            f"The card above is still what was staked. {status} "
+            f"Review before acting: localdata/{recut_file.name}")
+
+
+def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[dict],
+                       plan: list[dict], bank_eff: float, fixture_report: dict,
+                       floors: dict) -> int:
+    """--force on a frozen date: supersede it with a recut report, never a rewrite.
+
+    The frozen slip and its open acca stay exactly as staked, so settlement
+    still grades what was placed. The corrected card goes to a sibling
+    ``_force_recut.txt`` with the legs that moved shown against the frozen card.
+    The re-cut file on disk is what later ordinary runs read.
+    """
+    frozen_rec = frozen_entry(st, target) or {}
+    frozen_text = slip_txt.read_text(encoding="utf-8") if slip_txt.exists() else ""
+    footer = re.search(r"FROZEN AT (\d\d:\d\d)", frozen_text)
+    frozen_at = str(frozen_rec.get("frozen_at")
+                    or (f"{footer.group(1)} (from the slip)" if footer else "unknown"))
+    card = render_enhancement_tickets(
+        st, target, legs, plan, now, should_freeze=False, freeze_record=None,
+        bank_eff=bank_eff, fixture_report=fixture_report, floors=floors)
+    result = "RECUT" if plan else "NO BET"
+    lines = [
+        f"ENHANCEMENT FORCE RE-CUT — {target}",
+        "=" * 62,
+        f"SUPERSEDES the frozen card (frozen_at {frozen_at}). The frozen slip was NOT edited:",
+        f"  localdata/{slip_txt.name}",
+        "  the frozen card is what was staked and stays the settlement record.",
+        "  nothing was placed or settled from this re-cut; it is for the operator's decision.",
+        f"  slate sha256: {_slate_sha() or 'none'}",
+    ]
+    recut_legs: dict[str, str] = {}
+    for a_ in plan:
+        for l in a_.get("legs", []):
+            recut_legs.setdefault(
+                _leg_text_key(f"{l['match']} {l.get('label')}"),
+                f"{l['match']}  {l.get('label')} @ {l['odds']:.2f}")
+    lines += _recut_diff_lines(frozen_text, recut_legs)
+    lines += ["", card]
+    text = "\n".join(lines)
+    recut_path = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
+    recut_path.write_text(text, encoding="utf-8")
+    print(text)
+    print(f"\nSTATUS: SUPERSEDED — frozen card retained; re-cut ({result}) written to "
+          f"localdata/{recut_path.name}")
+    return 0
+
+
+def cmd_enhancement(args, st, *, scores=None) -> int:
+    """Draft / freeze / re-print the enhancement lane's card for `args.date`."""
+    now = datetime.now(TZ)
+    target = args.date or now.strftime("%Y-%m-%d")
+    slip_txt = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}.txt"
+
+    if not enhancement_board_enabled():
+        print(f"enhancement lane is off — set {ENH_BOARD_FLAG}=1 to build it")
+        return 0
+
+    # A frozen date is final. --force no longer rewrites it: a forced run writes
+    # a re-cut report beside the frozen slip (see _enhancement_recut). The lock is
+    # the state's freeze book OR the frozen slip on disk, because the state file
+    # is gitignored and a fresh checkout has no freeze book.
+    frozen_here = is_frozen(st, target, ENHANCEMENT_LANE) or _frozen_text_on_disk(slip_txt)
+    if frozen_here and not args.force:
+        entry = frozen_entry(st, target) or {}
+        basis = freeze_footer(entry) if entry else "frozen slip on disk"
+        print(f"enhancement slip for {target} is frozen "
+              f"({basis}); write-once lock in "
+              f"{ENHANCEMENT_LANE.state_file.name}")
+        if slip_txt.exists():
+            print(slip_txt.read_text())
+        recut_file = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
+        if recut_file.exists():
+            # The re-cut file is the durable record (it is tracked). The state
+            # is gitignored and absent in a fresh run, so the notice reads only
+            # the file, takes RECUT / NO BET from its content, and says whether
+            # the re-cut still matches today's slate.
+            print(_recut_notice(recut_file))
+        return 0
+
+    try:
+        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
+        if not isinstance(slate, list):
+            slate = []
+    except Exception:
+        slate = []
+    # The day's floors, derived once from the committed registry and carried by
+    # the legs, the artifact and the lane's own state. Deterministic: the same
+    # registry commit derives the same table on every re-print.
+    from edgefactory.enh_registry import derive_floors_for_day
+    # Resolve the registry through THIS module's localdata (the same constant the
+    # lane's own state and slate resolve through), so a scratch/test root derives
+    # from its own registry and never from the repository's.
+    floors = derive_floors_for_day(LOCALDATA.parent, target)
+    from edgefactory.enh_team_floors import team_under_floors
+    team_floors = team_under_floors(LOCALDATA.parent, target)
+    legs = enhancement_legs(slate, floors=floors, team_floors=team_floors,
+                            execution_safe=True)
+    if scores is None:
+        scores = load_settled_scores()
+    known_results = [enhancement_leg_result(
+        dict(leg, pick=_market_selection(leg.get("market"))), target, scores or {})
+                     if leg.get("verdict") == "fire" else None for leg in legs]
+    bank_eff = effective_bank(st, exclude_date=target)
+    decision_context = ticket_decision_context(
+        "enh", target, now, slate, legs, bank_eff, bank=st["bank"],
+        bank_state=dict(bank=st["bank"], open_slips=st.get("open_slips", [])),
+        known_results=known_results,
+        policy=dict(floors=floors, team_floors=team_floors))
+    prepared_decision = prepare_ticket_pool(decision_context)
+    legs = prepared_decision["legs"]
+    withdrawn = prepared_decision["withdrawn"]
+    for reason, names in withdrawn.items():
+        print(f"enhancement leg withdrawn ({reason}): {', '.join(dict.fromkeys(str(n) for n in names))}")
+    pool = prepared_decision["pool"]
+    should_freeze = (str(target) == now.strftime("%Y-%m-%d")
+                     and now.hour >= FREEZE_HOUR and not args.force)
+    fixture_report: dict = {}
+    plan = plan_ticket_decision(decision_context, prepared=prepared_decision,
+                                fixture_report=fixture_report)
+    if frozen_here:          # --force on a frozen date: supersede, never rewrite
+        return _enhancement_recut(st, target, now, slip_txt, legs, plan,
+                                  bank_eff, fixture_report, floors)
+    freeze_record = None
+    if plan:
+        # Same write path as the main lane, routed to this lane's state and
+        # freeze book. A no-bet day writes no card (and no lock), exactly
+        # like the main lane. The floor table rides the state write, so the
+        # card and the derivation it was built from are persisted together.
+        st["enh_floor_table"] = {k: floors.get(k) for k in
+                                 ("as_of", "margin", "min_n", "floors", "counts",
+                                  "coverage")}
+        freeze_record = upsert_slip(st, target, plan,
+                                    freeze_at=now if should_freeze else None,
+                                    lane=ENHANCEMENT_LANE)
+    write_decision_receipt(decision_context, plan, frozen=should_freeze)
+    txt = render_enhancement_tickets(st, target, legs, plan, now,
+                                     should_freeze=should_freeze,
+                                     freeze_record=freeze_record,
+                                     bank_eff=bank_eff,
+                                     fixture_report=fixture_report,
+                                     floors=floors)
+    if getattr(args, "rebuild_unplaced", False) and not plan:
+        census = Counter(f"{l.get('market', '?')}:{l.get('verdict', 'unknown')}" for l in legs)
+        txt += "\nCandidate outcomes (all competing markets): " + json.dumps(dict(census), sort_keys=True)
+        if not legs:
+            txt += "\nNo current exact-contract enhancement candidates; prior slate is not evidence."
+    print(txt)
+    # Persist a fresh NO BET too: an earlier reason/card is not this build.
+    slip_txt.write_text(txt)
+    if should_freeze and freeze_record:
+        print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} enhancement slip; later runs "
+              f"re-print unchanged (write-once lock in "
+              f"{ENHANCEMENT_LANE.state_file.name}: {FROZEN_BOOK_KEY}[{target}]).")
+    else:
+        print(f"\nSTATUS: ⏳ DRAFT — regenerates each run until the "
+              f"{FREEZE_HOUR:02d}:00 freeze.")
+    return 0
+
+
+
+def cmd_rebuild_unplaced_enhancement(args, st):
+    """Only the approved unplaced day: rebuild without settling any lane.
+
+    No old slate may substitute for a failed build. A no-bet result is a real,
+    persisted artifact, but not a freeze or a financial commitment.
+    """
+    target = args.date or datetime.now(TZ).date().isoformat()
+    if target != datetime.now(TZ).date().isoformat():
+        raise ValueError("unplaced rebuild is only allowed for today's approved date")
+    receipt = LOCALDATA / f"autobets_enh_tickets_{target}_reset.json"
+    if not receipt.exists():
+        raise ValueError("unplaced rebuild requires an approved none-placed reset receipt")
+    # load_state validated/applied the receipt before this call.
+    slip = dated_artifact_path(LOCALDATA, f"autobets_enh_tickets_{target}.txt")
+    if is_frozen(st, target, ENHANCEMENT_LANE) or _frozen_text_on_disk(slip):
+        return cmd_enhancement(args, st)  # preserve a newer replacement
+    reason = None
+    if not st:
+        reason = "current enhancement bank state unavailable; no bank/history initialization permitted"
+    else:
+        registry = json.loads((LOCALDATA / "edges_consensus.json").read_text())
+        active = [e for e in registry.get("edges", [])
+                  if e.get("contract_schema") == "post_forebet_v1" and e.get("status") == "certified"]
+        if registry.get("operating_contract") != "post_forebet_v1" or not active:
+            reason = "zero active validated post-Forebet contracts; prior slate/inherited Forebet evidence forbidden"
+        elif not (LOCALDATA / "warehouse.duckdb").is_file():
+            reason = "exact-contract warehouse unavailable for fresh rebuild; prior slate is not executable evidence"
+    if reason:
+        text = f"{ENHANCEMENT_LANE.label} — {target}\nNO BET — {reason}\nNo stake committed; bank/history unchanged.\n"
+        slip.write_text(text)
+        print(text)
+        return 0
+    from edgefactory.prediction_history import check
+    check(LOCALDATA.parent)
+    env = dict(os.environ, EDGE_FACTORY_OFFLINE_REBUILD="1", EDGE_FACTORY_CANDIDATE_ONLY="0")
+    try:
+        subprocess.run([sys.executable, str(ROOT / "scripts/picks_today.py"), "--date", target],
+                       cwd=ROOT, env=env, check=True)
+    except subprocess.CalledProcessError:
+        slip.write_text(f"{ENHANCEMENT_LANE.label} — {target}\nNO BET — cache-only pick build failed; old slate forbidden.\n")
+        raise
+    return cmd_enhancement(args, st)
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Rolling auto-tickets (percent-only, validated acca engine)")
+    ap.add_argument("--today", action="store_true", help="settle open slips, then build/reprint today")
+    ap.add_argument("--settle", action="store_true", help="settle open slips only")
+    ap.add_argument("--status", action="store_true", help="show performance / history")
+    ap.add_argument("--backfill", action="store_true", help="replay archived ledger into state")
+    ap.add_argument("--from", dest="from_", default=None)
+    ap.add_argument("--to", default=None)
+    ap.add_argument("--date", default=None)
+    ap.add_argument("--reset", action="store_true")
+    ap.add_argument("--apply-unplaced-resets", action="store_true",
+                    help="enhancement lane only: apply committed unplaced-ticket receipts; no settlement/build")
+    ap.add_argument("--rebuild-unplaced", action="store_true",
+                    help="approved enhancement date only: cache-only rebuild or persist explicit NO BET; no settlement")
+    ap.add_argument("--force", action="store_true")
+    ap.add_argument("--regrade-verified", action="store_true",
+                    help="enhancement lane only: re-book settled legs contradicted by an "
+                         "operator-verified final score (Config/verified_results.json)")
+    ap.add_argument("--enhancements", action="store_true",
+                    help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
+    ap.add_argument("--autobets-ml", action="store_true",
+                    help="independent paper draft/freeze/report only; never touch live financial state")
+    args = ap.parse_args()
+    if args.autobets_ml:
+        if len(sys.argv) != 2:
+            ap.error("--autobets-ml is standalone; no live lane/reset/backfill/force arguments")
+        return 1 if _run_ml_paper() is False else 0
+    if args.rebuild_unplaced and (not args.enhancements or args.force or args.reset
+                                 or args.backfill or args.settle or args.status
+                                 or args.apply_unplaced_resets):
+        ap.error("--rebuild-unplaced requires enhancement lane only; no reset/force/settle/backfill/status")
+    if args.apply_unplaced_resets and not args.enhancements:
+        ap.error("--apply-unplaced-resets requires --enhancements; main lane cannot be reset")
+
+    # Additive lane, own state: it shares the lifecycle functions but never the
+    # main lane's state file or artifact. Without the flag every command below
+    # behaves exactly as before.
+    if args.enhancements and not enhancement_board_enabled():
+        # `--enhancements` means the enhancement lane, full stop. Falling through
+        # to the main lane (which is what an unflagged flag used to do here) would
+        # print the MAIN lane's status under the enhancement lane's name and tell
+        # the operator a lane is live when it is off — the exact confusion the
+        # enablement step must not create. Say why, change nothing.
+        print(f"enhancement lane disabled — set {ENH_BOARD_FLAG}=1 to enable; "
+              f"nothing done.")
+        return 0
+
+    if args.enhancements and enhancement_board_enabled():
+        st = load_state(ENHANCEMENT_LANE)
+        if args.rebuild_unplaced:
+            return cmd_rebuild_unplaced_enhancement(args, st)
+        if args.apply_unplaced_resets:
+            print("Enhancement unplaced-ticket resets applied; no settlement, capture, build or bank reset.")
+            return 0
+        # The lane's command semantics are the main lane's, exactly: a bare
+        # `--enhancements` (what the wired daily step runs) settles open
+        # slips first and then builds/freezes today's card; `--settle` alone
+        # settles and reports; `--status` only reports. A frozen card is
+        # re-printed, never rewritten.
+        lane_argv = [a for a in sys.argv[1:] if a != "--enhancements"]
+        wants_today = args.today or args.force or not lane_argv
+        if not st and (wants_today or args.settle):
+            st = fresh_state()
+            save_state(st, ENHANCEMENT_LANE)
+        if args.regrade_verified or args.settle or wants_today:
+            # Settlement honours operator-verified final scores before it books
+            # anything else, and before the card is built, so a corrected bank
+            # is the bank the next stake is sized from. Without a verified row
+            # this is a no-op that prints regrade_verified_changes=0.
+            lines = regrade_verified_settlements(st)
+            if lines:
+                for line in lines:
+                    print(line)
+                save_state(st, ENHANCEMENT_LANE)
+        if args.settle or wants_today:
+            settled = load_settled()
+            for line in settle_open_slips(st, settled, lane=ENHANCEMENT_LANE):
+                print(line)
+            if not wants_today:
+                print_status(st)
+                return 0
+            scores = settled.scores if isinstance(settled, _SettledOutcomes) else None
+            return cmd_enhancement(args, st, scores=scores)
+        print_status(st)
+        return 0
+
+    st = load_state()
+    if args.backfill:
+        cmd_backfill(args, st)
+        _report_marker_guarded_settlement()
+        return 0
+    wants_today = args.today or args.force or not sys.argv[1:]
+    if not st and (wants_today or args.settle):
+        st = fresh_state()   # first production run starts a fresh walk-forward at 100%
+        save_state(st)
+    if args.regrade_verified or args.settle or wants_today:
+        lines = regrade_verified_settlements(st)
+        if lines:
+            for line in lines:
+                print(line)
+            save_state(st)
+    if args.settle or wants_today:
+        settled = load_settled()
+        for line in settle_open_slips(st, settled):
+            print(line)
+        if not wants_today:
+            print_status(st)
+            _report_marker_guarded_settlement()
+            return 0
+        rc = cmd_today(args, st, settled=settled)
+        _report_marker_guarded_settlement()
+        return rc
+    print_status(st)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

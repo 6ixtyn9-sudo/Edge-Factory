@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "date": "2026-10-19",
+  "verdict": "OPERATOR_AUTHORIZED_COHORT_DEFAULT_ON_ROI_UPLIFT_NOT_VALIDATED",
+  "full_suite": {
+    "command": "PYTHONPATH=src .venv/bin/python -m pytest -q",
+    "exit_code": 0,
+    "passed": 3259,
+    "seconds": 147.25
+  },
+  "coherent_score_distribution_random_price_cases": 100,
+  "correction": "The first U4.5 removal mutation passed because a redundant scorer branch had been added. It was removed; breaking the actual pre-existing rule then failed all 12 boundary tests. No net change to enh_registry.py.",
+  "operational_changes": "Broader cohort eligibility defaults ON by operator instruction; explicit env 0 rolls back. Replay simultaneous P&L fixed. No localdata, bank, frozen slip, stake, bucket or workflow changes; no deployment.",
+  "focused_after_mutation_restore": {
+    "passed": 225,
+    "seconds": 4.86,
+    "includes_docs_links": true
+  },
+  "legacy_rollback_selector_parity": {
+    "command": "PYTHONPATH=src .venv/bin/python tools/verify_enh_default_parity.py",
+    "seed": 20261019,
+    "cases": 200,
+    "baseline_commit": "8abefc45fc4b4442a2997d0c3f18831cc6bff436",
+    "recommendations_and_logs_identical": true,
+    "stubbed_not_roi_evidence": true,
+    "mode": "explicit_legacy_rollback_EDGE_FACTORY_ENH_COHORT_PARITY_0",
+    "new_default_parity_claimed": false
+  },
+  "prior_redteam_mutations": [
+    {
+      "guard": "research_gate",
+      "exit_code": 1,
+      "caught": true,
+      "summary": "1 failed in 0.47s"
+    },
+    {
+      "guard": "under45_settlement",
+      "exit_code": 1,
+      "caught": true,
+      "summary": "12 failed in 0.21s"
+    },
+    {
+      "guard": "no_future_quote",
+      "exit_code": 1,
+      "caught": true,
+      "summary": "1 failed, 9 passed in 0.14s"
+    },
+    {
+      "guard": "additive_day_pnl",
+      "exit_code": 1,
+      "caught": true,
+      "summary": "1 failed in 0.13s"
+    }
+  ],
+  "mutations": [
+    {
+      "guard": "default_cohort_enable",
+      "exit_code": 1,
+      "caught": true,
+      "summary": "1 failed in 0.51s"
+    },
+    {
+      "guard": "additive_simultaneous_pnl",
+      "exit_code": 1,
+      "caught": true,
+      "summary": "6 failed in 0.18s"
+    }
+  ],
+  "coherent_score_cases_exercise": "unset/default-on environment",
+  "source_sha256": {
+    "scripts/picks_today.py": "6dc698e187890c10eef8b32bb018111860aea1d6411a4190ea845b4044ae3b50",
+    "scripts/replay_harness.py": "f71d867b0069124e8b3dac9f89b49e89e0d67df8f9ccc3c40ac6439c16eae446",
+    "tests/test_hybrid_engine.py": "6012c8bc63a5721b0a0266db824b1d775a925f1f4d5b12d2b9973a4a7edead38",
+    "tests/test_replay_enhancements.py": "c2c32a2d14d562107f48aa9c6a8ada3420435d1e72e25eef0e917e2d3727e506",
+    "tools/verify_enh_default_parity.py": "b1194264f772b058a374e883f0f34298b9e09de6f5911d288a9d0dd0ead5d593"
+  }
+}

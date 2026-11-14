@@ -1,0 +1,94 @@
+state top-level keys          : ['bank', 'base_pct', 'cycle_base', 'events', 'frozen_by_date', 'history', 'open_slips']
+open_slips[0] keys            : ['accas', 'date', 'staked_pct']    <- the main lane's slip entry
+accas[0] keys                 : ['legs', 'odds', 'stake_pct']    <- the main lane's acca entry
+accas[0].legs[0] keys         : ['fixture_key', 'floor', 'label', 'market', 'match', 'odds', 'pick', 'price_book', 'prob', 'result', 'shadow']
+frozen_by_date                : {"2026-10-12": {"frozen_at": "2026-10-12T11:29:14+02:00", "final": true, "lock_source": "state"}}
+bank                          : 100.0
+
+--- open_slips[0] verbatim ---
+{
+ "date": "2026-10-12",
+ "accas": [
+  {
+   "legs": [
+    {
+     "match": "Alpha FC vs Beta FC",
+     "pick": "over",
+     "prob": 0.46,
+     "odds": 1.9,
+     "result": null,
+     "market": "match_over_25",
+     "label": "Match Over 2.5 Goals",
+     "floor": 1.6,
+     "price_book": "Stake.com",
+     "shadow": false,
+     "fixture_key": [
+      "2026-10-12",
+      "Alpha FC",
+      "Beta FC"
+     ]
+    },
+    {
+     "match": "Eta FC vs Theta FC",
+     "pick": "over",
+     "prob": 0.46,
+     "odds": 1.87,
+     "result": null,
+     "market": "match_over_25",
+     "label": "Match Over 2.5 Goals",
+     "floor": 1.6,
+     "price_book": "Stake.com",
+     "shadow": false,
+     "fixture_key": [
+      "2026-10-12",
+      "Eta FC",
+      "Theta FC"
+     ]
+    }
+   ],
+   "odds": 3.55,
+   "stake_pct": 12.5
+  },
+  {
+   "legs": [
+    {
+     "match": "Gamma FC vs Delta FC",
+     "pick": "over",
+     "prob": 0.46,
+     "odds": 1.89,
+     "result": null,
+     "market": "match_over_25",
+     "label": "Match Over 2.5 Goals",
+     "floor": 1.6,
+     "price_book": "Stake.com",
+     "shadow": false,
+     "fixture_key": [
+      "2026-10-12",
+      "Gamma FC",
+      "Delta FC"
+     ]
+    },
+    {
+     "match": "Epsilon FC vs Zeta FC",
+     "pick": "over",
+     "prob": 0.46,
+     "odds": 1.88,
+     "result": null,
+     "market": "match_over_25",
+     "label": "Match Over 2.5 Goals",
+     "floor": 1.6,
+     "price_book": "Stake.com",
+     "shadow": false,
+     "fixture_key": [
+      "2026-10-12",
+      "Epsilon FC",
+      "Zeta FC"
+     ]
+    }
+   ],
+   "odds": 3.55,
+   "stake_pct": 12.5
+  }
+ ],
+ "staked_pct": 25.0
+}

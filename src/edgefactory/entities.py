@@ -1,0 +1,244 @@
+"""Canonical entity registry for leagues and teams.
+
+This module is deliberately lightweight and safe on fresh clones:
+
+1. manual overrides from config/entity_overrides.json
+2. learned aliases from localdata/entity_registry.json
+3. deterministic normalization fallback from util.py
+
+Use this for purity contexts, reporting, and read-model keys. Do not use it to
+silently change certified miner joins without re-validating the miner.
+"""
+from __future__ import annotations
+
+import json
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+from .identity import (AMBIGUOUS_DOMESTIC_LEAGUE_KEYS, canonical_league_key, fold_league_identity,
+                       team_identity_words)
+from .util import (
+    clear_team_alias_cache,
+    resolve_team_alias,
+    compact_key,
+    squad_marker_suffix,
+    squad_markers,
+    norm_entity_team,
+    norm_league,
+    norm_team,
+    norm_team_legacy,
+)
+
+ROOT = Path(__file__).resolve().parents[2]
+CONFIG_OVERRIDES_PATH = ROOT / "Config" / "entity_overrides.json"
+if not CONFIG_OVERRIDES_PATH.exists():
+    CONFIG_OVERRIDES_PATH = ROOT / "config" / "entity_overrides.json"
+ENTITY_REGISTRY_PATH = ROOT / "localdata" / "entity_registry.json"
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return {}
+
+
+@lru_cache(maxsize=1)
+def load_overrides() -> dict[str, Any]:
+    data = _read_json(CONFIG_OVERRIDES_PATH)
+    return data if isinstance(data, dict) else {}
+
+
+@lru_cache(maxsize=1)
+def load_registry() -> dict[str, Any]:
+    data = _read_json(ENTITY_REGISTRY_PATH)
+    return data if isinstance(data, dict) else {}
+
+
+def clear_entity_caches() -> None:
+    """Clear cached registry/override data, useful in tests or long processes."""
+    load_overrides.cache_clear()
+    load_registry.cache_clear()
+    clear_team_alias_cache()
+
+
+def _override_lookup(kind: str, raw: object) -> str | None:
+    if kind == "teams":
+        # Single-sourced through util's curated table, which indexes every
+        # curated spelling in several deterministic key spaces (raw,
+        # folded, compact, fixed and legacy norm_team). Doing the lookup
+        # here with a narrower candidate list silently missed folded
+        # spellings such as "07 vestur" (2026-10-05 sweep).
+        canonical, matched = resolve_team_alias(raw)
+        if matched:
+            return canonical
+    overrides = load_overrides().get(kind, {})
+    if not isinstance(overrides, dict):
+        return None
+    candidates = [
+        str(raw or ""), norm_league(raw), compact_key(raw),
+        norm_team(str(raw or "")),
+        # Dual key: entries/callers created before the 2026-10-05
+        # transliteration fix still resolve through the frozen key.
+        norm_team_legacy(str(raw or "")),
+    ]
+    for key in candidates:
+        if key in overrides:
+            return str(overrides[key])
+    return None
+
+
+def _registry_lookup(kind: str, raw: object) -> str | None:
+    registry = load_registry()
+    alias_index = registry.get("alias_index", {}).get(kind, {})
+    if not isinstance(alias_index, dict):
+        return None
+    # Legacy candidates first, byte-unchanged; folded identity candidates
+    # appended (additive-only coverage, see edgefactory/identity.py).
+    # Registry candidates use the PLAIN fold, not canonical_league_key, so
+    # the curated alias table can never be applied twice through a learned
+    # alias_index.
+    candidates = [
+        str(raw or ""), norm_league(raw), compact_key(raw),
+        norm_team(str(raw or "")),
+        norm_team_legacy(str(raw or "")),  # legacy-keyed learned aliases
+    ]
+    if kind == "leagues":
+        candidates.append(fold_league_identity(raw))
+    else:
+        # historical word rule: this list is matched against keys persisted
+        # before the fold existed (see team_identity_words)
+        folded_team = team_identity_words(str(raw or ""), fold_tokens=False)
+        candidates.append(norm_team(folded_team))
+        candidates.append(norm_entity_team(folded_team, width=24))
+    for key in candidates:
+        if key in alias_index:
+            return str(alias_index[key])
+    return None
+
+
+def canonical_league(raw: object) -> str:
+    """Return canonical league key for purity/reporting contexts."""
+    override = _override_lookup("leagues", raw)
+    if override:
+        return canonical_league_key(norm_league(override))
+    # A global learned alias cannot disambiguate a country-less domestic title.
+    if fold_league_identity(raw) in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS:
+        return canonical_league_key(raw)
+    learned = _registry_lookup("leagues", raw)
+    if learned:
+        # An older learned registry may still return the sponsored spelling.
+        # Normalize alias OUTPUTS too so assay writes and pick lookups cannot
+        # bypass the same explicit league identity table.
+        return canonical_league_key(norm_league(learned))
+    # Folded identity fallback: identical to norm_league(raw) for clean
+    # names; unifies '&' -> 'and' spellings and applies evidence aliases
+    # (e.g. "England,Fa Cup" -> "fa"). See edgefactory/identity.py.
+    return canonical_league_key(raw) or "unknown"
+
+
+def classify_competition(league_name: object) -> str:
+    """Classify a competition/league into structural categories:
+    friendly, youth, women, cup, or league.
+    """
+    s = str(league_name or "").lower()
+    if any(tok in s for tok in ("friendly", "amichevole", "freundschaftsspiele", "club amic")):
+        return "friendly"
+    if any(tok in s for tok in ("u17", "u18", "u19", "u20", "u21", "u23", "youth", "reserves", "reserve", "young", "primavera", "junior")):
+        return "youth"
+    if any(tok in s for tok in ("women", "fem", "donna", "ladies", "w-cup", "frau")):
+        return "women"
+    if any(tok in s for tok in ("cup", "copa", "coppa", "coupe", "pokal", "trophy", "shield", "fa cup", "dff pokal", "ko-runde", "play-offs", "playoffs", "tournament")):
+        return "cup"
+    return "league"
+
+
+def canonical_team(raw: object, *, width: int = 24) -> str:
+    """Return canonical team key for purity/reporting contexts.
+
+    When a curated/learned alias replaces the name, any distinct-entity
+    marker on the RAW name is re-attached: the alias canonicalizes the
+    CLUB, never the squad, so "Copenhagen FC Women" must not resolve onto
+    "FC Copenhagen" (2026-10-05 sweep). Names resolved without an alias
+    keep their historical key byte-for-byte.
+    """
+    suffix = squad_marker_suffix(raw)
+    override = _override_lookup("teams", raw)
+    if override:
+        base = norm_entity_team(override, width=width)
+        return base + suffix if suffix and not squad_markers(override) else base
+    learned = _registry_lookup("teams", raw)
+    if learned:
+        base = norm_entity_team(learned, width=width)
+        return base + suffix if suffix and not squad_markers(learned) else base
+    # Folded identity fallback: identical to the legacy form for clean
+    # names; unifies '&' <-> 'and' spellings (Dagenham incident).
+    #
+    # Deliberately the PRE-FOLD word function (2026-10-12): the seam's
+    # ``team_identity_words`` now folds the abbreviation 'utd' -> 'united',
+    # which is right for the archive seam but must NOT move an operational
+    # key. These keys are persisted and joined against stored data - the
+    # committed ``localdata/purity_registry.json`` carries keys such as
+    # ``soccer|afctelfordutd|*|1x2|home`` built under the historical rule -
+    # and this function's own contract above is "byte-for-byte for names
+    # resolved without an alias". Folding here would silently orphan every
+    # stored verdict for a club spelled '... Utd', i.e. change which picks
+    # the purity layer explains, so the fallback keeps the historical rule
+    # and the seam carries the fold.
+    return norm_entity_team(team_identity_words(str(raw or ""), fold_tokens=False),
+                            width=width)
+
+
+def canonical_team_variants(raw: object, *, width: int = 24) -> list[str]:
+    """Every entity-key spelling that denotes the SAME team.
+
+    Returned in priority order: the canonical key first, then the
+    pre-alias fallback key (what this name resolved to before the
+    2026-10-05 canonicalization), then the keys of every curated sibling
+    spelling that maps to the same canonical name.
+
+    Context/purity tables learned their keys under whichever spelling the
+    feeds used at the time (the live registry, for example, carries
+    ``turkiye`` entries and no ``turkey`` ones). Canonicalizing the lookup
+    key alone would therefore ORPHAN that evidence — including VETO
+    verdicts. Callers look up every variant and keep the most severe
+    verdict, so canonicalization can never lose a veto.
+
+    Deterministic: curated table + folding only, no fuzzy matching.
+    """
+    variants: list[str] = []
+
+    def _add(key: str) -> None:
+        if key and key not in variants:
+            variants.append(key)
+
+    _add(canonical_team(raw, width=width))
+    # pre-alias fallback: the historical key for this exact spelling (the
+    # historical word rule, no abbreviation folds: these keys are looked up
+    # in tables written before the fold existed)
+    _add(norm_entity_team(team_identity_words(str(raw or ""), fold_tokens=False),
+                          width=width))
+    override = _override_lookup("teams", raw)
+    if override:
+        teams = load_overrides().get("teams", {})
+        if isinstance(teams, dict):
+            for spelling, canonical in teams.items():
+                if str(canonical) != str(override):
+                    continue
+                _add(norm_entity_team(
+                    team_identity_words(str(spelling), fold_tokens=False), width=width))
+    return variants
+
+
+def explain_entity(kind: str, raw: object) -> dict[str, Any]:
+    """Return canonical key plus evidence metadata if available."""
+    canonical = canonical_league(raw) if kind == "leagues" else canonical_team(raw)
+    registry = load_registry()
+    entities = registry.get(kind, {}) if isinstance(registry, dict) else {}
+    meta = entities.get(canonical, {}) if isinstance(entities, dict) else {}
+    return {
+        "raw": raw,
+        "canonical": canonical,
+        "meta": meta,
+    }

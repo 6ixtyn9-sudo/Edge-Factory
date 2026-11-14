@@ -1,0 +1,68 @@
+W4 — page blocks vs the archive, every difference named
+command: PYTHONPATH=src .venv/bin/python handoff/round5_form_h2h_2026-10-12/w4_probe.py
+source: w1_served_excerpt.txt (section A), fixture Coventry vs Newcastle Utd as of 2026-10-12
+capture parser over section A: blocks=['last_results'], 10 rows, labels=['Coventry', 'Newcastle Utd']
+  Coventry     2026-09-19 [0, 1] odds=None
+  Coventry     2026-09-13 [0, 5] odds=None
+  Coventry     2026-09-05 [1, 0] odds=None
+  Coventry     2026-08-29 [0, 1] odds=None
+  Coventry     2026-08-21 [3, 0] odds=None
+  Newcastle Utd 2026-09-19 [2, 1] odds=None
+  Newcastle Utd 2026-09-14 [4, 1] odds=None
+  Newcastle Utd 2026-09-05 [2, 2] odds=None
+  Newcastle Utd 2026-08-29 [0, 2] odds=None
+  Newcastle Utd 2026-08-23 [2, 2] odds=None
+
+--- canonical identity (the shipped rule) ---
+identity census: 'Newcastle Utd' rows 44, 'Newcastle' rows 44, 'Coventry' rows 33
+unmatched labels: 0
+Coventry: page_n=5 archive_n=5 matched=4
+    page 2026-09-19 [0, 1] -> matched   [Nottingham Forest 0-1 Coventry league='']
+    page 2026-09-13 [0, 5] -> matched   [Coventry 0-5 Brighton league='']
+    page 2026-09-05 [1, 0] -> matched   [Manchester City 1-0 Coventry league='']
+    page 2026-08-29 [0, 1] -> matched   [Coventry 0-1 Hull league='Premier League']
+    page 2026-08-21 [3, 0] -> window_shift   [Arsenal 3-0 Coventry league='Premier League']
+    archive 2026-09-16 Coventry 1-3 Aston Villa league='' -> unexplained
+Newcastle Utd: page_n=5 archive_n=5 matched=4
+    page 2026-09-19 [2, 1] -> matched   [Newcastle 2-1 Hull City league='']
+    page 2026-09-14 [4, 1] -> matched   [Leeds 4-1 Newcastle league='']
+    page 2026-09-05 [2, 2] -> matched   [Newcastle 2-2 Bournemouth league='']
+    page 2026-08-29 [0, 2] -> matched   [Tottenham 0-2 Newcastle league='Premier League']
+    page 2026-08-23 [2, 2] -> window_shift   [Newcastle 2-2 Liverpool league='Premier League']
+    archive 2026-09-08 Millwall 0-1 Newcastle league='' -> unexplained
+
+--- comparison run: the same code path with the identity function swapped to the width-9 norm_team bucket ---
+identity census: 'Newcastle Utd' rows 111, 'Newcastle' rows 111, 'Coventry' rows 33
+unmatched labels: 0
+Coventry: page_n=5 archive_n=5 matched=4
+    page 2026-09-19 [0, 1] -> matched   [Nottingham Forest 0-1 Coventry league='']
+    page 2026-09-13 [0, 5] -> matched   [Coventry 0-5 Brighton league='']
+    page 2026-09-05 [1, 0] -> matched   [Manchester City 1-0 Coventry league='']
+    page 2026-08-29 [0, 1] -> matched   [Coventry 0-1 Hull league='Premier League']
+    page 2026-08-21 [3, 0] -> window_shift   [Arsenal 3-0 Coventry league='Premier League']
+    archive 2026-09-16 Coventry 1-3 Aston Villa league='' -> unexplained
+Newcastle Utd: page_n=5 archive_n=5 matched=2
+    page 2026-09-19 [2, 1] -> matched   [Anstey Nomads 2-1 Newcastle Town league='']
+    page 2026-09-14 [4, 1] -> matched   [Leeds 4-1 Newcastle league='']
+    page 2026-09-05 [2, 2] -> window_shift   [Newcastle 2-2 Bournemouth league='']
+    page 2026-08-29 [0, 2] -> window_shift   [Tottenham 0-2 Newcastle league='Premier League']
+    page 2026-08-23 [2, 2] -> window_shift   [Newcastle 2-2 Liverpool league='Premier League']
+    archive 2026-09-15 Kashima Antlers 7-1 Newcastle Jets league='' -> reschedule
+    archive 2026-09-15 York City 1-3 Newcastle U23s league='' -> reschedule
+
+reading   | page rows matched | unmatched labels
+  canonical | 8/10 | 0
+  width-9   | 6/10 | 0
+
+note: the width-9 bucket folds 'Newcastle Utd' in with Newcastle Town,
+Newcastle Jets and Newcastle U23s: its 2026-09-19 'matched' row is
+Anstey Nomads 2-1 Newcastle Town - a different club's fixture with the
+same date and score. The canonical rule refuses the guess and names the
+alias gap (unmatched_identity) instead.
+
+note: the served rows carry closing 1x2 odds in the raw excerpt
+(first row 1.64/3.88/5.49, read live), but the capture's odds regex
+does not fire on this flat text render, so 'odds=None' above is a
+render artefact of the excerpt, not a capture defect - the odds
+parsing runs on the HTML the capture actually reads, which is not
+re-derivable from this sandbox (no route to betexplorer.com).

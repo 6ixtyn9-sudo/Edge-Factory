@@ -1,0 +1,586 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+ROOT = Path(__file__).resolve().parent.parent
+SCRIPT = ROOT / "scripts" / "daily.py"
+SPEC = importlib.util.spec_from_file_location("daily", SCRIPT)
+daily = importlib.util.module_from_spec(SPEC)
+sys.modules["daily"] = daily
+assert SPEC is not None and SPEC.loader is not None
+SPEC.loader.exec_module(daily)
+
+
+@patch("daily.run_soft")
+@patch("daily.run_pipeline")
+@patch("daily.official_run_marker_file")
+@patch("daily.archived_picks_file")
+def test_run_smart_auto_forecast_archive_without_marker_runs_heavy(
+    mock_archived_file, mock_marker_file, mock_run_pipeline, mock_run_soft
+):
+    """A future-planner archive must not suppress today's heavy official run."""
+    archive = MagicMock()
+    archive.exists.return_value = True  # yesterday's forecast shortlist exists
+    mock_archived_file.return_value = archive
+    marker = MagicMock()
+    marker.exists.return_value = False
+    mock_marker_file.return_value = marker
+
+    with patch("daily.datetime") as mock_dt:
+        mock_dt.now.return_value.strftime.side_effect = lambda fmt: "2026-06-18" if "%Y" in fmt else "0600"
+        mock_dt.now.return_value.hour = 6
+
+        daily.run_smart_auto(future_days=2, backfill_days=30)
+
+        mock_run_pipeline.assert_called_once_with(
+            target_date="2026-06-18",
+            mode="official",
+            future_days=2,
+            backfill_days=30,
+            force_repick=True,
+            picks_only=False,
+        )
+        assert any("edge_firing_tripwire.py" in call.args[0] for call in mock_run_soft.call_args_list)
+
+
+def test_manual_auto_once_resolves_to_intraday_and_skips_phase5(monkeypatch):
+    archive = MagicMock()
+    archive.exists.return_value = True
+    marker = MagicMock()
+    marker.exists.return_value = True
+    monkeypatch.setattr(daily, "archived_picks_file", lambda _day: archive)
+    monkeypatch.setattr(daily, "official_run_marker_file", lambda _day: marker)
+    monkeypatch.setattr(daily, "run_pipeline", MagicMock())
+    monkeypatch.setattr(daily, "run_soft", MagicMock())
+    monkeypatch.setattr(daily.sys, "argv", ["daily.py", "--auto-once"])
+
+    with patch("daily.datetime") as mock_dt:
+        mock_dt.now.return_value.strftime.side_effect = (
+            lambda fmt: "2026-10-08" if "%Y" in fmt else "1100"
+        )
+        mock_dt.now.return_value.hour = 11
+        daily.main()
+
+    daily.run_pipeline.assert_called_once()
+    assert daily.run_pipeline.call_args.kwargs["mode"] == "autonomous_intraday"
+    assert daily.phase5_capture_command("autonomous_intraday") is None
+    assert "intraday" in daily.phase5_capture_skip_reason("autonomous_intraday")
+
+
+def test_full_official_pipeline_runs_authorized_sidecar_and_status_receipt(
+    monkeypatch, tmp_path, capsys
+):
+    calls: list[tuple[str, str | None]] = []
+    finalize_routes: list[bool] = []
+    picks_file = tmp_path / "picks_today.json"
+    marker = tmp_path / "official_run_2026-10-08.json"
+    monkeypatch.setattr(daily, "sync_repo_state", lambda: None)
+    monkeypatch.setattr(daily, "run_soft", lambda cmd, label=None: calls.append((cmd, label)))
+
+    def fake_run(cmd, label=None):
+        calls.append((cmd, label))
+        if "picks_today.py" in cmd:
+            picks_file.write_text("[]", encoding="utf-8")
+
+    monkeypatch.setattr(daily, "run", fake_run)
+    monkeypatch.setattr(daily, "PICKS_TODAY_FILE", picks_file)
+    monkeypatch.setattr(daily, "archived_picks_file", lambda _day: tmp_path / "picks_2026-10-08.json")
+    monkeypatch.setattr(daily, "official_run_marker_file", lambda _day: marker)
+    monkeypatch.setattr(daily, "get_build_entity_registry_cmd", lambda: "mock build_entity_registry")
+    monkeypatch.setattr(
+        daily,
+        "finalize_priced_candidate_slate",
+        lambda _day, *, phase5_shadow=False: (finalize_routes.append(phase5_shadow) or "2026-10-08T07:00:00+02:00"),
+    )
+    monkeypatch.setattr(daily, "archive_picks_by_kickoff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "load_picks_file", lambda: [])
+    monkeypatch.setattr(daily, "save_morning_baseline", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "generate_daily_report", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "run_future_planner", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "restore_target_picks", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "sync_official_archive", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "_notify", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "mark_official_run_complete", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "ml_fade_research_maintenance", lambda *_args, **_kwargs: None)
+
+    daily.run_pipeline("2026-10-08", mode="official", future_days=2, picks_only=False)
+
+    capture_commands = [cmd for cmd, _label in calls if "capture_daily.py" in cmd]
+    assert len(capture_commands) == 1
+    assert "--phase5-shadow" in capture_commands[0]
+    assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in capture_commands[0]
+    assert finalize_routes == [True]
+    assert any("scripts/phase5_certify.py" in cmd for cmd, _label in calls)
+    assert "PHASE5_CAPTURE status=executed mode=official" in capsys.readouterr().out
+
+
+def test_manual_forecast_promotion_reports_phase5_skip(
+    monkeypatch, tmp_path, capsys
+):
+    forecast = tmp_path / "forecast.json"
+    forecast.write_text("[]", encoding="utf-8")
+    archive = tmp_path / "official.json"
+    live = tmp_path / "picks_today.json"
+    monkeypatch.setattr(daily, "archived_picks_file", lambda _day: archive)
+    monkeypatch.setattr(daily, "PICKS_TODAY_FILE", live)
+    monkeypatch.setattr(daily, "generate_daily_report", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "run_soft", lambda *_args, **_kwargs: None)
+
+    daily.promote_forecast(str(forecast), "2026-10-08")
+
+    output = capsys.readouterr().out
+    assert "status=skipped_by_mode mode=manual_forecast_promotion" in output
+    assert "not authorized daily capture work" in output
+
+
+def test_capture_route_is_full_official_only_and_forecast_has_distinct_reason(capsys):
+    command = daily.phase5_capture_command("official")
+    assert command is not None
+    assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in command
+    assert "--phase5-shadow" in command
+    assert daily.phase5_capture_command("official", picks_only=True) is None
+    assert daily.phase5_capture_command("forecast") is None
+    assert daily.phase5_capture_command("autonomous_intraday") is None
+
+    daily.report_phase5_capture_status("forecast")
+    forecast_line = capsys.readouterr().out.strip()
+    assert "status=skipped_by_mode mode=forecast" in forecast_line
+    assert "forecast" in forecast_line
+
+
+@patch("daily.run_soft")
+@patch("daily.run_pipeline")
+@patch("daily.official_run_marker_file")
+@patch("daily.archived_picks_file")
+def test_run_smart_auto_marker_triggers_intraday(
+    mock_archived_file, mock_marker_file, mock_run_pipeline, mock_run_soft
+):
+    """Only the heavy-run completion marker authorizes intraday mode."""
+    archive = MagicMock()
+    archive.exists.return_value = True
+    mock_archived_file.return_value = archive
+    marker = MagicMock()
+    marker.exists.return_value = True
+    mock_marker_file.return_value = marker
+
+    with patch("daily.datetime") as mock_dt:
+        mock_dt.now.return_value.strftime.side_effect = lambda fmt: "2026-06-18" if "%Y" in fmt else "1100"
+        mock_dt.now.return_value.hour = 11
+
+        daily.run_smart_auto(future_days=2, backfill_days=30)
+
+        mock_run_pipeline.assert_called_once_with(
+            target_date="2026-06-18",
+            mode="autonomous_intraday",
+            future_days=2,
+            backfill_days=30,
+            force_repick=True,
+            picks_only=True,
+        )
+        assert any("edge_firing_tripwire.py" in call.args[0] for call in mock_run_soft.call_args_list)
+
+
+@patch("daily.run_soft")
+@patch("daily.run")
+@patch("daily.generate_daily_report")
+@patch("daily.archived_picks_file")
+@patch("daily.PICKS_TODAY_FILE")
+def test_promote_forecast(mock_picks_today_file, mock_archived_file, mock_gen_report, mock_run, mock_run_soft, tmp_path):
+    """Test deliberate promotion of a forecast file to the official record."""
+    forecast_file = tmp_path / "forecast_2026-06-18_1100.json"
+    dummy_picks = [{"date": "2026-06-18T12:00:00", "home": "Team A", "away": "Team B", "pick": "1"}]
+    forecast_file.write_text(json.dumps(dummy_picks))
+
+    mock_archive_dest = MagicMock()
+    mock_archived_file.return_value = mock_archive_dest
+
+    daily.promote_forecast(str(forecast_file), "2026-06-18")
+
+    # promote_forecast re-serializes with heal_ledger_labels (indent=2,
+    # sort_keys=True) — the written form is pretty-printed, not the compact
+    # input. Assert the actual serialization the code writes.
+    expected = json.dumps(dummy_picks, indent=2, sort_keys=True)
+    mock_archive_dest.write_text.assert_called_once_with(expected)
+    mock_picks_today_file.write_text.assert_called_once_with(expected)
+    mock_gen_report.assert_called_once_with("2026-06-18")
+    mock_run_soft.assert_called()
+    assert any("sync_supabase" in call[0][0] for call in mock_run_soft.call_args_list)
+
+
+def test_result_refresh_command_targets_yesterday_only():
+    assert daily.result_refresh_day("2026-08-05") == "2026-08-04"
+    assert daily.result_refresh_cmd("2026-08-05") == (
+        "PYTHONPATH=src python3 scripts/refresh_result_sources.py --date 2026-08-04"
+    )
+
+
+def test_official_run_marker_is_atomic_and_independent_of_pick_archive(tmp_path):
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        # A future forecast archive may already exist; it is not the marker.
+        daily.archived_picks_file("2026-08-20").write_text("[]")
+        assert not daily.official_run_marker_file("2026-08-20").exists()
+
+        path = daily.mark_official_run_complete(
+            "2026-08-20", "2026-08-20T06:00:00+02:00"
+        )
+        payload = json.loads(path.read_text())
+
+    assert payload["schema"] == 1
+    assert payload["target_date"] == "2026-08-20"
+    assert payload["pipeline"] == "official_heavy"
+    assert payload["run_as_of"] == "2026-08-20T06:00:00+02:00"
+    assert not path.with_suffix(".json.tmp").exists()
+
+
+def test_autonomous_intraday_merge():
+    """Test that existing picks are fully preserved and brand new picks are appended."""
+    existing = [
+        {
+            "date": "2026-06-18T10:00:00",
+            "home": "AC Oulu",
+            "away": "IFK Mariehamn",
+            "market": "1x2",
+            "pick": "1",
+            "bucket": "CERTIFIED_CLEAN",
+            "odds": 1.95,
+            "w_score": 0.95,
+        }
+    ]
+    
+    fresh = [
+        # Duplicate of existing game/market (maybe odds changed or picked X later)
+        {
+            "date": "2026-06-18T10:00:00",
+            "home": "AC Oulu",
+            "away": "IFK Mariehamn",
+            "market": "1x2",
+            "pick": "X",
+            "bucket": "CAUTION",
+            "odds": 3.40,
+        },
+        # Completely new game discovered on late slate
+        {
+            "date": "2026-06-18T15:00:00",
+            "home": "HJK Helsinki",
+            "away": "KuPS",
+            "market": "1x2",
+            "pick": "2",
+            "bucket": "CERTIFIED_CLEAN",
+            "odds": 2.80,
+            "w_score": 0.85,
+        }
+    ]
+
+    merged, new_added, superseded = daily.autonomous_intraday_merge(existing, fresh)
+
+    assert new_added == 1
+    assert superseded == 1
+    assert len(merged) == 2
+    # Prefer-fresh: the duplicate fixture's FRESH row supersedes the archived
+    # one (the old behavior of keeping the archived row silently hid newer,
+    # more truthful picks — e.g. an ml-meta pick behind an archived 3way row).
+    assert merged[0]["home"] == "AC Oulu"
+    assert merged[0]["pick"] == "X"
+    assert merged[0]["odds"] == 3.40
+
+    # Verify brand new game is appended
+    assert merged[1]["home"] == "HJK Helsinki"
+    assert merged[1]["pick"] == "2"
+
+
+def test_autonomous_merge_repairs_duplicates_already_in_archive():
+    """A corrupt prior archive must not keep duplicate aliases forever."""
+    first = {
+        "date": "2026-08-13",
+        "home": "FC Nordsjaelland",
+        "away": "Valur Reykjavik",
+        "match": "FC Nordsjaelland vs Valur Reykjavik",
+        "market": "1x2",
+        "pick": "home",
+        "odds": 1.12,
+    }
+    duplicate_alias = {
+        **first,
+        "home": "FC Nordsjælland",
+        "match": "FC Nordsjælland vs Valur Reykjavik",
+    }
+
+    merged, new_added, superseded = daily.autonomous_intraday_merge(
+        [first, duplicate_alias], []
+    )
+
+    assert len(merged) == 1
+    assert new_added == 0
+    assert superseded == 1
+    assert merged[0] == first  # first-frozen wins when there is no fresh row
+
+
+def test_stack_dispatch_never_drops_prior_bets(tmp_path):
+    """Regression: a re-run whose fresh snapshot is missing a bet found in an
+    earlier run must keep that bet in the stacked archive. This is the contract
+    the official dispatch relies on (WhatsApp/report/CLV read the merged stack,
+    not the fresh subset)."""
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        prior = [
+            {
+                "date": "2026-08-02",
+                "home": "Dinamo Brest", "away": "Belshina",
+                "match": "Dinamo Brest vs Belshina",
+                "market": "1x2", "pick": "home",
+                "kickoff": "2026-08-02T17:00:00+02:00",
+                "bucket": "CAUTION", "odds": 1.31,
+            },
+            {
+                "date": "2026-08-02",
+                "home": "CSKA Sofia", "away": "Dunav Ruse",
+                "match": "CSKA Sofia vs Dunav Ruse",
+                "market": "1x2", "pick": "home",
+                "kickoff": "2026-08-02T19:15:00+02:00",
+                "bucket": "CAUTION", "odds": 1.31,
+            },
+        ]
+        daily.archive_picks_by_kickoff(prior, "2026-08-02")
+        archive_path = daily.archived_picks_file("2026-08-02")
+        assert archive_path.exists()
+
+        # Run 2: fresh snapshot only found ONE of the two bets (the other vanished).
+        daily.archive_picks_by_kickoff([prior[0]], "2026-08-02")
+
+        merged = json.loads(archive_path.read_text())
+        matches = {p["match"] for p in merged}
+        assert "CSKA Sofia vs Dunav Ruse" in matches, "prior bet was dropped from the stack"
+        assert "Dinamo Brest vs Belshina" in matches
+        cska = next(p for p in merged if p["match"] == "CSKA Sofia vs Dunav Ruse")
+        assert cska["odds"] == 1.31, "prior bet must be retained exactly as emitted"
+
+
+def test_get_actual_kickoff_date_parses_european_dmy():
+    """Forebet serves 'DD-MM, HH:MM' kickoffs; the archive must resolve the
+    real calendar date instead of filing the pick on the scan day."""
+    pick = {"date": "2026-08-29", "kickoff": "30-08, 16:00"}
+    assert daily.get_actual_kickoff_date(pick, "2026-08-29") == "2026-08-30"
+
+
+def test_get_actual_kickoff_date_bare_time_falls_back_to_pick_date():
+    """A bare 'HH:MM' kickoff names no calendar day — fail closed to the
+    pick's own date field rather than inventing one."""
+    pick = {"date": "2026-08-29", "kickoff": "11:00"}
+    assert daily.get_actual_kickoff_date(pick, "2026-08-29") == "2026-08-29"
+
+
+def test_archive_picks_by_kickoff_redates_row_to_kickoff_date(tmp_path):
+    """A pick scanned 08-29 for a 08-30 fixture (kickoff '30-08, 16:00') must
+    be filed under 08-30 with its date field rewritten, so the audit settles it
+    on the day the result donor uses."""
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        pick = {
+            "date": "2026-08-29",
+            "home": "Viking", "away": "Aalesund",
+            "match": "Viking vs Aalesund",
+            "market": "1x2", "pick": "home",
+            "kickoff": "30-08, 16:00",
+            "bucket": "CAUTION", "odds": 1.30,
+        }
+        daily.archive_picks_by_kickoff([pick], "2026-08-29")
+
+        moved = json.loads(daily.archived_picks_file("2026-08-30").read_text())
+        assert len(moved) == 1
+        assert moved[0]["date"] == "2026-08-30"
+        assert moved[0]["home"] == "Viking"
+        # The scan-day archive was not created for this row.
+        assert not daily.archived_picks_file("2026-08-29").exists()
+
+
+def test_match_market_key_folds_accents():
+    """Accent variants of the same team must collapse to one ledger key, so a
+    re-scrape spelling the fixture differently cannot double-enter the stack."""
+    a = daily.match_market_key(
+        {"home": "Strømmen", "away": "Kongsvinger", "market": "1x2"}
+    )
+    b = daily.match_market_key(
+        {"home": "Strommen", "away": "Kongsvinger IL", "market": "1x2"}
+    )
+    assert a == b, f"accent variant produced different keys: {a} vs {b}"
+    # And a genuinely different fixture must NOT collide with it.
+    c = daily.match_market_key(
+        {"home": "Strømsgodset", "away": "Kongsvinger", "market": "1x2"}
+    )
+    assert a != c
+
+
+def test_match_market_key_ignores_date_field():
+    """The ledger key must ignore the explicit date field (midnight-crossing
+    guard): the same match scraped across two dates is still one bet."""
+    a = daily.match_market_key(
+        {"date": "2026-08-02", "home": "Dinamo Brest", "away": "Belshina", "market": "1x2"}
+    )
+    b = daily.match_market_key(
+        {"date": "2026-08-03", "home": "Dinamo Brest", "away": "Belshina", "market": "1x2"}
+    )
+    assert a == b
+
+
+def test_daily_report_renders_every_ledger_bucket(tmp_path):
+    """The operator-facing TXT must match the audited JSON ledger row-for-row."""
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        picks = [
+            {
+                "date": "2026-08-06",
+                "home": "Twente",
+                "away": "Dunajska Streda",
+                "match": "Twente vs Dunajska Streda",
+                "market": "1x2",
+                "pick": "home",
+                "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+                "avg_p": 72.5,
+                "w_score": 1.0,
+                "odds": 1.2,
+                "odds_source": "scoutingstats_odds",
+                "kickoff": "06-08, 18:00",
+                "statistical_comment": (
+                    "📊 Realized Stats: Avg Goals: 3.10 | Over 2.5: 65.0% | "
+                    "Top Scores: 2-0 (16.0%), 1-0 (12.0%)"
+                ),
+                "ctx": {"league_key": "ecl", "league": "ALLOW", "odds_band_name": "1.20-1.35", "odds_band": "CAUTION"},
+            },
+            {
+                "date": "2026-08-06",
+                "home": "Ajax",
+                "away": "Shelbourne",
+                "match": "Ajax vs Shelbourne",
+                "market": "1x2",
+                "pick": "home",
+                "bucket": "WATCHLIST_SUSPECT_PRICE",
+                "avg_p": 68.0,
+                "w_score": 1.0,
+                "odds": 1.08,
+                "kickoff": "06-08, 19:00",
+                "ctx": {},
+            },
+        ]
+        out = daily.generate_daily_report("2026-08-06", source_picks=picks)
+        text = out.read_text()
+
+    assert "WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE" in text
+    assert "Twente vs Dunajska Streda" in text
+    assert "WATCHLIST — SUSPECT FUZZY PRICE MATCH" in text
+    assert "Ajax vs Shelbourne" in text
+    assert "Avg Goals: 3.10" in text
+    assert "Top Scores" not in text
+    assert "2-0 (16.0%)" not in text
+    assert "Total archived picks in this report: 2" in text
+
+
+def test_intraday_runs_prosoccer_capture_daily_recapture(tmp_path):
+    archive = tmp_path / "picks_2026-09-30.json"
+    archive.write_text("[]")
+    picks_today = tmp_path / "picks_today.json"
+
+    with patch.object(daily, "REPORT_DIR", tmp_path), \
+         patch.object(daily, "PICKS_TODAY_FILE", picks_today), \
+         patch("daily.sync_repo_state"), \
+         patch("daily.run_soft") as mock_run_soft, \
+         patch("daily.run"), \
+         patch("daily.generate_daily_report"), \
+         patch("daily._notify"), \
+         patch("daily.run_future_planner"), \
+         patch("daily.capture_theodds_snapshot"), \
+         patch("daily.ml_fade_research_maintenance"), \
+         patch("daily.sync_official_archive"):
+        daily.run_pipeline(
+            target_date="2026-09-30",
+            mode="autonomous_intraday",
+            future_days=2,
+            backfill_days=30,
+            force_repick=True,
+            picks_only=True,
+        )
+
+    assert any(
+        "capture_daily.py --skip-build --sources prosoccer" in call.args[0]
+        for call in mock_run_soft.call_args_list
+    )
+
+
+def test_oddspapi_capture_is_quota_opt_in_and_ceiling_only(monkeypatch):
+    with patch.object(daily, "run_soft") as run_soft:
+        monkeypatch.delenv("EDGE_FACTORY_ODDSPAPI_PRICES", raising=False)
+        daily.capture_oddspapi_snapshot("2026-10-03", "pick_time")
+        run_soft.assert_not_called()
+
+        monkeypatch.setenv("EDGE_FACTORY_ODDSPAPI_PRICES", "1")
+        # No secret or env var sets the cap any more: the monthly budget does.
+        monkeypatch.setenv("ODDSPAPI_MAX_FIXTURES", "999")
+        daily.capture_oddspapi_snapshot("2026-10-03", "pick_time")
+
+    command, label = run_soft.call_args.args
+    assert "scripts/capture_oddspapi.py --date 2026-10-03 --max-fixtures 200" in command
+    assert label == "oddspapi bounded capture 2026-10-03 [pick_time]"
+
+
+def test_card_enrich_cron_uses_one_execute_call_and_keeps_preflight_inside_it():
+    with patch.object(daily, "run_soft") as run_soft:
+        daily.capture_card_enrich_snapshot("2026-10-11", "candidate_price_snapshot")
+
+    run_soft.assert_called_once()
+    command, label = run_soft.call_args.args
+    assert "scripts/capture_card_enrich.py --date 2026-10-11 --execute" in command
+    assert "--allow-listing" not in command
+    assert label == "card_enrich capture 2026-10-11 [candidate_price_snapshot]"
+
+
+def test_priced_finalization_captures_then_rebuilds_with_a_new_cutoff(monkeypatch):
+    commands: list[tuple[str, str]] = []
+    monkeypatch.setattr(daily, "make_run_as_of", lambda: "2026-10-03T09:15:00+02:00")
+    with patch.object(daily, "capture_theodds_snapshot") as theodds, \
+            patch.object(daily, "capture_oddspapi_snapshot") as oddspapi, \
+            patch.object(daily, "capture_betexplorer_snapshot") as betexplorer, \
+            patch.object(daily, "capture_card_enrich_snapshot") as card_enrich, \
+            patch.object(daily, "run", side_effect=lambda cmd, label: commands.append((cmd, label))):
+        result = daily.finalize_priced_candidate_slate("2026-10-03")
+
+    assert result == "2026-10-03T09:15:00+02:00"
+    theodds.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    oddspapi.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    betexplorer.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    card_enrich.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    assert commands == [(
+        "EDGE_FACTORY_RUN_AS_OF=2026-10-03T09:15:00+02:00 "
+        "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-03",
+        "picks_today 2026-10-03 (final priced card)",
+    )]
+
+
+def test_official_finalization_enables_phase5_only_on_the_existing_pick_capture(monkeypatch):
+    commands: list[tuple[str, str]] = []
+    monkeypatch.setattr(daily, "make_run_as_of", lambda: "2026-10-07T09:15:00+02:00")
+    with patch.object(daily, "capture_theodds_snapshot"), \
+            patch.object(daily, "capture_oddspapi_snapshot"), \
+            patch.object(daily, "capture_betexplorer_snapshot"), \
+            patch.object(daily, "capture_card_enrich_snapshot"), \
+            patch.object(daily, "run", side_effect=lambda cmd, label: commands.append((cmd, label))):
+        daily.finalize_priced_candidate_slate("2026-10-07", phase5_shadow=True)
+
+    assert commands == [(
+        "EDGE_FACTORY_PHASE5_SHADOW=1 "
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
+        "EDGE_FACTORY_RUN_AS_OF=2026-10-07T09:15:00+02:00 "
+        "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-07",
+        "picks_today 2026-10-07 (final priced card)",
+    )]
+
+
+def test_official_capture_command_opts_into_phase5_on_resilience_group():
+    source = (ROOT / "scripts" / "daily.py").read_text()
+    assert (
+        '"python3 scripts/capture_daily.py --skip-build --phase5-shadow "'
+        in source
+    )
+    assert "forebet-resilience" in source
+    assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in source
+    assert "phase5_shadow=not picks_only" in source
+    assert "scripts/phase5_certify.py" in source

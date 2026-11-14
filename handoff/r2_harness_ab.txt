@@ -1,0 +1,25 @@
+==========================================================================
+ENHANCEMENT LANE REPLAY (settled registry records only)
+==========================================================================
+doctrine: this can only backtest history that HAD a price. On 2026-10-12
+that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).
+The newly-priced legs exist only going forward. Use these numbers for
+RELATIVE floor comparisons — never as a prediction of bank growth.
+
+floor variant                                        bet-days  bets  hits    rate  mean log growth/bet-day  no-bet days
+------------------------------------------------------------------------------------------------------------------------
+arm A: live floors                                         30    46    13  28.3%                  -0.0154        12/42
+arm B: derived slice floors (day-by-day)                   21    26     6  23.1%                  -0.0182        12/33  ⚠ small-n
+
+NO BET frequency (MIN_ACCAS/LEGS_PER_ACCA: a day without a 2-leg
+card is skipped, never a single) — live 29%, derived 36%; every mean above is per BET-day.
+
+by market (live floors):
+  market              floor     n  hits    rate  fires
+  btts_yes             1.85     7     4  57.1%      5  ⚠ small-n
+  match_over_15        1.45    33    24  72.7%      0  ⚠ small-n
+  match_over_25        1.60   350   231  66.0%    146
+  match_over_35        3.30    16     5  31.2%      5  ⚠ small-n
+
+paired bootstrap, B minus A, mean log growth per bet-day (5000 resamples):
+  median +0.0029  p10 -0.0294  p90 +0.0343  P(B>A) 54%  horizon 30 bet-days

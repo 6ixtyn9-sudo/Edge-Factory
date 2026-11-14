@@ -1,0 +1,524 @@
+"""Forebet adapter — JSON endpoint, richest source (probs + best odds + FT/HT scores).
+
+Endpoint: /scripts/getrs.php?ln=en&tp={1x2,uo,bts,ht}&in=DATE&ord=0&tz=0&tzs=&tze=
+Needs UA + Referer + X-Requested-With. Serves nothing before 2024-01-01.
+Response: [rows, meta]. The 1x2 payload already carries FT and HT scores,
+so one merged wide row per match covers all markets.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date as _date
+
+from edgefactory.sources import public_relay
+
+BASE = "https://www.forebet.com/scripts/getrs.php"
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Referer": "https://www.forebet.com/en/football-tips-and-predictions-for-today",
+    "X-Requested-With": "XMLHttpRequest",
+}
+MIN_DATE = "2024-01-01"
+DEFAULT_MARKETS = ("1x2", "uo", "bts")  # ht is certified charcoal; opt-in only
+
+
+CFFI_IMPERSONATIONS = ("safari17_0", "firefox133")
+CLOUD_RETRY_ENV = "EDGE_FACTORY_FOREBET_CLOUD"
+BROWSER_ENV = "EDGE_FACTORY_FOREBET_BROWSER"
+PLAYWRIGHT_ENV = "EDGE_FACTORY_FOREBET_PLAYWRIGHT"
+BROWSER_OPERATION = "forebet_getrs"
+BROWSER_TRANSPORT = "cloudflare_browser_rendering"
+BROWSER_TIMEOUT_SECONDS = 75
+PLAYWRIGHT_TIMEOUT_MS = 45_000
+BROWSER_AUTO_PAST_DAYS = 2
+BROWSER_AUTO_FUTURE_DAYS = 1
+RELAY_BASE = "https://r.jina.ai/"
+RELAY_TIMEOUT_SECONDS = 25
+RELAY_MARKER = "Markdown Content:\n"
+
+
+def _cloud_fetch_mode() -> str:
+    """Return ``local``, ``relay``, ``direct`` or ``disabled``.
+
+    GitHub's own IP path is blocked by Forebet even with browser TLS, but the
+    public Jina Reader relay returns the endpoint's JSON byte-for-byte. Relay
+    is therefore the cloud default. Operators can explicitly choose a direct
+    re-probe or fail-fast disable without changing code.
+    """
+    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() != "true":
+        return "local"
+    value = os.environ.get(CLOUD_RETRY_ENV, "").strip().lower()
+    if value in {"0", "false", "no", "off", "disabled"}:
+        return "disabled"
+    if value in {"1", "true", "yes", "on", "direct"}:
+        return "direct"
+    return "relay"
+
+
+def _today() -> _date:
+    return _date.today()
+
+
+def _browser_mode() -> str:
+    value = os.environ.get(BROWSER_ENV, "auto").strip().lower()
+    if value in {"0", "false", "no", "off", "disabled"}:
+        return "off"
+    if value in {"1", "true", "yes", "on", "force"}:
+        return "on"
+    return "auto"
+
+
+def _browser_enabled_for_date(date: str) -> bool:
+    """Bound the production Browser Run ladder to live capture dates.
+
+    The history file is intact, while Browser Run is a scarce managed-browser
+    path.  In default auto mode only GitHub Actions recent/tomorrow dates use
+    it; operators can force or disable it with EDGE_FACTORY_FOREBET_BROWSER.
+    """
+    mode = _browser_mode()
+    if mode == "off" or not public_relay.configured():
+        return False
+    if mode == "on":
+        return True
+    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() != "true":
+        return False
+    try:
+        delta = (_date.fromisoformat(date) - _today()).days
+    except ValueError:
+        return False
+    return -BROWSER_AUTO_PAST_DAYS <= delta <= BROWSER_AUTO_FUTURE_DAYS
+
+
+def _playwright_enabled_for_date(date: str) -> bool:
+    value = os.environ.get(PLAYWRIGHT_ENV, "").strip().lower()
+    if value not in {"1", "true", "yes", "on"}:
+        return False
+    try:
+        delta = (_date.fromisoformat(date) - _today()).days
+    except ValueError:
+        return False
+    return -BROWSER_AUTO_PAST_DAYS <= delta <= BROWSER_AUTO_FUTURE_DAYS
+
+
+def _first_relay_url() -> str | None:
+    return next((url.strip() for url in os.environ.get(public_relay.URLS_ENV, "").split(",") if url.strip()), None)
+
+
+def _browser_get(url: str) -> bytes:
+    """Fetch Forebet getrs through the Cloudflare Worker Browser Run operation."""
+    relay_url = _first_relay_url()
+    token = os.environ.get(public_relay.TOKEN_ENV, "").strip()
+    if not relay_url or not token:
+        raise RuntimeError("Forebet Browser Run relay is not configured")
+    payload = json.dumps({"token": token, "operation": BROWSER_OPERATION, "url": url}).encode()
+    request = urllib.request.Request(
+        relay_url,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "EdgeFactory-ForebetBrowser/1.0",
+        },
+    )
+    raw = b""
+    try:
+        with urllib.request.urlopen(request, timeout=BROWSER_TIMEOUT_SECONDS) as response:
+            raw = response.read(public_relay.MAX_RESPONSE_BYTES + 1)
+    except urllib.error.HTTPError as error:
+        # A relay can echo the credential-bearing POST body on an HTTP error.
+        # Report the status, not an arbitrary (or partly truncated) body.
+        raise RuntimeError(f"browser relay HTTP {error.code}") from error
+    if len(raw) > public_relay.MAX_RESPONSE_BYTES:
+        raise ValueError("browser relay response exceeds size limit")
+    envelope = json.loads(raw.decode("utf-8", "replace"))
+    if not isinstance(envelope, dict):
+        raise ValueError("browser relay envelope shape")
+    if (
+        envelope.get("operation") != BROWSER_OPERATION
+        or envelope.get("transport") != BROWSER_TRANSPORT
+    ):
+        raise ValueError("browser relay operation marker mismatch")
+    if envelope.get("source_url") != url:
+        raise ValueError("browser relay source URL mismatch")
+    if envelope.get("error"):
+        raise ValueError(f"browser relay error: {envelope.get('error')}")
+    if int(envelope.get("status", 0)) != 200 or not isinstance(envelope.get("body"), str):
+        raise ValueError("browser relay upstream failure")
+    if envelope.get("body_shape") != "forebet_getrs":
+        raise ValueError("browser relay payload marker mismatch")
+    return envelope["body"].encode()
+
+
+def _playwright_get(url: str) -> bytes:
+    """Optional Actions-runner headless fallback; disabled unless env-gated."""
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            page = browser.new_page(
+                user_agent=HEADERS["User-Agent"],
+                extra_http_headers={k: v for k, v in HEADERS.items() if k.lower() != "user-agent"},
+            )
+            response = page.goto(url, wait_until="domcontentloaded", timeout=PLAYWRIGHT_TIMEOUT_MS)
+            status = response.status if response is not None else 0
+            if status != 200:
+                raise RuntimeError(f"HTTP {status}")
+            body = page.locator("body").inner_text(timeout=PLAYWRIGHT_TIMEOUT_MS).strip()
+            return body.encode("utf-8")
+        finally:
+            browser.close()
+
+
+def _decode_payload(raw: bytes | str) -> list[dict]:
+    """Decode and validate Forebet's ``[rows, meta]`` response.
+
+    A Cloudflare/challenge HTML page can return HTTP 200. Treating it as an
+    empty slate hid the cloud-capture failure for weeks, so invalid shape is a
+    transport failure, not ``[]``.
+    """
+    text = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+    data = json.loads(text)
+    if not (isinstance(data, list) and data and isinstance(data[0], list)):
+        raise ValueError("unexpected payload shape")
+    if not all(isinstance(row, dict) for row in data[0]):
+        raise ValueError("unexpected Forebet row shape")
+    return data[0]
+
+
+def _urllib_get(url: str) -> bytes:
+    req = urllib.request.Request(url, headers=HEADERS)
+    with urllib.request.urlopen(req, timeout=30) as response:
+        return response.read()
+
+
+def _unwrap_relay(raw: bytes | str, source_url: str) -> bytes:
+    """Extract relay body only when wrapper provenance is exact.
+
+    The relay prepends a small text header. Accept exactly one content marker
+    and the exact public source URL; everything else fails closed before JSON
+    decoding. No credentials are sent through this route.
+    """
+    text = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+    if text.count(RELAY_MARKER) != 1:
+        raise ValueError("unexpected relay wrapper marker count")
+    header, body = text.split(RELAY_MARKER, 1)
+    source_lines = [line.removeprefix("URL Source: ").strip() for line in header.splitlines()
+                    if line.startswith("URL Source: ")]
+    if source_lines != [source_url]:
+        raise ValueError("relay source URL mismatch")
+    return body.strip().encode("utf-8")
+
+
+def _relay_get(url: str) -> bytes:
+    request = urllib.request.Request(
+        RELAY_BASE + url,
+        headers={
+            "User-Agent": "EdgeFactory/1.0",
+            "Accept": "text/plain",
+            "X-No-Cache": "true",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=RELAY_TIMEOUT_SECONDS) as response:
+        wrapped = response.read()
+    return _unwrap_relay(wrapped, url)
+
+
+def _cffi_get(url: str, impersonate: str) -> bytes:
+    """Browser-TLS fallback for datacenter/Actions anti-bot responses."""
+    from curl_cffi import requests as curl_requests
+
+    # Let curl_cffi provide a User-Agent matching its TLS fingerprint; retain
+    # the endpoint-specific AJAX headers Forebet requires.
+    headers = {key: value for key, value in HEADERS.items() if key.lower() != "user-agent"}
+    headers["Accept-Language"] = "en-US,en;q=0.9"
+    response = curl_requests.get(
+        url,
+        impersonate=impersonate,
+        headers=headers,
+        timeout=30,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(f"HTTP {response.status_code}")
+    return bytes(response.content)
+
+
+def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
+    """Fetch one market through the environment-appropriate transport."""
+    # ``output=1`` is deliberately included even though the endpoint currently
+    # returns the same JSON without it.  Forebet's Cloudflare rules/cache key
+    # started challenging the bare endpoint on 2026-09-30 while this variant
+    # remained publicly readable.  It is harmless to the payload and gives the
+    # direct fallback a distinct, working cache/WAF route.
+    url = f"{BASE}?ln=en&tp={tp}&in={date}&ord=0&tz=0&tzs=&tze=&output=1"
+    mode = _cloud_fetch_mode()
+    if mode == "disabled":
+        raise RuntimeError("Forebet cloud fetch explicitly disabled")
+    browser_error = None
+    if _browser_enabled_for_date(date):
+        try:
+            return _decode_payload(_browser_get(url))
+        except Exception as exc:  # noqa: BLE001 - production browser may still see a challenge
+            browser_error = _transport_failure("browser", exc)
+    playwright_error = None
+    if _playwright_enabled_for_date(date):
+        try:
+            return _decode_payload(_playwright_get(url))
+        except Exception as exc:  # noqa: BLE001 - optional fallback must fail closed
+            playwright_error = _transport_failure("playwright", exc)
+    # Operator-owned free relays (Cloudflare Worker, then Apps Script) are
+    # independent egress paths. Try them before public/direct datacenter paths;
+    # Python re-validates every echoed URL and every JSON payload shape.
+    operator_errors = []
+    for relay_name, raw in public_relay.fetches(url):
+        try:
+            return _decode_payload(raw)
+        except Exception as exc:  # noqa: BLE001 - try the next independent relay
+            operator_errors.append(_transport_failure(f"operator:{relay_name}", exc))
+
+    relay_error = None
+    if mode == "relay":
+        try:
+            return _decode_payload(_relay_get(url))
+        except Exception as exc:  # noqa: BLE001 - relay itself is now challenged intermittently
+            # Falling through is safe: every response is shape-validated, so
+            # challenge HTML can never be mistaken for an empty slate.
+            relay_error = _transport_failure("relay", exc)
+
+    errors = (
+        ([browser_error] if browser_error else [])
+        + ([playwright_error] if playwright_error else [])
+        + ([relay_error] if relay_error else [])
+        + operator_errors
+    )
+    if mode == "relay" and os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true":
+        raise RuntimeError(
+            f"Forebet {tp} {date} failed across relays/browser paths: "
+            f"{', '.join(errors) or 'no relay configured'}; "
+            "GitHub direct transport skipped (Cloudflare managed challenge)"
+        )
+
+    # Local/default or deliberate cloud direct-probe.
+    transports = [("urllib", lambda: _urllib_get(url))]
+    transports.extend(
+        (f"curl_cffi:{identity}", lambda identity=identity: _cffi_get(url, identity))
+        for identity in CFFI_IMPERSONATIONS
+    )
+    attempt_limit = max(1, min(int(retries), len(transports)))
+    for attempt, (name, request) in enumerate(transports[:attempt_limit]):
+        try:
+            return _decode_payload(request())
+        except Exception as exc:  # noqa: BLE001 - retry with a distinct transport
+            errors.append(_transport_failure(name, exc))
+            if attempt + 1 < attempt_limit:
+                time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(
+        f"Forebet {tp} {date} failed across transports: {', '.join(errors)}"
+    )
+
+
+def _f(v):
+    try:
+        x = float(v)
+        return x if x == x else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _i(v):
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+_FAILURE_DETAIL_MAX = 160
+_FAILURE_SUMMARY_MAX = 720
+
+
+def _safe_failure_text(detail: str) -> str:
+    """Sanitise untrusted transport text before it is truncated or logged."""
+    # The configured relay token may be echoed anywhere, not only in a token
+    # field. Never print private relay endpoints (including path credentials).
+    secrets = [os.environ.get(public_relay.TOKEN_ENV, "").strip()]
+    secrets += [s.strip() for s in os.environ.get(public_relay.URLS_ENV, "").split(",")]
+    for secret in sorted(filter(None, secrets), key=len, reverse=True):
+        detail = detail.replace(secret, "[redacted]")
+    detail = re.sub(r"https?://[^\s\"'<>]+", "[url]", detail, flags=re.I)
+    # Authorization is one opaque credential value, not just a scheme/token.
+    # Digest has quoted comma-separated parameters; AWS also has semicolons
+    # in SignedHeaders. Match complete escaped repr/JSON values, or fail
+    # closed over an unquoted header line and its indented continuations.
+    # Emit no ':'/'=' after the name, so re-sanitising a composed transport
+    # summary cannot swallow the following (already safe) failure reasons.
+    detail = re.sub(
+        r"\bauthorization[\"']?[ \t]*[:=][ \t]*"
+        r"(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
+        r"[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*)",
+        "Authorization [redacted]", detail, flags=re.I,
+    )
+    detail = re.sub(
+        r"(?i)\b(token|api[_-]?key|password|secret)[\"']?\s*[:=]\s*"
+        r"(?:[\"'][^\"']*[\"']|(?:Bearer|Basic)\s+[^\s,;]+|[^\s,;]+)",
+        r"\1=[redacted]", detail,
+    )
+    detail = re.sub(r"(?i)\b(Bearer|Basic)\s+[^\s,;]+", r"\1 [redacted]", detail)
+    return " ".join(detail.split())
+
+
+def _failure_detail(exc: Exception, market: str = "", day: str = "") -> str:
+    detail = _safe_failure_text(str(exc))
+    # _get includes market and day in its prefix. They are already reported
+    # outside the detail; removing that exact prefix lets equal causes group.
+    if market and day:
+        detail = detail.removeprefix(f"Forebet {market} {day} ")
+    return detail if len(detail) <= _FAILURE_DETAIL_MAX else detail[:_FAILURE_DETAIL_MAX - 3] + "..."
+
+
+def _transport_failure(name: str, exc: Exception) -> str:
+    # Operator relay names can be URLs containing credentials, too.
+    prefix = f"{_safe_failure_text(name)}={type(exc).__name__}"
+    detail = _failure_detail(exc)
+    return prefix + (f": {detail}" if detail else "")
+
+
+def _market_failures(failures: list[tuple[str, str, str]]) -> list[str]:
+    """Keep each market:Type prefix, print each distinct bounded reason once."""
+    grouped: dict[tuple[str, str], list[str]] = {}
+    for market, kind, detail in failures:
+        grouped.setdefault((kind, detail), []).append(f"{market}:{kind}")
+    return [",".join(prefixes) + (f": {detail}" if detail else "")
+            for (_, detail), prefixes in grouped.items()]
+
+
+def _failure_summary(failures: list[str]) -> str:
+    text = "; ".join(failures)
+    return text if len(text) <= _FAILURE_SUMMARY_MAX else text[:_FAILURE_SUMMARY_MAX - 3] + "..."
+
+
+def _fetch_market_payloads(
+    date: str,
+    markets: tuple[str, ...],
+    sleep: float,
+) -> tuple[dict[str, list[dict]], list[str]]:
+    """Fetch independent markets, concurrently only on the validated relay.
+
+    Results are returned by market key and consumed later in the caller's
+    original order, so concurrency changes wall-clock time—not merge semantics.
+    Local/direct traffic remains sequential and retains its politeness delay.
+    """
+    payloads: dict[str, list[dict]] = {}
+    failures: list[tuple[str, str, str]] = []
+    if (
+        _cloud_fetch_mode() == "relay"
+        and not _browser_enabled_for_date(date)
+        and not _playwright_enabled_for_date(date)
+        and len(markets) > 1
+    ):
+        with ThreadPoolExecutor(max_workers=min(4, len(markets))) as executor:
+            futures = {market: executor.submit(_get, market, date) for market in markets}
+            for market in markets:
+                try:
+                    payloads[market] = futures[market].result()
+                except Exception as exc:  # noqa: BLE001 - preserve partial markets
+                    failures.append((market, type(exc).__name__, _failure_detail(exc, market, date)))
+                    payloads[market] = []
+        return payloads, _market_failures(failures)
+
+    for market in markets:
+        try:
+            payloads[market] = _get(market, date)
+        except Exception as exc:  # noqa: BLE001 - preserve partial markets
+            failures.append((market, type(exc).__name__, _failure_detail(exc, market, date)))
+            payloads[market] = []
+        time.sleep(sleep)
+    return payloads, _market_failures(failures)
+
+
+def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[dict]:
+    """Fetch one calendar day, merge all market endpoints by match id."""
+    if date < MIN_DATE:
+        return []
+    if _cloud_fetch_mode() == "disabled":
+        raise RuntimeError(
+            "Forebet cloud fetch explicitly disabled; unset "
+            f"{CLOUD_RETRY_ENV} to restore the validated relay"
+        )
+    market_order = tuple(markets)
+    payloads, failures = _fetch_market_payloads(date, market_order, sleep)
+    rows: dict[str, dict] = {}
+    for tp in market_order:
+        for m in payloads.get(tp, []):
+            mid = str(m.get("id"))
+            row = rows.setdefault(
+                mid,
+                {
+                    "date": date,
+                    "kickoff": m.get("DATE_BAH"),
+                    "league_id": m.get("league_id"),
+                    "league": m.get("short_tag"),
+                    "home": m.get("HOST_NAME"),
+                    "away": m.get("GUEST_NAME"),
+                    "hs": _i(m.get("Host_SC")),
+                    "gs": _i(m.get("Guest_SC")),
+                    "ht_hs": _i(m.get("Host_SC_HT")),
+                    "ht_gs": _i(m.get("Guest_SC_HT")),
+                    "status": m.get("comment"),
+                },
+            )
+            if tp == "1x2":
+                row.update(
+                    p1=_f(m.get("Pred_1")), px=_f(m.get("Pred_X")), p2=_f(m.get("Pred_2")),
+                    odd1=_f(m.get("best_odd_1")), oddx=_f(m.get("best_odd_X")),
+                    odd2=_f(m.get("best_odd_2")), kelly=_f(m.get("kelly")),
+                    pred_hs=_i(m.get("host_sc_pr")), pred_gs=_i(m.get("guest_sc_pr")),
+                )
+            elif tp == "uo":
+                row.update(
+                    p_under=_f(m.get("pr_under")), p_over=_f(m.get("pr_over")),
+                    odd_under=_f(m.get("best_under")), odd_over=_f(m.get("best_over")),
+                    goalsavg=_f(m.get("goalsavg")),
+                )
+            elif tp == "bts":
+                row.update(
+                    p_gg=_f(m.get("Pred_gg")), p_ng=_f(m.get("Pred_no_gg")),
+                    odd_gg=_f(m.get("odds_gg_y")), odd_ng=_f(m.get("odds_gg_n")),
+                )
+            elif tp == "ht":
+                row.update(
+                    p1_ht=_f(m.get("Pred_1_HT")), px_ht=_f(m.get("Pred_X_HT")),
+                    p2_ht=_f(m.get("Pred_2_HT")),
+                )
+    if failures and not rows:
+        # local_backfill must not mark an anti-bot/error response as a completed
+        # zero-fixture day. Raising keeps the day retryable and makes the cause
+        # visible in Actions logs.
+        raise RuntimeError(
+            f"Forebet {date}: no usable rows; failed markets={_failure_summary(failures)}"
+        )
+    if failures:
+        print(
+            f"Forebet {date}: partial capture; failed markets={_failure_summary(failures)}",
+            file=sys.stderr,
+        )
+    return list(rows.values())
+
+
+COLUMNS = [
+    "date", "kickoff", "league_id", "league", "home", "away",
+    "hs", "gs", "ht_hs", "ht_gs", "status",
+    "p1", "px", "p2", "odd1", "oddx", "odd2", "kelly", "pred_hs", "pred_gs",
+    "p_under", "p_over", "odd_under", "odd_over", "goalsavg",
+    "p_gg", "p_ng", "odd_gg", "odd_ng",
+    "p1_ht", "px_ht", "p2_ht",
+]

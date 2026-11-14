@@ -1,0 +1,7757 @@
+#!/usr/bin/env python3
+"""picks_today.py with market_type, odds_tier fields, and integrated ML Meta-Classifier (Phase 7)."""
+
+from __future__ import annotations
+
+import csv
+import gzip
+import os
+import importlib
+import json
+import re
+import sys
+import math
+from collections import Counter
+from contextlib import contextmanager
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
+from pathlib import Path
+from statistics import mean
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from edgefactory.util import dated_artifact_path
+from edgefactory.entities import (
+    canonical_league,
+    canonical_team,
+    canonical_team_variants,
+    classify_competition,
+)
+from edgefactory.identity import source_team_key as _identity_source_team_key
+from edgefactory.util import (
+    finite_probability, pick_probability_pct, format_pick_probability, format_event_note,
+    canonical_team_key,
+    research_ledger_team_key,
+    expand_team_token,
+    resolve_team_alias,
+    compact_key,
+    is_degenerate_team_key,
+    script_anomaly,
+    markers_conflict,
+    squad_markers,
+    MIN_IDENTITY_KEY_LEN,
+    norm_team,
+    fold_ascii,
+    kickoff_date,
+    ledger_team_key,
+    display_rule_label,
+    honest_display_label,
+    strip_retired_top_scores,
+)
+from edgefactory.notifier import format_kickoff
+from edgefactory.market_registry import get_odds_tier
+from edgefactory.odds_normalization import (
+    canonicalize_row,
+    miss_bucket,
+    miss_vocabulary_token,
+    provider_kickoff_date,
+)
+from edgefactory.assay import weighted_consensus_score
+from edgefactory.fade import (
+    FADE_FAMILY,
+    PARENT_FAMILY,
+    DERIVATION,
+    inverse_selection,
+    fade_odds_column,
+    fade_avg_p,
+)
+from edgefactory.ml_fade_research import (
+    LEDGER_NAME as RESEARCH_LEDGER_NAME,
+    FadeResearchCollector,
+    detect_model_drift,
+    load_ledger as load_research_ledger,
+    merge_candidates as merge_research_candidates,
+    save_ledger as save_research_ledger,
+)
+from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
+from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
+from edgefactory.phase5_k import (
+    DECLARED_SOURCE_ORDER as PHASE5_K_SOURCES,
+    feature_vector as phase5_feature_vector,
+    source_columns as phase5_source_columns,
+)
+from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
+from edgefactory.enh_registry import (
+    ceiling_for as enh_ceiling_for,
+    clears_floor as enh_clears_floor,
+    floor_for as enh_floor_for,
+    status_for as enh_status_for,
+)
+from edgefactory.source_health import (
+    FOREBET_LIVE_LAST_DAY,
+    bzzoiro_status_line,
+    coherence_observation,
+    daily_status_block,
+    persist_daily_source_health,
+    pinnapi_contract_observation,
+    sharpapi_board_observation,
+    source_role_lines,
+    record_bzzoiro_run,
+    zero_row_reason,
+)
+from edgefactory.shadow import append_price_board_rows, read_shadow_rows
+from edgefactory.phase5_registry_guard import inspect_operational_registry
+from edgefactory import price_sources as psrc
+
+EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
+PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
+LOCALDATA = ROOT / "localdata"
+PHASE5_ACTIVATION_ROOT = LOCALDATA / "phase5_activation"
+BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
+SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
+BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
+THEODDSAPI_ODDS_SOURCE = "theoddsapi"
+_KICKOFF_DATE_AUTHORITY_PROVIDERS = frozenset({"boggio", "betbetter", "theoddsapi"})
+# Providers whose naive stamps carry a zone fixed by the provider's OWN
+# documented payload contract (never by our capture machine's locale). The
+# shared parser stays fail-closed for everyone else: a zone-free value
+# without a documented contract still yields no join date.
+#   boggio: football-prediction-api v2 publishes naive "2018-12-06T19:00:00"
+#   stamps on an Europe/London (GMT/BST) clock - "The GMT/BST start date of
+#   the predicted event" / "Day starts at 00:00 London Timezone"
+#   (developer.boggio-analytics.com, API endpoints; the official examples
+#   localize the stamps with Europe/London).
+_PROVIDER_DECLARED_ZONES = {"boggio": "Europe/London"}
+
+# Voter-row (source) aliasing lives in edgefactory/identity.py
+# (source_team_key + TEAM_KEY_RAW_ALIASES, width-24 collision-safe keys).
+# The odds-matching alias maps below stay local to picks_today so certified
+# miners, warehouse joins, and historical backtests remain unchanged.
+
+ODDS_EXACT_TEAM_ALIASES = {
+    "dila": "dilagori",              # Dila -> Dila Gori (Georgia)
+    "neftchi": "neftchife",          # Neftchi -> Neftchi Fergana (Uzbekistan)
+    "caboverde": "capeverde",
+    "drcongo": "congodr",
+    "ifkmarieh": "mariehamn",
+    "ifkmariehamn": "mariehamn",
+    "thunder": "dandenong",
+    "hobartzeb": "clarencez",
+    "ulsanhyun": "ulsanhd",          # Ulsan Hyundai → Ulsan HD (K League 1)
+    "sirius": "iksirius",            # Sirius → IK Sirius (Allsvenskan)
+    "kpvj": "kpvkokkol",             # KPV-j → KPV Kokkola (Finland Ykkönen)
+    "vestur": "vestursor",           # 07 Vestur → 07 Vestur Sorvag (Faroe Islands)
+    "eidsvold": "eidsvoldt",         # Eidsvold → Eidsvold Turn (Norway 2.Div)
+    "mlvitebsk": "maxlinero",        # ML Vitebsk → Maxline Rogachev (Belarus PL, renamed club)
+    "vitebsk": "fkvitebsk",          # Vitebsk → FK Vitebsk (Belarus PL)
+    "ivorycoas": "cotedivoi",        # Ivory Coast → Côte d'Ivoire (World Cup)
+    "hodd": "ilhodd",                # Hodd → IL Hodd (Norway 1.Div)
+    "naftan": "naftannov",           # Naftan → Naftan Novopolotsk (Belarus PL)
+    "lions": "queenslan",            # Lions → Queensland Lions FC (NPL Queensland)
+    "belshina": "belshinab",         # Belshina → Belshina Bobruisk (Belarus)
+    "thorakure": "thor",             # Thor Akureyri → Thór (Iceland Besta Deildin)
+    # 2026-10-03 TheOddsAPI receipt: provider shortens these two English
+    # club names.  Narrow, one-way aliases are preferred to fuzzy matching.
+    "eibar": "sdeibar",                # Eibar -> SD Eibar (Spain Segunda)
+    "grimsbyto": "grimsby",            # Grimsby Town -> Grimsby (England L2)
+    # 2026-10-07 SharpAPI board census (run 37570304076): the vendor writes
+    # the full club name "Urawa Red Diamonds" where our card writes "Urawa".
+    # width-9 exact key of the long form (and of the feed-truncated "Urawa
+    # Red Diamon") -> our key.  Mirrors Config/entity_overrides.json -> teams.
+    "urawaredd": "urawa",              # Urawa Red Diamonds -> Urawa (Japan Emperor Cup)
+}
+
+ODDS_MATCH_TEAM_ALIASES = {
+    "dila": "dilagori",                  # Dila -> Dila Gori (Georgia)
+    "caboverde": "capeverde",
+    "drcongo": "congodr",
+    "ifkmarieh": "mariehamn",
+    "ifkmariehamn": "mariehamn",
+    "thundersc": "dandenongthunder",
+    "hobartzebras": "clarencezebras",
+    "hobartzebrasfc": "clarencezebras",
+    "ulsanhyundai": "ulsanhd",           # Ulsan Hyundai → Ulsan HD (K League 1)
+    "sirius": "iksirius",                # Sirius → IK Sirius (Allsvenskan)
+    "kpvj": "kpvkokkola",               # KPV-j → KPV Kokkola (Finland Ykkönen)
+    "07vestur": "07vestursorvag",        # 07 Vestur → 07 Vestur Sorvag (Faroe Islands)
+    "eidsvold": "eidsvoldturn",          # Eidsvold → Eidsvold Turn (Norway 2.Div)
+    "mlvitebsk": "maxlinerogachev",      # ML Vitebsk → Maxline Rogachev (Belarus PL, renamed club)
+    "vitebsk": "fkvitebsk",             # Vitebsk → FK Vitebsk (Belarus PL)
+    "ivorycoast": "cotedivoire",         # Ivory Coast → Côte d'Ivoire (World Cup)
+    "hodd": "ilhodd",                    # Hodd → IL Hodd (Norway 1.Div)
+    "naftan": "naftannovopolotsk",       # Naftan → Naftan Novopolotsk (Belarus PL)
+    "lions": "queenslandlionsfc",        # Lions → Queensland Lions FC (NPL Queensland)
+    "olympic": "olympicfc",              # Olympic → Olympic FC (NPL Queensland)
+    "saburtalo": "fcsaburtalo",          # Saburtalo → FC Saburtalo (Georgia)
+    "capeverdeislands": "capeverde",     # Cape Verde Islands → Cape Verde (World Cup)
+    "dinamominsk": "fcdinamominsk",      # Dinamo Minsk → FC Dinamo Minsk (Belarus PL)
+    "belshina": "belshinabobruisk",      # Belshina → Belshina Bobruisk (Belarus)
+    "thorakureyri": "thor",              # Thor Akureyri → Thór (Iceland Besta Deildin)
+    # 2026-10-03 TheOddsAPI receipt; see exact-key aliases above.
+    "eibar": "sdeibar",                    # Eibar -> SD Eibar
+    "grimsbytown": "grimsby",              # Grimsby Town -> Grimsby
+    # 2026-10-07 SharpAPI board census; see exact-key aliases above.  This is
+    # the compact-key half of the same fold, so the fixture census
+    # (card_fixtures_on_board) and the timed join see the SAME club, not a
+    # spelling pair.
+    "urawareddiamonds": "urawa",           # Urawa Red Diamonds -> Urawa
+}
+
+DISPLAY_TEAM_ALIASES = {
+    "thundersc": "Dandenong Thunder",
+    "hobartzebras": "Clarence Zebras",
+    "hobartzebrasfc": "Clarence Zebras",
+}
+
+OPERATIONAL_CLUB_TOKENS = {
+    "fc", "afc", "cf", "sc", "ac", "cd", "ca", "fk", "ifk", "bk", "sk",
+    "club",
+}
+LOW_PRIORITY_BOOKMAKER_TOKENS = ("polymarket", "consensus")
+
+SOURCES_1X2 = ["forebet", "zulubet", "statarea", "vitibet", "betclan", "bzzoiro"]
+SOURCES_OU = ["forebet", "statarea", "scoutingstats", "bzzoiro"]
+SOURCES_BTTS = ["forebet", "scoutingstats", "bzzoiro"]
+ALL_SOURCES = ["forebet", "zulubet", "statarea", "vitibet", "betclan",
+               "bzzoiro", "scoutingstats"]
+
+OU_COL = {"forebet": "p_over", "statarea": "p_o25",
+          "scoutingstats": "p_o25", "bzzoiro": "p_o25"}
+BTTS_COL = {"forebet": "p_gg", "scoutingstats": "p_gg", "bzzoiro": "p_gg"}
+
+
+# The miner certifies NAMED electorates: "2way-unanimous ..." means forebet +
+# zulubet, "3way-unanimous ..." means forebet + zulubet + statarea
+# (tests/test_consensus_contract_gaps.py contract). Used when a registry edge
+# carries no explicit "sources" field; edges that DO carry one always win.
+_HISTORICAL_ELECTORATES = {
+    2: ("forebet", "zulubet"),
+    3: ("forebet", "zulubet", "statarea"),
+}
+
+_RULE_NWAY = re.compile(r"(\d+)\s*way")
+_RULE_THR = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
+_RULE_MINP = re.compile(r"min_p\s*>=\s*([\d.]+)")
+_RULE_ODDS_WIN = re.compile(r"odds-([\d.]+)-([\d.]+)")
+_TIME_RE = re.compile(r"(?<!\d)(\d{1,2}):(\d{2})(?!\d)")
+DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
+
+# K-contract imputation loudness. The legacy scoring loop substituted 0.0
+# for any model column the live path did not produce; for a probability
+# feature that is a silent logit shift (the train/serve skew class the
+# 2026-10-06 diagnosis is about). Missing columns are now imputed from the
+# model's own recorded fallback means and reported once per model shape.
+_IMPUTED_FEATURE_WARNINGS: set = set()
+
+
+def _warn_imputed_features(model: dict, imputed: list, day: str) -> None:
+    signature = (
+        str(model.get("intercept")),
+        len(model.get("feature_cols") or []),
+        tuple(sorted(str(c) for c in imputed)),
+    )
+    if signature in _IMPUTED_FEATURE_WARNINGS:
+        return
+    _IMPUTED_FEATURE_WARNINGS.add(signature)
+    print(
+        f"served model imputed {len(imputed)} column(s) the live path did "
+        f"not produce on {day}: {', '.join(sorted(str(c) for c in imputed))} "
+        "— scored with the model's recorded fallback means; investigate "
+        "before trusting these scores",
+        file=sys.stderr,
+    )
+DEFAULT_MIN_LEAD_MINUTES = 30
+
+
+def _local_tz() -> ZoneInfo:
+    name = os.environ.get("EDGE_FACTORY_TZ", DEFAULT_LOCAL_TZ).strip() or DEFAULT_LOCAL_TZ
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return ZoneInfo(DEFAULT_LOCAL_TZ)
+
+
+def _parse_as_of(value: object | None) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        normalized = text[:-1] + "+00:00" if text.endswith("Z") else text
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=_local_tz())
+    return parsed.astimezone(_local_tz())
+
+
+def pick_run_as_of() -> datetime:
+    return _parse_as_of(os.environ.get("EDGE_FACTORY_RUN_AS_OF")) or datetime.now(_local_tz())
+
+
+def min_lead_minutes() -> int:
+    raw = os.environ.get("EDGE_FACTORY_MIN_LEAD_MINUTES", str(DEFAULT_MIN_LEAD_MINUTES))
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return DEFAULT_MIN_LEAD_MINUTES
+
+def offline_rebuild() -> bool:
+    """Reprice from captured boards only; never invoke a provider capture."""
+    return os.environ.get("EDGE_FACTORY_OFFLINE_REBUILD") == "1"
+
+
+def candidate_only_build() -> bool:
+    """True for the first, non-ticketable pass of the two-pass daily build."""
+    return os.environ.get("EDGE_FACTORY_CANDIDATE_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+# ---- purity buckets ----
+BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
+BUCKET_CAUTION = "CAUTION"
+BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
+BUCKET_WL_CTX = "WATCHLIST_UNKNOWN_CTX"
+# Addendum 26: price evidence can make a selection auditable but not pushable.
+BUCKET_WL_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
+BUCKET_WL_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
+BUCKET_SKIP_VETO = "SKIPPED_VETO"
+BUCKET_SKIP_DEAD = "SKIPPED_DEAD_EDGE"
+
+# Stable price-evidence states, archived on every operational pick. These name
+# what we know about the displayed odds, not a prediction-quality verdict.
+# Keep the Bzzoiro-specific label for its historical receipts.  Other named
+# bookmakers must not inherit its name merely because they use the same lane.
+PRICE_EVIDENCE_BZZOIRO_PRIMARY = "BZZOIRO_PRIMARY"
+PRICE_EVIDENCE_NAMED_BOOKMAKER = "NAMED_BOOKMAKER_PRICE"
+PRICE_EVIDENCE_SCOUTINGSTATS_SOLE = "SCOUTINGSTATS_SOLE"
+PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY = "SUSPECT_ALIAS_FUZZY"
+# 2026-10-15: a named-book price that disagrees with the other independent
+# quotes for the same fixture and selection by more than CONSENSUS_MAX_RATIO.
+PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT = "SUSPECT_SOURCE_CONFLICT"
+PRICE_EVIDENCE_BETEXPLORER_RESCUE = "BETEXPLORER_RESCUE"
+PRICE_EVIDENCE_SOURCE_FALLBACK = "SOURCE_FALLBACK"
+PRICE_EVIDENCE_UNMATCHED = "UNMATCHED"
+# A price supplied by an operator-approved donor that is NOT a named book
+# (Boggio average aggregate, Bet Better fair price). It is a real, usable
+# number - but the ticket must say what kind of number it is.
+PRICE_EVIDENCE_DONOR_PRICE = "APPROVED_DONOR_PRICE"
+
+BUCKET_ORDER = [
+    BUCKET_CERTIFIED,
+    BUCKET_CAUTION,
+    BUCKET_WL_ODDS,
+    BUCKET_WL_UNCORROBORATED_PRICE,
+    BUCKET_WL_SUSPECT_PRICE,
+    BUCKET_WL_CTX,
+    BUCKET_SKIP_VETO,
+    BUCKET_SKIP_DEAD,
+]
+
+BUCKET_LABELS = {
+    BUCKET_CERTIFIED: "CERTIFIED CLEAN PICKS",
+    BUCKET_CAUTION: "CAUTION PICKS",
+    BUCKET_WL_ODDS: "WATCHLIST — NO MATCHED ODDS",
+    BUCKET_WL_UNCORROBORATED_PRICE: "WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE",
+    BUCKET_WL_SUSPECT_PRICE: "WATCHLIST — SUSPECT FUZZY PRICE MATCH",
+    BUCKET_WL_CTX: "WATCHLIST — UNKNOWN CONTEXT",
+    BUCKET_SKIP_VETO: "SKIPPED — VETO CONTEXT",
+    BUCKET_SKIP_DEAD: "SKIPPED — DEAD EDGE",
+}
+
+# Odds bands
+ODDS_BANDS = [
+    (0.0, 1.10, "1.00-1.10"),
+    (1.10, 1.20, "1.10-1.20"),
+    (1.20, 1.35, "1.20-1.35"),
+    (1.35, 1.50, "1.35-1.50"),
+    (1.50, 1.75, "1.50-1.75"),
+    (1.75, 2.00, "1.75-2.00"),
+    (2.00, 2.50, "2.00-2.50"),
+    (2.50, 999.0, "2.50+"),
+]
+
+
+def odds_band(odds: float | None) -> str:
+    if odds is None:
+        return "NO_ODDS"
+    try:
+        o = float(odds)
+    except (TypeError, ValueError):
+        return "NO_ODDS"
+    for lo, hi, name in ODDS_BANDS:
+        if lo <= o < hi or (lo == 0.0 and o < hi):
+            return name
+    return "2.50+"
+
+
+# Market Expression Policy Constants (Phase-1)
+MARKET_EXPRESSION_VERSION = "phase1-warning-only"
+MARKET_EXPRESSION_POLICY = [
+    (0.0, 1.20, "keep_1x2", "LOW", "short odds, acceptable draw risk"),
+    (1.20, 1.25, "keep_1x2", "MEDIUM", "upper short-odds zone, narrow surviving niche"),
+    (1.25, 1.35, "avoid_raw_1x2", "HIGH", "historically unstable out of sample above 1.25"),
+    (1.35, 1.50, "avoid_raw_1x2", "HIGH", "draw-risk / medium-odds negative-EV zone"),
+    (1.50, 1.75, "avoid_raw_1x2", "EXTREME", "high draw risk and weak signal for raw 1X2"),
+    (1.75, 999.0, "avoid_raw_1x2", "EXTREME", "price vs hit-rate math broken for 1X2")
+]
+
+SHORT_ODDS_SNIPER_MAX = 1.25
+TOXIC_SHORT_ODDS_LEAGUES = {
+    "estonia meistriliiga",  # keep config-driven expansion later; conservative starter set
+}
+
+# CAUTION odds floor
+CAUTION_MIN_ODDS = 1.30
+
+
+def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> str | None:
+    """Describe historical winners, not pre-match chances. Show both goal sides.
+
+    This outcome-conditioned display is deliberately separate from the all-outcome
+    cohort used to select enhancements (fetch_match_cohort).
+    """
+    view_name = "consensus3" if n_way >= 3 else "consensus2"
+    try:
+        max_p = con.execute(f"SELECT MAX(avg_p) FROM {view_name}").fetchone()[0]
+        is_scaled = max_p is not None and float(max_p) > 1.5
+    except Exception:
+        is_scaled = True
+        
+    p_val = float(avg_p)
+    if not is_scaled and p_val > 1.5:
+        p_val /= 100.0
+        
+    p_min = p_val - (5.0 if is_scaled else 0.05)
+    p_max = p_val + (5.0 if is_scaled else 0.05)
+    
+    sel = str(selection).lower()
+    if sel not in ("home", "away", "draw"):
+        return None
+        
+    if view_name == "consensus3":
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ? AND c.sa_pick = ?"
+        params = [sel, sel, sel]
+    else:
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ?"
+        params = [sel, sel]
+        
+    q = f"""
+        SELECT 
+            COUNT(*) AS n,
+            AVG(f.hs + f.gs) AS avg_total_goals,
+            AVG(CASE WHEN f.hs + f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+            AVG(CASE WHEN f.hs > 0 AND f.gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
+            AVG(CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END) AS home_o15_rate,
+            AVG(CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS away_o15_rate,
+            AVG(CASE WHEN f.hs + f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
+            AVG(CASE WHEN f.hs + f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS over35_rate,
+            AVG(CASE WHEN f.hs + f.gs >= 5 THEN 1.0 ELSE 0.0 END) AS over45_rate,
+            AVG(CASE WHEN f.hs >= 1 THEN 1.0 ELSE 0.0 END) AS home_o05_rate,
+            AVG(CASE WHEN f.hs >= 3 THEN 1.0 ELSE 0.0 END) AS home_o25_rate,
+            AVG(CASE WHEN f.hs >= 4 THEN 1.0 ELSE 0.0 END) AS home_o35_rate,
+            AVG(CASE WHEN f.gs >= 1 THEN 1.0 ELSE 0.0 END) AS away_o05_rate,
+            AVG(CASE WHEN f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS away_o25_rate,
+            AVG(CASE WHEN f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS away_o35_rate
+        FROM {view_name} c
+        JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
+        WHERE c.outcome = ? AND {agree_cond}
+          AND c.avg_p BETWEEN ? AND ?
+    """
+    try:
+        row = con.execute(q, [sel, *params, p_min, p_max]).fetchone()
+        if not row or not row[0] or row[0] < 5:
+            return None
+            
+        (n, avg_goals, over25, btts, home_o15, away_o15,
+         over15, over35, over45, home_o05, home_o25, home_o35,
+         away_o05, away_o25, away_o35) = row
+
+        # Paired rates share the same sample: half-goal unders are exact
+        # complements, not a separate model or a hand-picked high percentage.
+        stats = [f"Avg Goals: {avg_goals:.2f}"]
+        for line, rate in (("1.5", over15), ("2.5", over25),
+                           ("3.5", over35), ("4.5", over45)):
+            stats.extend((f"Over {line}: {rate:.1%}", f"Under {line}: {1-rate:.1%}"))
+        stats.extend((f"BTTS: {btts:.1%}", f"BTTS-No: {1-btts:.1%}"))
+        for side, rates in (("Home", (home_o05, home_o15, home_o25, home_o35)),
+                            ("Away", (away_o05, away_o15, away_o25, away_o35))):
+            for line, rate in zip(("0.5", "1.5", "2.5", "3.5"), rates):
+                stats.extend((f"{side} Over {line} Goals: {rate:.1%}",
+                              f"{side} Under {line} Goals: {1-rate:.1%}"))
+        # Keep legacy labels parseable by the rolling audit. Exact Top Scores
+        # remain retired. Never feed this winner-only sample into selection.
+        return (f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): "
+                + " | ".join(stats)
+                + " | Winner-only history, not pre-match probabilities"
+                + " | Legacy Forebet-era electorate, not exact current-source evidence")
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Hybrid empirical-cohort engine (Addendum 17)
+#
+# The legacy 🔥 notes engine priced broad markets from raw league/team rate
+# blends plus a Poisson on a blended lambda. The 2026-08-03 full-surface audit
+# measured that surface as the miscalibrated one (btts_yes -11.3pp,
+# home_under_35 -27.6pp, exact_3 -22.3pp, avg-goals bias -0.41/game) while the
+# empirical-cohort 📊 surface stayed within ±7.7pp. The hybrid therefore
+# re-sources broad markets (and the Poisson lambda anchor) from the realized
+# outcome-UNCONDITIONED "matches like this one" cohort — the same consensus
+# cohort fetch_historical_profile() queries, minus its outcome filter: the 📊
+# line conditions on the pick WINNING, which is fine for a display anecdote
+# but fatal for a probability engine (conditioning on the win injects exactly
+# the selection bias the engine is trying to avoid).
+#
+# Shrinkage (empirical Bayes): p = (n * p_cohort + K * p_model) / (n + K).
+# Notes are tagged engine="hybrid_cohort" | "model" (+ cohort_n) so the audit
+# can grade the engines separately (by-engine table). Display/context layer
+# only: registry, pricing and certification paths are untouched.
+HYBRID_MIN_N = 30        # thinner cohorts cannot authorize an enhancement bet
+# Operator-authorized 2026-10-19: let all cohort-backed markets compete under
+# the existing shared rate/price rules. Default ON; explicit 0 rolls back to
+# legacy market filters. This is an eligibility policy, not proven ROI uplift.
+ENH_COHORT_PARITY_ENV = "EDGE_FACTORY_ENH_COHORT_PARITY"
+
+
+def _hybrid_pick_n_way(pick: dict) -> int:
+    """consensus3 vs consensus2 cohort selection from the pick (default 3)."""
+    try:
+        rule = str(pick.get("edge_rule") or "").strip().lower()
+        if rule.startswith("2way") or rule.startswith("2-way"):
+            return 2
+        return 3
+    except Exception:
+        return 3
+
+
+def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=None,
+                       min_n=None, cache=None) -> dict | None:
+    """Live: exact activated parent recipe, all outcomes, strictly before day.
+
+    Missing/invalid/thin evidence returns None, never a model betting fallback.
+    Without ``pick`` this retains the old SQL for explicitly historical/offline
+    diagnostics only; no production enhancement call uses that legacy path.
+    """
+    if pick is not None:
+        # Production never proxies a dynamic electorate through consensus3/2.
+        # The no-pick SQL below remains for historical/offline diagnostics only.
+        from edgefactory.consensus_contracts import enhancement_cohort, enhancement_ml_inputs, validate_contract
+        try:
+            registry = load_post_forebet_registry()
+            edges = [e for e in (registry or {}).get("edges", [])
+                     if e.get("status") == "certified"
+                     and e.get("contract_id") == pick.get("contract_id")]
+            if len(edges) != 1:
+                return None
+            edge = edges[0]
+            identity = validate_contract(edge)
+            if (pick.get("contract_schema") != edge.get("contract_schema")
+                    or pick.get("market") != edge["market"]
+                    or sorted(pick.get("sources_used", [])) != edge["sources"]
+                    or pick.get("edge_rule") != identity):
+                return None
+            build_cache = cache if cache is not None else {}
+            cohort = enhancement_cohort(con, edge, as_of=pick["date"],
+                                      selection=selection,
+                                      min_n=HYBRID_MIN_N if min_n is None else min_n,
+                                      cache=build_cache,
+                                      fit_ml=os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1')
+            if cohort and cohort.get('ml_model', {}).get('schema') == 'enh_score_logit_v2':
+                try:
+                    if pick.get('enhancement_input_status') == 'unavailable':
+                        raise ValueError('optional forecast context unavailable at emission')
+                    cohort['ml_inputs'] = enhancement_ml_inputs(con, edge, pick, build_cache,
+                        model_key=cohort['ml_model']['model_key'])
+                    cols = cohort['ml_model']['feature_cols']
+                    cohort['ml_imputed_features'] = [c for c in cols
+                        if cohort['ml_inputs']['values'].get(c) is None]
+                except (KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
+                    # Optional context failure must not erase measured admission.
+                    cohort.pop('ml_model', None)
+                    cohort['ml_status'] = 'input_unavailable'
+            return cohort
+        except (KeyError, TypeError, ValueError):
+            return None
+    view_name = "consensus3" if n_way >= 3 else "consensus2"
+    try:
+        max_p = con.execute(f"SELECT MAX(avg_p) FROM {view_name}").fetchone()[0]
+        is_scaled = max_p is not None and float(max_p) > 1.5
+    except Exception:
+        is_scaled = True
+
+    p_val = float(avg_p)
+    if not is_scaled and p_val > 1.5:
+        p_val /= 100.0
+
+    p_min = p_val - (5.0 if is_scaled else 0.05)
+    p_max = p_val + (5.0 if is_scaled else 0.05)
+
+    sel = str(selection).lower()
+    if sel not in ("home", "away", "draw"):
+        return None
+
+    if view_name == "consensus3":
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ? AND c.sa_pick = ?"
+        params = [sel, sel, sel]
+    else:
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ?"
+        params = [sel, sel]
+
+    q = f"""
+        SELECT
+            COUNT(*) AS n,
+            AVG(f.hs + f.gs) AS avg_goals,
+            AVG(CASE WHEN f.hs + f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15,
+            AVG(CASE WHEN f.hs + f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25,
+            AVG(CASE WHEN f.hs + f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS over35,
+            AVG(CASE WHEN f.hs + f.gs >= 5 THEN 1.0 ELSE 0.0 END) AS over45,
+            AVG(CASE WHEN f.hs > 0 AND f.gs > 0 THEN 1.0 ELSE 0.0 END) AS btts,
+            AVG(CASE WHEN f.hs >= 1 THEN 1.0 ELSE 0.0 END) AS h_o05,
+            AVG(CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END) AS h_o15,
+            AVG(CASE WHEN f.hs >= 3 THEN 1.0 ELSE 0.0 END) AS h_o25,
+            AVG(CASE WHEN f.hs >= 4 THEN 1.0 ELSE 0.0 END) AS h_o35,
+            AVG(CASE WHEN f.gs >= 1 THEN 1.0 ELSE 0.0 END) AS a_o05,
+            AVG(CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS a_o15,
+            AVG(CASE WHEN f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS a_o25,
+            AVG(CASE WHEN f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS a_o35
+        FROM {view_name} c
+        JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
+        WHERE {agree_cond}
+          AND c.avg_p BETWEEN ? AND ?
+    """
+    keys = ["n", "avg_goals", "over15", "over25", "over35", "over45", "btts",
+            "h_o05", "h_o15", "h_o25", "h_o35", "a_o05", "a_o15", "a_o25", "a_o35"]
+    try:
+        row = con.execute(q, [*params, p_min, p_max]).fetchone()
+        if not row or not row[0] or int(row[0]) < HYBRID_MIN_N:
+            return None
+        out = dict(zip(keys, row))
+        out["n"] = int(out["n"])
+        return out
+    except Exception:
+        return None
+
+
+def format_contract_profile(profile: dict | None) -> str | None:
+    """Render measured all-outcome rates; never synthesize missing statistics.
+
+    Archived counterfactual replays may supply only some measured markets.
+    Missing fields are omitted, never filled with priors or zeroes.
+    """
+    if not profile or not profile.get("n"):
+        return None
+    stats = []
+    if profile.get("parent_hit_rate") is not None:
+        stats.append(f"Parent hit rate: {profile['parent_hit_rate']:.1%} "
+                     f"({profile['parent_hits']}/{profile['n']})")
+    if profile.get("avg_goals") is not None:
+        stats.append(f"Avg Goals: {profile['avg_goals']:.2f}")
+    for line, key in (("1.5", "over15"), ("2.5", "over25"),
+                      ("3.5", "over35"), ("4.5", "over45")):
+        rate = profile.get(key)
+        if rate is not None:
+            stats.extend((f"Over {line}: {rate:.1%}", f"Under {line}: {1-rate:.1%}"))
+    rate = profile.get('btts')
+    if rate is not None:
+        stats.extend((f"BTTS: {rate:.1%}", f"BTTS-No: {1-rate:.1%}"))
+    for side, prefix in (("Home", "h"), ("Away", "a")):
+        for goals in range(4):
+            rate = profile.get(f'{prefix}_o{goals}5')
+            if rate is not None:
+                stats.extend((f"{side} Over {goals}.5 Goals: {rate:.1%}",
+                              f"{side} Under {goals}.5 Goals: {1-rate:.1%}"))
+    if not stats:
+        return None
+    scope = f"; selection={profile['selection']}" if profile.get('selection') else ""
+    return (f"📊 Exact-contract realized stats (n={profile['n']}{scope}; "
+            f"before {profile['as_of_exclusive']}; {profile['contract_id']}): "
+            + " | ".join(stats)
+            + " | All parent outcomes; descriptive history, not untouched forward validation")
+
+
+def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | None:
+    if not con:
+        return None
+    try:
+        return fetch_historical_profile(con, pick, avg_p, n_way)
+    except Exception:
+        return None
+
+
+AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
+
+
+# Market choice is judged on the REALIZED rate of the outcome-unconditioned
+# "matches like this one" cohort (fetch_match_cohort). Only measured cohort
+# rates enter selection, gates and ranking. Retired raw/model fields stay None;
+# missing evidence never invokes a prior, Poisson estimate or shrinkage.
+COHORT_DIRECT_KEYS = {
+    "match_over_15": "over15", "match_over_25": "over25",
+    "match_over_35": "over35", "match_over_45": "over45",
+    "btts_yes": "btts",
+    "home_over_05": "h_o05", "home_over_15": "h_o15",
+    "home_over_25": "h_o25", "home_over_35": "h_o35",
+    "away_over_05": "a_o05", "away_over_15": "a_o15",
+    "away_over_25": "a_o25", "away_over_35": "a_o35",
+}
+COHORT_COMPLEMENT_KEYS = {
+    "match_under_15": "over15", "match_under_25": "over25",
+    "match_under_35": "over35", "match_under_45": "over45",
+    "btts_no": "btts",
+    "home_under_05": "h_o05", "home_under_15": "h_o15",
+    "home_under_25": "h_o25", "home_under_35": "h_o35",
+    "away_under_05": "a_o05", "away_under_15": "a_o15",
+    "away_under_25": "a_o25", "away_under_35": "a_o35",
+}
+
+
+def cohort_realized_rate(cohort: dict | None, market: str) -> float | None:
+    """Realized rate of `market` in the cohort, or None when the cohort cannot
+    speak to it (no cohort, or a market outside the cohort's columns). An under
+    is the complement of its over/score rate, exact for whole-goal lines."""
+    if not cohort:
+        return None
+    if market in COHORT_DIRECT_KEYS:
+        return finite_probability(cohort.get(COHORT_DIRECT_KEYS[market]))
+    if market in COHORT_COMPLEMENT_KEYS:
+        value = finite_probability(cohort.get(COHORT_COMPLEMENT_KEYS[market]))
+        return None if value is None else 1.0 - value
+    return None
+
+
+def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[str, dict]:
+    """Per-market promised->realized calibration from the rolling audit.
+
+    Light ML assist: learns each market's systematic promised-vs-realized gap
+    from the audit's own settled history (n-weighted), so enhancement
+    probabilities can be corrected toward truth. Returns {market: {realized,
+    mean_promised, n}}; empty dict when no data (safe default)."""
+    try:
+        if not audit_path.exists():
+            return {}
+        data = json.loads(audit_path.read_text())
+        by_market = data.get("event_notes_audit", {}).get("by_market", {})
+    except Exception:
+        return {}
+    out = {}
+    for market, slot in by_market.items():
+        if not isinstance(slot, dict):
+            continue
+        n = int(slot.get("n") or 0)
+        realized = slot.get("realized")
+        promised = slot.get("mean_promised")
+        if n <= 0 or realized is None or promised is None or float(promised) <= 0:
+            continue
+        try:
+            out[market] = {
+                "realized": float(realized),
+                "mean_promised": float(promised),
+                "n": n,
+            }
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+_ENH_PUBLISHED_FIELDS = (
+    "recommended_enhancement", "enhancement_label", "enhancement_probability",
+    "enhancement_stated_probability", "enhancement_cohort_rate",
+    "enhancement_cohort_n", "enhancement_cohort_contract_id",
+    "enhancement_cohort_as_of_exclusive", "enhancement_priced",
+    "enhancement_price", "enhancement_edge_sample", "enhancement_quote_alternatives",
+)
+
+
+def stamp_pick_evidence(picks, *, git_sha, built_at):
+    """Validate/stamp new output only; never backfill retained archive rows.
+
+    A selected enhancement that cannot prove its measured cohort identity is
+    WITHHELD from that row (fields nulled, reason recorded) instead of being
+    published. It must not abort the slate: one unprovable row is a row-level
+    evidence gap, not a reason to lose every other pick of the day. Returns the
+    quarantined (match, market, reason) tuples so the caller can report them.
+    """
+    from edgefactory.enh_registry import enhancement_cohort_evidence
+    quarantined: list[tuple[str, str, str]] = []
+    for pick in picks:
+        pick["build_git_sha"] = git_sha
+        pick["built_at_utc"] = built_at
+        if not pick.get("recommended_enhancement"):
+            pick["enhancement_probability"] = None
+            continue
+        if enhancement_cohort_evidence(pick) is None:
+            match = str(pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}")
+            market = str(pick.get("recommended_enhancement"))
+            for field in _ENH_PUBLISHED_FIELDS:
+                pick[field] = None
+            pick["enhancement_quarantined"] = (
+                "selected enhancement has no valid measured cohort identity")
+            quarantined.append((match, market, "no_valid_cohort_identity"))
+    return quarantined
+
+
+def load_rolling_audit_hit_rates() -> dict[str, float]:
+    try:
+        if AUDIT_ROLLING_PATH.exists():
+            data = json.loads(AUDIT_ROLLING_PATH.read_text())
+            by_enh = data.get("enhancements_audit", {}).get("by_enhancement", {})
+            out = {}
+            for enh, stats in by_enh.items():
+                if stats.get("recommended", 0) >= 5:
+                    rate = finite_probability(stats.get("hit_rate"))
+                    if rate is not None:
+                        out[enh] = rate
+            return out
+    except Exception:
+        pass
+    return {}
+
+
+# Logging switch. Off = no rows are stored; selection is identical either way
+# (checked by tests/test_enh_candidate_log.py).
+ENH_CANDIDATE_LOG_ENABLED = True
+
+
+def _push_enh_log(enh_log: list, entry: dict | None) -> None:
+    """Store one candidate row. Never raises: a logging failure must not stop the
+    picks run or change the enhancement choice."""
+    if not ENH_CANDIDATE_LOG_ENABLED or entry is None:
+        return
+    try:
+        enh_log.append(entry)
+    except Exception:  # noqa: BLE001 - logging only
+        pass
+
+
+def _enh_log_entry(market: str, label, status: str, reason: str | None, *,
+                   probability=None, raw_probability=None, cohort_rate=None,
+                   engine=None, price=None, price_source=None, price_book=None) -> dict | None:
+    """One enhancement-candidate log row (per pick, per market). Returns None if
+    the row cannot be built; the caller then stores nothing.
+
+    Logged for every candidate the overlay considers, including the ones it
+    rejects, so exclusions can be measured later. Logging only: nothing here
+    changes which candidate is chosen. ``implied_probability`` is the raw
+    1/price (not de-vigged).
+    """
+    try:
+        return _build_enh_log_entry(market, label, status, reason,
+                                    probability=probability, raw_probability=raw_probability,
+                                    cohort_rate=cohort_rate, engine=engine, price=price,
+                                    price_source=price_source, price_book=price_book)
+    except Exception:  # noqa: BLE001 - logging only
+        return None
+
+
+def _build_enh_log_entry(market, label, status, reason, *, probability=None, raw_probability=None,
+                         cohort_rate=None, engine=None, price=None, price_source=None,
+                         price_book=None) -> dict:
+    def _r(x, nd=4):
+        return None if x is None else round(float(x), nd)
+    return {
+        "market": market,
+        "label": label,
+        "status": status,            # excluded | eligible | recommended | eligible_not_selected
+        "reason": reason,            # why excluded, or None when eligible
+        "probability": _r(probability),
+        "raw_probability": _r(raw_probability),
+        "cohort_rate": _r(cohort_rate),
+        "engine": engine,
+        "price": _r(price, 3),
+        "price_source": price_source,
+        "price_book": price_book,
+        "implied_probability": (None if not price else _r(1.0 / float(price))),
+    }
+
+
+def _enh_log_mark_selected(enh_log: list, best_market: str | None) -> None:
+    """Mark the chosen eligible candidate as recommended; others as not selected."""
+    try:
+        marked = False
+        for e in enh_log:
+            if e.get("status") != "eligible":
+                continue
+            if best_market is not None and not marked and e.get("market") == best_market:
+                e["status"] = "recommended"
+                marked = True
+            else:
+                e["status"] = "eligible_not_selected"
+    except Exception:  # noqa: BLE001 - logging only
+        pass
+
+
+def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = None,
+                                *, cohort_cache=None) -> dict:
+    """Query the local database to find deep league & team context and determine
+    a descriptive exact-parent shortlist of priced enhancements.
+
+    With prices_index, rank eligible candidates by realized all-outcome cohort
+    rate from the exact validated parent contract, then price. Edge is
+    informational only; an unpriced or sub-minimum market cannot be chosen.
+    Cohort-backed markets share eligibility by default (explicit env 0 restores
+    legacy market filters). No realized cohort means no bet. Broader eligibility is
+    operator-authorized, not an established ROI improvement.
+    """
+    cohort_parity = os.environ.get(ENH_COHORT_PARITY_ENV, "1") == "1"
+    out = {
+        "recommended_enhancement": None,
+        "enhancement_probability": None,
+        "enhancement_stated_probability": None,
+        "enhancement_reason": None,
+        "enhancement_label": None,
+        "event_notes": [],
+        "enhancement_ml_status": ("unavailable_cohort" if os.environ.get(
+            "EDGE_FACTORY_ENH_ML", "1") == "1" else "disabled"),
+    }
+    if pick.get("contract_schema") == "post_forebet_v1":
+        out.update(statistical_profile=None, statistical_comment=None,
+                   statistical_profile_status="unavailable_exact_contract_cohort")
+    if not con:
+        return out
+        
+    home = pick.get("home")
+    away = pick.get("away")
+    if not home or not away:
+        return out
+        
+    # No league/team priors, Poisson defaults or missing-data imputation.
+    # Only the exact observed parent cohort may supply descriptive frequency.
+    cohort = None
+    _cohort_sel = str(pick.get("pick") or "").lower()
+    _cohort_avg_p = pick.get("avg_p")
+    try:
+        numeric_probability = (not isinstance(_cohort_avg_p, bool)
+                               and isinstance(_cohort_avg_p, (int, float))
+                               and math.isfinite(_cohort_avg_p))
+        if _cohort_sel and (numeric_probability or
+                (pick.get("contract_schema") == "post_forebet_v1" and _cohort_avg_p is None)):
+            cohort = fetch_match_cohort(
+                con, _cohort_sel, _cohort_avg_p, _hybrid_pick_n_way(pick),
+                pick=pick, min_n=1, cache=cohort_cache)
+    except Exception:
+        cohort = None
+    if pick.get("contract_schema") == "post_forebet_v1":
+        # Descriptive evidence is independent of executable quotes and bet gates.
+        # A thin sample may be displayed, but cannot authorize an enhancement.
+        out["statistical_profile"] = dict(cohort) if cohort is not None else None
+        out["statistical_comment"] = format_contract_profile(cohort)
+        out["statistical_profile_status"] = (
+            "available" if cohort is not None else "unavailable_exact_contract_cohort")
+    if cohort is not None:
+        out['enhancement_ml_status'] = cohort.get('ml_status', 'disabled')
+    if cohort is not None and cohort["n"] < HYBRID_MIN_N:
+        cohort = None
+    
+    LINE_THRESHOLDS = {
+        "match_over_15": 0.80,
+        "match_under_15": 0.80,
+        "home_over_05": 0.80,
+        "home_over_15": 0.80,
+        "home_under_05": 0.80,
+        "home_under_15": 0.80,
+        "away_over_05": 0.80,
+        "away_over_15": 0.80,
+        "away_under_05": 0.80,
+        "away_under_15": 0.80,
+        "double_chance": 0.80,
+        "btts_yes": 0.35,
+        "btts_no": 0.50,
+        "match_over_25": 0.35,
+        "match_under_25": 0.85,
+        "home_over_25": 0.85,
+        "home_under_25": 0.85,
+        "away_over_25": 0.85,
+        "away_under_25": 0.85,
+        "match_under_35": 0.90,
+        "match_under_45": 0.90,
+        "home_over_35": 0.90,
+        "home_under_35": 0.90,
+        "away_over_35": 0.90,
+        "away_under_35": 0.90,
+        "goal_range_0_1": 0.30,
+        "goal_range_2_3": 0.42,
+        "goal_range_4_5": 0.25,
+        "goal_range_4_6": 0.28,
+        "goal_range_6_plus": 0.15,
+        "goal_range_7_plus": 0.10,
+        "exact_0": 0.10,
+        "exact_1": 0.20,
+        "exact_2": 0.22,
+        "exact_3": 0.22,
+        "exact_4": 0.15,
+        "exact_5": 0.10,
+        "match_over_35": 0.30,
+        "match_over_45": 0.18,
+    }
+
+    # Preserve deterministic market competition order, but never manufacture a
+    # probability for an unmeasured market. Unsupported rates remain unknown.
+    raw_candidates = [
+        ('match_over_15', 'Match Over 1.5 Goals'),
+        ('match_under_15', 'Match Under 1.5 Goals'),
+        ('match_under_25', 'Match Under 2.5 Goals'),
+        ('match_under_35', 'Match Under 3.5 Goals'),
+        ('match_over_25', 'Match Over 2.5 Goals'),
+        ('btts_yes', 'Both Teams to Score - Yes (BTTS-Yes)'),
+        ('btts_no', 'Both Teams to Score - No (BTTS-No)'),
+        ('home_over_05', 'Home Team Over 0.5 Goals'),
+        ('home_over_15', 'Home Team Over 1.5 Goals'),
+        ('home_over_25', 'Home Team Over 2.5 Goals'),
+        ('home_over_35', 'Home Team Over 3.5 Goals'),
+        ('home_under_05', 'Home Team Under 0.5 Goals'),
+        ('home_under_15', 'Home Team Under 1.5 Goals'),
+        ('home_under_25', 'Home Team Under 2.5 Goals'),
+        ('home_under_35', 'Home Team Under 3.5 Goals'),
+        ('away_over_05', 'Away Team Over 0.5 Goals'),
+        ('away_over_15', 'Away Team Over 1.5 Goals'),
+        ('away_over_25', 'Away Team Over 2.5 Goals'),
+        ('away_over_35', 'Away Team Over 3.5 Goals'),
+        ('away_under_05', 'Away Team Under 0.5 Goals'),
+        ('away_under_15', 'Away Team Under 1.5 Goals'),
+        ('away_under_25', 'Away Team Under 2.5 Goals'),
+        ('away_under_35', 'Away Team Under 3.5 Goals'),
+        ('goal_range_0_1', 'Goal Range 0-1'),
+        ('goal_range_2_3', 'Goal Range 2-3'),
+        ('goal_range_4_5', 'Goal Range 4-5'),
+        ('goal_range_4_6', 'Goal Range 4-6'),
+        ('goal_range_6_plus', 'Goal Range 6+'),
+        ('goal_range_7_plus', 'Goal Range 7+'),
+        ('exact_0', 'Exact Goals: 0'),
+        ('exact_1', 'Exact Goals: 1'),
+        ('exact_2', 'Exact Goals: 2'),
+        ('exact_3', 'Exact Goals: 3'),
+        ('exact_4', 'Exact Goals: 4'),
+        ('exact_5', 'Exact Goals: 5'),
+        ('match_over_35', 'Match Over 3.5 Goals'),
+        ('match_over_45', 'Match Over 4.5 Goals'),
+    ]
+    if cohort_parity and cohort is not None:
+        raw_candidates.append(("match_under_45", "Match Under 4.5 Goals"))
+    raw_candidates.append(("double_chance", "Double Chance"))
+
+    candidates = []
+    enh_log: list = []  # candidate log for the audit; see _enh_log_entry
+
+    # One shared eligibility band for all cohort-backed markets, regardless
+    # of goal direction. Model-only priors cannot enter the candidate pool.
+    MIN_PROB = 0.60
+    MAX_PROB = 0.90
+    for market, label in raw_candidates:
+        cohort_rate = cohort_realized_rate(cohort, market)
+        if cohort_rate is None:
+            _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "no_realized_cohort",
+                                          raw_probability=None, engine=None))
+            continue  # cohort replaces the stated probability: no realized rate, no candidate
+        engine = "hybrid_cohort"
+        prob_adjusted = cohort_rate
+        # Legacy model thresholds were asymmetric (e.g. O2.5=35%, U2.5=85%)
+        # and silently blocked unders before the shared rate/price gates below.
+        # Operator-authorized default: cohort-backed rates compete equally.
+        # Explicit env 0 restores legacy market filters, NOT model fallback.
+        # No market-specific 85/75 tuning or new EV gate.
+        thr = (MIN_PROB if cohort_parity and cohort_rate is not None
+               else LINE_THRESHOLDS.get(market, 0.80))
+        if prob_adjusted < thr:
+            _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "below_line_threshold",
+                                          probability=None, raw_probability=None,
+                                          cohort_rate=cohort_rate, engine=engine))
+        if prob_adjusted >= thr:
+            candidates.append({
+                "market": market,
+                "probability": None,
+                "raw_probability": None,
+                # Realized cohort rate the card ranks on; None when no cohort.
+                "cohort_rate": (round(cohort_rate, 4) if cohort_rate is not None else None),
+                "label": label,
+                "reason": (f"Realized exact-contract {label}: {cohort_rate:.1%}, "
+                           f"n={cohort['n']}; before {cohort.get('as_of_exclusive')}"),
+                # Addendum 17: provenance so the audit can grade engines separately.
+                "engine": engine,
+                "cohort_n": cohort["n"],
+                "cohort_contract_id": cohort.get("contract_id"),
+                "cohort_as_of_exclusive": cohort.get("as_of_exclusive"),
+            })
+
+    if candidates:
+        # BTTS (btts_yes / btts_no) is no longer excluded: the operator lifted
+        # the 2026-08-08 opt-out on 2026-10-14, and BTTS has a captured price
+        # source (enh_pricing, since 2026-08-03). Goal ranges have no captured
+        # price source, so they are excluded here as well: they must never
+        # reach the fallback, which otherwise recommends an unpriced market.
+        EXCLUDED_MARKETS = {
+            "goal_range_0_1", "goal_range_2_3", "goal_range_4_5",
+            "goal_range_4_6", "goal_range_6_plus", "goal_range_7_plus",
+            "exact_0", "exact_1", "exact_2", "exact_3", "exact_4", "exact_5",
+        }
+        # Apply exclusions up-front so both the EV branch and the fallback
+        # see the same filtered candidate set.
+        for c in candidates:
+            if c["market"] in EXCLUDED_MARKETS:
+                _push_enh_log(enh_log, _enh_log_entry(
+                    c["market"], c.get("label"), "excluded", "excluded_market",
+                    probability=c.get("probability"), raw_probability=c.get("raw_probability"),
+                    cohort_rate=c.get("cohort_rate"), engine=c.get("engine")))
+        candidates = [c for c in candidates if c["market"] not in EXCLUDED_MARKETS]
+
+        # Selection rule (operator, 2026-10-14): a candidate is eligible only when
+        # it is priced at or above MIN_LEG_ODDS, the same minimum the slip uses,
+        # and its realized cohort hit rate sits inside [MIN_PROB, MAX_PROB]. The
+        # highest realized hit rate wins. There is no edge gate: an edge test
+        # rewards long prices with low hit rates. Nothing eligible means no
+        # recommendation (no bet). The probability band is a hit-rate band, not
+        # an edge test.
+        _scripts_dir = str(ROOT / "scripts")
+        if _scripts_dir not in sys.path:
+            sys.path.insert(0, _scripts_dir)
+        from auto_tickets import MIN_LEG_ODDS  # one minimum for both lanes
+
+        eligible = []
+        if prices_index is None:
+            for c in candidates:
+                _push_enh_log(enh_log, _enh_log_entry(
+                    c["market"], c.get("label"), "excluded", "no_price_index",
+                    probability=c.get("probability"), raw_probability=c.get("raw_probability"),
+                    cohort_rate=c.get("cohort_rate"), engine=c.get("engine")))
+        if prices_index is not None:
+            for c in candidates:
+                market = c["market"]
+                # Price this candidate in a throwaway probe without mutating the
+                # real pick. Keep fixture/as-of timestamps on the probe so
+                # the secondary receipt is checked for this actual decision.
+                probe = dict(pick)
+                probe["recommended_enhancement"] = market
+                attach_enhancement_price(probe, prices_index)
+                _log_kw = dict(
+                    probability=c.get("probability"), raw_probability=c.get("raw_probability"),
+                    cohort_rate=c.get("cohort_rate"), engine=c.get("engine"),
+                    price_source=probe.get("enhancement_price_source"),
+                    price_book=probe.get("enhancement_price_book"))
+                if not probe.get("enhancement_priced"):
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "unpriced", **_log_kw))
+                    continue
+                price = float(probe["enhancement_price"])
+                # A display-preferred quote is not the entire market. Retain
+                # the candidate if another validated book clears the SAME min;
+                # the live leg gate still applies it to each actual quote.
+                alternate_clears_min = any(
+                    isinstance(q, dict) and isinstance(q.get("enhancement_price"), (int, float))
+                    and not isinstance(q["enhancement_price"], bool)
+                    and math.isfinite(q["enhancement_price"]) and q["enhancement_price"] >= MIN_LEG_ODDS
+                    for q in probe.get("enhancement_quote_alternatives") or [])
+                if price < MIN_LEG_ODDS and not alternate_clears_min:
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "below_min_leg_odds",
+                                                  price=price, **_log_kw))
+                    continue
+                prob = float(c["cohort_rate"])
+                if prob < MIN_PROB or prob > MAX_PROB:
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "prob_outside_band",
+                                                  price=price, **_log_kw))
+                    continue
+                from edgefactory.enh_registry import enhancement_cohort_evidence
+                evidence_probe = dict(probe, recommended_enhancement=market,
+                                      enhancement_probability=None,
+                                      enhancement_cohort_rate=c["cohort_rate"],
+                                      enhancement_cohort_n=c["cohort_n"],
+                                      enhancement_cohort_contract_id=c["cohort_contract_id"],
+                                      enhancement_cohort_as_of_exclusive=c["cohort_as_of_exclusive"],
+                                      event_notes=[c])
+                if enhancement_cohort_evidence(evidence_probe) is None:
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded",
+                                                        "invalid_cohort_provenance", price=price, **_log_kw))
+                    continue
+                c = dict(c)
+                for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                            "enhancement_price_at", "enhancement_price_kickoff",
+                            "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection",
+                            "enhancement_quote_alternatives"):
+                    c[key] = probe.get(key)
+                # Retain every authentic priced alternative, even on NO BET
+                # days, so the existing audit can score it prospectively.
+                # This is a descriptive candidate shortlist, NOT permission
+                # to stake. The live board/slip resolves the original quote's
+                # cohort payout bound and competes complete tickets over all notes.
+                eligible.append(c)
+                _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "eligible", None,
+                                              price=price, **_log_kw))
+
+        from edgefactory.enh_registry import enhancement_ml_probability
+        ml_probe = dict(pick, statistical_profile=out.get('statistical_profile'))
+        for candidate in eligible:
+            candidate['ml_rank_probability'] = enhancement_ml_probability(ml_probe, candidate['market'])
+            candidate['ml_model_key'] = ((cohort or {}).get('ml_model') or {}).get('model_key')
+        # Same separate rank groups as complete ENH pair selection: never
+        # numerically compare a model score against a measured cohort rate.
+        eligible.sort(key=lambda x: (
+            (ml := finite_probability(x.get('ml_rank_probability'))) is not None,
+            ml if ml is not None else x['cohort_rate'],
+            x['cohort_rate'], x['enhancement_price']), reverse=True)
+        out["event_notes"] = eligible
+        _enh_log_mark_selected(enh_log, eligible[0]["market"] if eligible else None)
+        if eligible:
+            best = eligible[0]
+            out.update({
+                "recommended_enhancement": best["market"],
+                # Group frequency is not an individual fixture forecast.
+                "enhancement_probability": None,
+                "enhancement_stated_probability": None,
+                "enhancement_cohort_rate": best.get("cohort_rate"),
+                "enhancement_cohort_n": best.get("cohort_n"),
+                "enhancement_cohort_contract_id": best.get("cohort_contract_id"),
+                "enhancement_cohort_as_of_exclusive": best.get("cohort_as_of_exclusive"),
+                "enhancement_reason": best["reason"],
+                "enhancement_label": best["label"],
+            })
+            # Carry the price metadata through. The subsequent attach_enhancement_price
+            # call in main() is idempotent and re-derives the same fields.
+            for k in ("enhancement_price", "enhancement_price_source",
+                      "enhancement_price_book", "enhancement_edge_sample"):
+                if k in best:
+                    out[k] = best[k]
+
+    # Audit fields (logging only). cluster_id groups every candidate on the same
+    # fixture, so correlated markets on one match are not counted as independent.
+    # Stored on every pick (picks files grow with it). Empty when logging is off.
+    out["enh_candidate_log"] = enh_log if ENH_CANDIDATE_LOG_ENABLED else []
+    out["enh_cluster_id"] = f"{pick.get('date')}|{pick.get('home')}|{pick.get('away')}"
+    return out
+
+
+
+def annotate_market_recommendation(pick: dict):
+    """Add Phase-1 market expression guidance to 1X2 picks."""
+    pick["market_expression_version"] = MARKET_EXPRESSION_VERSION
+    if pick.get("market", "") != "1x2":
+        return
+
+    odds = pick.get("odds")
+    if odds is None:
+        pick["recommended_market"] = "unknown"
+        pick["draw_risk_flag"] = "UNKNOWN"
+        pick["market_recommendation_reason"] = "no odds available"
+        return
+
+    for lo, hi, rec, risk, reason in MARKET_EXPRESSION_POLICY:
+        if lo <= odds < hi or (lo == 0.0 and odds < hi):
+            pick["recommended_market"] = rec
+            pick["draw_risk_flag"] = risk
+            pick["market_recommendation_reason"] = reason
+            break
+
+
+# ---------------------------------------------------------------- registry --
+def display_rule(market: str, n_way: int, threshold: float, rule: str = "") -> str:
+    """Short human label; edge_rule remains the exact miner rule for lookups.
+
+    Honest labels: include the rule QUALIFIER (bc-confirms / home-only / min_p /
+    away-only / odds-) so a variant can never hide behind the plain unanimous
+    name. e.g. 2way+bc-confirms avg_p>=60 renders as 2WAY+BC-CONFIRMS>=60.
+    Delegates to the single-source formatter in edgefactory.util.
+    """
+    return display_rule_label(market, n_way, threshold, rule)
+
+
+def _edge_entry(edge: dict) -> dict | None:
+    rule = edge.get("rule", "")
+    market = edge.get("market", "1x2")
+    mn, mt = _RULE_NWAY.search(rule), _RULE_THR.search(rule)
+    if not mn or not mt:
+        if "ml-meta" in rule:
+            mt = _RULE_THR.search(rule)
+            if mt:
+                threshold = float(mt.group(1))
+                return {
+                    "n_way": 3,
+                    "threshold": threshold,
+                    "rule": rule,
+                    "display_rule": f"ML-META≥{threshold:.0f}",
+                    "market": market,
+                }
+        return None
+    n_way, threshold = int(mn.group(1)), float(mt.group(1))
+    # Certification-contract repair (operator-authorized 2026-10-10): the
+    # qualifier tokens a rule name carries are ENFORCABLE predicates, not
+    # decoration. Parse them here so eval_1x2 can enforce every one before
+    # stamping the certified label -- and record the ELECTORATE the rule was
+    # certified on (mine_consensus writes "sources"; the named historical
+    # predicates are fb/zb for 2way and fb/zb/sa for 3way), so a substitute
+    # voter set can never inherit a label certified for a different one.
+    entry = {
+        "n_way": n_way,
+        "threshold": threshold,
+        "rule": rule,
+        "display_rule": display_rule(market, n_way, threshold, rule),
+        "market": market,
+        "from_registry": True,
+        "electorate": (tuple(edge["sources"]) if edge.get("sources")
+                       else _HISTORICAL_ELECTORATES.get(n_way)),
+        "min_p": (float(_RULE_MINP.search(rule).group(1))
+                  if _RULE_MINP.search(rule) else None),
+        "home_only": "home-only" in rule.lower(),
+        "away_only": "away-only" in rule.lower(),
+        "odds_min": (float(_RULE_ODDS_WIN.search(rule).group(1))
+                     if _RULE_ODDS_WIN.search(rule) else None),
+        "odds_max": (float(_RULE_ODDS_WIN.search(rule).group(2))
+                     if _RULE_ODDS_WIN.search(rule) else None),
+    }
+    return entry
+
+
+_QUALIFIED_TOKENS = ("min_p", "home-only", "away-only", "odds-", "bc-confirms", "predictz-confirms", "windrawwin-confirms", "freesupertips-confirms")
+
+def _is_qualified(rule: str) -> bool:
+    r = rule.lower()
+    return any(tok in r for tok in _QUALIFIED_TOKENS)
+
+
+def _prefer_entry(new: dict, old: dict | None) -> bool:
+    if old is None:
+        return True
+    new_qual = _is_qualified(new["rule"])
+    old_qual = _is_qualified(old["rule"])
+    if new_qual != old_qual:
+        return old_qual
+    if new["threshold"] != old["threshold"]:
+        return new["threshold"] < old["threshold"]
+    new_rule, old_rule = new["rule"].lower(), old["rule"].lower()
+    new_penalty = ("no-draw" in new_rule, len(new_rule))
+    old_penalty = ("no-draw" in old_rule, len(old_rule))
+    return new_penalty < old_penalty
+
+
+def load_post_forebet_registry():
+    from edgefactory.consensus_contracts import SCHEMA
+    try:
+        registry = json.loads(EDGES_PATH.read_text())
+        if isinstance(registry, dict) and registry.get("operating_contract") == SCHEMA:
+            return registry
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
+
+
+def eval_post_forebet(day, registry, fixture_audit=None):
+    """Serve only exact validated subsets from the existing warehouse capture.
+
+    No network re-fetch changes a recipe's units/identity, and absent capture
+    never falls back to a retired electorate. Historical donor odds are NOT
+    execution prices: all emitted rows start unpriced and go through the same
+    existing market/side-specific enrichment and evidence gates as other picks.
+    """
+    from datetime import timedelta
+    from edgefactory.consensus_contracts import (
+        SCHEMA, REMINE_SOURCES, collect_observations, contract_rows, validate_contract,
+    )
+    edges = []
+    entries = registry.get("edges")
+    if not isinstance(entries, list):
+        print("POST_FOREBET_SELECTION blocked malformed edge list", file=sys.stderr)
+        return [], 0, 0, {}
+    for edge in entries:
+        if not isinstance(edge, dict):
+            print("POST_FOREBET_SELECTION blocked malformed contract", file=sys.stderr)
+            continue
+        if edge.get("status") != "certified" or edge.get("contract_schema") != SCHEMA:
+            continue
+        try:
+            validate_contract(edge)
+            if day < edge["activated_as_of"]:
+                continue
+            edges.append(edge)
+        except (KeyError, TypeError, ValueError):
+            print("POST_FOREBET_SELECTION blocked malformed contract", file=sys.stderr)
+    data, picks = {}, []
+    if not edges or not (LOCALDATA / "warehouse.duckdb").exists():
+        return picks, 0, 0, data
+    import duckdb
+    with duckdb.connect(str(LOCALDATA / "warehouse.duckdb"), read_only=True) as con:
+        _, observations, ambiguous, resolved, _ = collect_observations(
+            con, start=day, as_of=(date.fromisoformat(day) + timedelta(days=1)).isoformat())
+    for (key, market), votes in observations.items():
+        for source, vote in votes.items():
+            if (key, market, source) not in ambiguous:
+                data.setdefault(source, {})[(key[1], key[2])] = vote["row"]
+    for edge in edges:
+        for row in contract_rows(observations, ambiguous, resolved, edge, settled=False, enhancement_features=True):
+            unstable, _ = fixture_schedule_unstable(*row["source_rows"])
+            if unstable:
+                continue
+            home, away = canonical_display_team(row["home"]), canonical_display_team(row["away"])
+            picks.append({
+                "date": day, "market": edge["market"], "sport": "soccer",
+                "match": f"{home} vs {away}", "home": home, "away": away,
+                "league": row["league"], "kickoff": row["kickoff"], "pick": row["pick"],
+                "avg_p": row["avg_p"],
+                "enhancement_source_features": row["enhancement_source_features"],
+                "enhancement_feature_sources": row["enhancement_feature_sources"],
+                "enhancement_country": row.get("enhancement_country"),
+                "enhancement_country_sources": row.get("enhancement_country_sources", []),
+                "enhancement_input_status": row.get("enhancement_input_status", "available"),
+                "probability_available": row["avg_p"] is not None,
+                "w_score": float(edge["valid"]["wilson_lb"]),
+                "odds": None, "odds_source": None, "bookmaker": None,
+                "rule": edge["rule"], "edge_rule": edge["rule"],
+                "display_rule": edge.get("research_rule", edge["rule"]),
+                "contract_schema": SCHEMA, "contract_id": edge["contract_id"],
+                "n_way": len(edge["sources"]), "edge_n_way": len(edge["sources"]),
+                "sources_used": list(edge["sources"]), "source_weights": {},
+            })
+    attach_kickoff_normalisation(picks, data)
+    if fixture_audit is not None:
+        by_fixture = {}
+        for pick in picks:
+            key = (source_team_key(pick["home"]), source_team_key(pick["away"]))
+            by_fixture.setdefault(key, []).append(pick)
+        for key in sorted({(key[1], key[2]) for key, _ in observations}):
+            emitted = []
+            with _fixture_decision_audit(fixture_audit, key, data, emitted, None, [], [],
+                                         audit_sources=REMINE_SOURCES) as decision:
+                emitted.extend(by_fixture.get(key, []))
+                if decision is not None:
+                    decision["scope"] = SCHEMA
+                _audit_route(decision, "consensus", "emitted" if emitted else "rejected",
+                             None if emitted else "no_validated_contract_match",
+                             operating_contract=SCHEMA)
+    picks.sort(key=lambda r: (-r["w_score"], -(r["avg_p"] if r["avg_p"] is not None else -math.inf), r["rule"]))
+    print(f"POST_FOREBET_SELECTION {day}: contracts={len(edges)} candidates={len(picks)} "
+          f"ambiguous_votes={len(ambiguous)}", file=sys.stderr)
+    return picks, 0, len({key for key, _ in observations}), data
+
+
+def load_thresholds():
+    if load_post_forebet_registry() is not None:
+        # The structured registry is authoritative, including zero active edges.
+        return {}, None, None, False
+    edges = []
+    try:
+        data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("registry must be an object")
+        edges = [e for e in data.get("edges", [])
+                 if isinstance(e, dict) and e.get("status") == "certified"]
+        if any(
+            str(edge.get("rule", "")).lower().startswith("ml-meta ")
+            for edge in edges
+        ):
+            guard = inspect_operational_registry(data, PHASE5_ACTIVATION_ROOT)
+            if not guard["ok"]:
+                edges = [
+                    edge for edge in edges
+                    if not str(edge.get("rule", "")).lower().startswith("ml-meta ")
+                ]
+                print(
+                    "PHASE5_REGISTRY_GUARD ML_META_RULES_BLOCKED "
+                    f"model_key={guard.get('model_key') or 'missing'} reason={guard['reason']}",
+                    file=sys.stderr,
+                )
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError, AttributeError):
+        edges = []
+
+    if not edges:
+        # No registry evidence is not certification at a guessed operating point.
+        return {}, None, None, True
+
+    t1x2: dict[int, dict] = {}
+    ou_best = btts_best = None
+    for e in edges:
+        entry = _edge_entry(e)
+        if entry is None:
+            continue
+        market = entry["market"]
+        n_way = entry["n_way"]
+        if market == "1x2":
+            if _prefer_entry(entry, t1x2.get(n_way)):
+                t1x2[n_way] = entry
+        elif market == "ou_2.5":
+            if _prefer_entry(entry, ou_best):
+                ou_best = entry
+        elif market == "btts":
+            if _prefer_entry(entry, btts_best):
+                btts_best = entry
+
+    # Origin of the 1X2 floor, not whether any market had certified edges.
+    is_fallback = not bool(t1x2)
+    return t1x2, ou_best, btts_best, is_fallback
+
+
+# --------------------------------------------------------------------------
+# Checkpoint ⑫ tripwire: the ml-meta operating point depends on a CONSTANT.
+#
+# The meta-model was trained with `ht_diff`/`ht_total` (the match's actual
+# half-time score) in its feature vector. At serve time no match has kicked
+# off, so both are 0 for every live prediction. A constant contributes a fixed
+# logit offset: it cannot reorder picks, it only shifts the probability SCALE.
+# The live `avg_p>=55` threshold has been sitting on that shifted scale for the
+# entire live record, and the resulting under-confidence (+5.2pp measured, see
+# HANDOVER checkpoint ⑫) is load-bearing conservatism.
+#
+# That conservatism is UNSTABLE: it survives only while nobody retrains,
+# refits, or changes the feature pipeline. One routine model refresh would
+# silently remove the margin with no alarm. This assertion converts an
+# invisible dependency into a visible contract. It changes nothing while the
+# contract holds — which is every run to date.
+ML_META_CONSTANT_FEATURES = ("ht_diff", "ht_total")
+
+
+def ml_meta_contract_breaches(picks: list[dict]) -> list[dict]:
+    """ml-meta (and derived ml-fade) picks whose serve-time constant features
+    were NOT zero.
+
+    Checked AFTER the pre-match guard, on the picks that could actually be
+    bet. Checking earlier would fire every afternoon on fixtures that already
+    kicked off and are discarded anyway — a tripwire that cries wolf gets
+    ignored, which is worse than no tripwire.
+
+    ml-fade rows inherit the parent's operating point (they are derived from
+    the same inference), so the identical constant-feature contract applies to
+    them.
+    """
+    out = []
+    for pick in picks:
+        if not str(pick.get("rule") or "").startswith(("ml-meta", "ml-fade")):
+            continue
+        bad = {k: pick.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES
+               if pick.get(f"ml_{k}")}
+        if bad:
+            out.append({"match": pick.get("match"), "date": pick.get("date"),
+                        "features": bad})
+    return out
+
+
+def _read_guarded_ml_registry() -> dict | None:
+    try:
+        data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+    guard = inspect_operational_registry(data, PHASE5_ACTIVATION_ROOT)
+    if not guard["ok"]:
+        print(
+            "PHASE5_REGISTRY_GUARD ML_EMISSION_BLOCKED "
+            f"model_key={guard.get('model_key') or 'missing'} reason={guard['reason']}",
+            file=sys.stderr,
+        )
+        return None
+    return data
+
+
+def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
+    data = _read_guarded_ml_registry()
+    if data is None:
+        return [], None
+    edges = data.get("edges", [])
+    rules = [
+        edge for edge in edges
+        if isinstance(edge, dict)
+        and edge.get("status") == "certified"
+        and str(edge.get("rule", "")).lower().startswith("ml-meta ")
+    ]
+    model = data.get("ml_model")
+    return rules, model if isinstance(model, dict) else None
+
+
+def load_ml_fade_rules() -> list[dict]:
+    """Read certified fade cuts only when the same frozen incumbent verifies.
+
+    The legacy miner may not rewrite ``ml-fade`` entries either; its writer
+    carries their existing state forward. A model/baseline mismatch blocks both
+    ML rule families so neither can use a retrained payload at pick time.
+    """
+    data = _read_guarded_ml_registry()
+    if data is None:
+        return []
+    edges = data.get("edges", [])
+    return [
+        edge for edge in edges
+        if isinstance(edge, dict)
+        and edge.get("status") == "certified"
+        and str(edge.get("rule", "")).startswith(f"{FADE_FAMILY} ")
+    ]
+
+
+def get_rolling_hit_rate_last_14d(target_date_str: str) -> float | None:
+    try:
+        import duckdb
+        con = duckdb.connect(str(LOCALDATA / "warehouse.duckdb"), read_only=True)
+        q = f"""
+            SELECT COUNT(*) AS n,
+                   SUM(CASE WHEN fb_pick = outcome THEN 1 ELSE 0 END) AS wins
+            FROM consensus3
+            WHERE date >= CAST('{target_date_str}' AS DATE) - INTERVAL 14 DAY
+              AND date < '{target_date_str}'
+              AND outcome IS NOT NULL
+        """
+        row = con.execute(q).fetchone()
+        con.close()
+        if row and row[0] and row[0] > 0:
+            return float(row[1] / row[0])
+    except Exception:
+        pass
+    return None
+
+
+def load_edge_meta():
+    """Return edge metadata keyed by exact miner rule and display alias."""
+    try:
+        data = json.loads(EDGES_PATH.read_text())
+        out = {}
+        for e in data.get("edges", []):
+            rule = e.get("rule")
+            if not rule:
+                continue
+            status = e.get("status", "certified")
+            decay = e.get("decay", {})
+            verdict = decay.get("verdict", "WATCH" if e.get("contract_schema") == "post_forebet_v1" else "HEALTHY")
+            meta = {"status": status, "decay_verdict": verdict}
+            out[rule] = meta
+            entry = _edge_entry(e)
+            if entry:
+                out[entry["display_rule"]] = meta
+        return out
+    except Exception:
+        return {}
+
+
+def thr_for(n_sources: int, t1x2: dict[int, dict]):
+    eligible = [k for k in t1x2 if k <= n_sources]
+    if not eligible:
+        return None
+    return t1x2[max(eligible)]
+
+
+def load_source_weights(market: str = "1x2") -> dict[str, float]:
+    try:
+        data = json.loads(EDGES_PATH.read_text())
+        best_thr = -1.0
+        best_weights: dict[str, float] = {}
+        for e in data.get("edges", []):
+            if not e.get("weighted"):
+                continue
+            if e.get("market") != market:
+                continue
+            if e.get("status") != "certified":
+                continue
+            m = re.search(r">=\s*([\d.]+)", e.get("rule", ""))
+            if not m:
+                continue
+            thr = float(m.group(1))
+            if thr > best_thr and e.get("source_weights"):
+                best_thr = thr
+                best_weights = e["source_weights"]
+        return best_weights
+    except Exception:
+        return {}
+
+
+# ---------------------------------------------------------------- purity --
+def load_purity():
+    try:
+        return json.loads(PURITY_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
+    best_unknown: dict = {}
+    for entry in candidates:
+        if not entry:
+            continue
+        if int(entry.get("n") or 0) > int(best_unknown.get("n") or 0):
+            best_unknown = entry
+        verdict = entry.get("verdict", "UNKNOWN")
+        if verdict != "UNKNOWN":
+            return verdict, entry
+    return "UNKNOWN", best_unknown
+
+
+# Fail-closed ordering for merging verdicts across alias-equivalent keys.
+# A restrictive verdict learned under ANY spelling of a team wins; UNKNOWN
+# (no evidence) never displaces a verdict that exists under another
+# spelling.
+_CTX_SEVERITY = {"VETO": 4, "CAUTION": 3, "ALLOW": 2, "BOOST": 1, "UNKNOWN": 0}
+
+
+def _most_severe_ctx(results: list[tuple[str, dict]]) -> tuple[str, dict]:
+    best: tuple[str, dict] = ("UNKNOWN", {})
+    for verdict, meta in results:
+        if (_CTX_SEVERITY.get(str(verdict), 0)
+                > _CTX_SEVERITY.get(str(best[0]), 0)):
+            best = (str(verdict), meta)
+    return best
+
+
+def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
+    """Find best context verdict from the purity registry.
+
+    When scanning for a fallback verdict, prefers rule-specific entries over
+    generic base views (v_consensus2_base / v_consensus3_base). A rule-specific
+    entry for the actual certified edge (e.g. 'ml-meta avg_p>=70') is a much
+    better predictor than the base view which includes all confidence levels
+    including low-confidence junk.
+    """
+    # Collect (key, value) pairs so we can distinguish base views from rules
+    matched = [(k, v) for k, v in ctx.items() if k.startswith(prefix) and (not suffix or k.endswith(suffix))]
+    if not matched:
+        return {}
+
+    # Separate into rule-specific entries and base-view entries
+    specific = [(k, v) for k, v in matched if "_base" not in k.split("|")[3]]
+    base     = [(k, v) for k, v in matched if "_base"     in k.split("|")[3]]
+
+    def pick_best(pool: list[tuple[str, dict]]) -> dict:
+        """Pick the non-UNKNOWN entry with highest n, or highest-n UNKNOWN."""
+        non_unknown = [v for _, v in pool if v.get("verdict") != "UNKNOWN"]
+        pool_vals = non_unknown or [v for _, v in pool]
+        return max(pool_vals, key=lambda v: int(v.get("n") or 0)) if pool_vals else {}
+
+    # Prefer specific rule entries first; only fall back to base views when
+    # no specific entry exists.
+    result = pick_best(specific)
+    if result:
+        return result
+    return pick_best(base)
+
+
+def lookup_context(purity: dict, pick: dict) -> dict:
+    held = False
+    if (purity or {}).get("roi_population_status") == "unverified_legacy_population":
+        # Never apply old, population-biased PROMOTIONS after the correction.
+        # VETO/CAUTION (the fail-closed half) are retained: releasing them would
+        # turn 27 recorded vetoes on one live slate into ticket-eligible CAUTION
+        # legs. The original registry stays intact for audit/reproduction.
+        from edgefactory.veto_resolution import hold_to_negative_only
+        purity = hold_to_negative_only(purity)
+        held = True
+    exact_contract = pick.get("contract_schema") == "post_forebet_v1"
+    if exact_contract:
+        # Team keys in the legacy pooled map have no rule dimension. Keep
+        # every context dimension scoped to this exact operational recipe.
+        ctx = (purity or {}).get("contract_contexts", {}).get(pick.get("edge_rule") or pick.get("rule"), {})
+    else:
+        ctx = purity.get("contexts", {}) if purity else {}
+    league_ctx = ctx.get("league", {})
+    team_ctx = ctx.get("team", {})
+    odds_ctx = ctx.get("odds_band", {})
+    comp_ctx = ctx.get("competition_type", {})
+    niche_ctx = ctx.get("niche", {})
+
+    sport = pick.get("sport", "soccer")
+    league_raw = pick.get("league") or "UNKNOWN"
+    league = canonical_league(league_raw)
+
+    # Fuzzy fallback: if the canonical league key has no matches in the
+    # purity registry, try fuzzy matching against all known league codes.
+    # This catches cases like "World UEFA Europa Conference League" ->
+    # norm_league -> "world uefa europa conference league" which the
+    # registry only knows as "ecl".
+    known_league_keys = {
+        k.split("|")[1] for k in league_ctx
+        if isinstance(k, str) and k.count("|") >= 1
+    }
+    if league and known_league_keys and not exact_contract:
+        league_prefix = f"{sport}|{league}|"
+        has_exact = any(k.startswith(league_prefix) for k in league_ctx)
+        if not has_exact:
+            best_key, best_sim = None, 0.0
+            for candidate in known_league_keys:
+                sim = char_ngram_similarity(league, candidate, n=2)
+                if sim >= 0.55 and sim > best_sim:
+                    best_key, best_sim = candidate, sim
+            if best_key is not None:
+                league = best_key
+
+    market = pick.get("market", "1x2")
+    rule = pick.get("edge_rule") or pick.get("rule", "?")
+    sel = pick.get("pick", "?")
+
+    home = pick.get("home", "")
+    away = pick.get("away", "")
+    home_norm = canonical_team(home)
+    away_norm = canonical_team(away)
+    # Alias-equivalent entity keys (canonical first, then the historical
+    # pre-alias key and every curated sibling spelling). The purity
+    # registry learned its team keys under whichever spelling the feeds
+    # used, so looking up ONLY the canonical key would orphan existing
+    # evidence — including VETO verdicts. See the fail-closed merge below.
+    home_variants = canonical_team_variants(home)
+    away_variants = canonical_team_variants(away)
+
+    league_key = f"{sport}|{league}|{market}|{rule}|{sel}"
+    league_exact = league_ctx.get(league_key)
+    league_fallback = _scan_best(
+        league_ctx,
+        prefix=f"{sport}|{league}|{market}|",
+        suffix=f"|{sel}",
+    )
+    league_v, league_meta = _best_ctx([league_exact] if exact_contract else [league_exact, league_fallback])
+
+    team_h_key = f"{sport}|{home_norm}|{league}|{market}|home"
+    team_a_key = f"{sport}|{away_norm}|{league}|{market}|away"
+
+    def _team_verdict(variants: list[str], side: str) -> tuple[str, dict]:
+        """Most SEVERE verdict across every alias-equivalent team key.
+
+        Per-variant resolution is byte-identical to the legacy single-key
+        path (exact -> any-league -> prefix scan, via ``_best_ctx``); the
+        only addition is the fail-closed merge across spellings, so a VETO
+        learned under one spelling still vetoes the other.
+        """
+        results = []
+        for key in variants:
+            exact = team_ctx.get(f"{sport}|{key}|{league}|{market}|{side}")
+            any_league = team_ctx.get(f"{sport}|{key}|*|{market}|{side}")
+            scan = _scan_best(team_ctx, prefix=f"{sport}|{key}|",
+                              suffix=f"|{market}|{side}")
+            results.append(_best_ctx([exact, any_league, scan]))
+        return _most_severe_ctx(results)
+
+    team_h_v, team_h_meta = _team_verdict(home_variants, "home")
+    team_a_v, team_a_meta = _team_verdict(away_variants, "away")
+
+    odds = pick.get("odds")
+    band = odds_band(odds)
+    odds_key = f"{sport}|{market}|{rule}|{band}"
+    odds_exact = odds_ctx.get(odds_key)
+    odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|{rule}|", suffix=f"|{band}")
+    odds_v, odds_meta = _best_ctx([odds_exact, odds_fallback])
+
+    side_role = "home" if sel == "home" else "away" if sel == "away" else "other"
+    niche_key = f"{sport}|{league}|{market}|{rule}|{band}|{side_role}"
+    niche_exact = niche_ctx.get(niche_key)
+    niche_fallback = _scan_best(
+        niche_ctx,
+        prefix=f"{sport}|{league}|{market}|{rule}|",
+        suffix=f"|{side_role}",
+    )
+    niche_v, niche_meta = _best_ctx([niche_exact, niche_fallback])
+
+    comp_type = classify_competition(league_raw)
+    comp_key = f"{sport}|{market}|{rule}|{comp_type}"
+    comp_exact = comp_ctx.get(comp_key)
+    comp_fallback = _scan_best(comp_ctx, prefix=f"{sport}|{market}|", suffix=f"|{comp_type}")
+    comp_v, comp_meta = _best_ctx([comp_exact, comp_fallback])
+
+    return {
+        "purity_evidence_status": ("hold_negative_only" if held else
+                                   "available" if ctx else
+                                   "unavailable_exact_contract_context" if exact_contract
+                                   else "unavailable_context"),
+        "league": league_v,
+        "team_h": team_h_v,
+        "team_a": team_a_v,
+        "odds_band": odds_v,
+        "competition_type": comp_v,
+        "niche": niche_v,
+        "league_raw": league_raw,
+        "league_key": league,
+        "home_norm": home_norm,
+        "away_norm": away_norm,
+        "odds_band_name": band,
+        "comp_type_name": comp_type,
+        "side_role": side_role,
+        "_meta": {
+            "league": league_meta,
+            "team_h": team_h_meta,
+            "team_a": team_a_meta,
+            "odds_band": odds_meta,
+            "competition_type": comp_meta,
+            "niche": niche_meta,
+        },
+        "_keys": {
+            "league": league_key,
+            "team_h": team_h_key,
+            "team_a": team_a_key,
+            "odds_band": odds_key,
+            "competition_type": comp_key,
+            "niche": niche_key,
+        }
+    }
+
+
+def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
+                decay_verdict: str = "WATCH") -> str | None:
+    if edge_status == "benched":
+        return BUCKET_SKIP_DEAD
+    if decay_verdict in ("DEAD", "DECAYING"):
+        return BUCKET_SKIP_DEAD
+
+    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band"), ctx.get("competition_type"), ctx.get("niche")]
+    if "VETO" in vals:
+        pick["veto_reason"] = f"context VETO in {[k for k, v in zip(['league','team_h','team_a','odds_band','competition_type','niche'], vals) if v == 'VETO']}"
+        return BUCKET_SKIP_VETO
+
+    # Addendum 26: price evidence gates push eligibility independently from
+    # model/context quality. The pick stays in the archived/audit ledger and
+    # reaches the transparency shadow slate, but neither a sole ScoutingStats
+    # fallback nor an alias_fuzzy fixture match may become a pushed bet.
+    evidence = str(pick.get("price_evidence") or "")
+    if evidence == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
+        pick["price_quarantine_reason"] = "alias_fuzzy"
+        return BUCKET_WL_SUSPECT_PRICE
+    if evidence == PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT:
+        pick["price_quarantine_reason"] = "source_conflict"
+        return BUCKET_WL_SUSPECT_PRICE
+    if evidence == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE:
+        pick["price_quarantine_reason"] = "scoutingstats_sole_source"
+        return BUCKET_WL_UNCORROBORATED_PRICE
+    if pick.get("odds") is None:
+        return BUCKET_WL_ODDS
+
+    market = str(pick.get("market") or "")
+    odds = pick.get("odds")
+    sel = str(pick.get("pick") or "")
+    league_key = str(ctx.get("league_key") or "")
+    short_sniper = market == "1x2" and sel == "home" and odds is not None and float(odds) < SHORT_ODDS_SNIPER_MAX
+
+    if market == "1x2" and sel == "away" and odds is not None and float(odds) < 1.30:
+        pick["veto_reason"] = f"short-odds away favourite {float(odds):.2f}"
+        return BUCKET_SKIP_VETO
+    if short_sniper and league_key in TOXIC_SHORT_ODDS_LEAGUES:
+        return BUCKET_SKIP_VETO
+    if short_sniper and ctx.get("niche") == "UNKNOWN":
+        ultra_short_home_soft_unknown = (
+            sel == "home"
+            and odds is not None and float(odds) < 1.20
+            and ctx.get("odds_band") in ("ALLOW", "BOOST")
+            and ctx.get("competition_type") != "VETO"
+            and ctx.get("league") != "VETO"
+        )
+        if not ultra_short_home_soft_unknown:
+            return BUCKET_WL_CTX
+    if short_sniper and ctx.get("league") == "UNKNOWN":
+        ultra_short_home_soft_unknown = (
+            sel == "home"
+            and odds is not None and float(odds) < 1.20
+            and ctx.get("odds_band") in ("ALLOW", "BOOST")
+            and ctx.get("competition_type") != "VETO"
+        )
+        if not ultra_short_home_soft_unknown:
+            return BUCKET_WL_CTX
+
+    # Absence of evidence is not evidence of risk. An UNKNOWN odds-band
+    # context means no priced history exists for this rule/band cell (the
+    # odds_band dimension holds ~131 cells against tens of thousands of
+    # fixtures), not that the band is bad. CAUTION is a fair reading of
+    # UNKNOWN, but the sub-floor DELETE below was silent: the row left no
+    # archive trace at all, so the population could never be measured and it
+    # looked as if the floor applied to nothing. Keep the drop, tag WHY, and
+    # report it in the run summary — promoting this class to a staked bucket
+    # must come from its own recorded record, never from assuming
+    # UNKNOWN == bad.
+    caution_from_unknown_band_only = (
+        ctx.get("odds_band") == "UNKNOWN"
+        and "CAUTION" not in vals
+        and decay_verdict == "HEALTHY"
+    )
+
+    if ctx.get("odds_band") == "UNKNOWN":
+        bucket = BUCKET_CAUTION
+    elif "CAUTION" in vals:
+        bucket = BUCKET_CAUTION
+    elif decay_verdict != "HEALTHY":
+        # Decay-aware honesty: only HEALTHY earns CERTIFIED_CLEAN. WATCH means
+        # the decay monitor's recent window cannot confirm the edge — labeling
+        # it "certified clean" overclaims the evidence (this is exactly what
+        # happened to the bc-confirms>=60 picks: registry said certified, decay
+        # said WATCH, bucket said CERTIFIED_CLEAN, results said -67%).
+        bucket = BUCKET_CAUTION
+    else:
+        bucket = BUCKET_CERTIFIED
+
+    if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
+        # The picked leg is dropped, and the caller records WHY by reason so
+        # the floor stops being silent (see the run summary). The two reasons
+        # are different animals: `caution_below_odds_floor` is evidence-backed
+        # (the CAUTION population measures ~-9.5% ROI at n=205), while
+        # `unknown_odds_band_no_evidence` only says the rule/band cell has no
+        # priced history yet — measured WATCHLIST_UNKNOWN_CTX legs won 86.4%
+        # (n=44, +3.4% ROI). Promote the second class only from its own
+        # recorded record, never by assuming UNKNOWN == bad.
+        pick["bucket_drop_reason"] = (
+            "unknown_odds_band_no_evidence" if caution_from_unknown_band_only
+            else "caution_below_odds_floor"
+        )
+        return None
+
+    return bucket
+
+
+# ------------------------------------------------------------------- fetch --
+def _forebet_historical(day: str) -> bool:
+    return str(day)[:10] > FOREBET_LIVE_LAST_DAY
+
+
+def fetch_all(day: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for name in ALL_SOURCES:
+        if name == "forebet" and _forebet_historical(day):
+            # Forebet remains available to historical rebuilds only. It must
+            # not enter a post-2026-06-12 production fetch, price, or vote.
+            continue
+        try:
+            mod = importlib.import_module(f"edgefactory.sources.{name}")
+            rows = mod.fetch_day(day)
+        except Exception as e:
+            print(f"skip {name}: {e}", file=sys.stderr)
+            continue
+        by_key = {}
+        for r in rows or []:
+            home, away = r.get("home"), r.get("away")
+            if not home or not away:
+                continue
+            if r.get("hs") not in (None, ""):
+                continue
+            if name == "forebet" and r.get("status") == "FT":
+                continue
+            k = (source_team_key(home), source_team_key(away))
+            if len(k[0]) < 4 or len(k[1]) < 4:
+                continue
+            by_key[k] = r
+        out[name] = by_key
+    return out
+
+
+def _f(v):
+    try:
+        return None if v is None or v == "" else float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _valid_decimal_odds(v) -> float | None:
+    odds = _f(v)
+    if odds is None or not math.isfinite(odds) or odds <= 1.0:
+        return None
+    return odds
+
+
+def canonical_display_team(name: object) -> str:
+    raw = str(name or "").strip()
+    if not raw:
+        return raw
+    return DISPLAY_TEAM_ALIASES.get(compact_key(raw), raw)
+
+
+def source_team_key(name: object) -> str:
+    # Delegates to the shared identity key (2026-09-22 red-team fix):
+    # 24-char, club-structure-only noise, '&'<->'and' + accent folding,
+    # and explicit same-club aliases. Kills the legacy width-9 collision
+    # class (Atletico/Real Madrid shared "madrid"; Arsenal == Arsenal W)
+    # that could mis-attach wrong-match evidence for same-day fixtures.
+    return _identity_source_team_key(name)
+
+
+def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
+    def get_ngrams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i:i+n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+    g1 = get_ngrams(s1)
+    g2 = get_ngrams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
+
+
+def _odds_alias_key(raw: object, key: str, aliases: dict) -> str:
+    """Apply an odds alias map — but never across a squad boundary.
+
+    Same rule the entity layer already enforces (entities.canonical_team:
+    "the alias canonicalizes the CLUB, never the squad").  The width-9 key
+    space this feeds strips a distinct-entity marker before truncating, so
+    "Urawa Red Diamonds W" and "Urawa Red Diamonds" BOTH key as "urawaredd"
+    — an alias applied there resolves a women's/reserve spelling onto the
+    senior side's key and hands it our card's exact join (2026-10-07
+    correction to the Urawa fold; measured: 17 curated pairs were
+    alias-bridged across the marker, 87 collapse by truncation alone).
+
+    A marked name therefore keeps its unaliased key.  Fail-closed on
+    purpose: the join falls back to the timed/fuzzy tiers — a wrong-squad
+    price can still be *seen* and quarantined, never claimed as exact.
+    """
+    if squad_markers(str(raw or "")):
+        return key
+    return aliases.get(key, key)
+
+
+def odds_team_key(name: object) -> str:
+    raw = str(name or "")
+    key = norm_team(fold_ascii(raw))
+    return _odds_alias_key(raw, key, ODDS_EXACT_TEAM_ALIASES)
+
+
+def odds_match_team_key(name: object) -> str:
+    raw = str(name or "")
+    compact = compact_key(raw)
+    # The compact key retains the marker, so the guard is belt-and-braces
+    # here; it is stated once so no future key space has to re-derive it.
+    return _odds_alias_key(raw, compact, ODDS_MATCH_TEAM_ALIASES)
+
+
+def operational_team_key(name: object) -> str:
+    raw = str(name or "")
+    tokens = re.findall(r"[a-z0-9]+", fold_ascii(raw))
+    filtered = [t for t in tokens if t not in OPERATIONAL_CLUB_TOKENS]
+    compact = "".join(filtered) or compact_key(raw)
+    return _odds_alias_key(raw, compact, ODDS_MATCH_TEAM_ALIASES)
+
+
+def _kickoff_value(obj: dict) -> str | None:
+    for key in ("kickoff", "time"):
+        value = obj.get(key)
+        if value:
+            return str(value)
+    return None
+
+
+def _kickoff_minutes(value: object) -> int | None:
+    """Minutes-from-midnight SAST for a kickoff value.
+
+    Timezone-aware ISO strings are converted to SAST first. Naive strings
+    ("HH:MM", "DD-MM, HH:MM") are assumed to be SAST because every source
+    used by the operational pipeline reports local SAST times. Ambiguous
+    values return None so the pre-match guard fails closed.
+    """
+    dt = parse_kickoff_dt(value)
+    if dt is None:
+        return None
+    return dt.hour * 60 + dt.minute
+
+
+def parse_kickoff_dt(value: object, reference_date: object = None) -> datetime | None:
+    """Return the kickoff as an Africa/Johannesburg datetime, or None.
+
+    Accepts:
+      - ISO 8601 with offset ("2026-08-08T21:00:00+02:00")
+      - Zulu ("2026-08-08T19:00:00Z")
+      - Naive "DD-MM, HH:MM" and "HH:MM" (assumed SAST)
+    Rejects unparseable or out-of-range values.
+
+    ``reference_date`` is the fixture's own date ("YYYY-MM-DD" or a date).
+    The day-month forms carry no year, and the bare "HH:MM" form carries no
+    date at all, so the calendar context must come from the fixture rather
+    than from the wall clock: a run on the 30th must not stamp tomorrow's
+    fixture with today's date, and a run on 31 December must not regress a
+    1 January fixture by a full year.
+
+    Field order is DD-MM, matching the feeds: zulubet publishes
+    ``2024-07-24`` as ``"24-07, 14:00"``. Reading that as MM-DD silently
+    moves a fixture by months, or fails outright whenever the day exceeds
+    12 — which is why kickoffs went missing on the 30th of the month, and
+    why same-day candidates were being judged against the wrong month.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return None
+    tz = _local_tz()
+    # ISO with optional offset or Z
+    iso_candidate = text.replace("Z", "+00:00") if text.endswith("Z") else text
+    try:
+        dt = datetime.fromisoformat(iso_candidate)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=tz)
+        return dt.astimezone(tz)
+    except ValueError:
+        pass
+
+    ref = _kickoff_reference_date(reference_date, tz)
+
+    # "DD-MM, HH:MM" or "DD-MM HH:MM"
+    m = re.match(r"^(\d{1,2})-(\d{1,2})[ ,]+(\d{1,2}):(\d{2})\s*$", text)
+    if m:
+        dd, mm, hh, mi = map(int, m.groups())
+        if 0 <= hh <= 23 and 0 <= mi <= 59:
+            # The reference year is the fixture's own year. A December run
+            # reading a January fixture rolls forward rather than back.
+            year = ref.year
+            if ref.month == 12 and mm == 1:
+                year += 1
+            elif ref.month == 1 and mm == 12:
+                year -= 1
+            try:
+                return datetime(year, mm, dd, hh, mi, tzinfo=tz)
+            except ValueError:
+                return None
+    # bare "HH:MM" — the calendar day comes from the fixture's own date
+    # (reference_date); only with no reference does it fall back to today.
+    m = re.match(r"^(\d{1,2}):(\d{2})\s*$", text)
+    if m:
+        hh, mi = map(int, m.groups())
+        if 0 <= hh <= 23 and 0 <= mi <= 59:
+            return datetime(ref.year, ref.month, ref.day, hh, mi, tzinfo=tz)
+    return None
+
+
+def _kickoff_reference_date(reference_date: object, tz) -> date:
+    """The calendar context for a kickoff string that carries none."""
+    if isinstance(reference_date, datetime):
+        return reference_date.date()
+    if isinstance(reference_date, date):
+        return reference_date
+    text = str(reference_date or "").strip()[:10]
+    if text:
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            pass
+    return datetime.now(tz).date()
+
+
+def _kickoff_delta_minutes(a: object, b: object) -> int | None:
+    a_min = _kickoff_minutes(a)
+    b_min = _kickoff_minutes(b)
+    if a_min is None or b_min is None:
+        return None
+    return abs(a_min - b_min)
+
+
+# ---------------------------------------------------------------------------
+# KICKOFF NORMALISATION AT INGEST (incident #6 — the REAL fix, Task A).
+#
+# The guard drops legs whose kickoff cannot be trusted. This is the data-side
+# fix: every pick emitted by this pipeline now carries
+#     kickoff_utc      ISO-8601 UTC instant, or None
+#     kickoff_source   HOW it was resolved (constants below)
+#     kickoff_witness  provenance note (which source row's raw string)
+# `kickoff` (the feed's raw text) is NEVER overwritten — the guard and the
+# audit keep reading the original rendering.
+#
+# Resolution rule (no guesses, no SAST defaulting — the incident fault):
+#   kickoff_utc is set ONLY from an explicit zone-bearing instant found at
+#   ingest time in (a) the pick's own kickoff string (offset/Z passthrough),
+#   or (b) another source row for the SAME fixture in the fetch-time data —
+#   scoutingstats starting_at ("…T02:30:00Z"), vitibet data-time
+#   ("…T20:15:00+02:00"), bzzoiro event_date, etc. If two zoned witnesses
+#   DISAGREE, the row is left unresolved (do not guess which is right).
+#   Naive renderings ("HH:MM", "DD-MM, HH:MM", "YYYY-MM-DD HH:MM:SS") name
+#   no zone and are marked unresolved even when they carry a date: the
+#   2026-09-06 Vancouver row's "22:30" was exactly such a wall clock read on
+#   a remote-league slate, and stamping it SAST was the bug.
+#
+# 2026-09-06 evidence: the Vancouver fixture's own pick anchor (statarea)
+# rendered the bare "22:30", but the SAME slate carried a scoutingstats row
+# for the fixture with starting_at "2026-09-06T02:30:00Z" (the true kickoff —
+# it is preserved on the archived row as odds_captured_at because the
+# scoutingstats odds adapter stores the starting_at string in captured_at).
+# Inter Miami's row on the same slate came through "+02:00" via vitibet/
+# betexplorer. The pipeline CAN emit a zoned instant — it just picked the
+# wrong (anchor) kickoff string. Normalisation scans every source row of the
+# fixture, not just the anchor.
+# ---------------------------------------------------------------------------
+KICKOFF_SRC_OFFSET = "offset_passthrough"     # pick's own kickoff carried offset/Z
+KICKOFF_SRC_SIBLING = "derived_sibling_row"   # same-fixture source row at ingest carried one
+KICKOFF_SRC_ODDS_ROW = "derived_odds_row"     # matched odds row carried one (enrichment-time)
+KICKOFF_SRC_UNRESOLVED = "unresolved"
+
+_ZONED_KICKOFF_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})$"
+)
+
+
+def zoned_kickoff_to_utc(value: object) -> str | None:
+    """UTC ISO string from an explicit zone-bearing ISO kickoff, else None.
+
+    Accepts only strings that carry their own offset/Z — a naive string names
+    no zone and returns None (no SAST defaulting anywhere in normalisation).
+    """
+    raw = str(value or "").strip()
+    if not raw or not _ZONED_KICKOFF_RE.match(raw):
+        return None
+    text = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    text = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", text)
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        return None
+    return dt.astimezone(timezone.utc).isoformat()
+
+
+def _fixture_sibling_rows(pick: dict, data: dict[str, dict]) -> list[tuple[str, dict]]:
+    """Every ingest row for the same fixture across all sources (data is the
+    fetch_all() dict: source name -> {(home_key, away_key): row})."""
+    key = (source_team_key(pick.get("home") or ""), source_team_key(pick.get("away") or ""))
+    out: list[tuple[str, dict]] = []
+    for name in sorted(data or {}):
+        rows = data[name]
+        if not isinstance(rows, dict):
+            continue
+        row = rows.get(key)
+        if row:
+            out.append((str(name), row))
+    return out
+
+
+def resolve_kickoff_utc(
+    pick: dict,
+    *,
+    data: dict[str, dict] | None = None,
+    odds_row: dict | None = None,
+    odds_provider: str | None = None,
+) -> None:
+    """Attach kickoff_utc / kickoff_source / kickoff_witness to a pick.
+
+    Idempotent: never overwrites an existing kickoff_utc (the run_day
+    sibling scan runs before enrichment; enrichment only fills rows the scan
+    could not see, e.g. live-fetched bzzoiro odds rows).
+    """
+    if pick.get("kickoff_utc"):
+        attach_kickoff_display(pick)
+        return
+    own_raw = _kickoff_value(pick) or ""
+    own_utc = zoned_kickoff_to_utc(own_raw) if own_raw else None
+    if own_utc:
+        pick["kickoff_utc"] = own_utc
+        pick["kickoff_source"] = KICKOFF_SRC_OFFSET
+        pick["kickoff_witness"] = f"own kickoff {own_raw!r}"
+        attach_kickoff_display(pick)
+        return
+
+    candidates: list[tuple[str, str, str, bool]] = []  # (utc, source_name, raw, is_odds_row)
+    for sname, srow in _fixture_sibling_rows(pick, data or {}):
+        sraw = _kickoff_value(srow)
+        sutc = zoned_kickoff_to_utc(sraw) if sraw else None
+        if sutc:
+            candidates.append((sutc, sname, str(sraw), False))
+    if odds_row is not None:
+        oraw = _kickoff_value(odds_row)
+        outc = zoned_kickoff_to_utc(oraw) if oraw else None
+        if outc:
+            candidates.append((outc, str(odds_provider or "odds_row"), str(oraw), True))
+
+    if not candidates:
+        pick["kickoff_utc"] = None
+        pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_sast"] = None
+        return
+    distinct = {c[0] for c in candidates}
+    if len(distinct) > 1:
+        # Conflicting zoned witnesses (e.g. a rescheduled fixture mid-slate):
+        # leaving it unresolved is the only non-guessing answer. The live
+        # guard's region fallback still covers it.
+        pick["kickoff_utc"] = None
+        pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_sast"] = None
+        pick["kickoff_witness"] = (
+            f"conflicting zoned witnesses: "
+            + "; ".join(f"{n} {r!r}" for _, n, r, _ in candidates[:4]))
+        return
+    utc, sname, sraw, is_odds = candidates[0]
+    pick["kickoff_utc"] = utc
+    pick["kickoff_source"] = KICKOFF_SRC_ODDS_ROW if is_odds else KICKOFF_SRC_SIBLING
+    pick["kickoff_witness"] = f"{sname} kickoff {sraw!r}"
+    attach_kickoff_display(pick)
+
+
+def attach_kickoff_display(pick: dict) -> None:
+    """Add ``kickoff_sast``: the one consistent human rendering.
+
+    The raw ``kickoff`` text is deliberately left alone - it is the
+    pre-match guard's input and the audit's provenance, and rewriting it
+    could move a kickoff LATER, which is the one direction the lead guard
+    must never be nudged. ``kickoff_sast`` is derived from the authoritative
+    zone-bearing ``kickoff_utc`` only, so it is exact rather than merely
+    consistent, and it replaces the two incompatible feed renderings
+    ("03-10, 17:00" from a UK-local source, bare "11:00" from an
+    Americas-local one) with a single unambiguous string.
+    """
+    utc_text = str(pick.get("kickoff_utc") or "").strip()
+    if not utc_text:
+        pick.setdefault("kickoff_sast", None)
+        return
+    try:
+        stamp = datetime.fromisoformat(utc_text)
+    except ValueError:
+        pick.setdefault("kickoff_sast", None)
+        return
+    if stamp.tzinfo is None:
+        pick.setdefault("kickoff_sast", None)
+        return
+    pick["kickoff_sast"] = stamp.astimezone(_local_tz()).strftime("%Y-%m-%d %H:%M SAST")
+
+
+def kickoff_display_offset_census(picks: list[dict]) -> dict[str, dict[str, int]]:
+    """How far each feed's kickoff TEXT sits from the true SAST instant.
+
+    Answers "systematic or per-source?" from data on every run instead of
+    from a single fixture. Buckets are minutes of (displayed wall clock -
+    true SAST wall clock), grouped by the shape of the rendering, because
+    the rendering - not the pick - is what identifies the upstream feed.
+    """
+    census: dict[str, Counter] = {}
+    for pick in picks:
+        utc_text = str(pick.get("kickoff_utc") or "").strip()
+        raw = str(_kickoff_value(pick) or "").strip()
+        if not utc_text or not raw:
+            continue
+        try:
+            stamp = datetime.fromisoformat(utc_text)
+        except ValueError:
+            continue
+        if stamp.tzinfo is None:
+            continue
+        match = re.search(r"(\d{1,2}):(\d{2})", raw)
+        if not match:
+            continue
+        local = stamp.astimezone(_local_tz())
+        displayed = int(match.group(1)) * 60 + int(match.group(2))
+        actual = local.hour * 60 + local.minute
+        delta = (displayed - actual) % 1440
+        if delta > 720:
+            delta -= 1440
+        shape = "dd-mm_hh:mm" if re.match(r"^\d{1,2}-\d{1,2}[ ,]", raw) else (
+            "iso" if re.match(r"^\d{4}-\d{2}-\d{2}", raw) else "bare_hh:mm")
+        census.setdefault(shape, Counter())[f"{delta:+d}m"] += 1
+    return {shape: dict(sorted(counts.items())) for shape, counts in sorted(census.items())}
+
+
+def kickoff_offset_lines(census: dict[str, dict[str, int]]) -> list[str]:
+    """One compact line per rendering shape, plus the systematic verdict."""
+    if not census:
+        return []
+    lines = []
+    for shape, counts in census.items():
+        rendered = " ".join(f"{offset}={count}" for offset, count in counts.items())
+        lines.append(f"kickoff display offset [{shape}]: {rendered}")
+    distinct = {offset for counts in census.values() for offset in counts}
+    lines.append(
+        "kickoff display offset verdict: "
+        + ("systematic" if len(distinct) == 1 else f"per-source ({len(distinct)} distinct offsets)")
+        + " — kickoff_utc is authoritative; kickoff_sast is rendered from it"
+    )
+    return lines
+
+
+def attach_kickoff_normalisation(picks: list[dict], data: dict[str, dict]) -> None:
+    """run_day hook: after picks are built and date-filed, resolve every
+    pick's kickoff from the fetch-time data (all sources of the same
+    fixture). Enrichment-time odds rows are attached separately where the
+    run-day scan cannot see them (see enrich_with_live_odds)."""
+    for p in picks:
+        resolve_kickoff_utc(p, data=data)
+
+
+def _parse_resolved_kickoff_instant(pick: dict) -> datetime | None:
+    """The pick's authoritative absolute kickoff, if one was resolved.
+
+    ``kickoff_utc`` is only ever set from an explicitly zoned witness (see
+    ``resolve_kickoff_utc``); a zone-free string cannot produce one. It is
+    therefore safe to compare against, unlike the raw display text.
+    """
+    raw = pick.get("kickoff_utc")
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
+
+
+def operational_pick_eligibility(
+    pick: dict,
+    *,
+    as_of: datetime,
+    min_lead: int,
+) -> tuple[bool, str | None]:
+    p_date = str(pick.get("date") or "")[:10]
+    try:
+        pick_date = datetime.strptime(p_date, "%Y-%m-%d").date()
+    except ValueError:
+        return False, "bad_date"
+
+    as_of_date = as_of.date()
+    if pick_date < as_of_date:
+        return False, "past_target_date"
+    if pick_date > as_of_date:
+        return True, None
+
+    ko = parse_kickoff_dt(_kickoff_value(pick), pick.get("date"))
+    if ko is None:
+        # An absent display string stays a skip even when kickoff_utc is
+        # known: admitting it here would ADD picks, and this guard is only
+        # ever allowed to subtract them.
+        return False, "missing_kickoff_same_day"
+    if ko.tzinfo is None:
+        # The raw feed text carries no zone, so it is read as local time.
+        # On 2026-10-03 every zone-free renderer observed (statarea UTC-5,
+        # zulubet UTC+1) sits BEHIND SAST, which made this read early — the
+        # safe direction — by luck rather than by construction. A renderer
+        # ahead of SAST would make it read LATE, which is the one direction
+        # a pre-match guard must never move.
+        ko = ko.replace(tzinfo=_local_tz())
+    resolved = _parse_resolved_kickoff_instant(pick)
+    if resolved is not None:
+        # Take the EARLIER of the feed text and the authoritative instant.
+        # This can only ever shorten the computed lead, so it can only ever
+        # skip more picks, never admit one the old guard rejected.
+        ko = min(ko, resolved)
+    lead = (ko - as_of).total_seconds() / 60.0
+    if lead < min_lead:
+        return False, f"inside_{min_lead}m_lead_or_started"
+    return True, None
+
+
+def filter_operational_pre_match_picks(
+    picks: list[dict],
+    *,
+    as_of: datetime,
+    min_lead: int,
+    rejection_audit: list | None = None,
+) -> tuple[list[dict], dict[str, int]]:
+    kept: list[dict] = []
+    skipped: dict[str, int] = {}
+    as_of_text = as_of.isoformat(timespec="seconds")
+    for pick in picks:
+        ok, reason = operational_pick_eligibility(pick, as_of=as_of, min_lead=min_lead)
+        if not ok:
+            skipped[reason or "unknown"] = skipped.get(reason or "unknown", 0) + 1
+            if rejection_audit is not None:
+                try:
+                    rejection_audit.append({"row": dict(pick), "stage": "pre_match_guard",
+                        "reason": reason or "unknown", "evidence": {"as_of": as_of_text,
+                        "min_lead_minutes": min_lead, "kickoff": _kickoff_value(pick),
+                        "kickoff_utc": pick.get("kickoff_utc")}})
+                except Exception as exc:
+                    print(f"pre-match rejection audit failed: {exc}", file=sys.stderr)
+            continue
+        pick["as_of"] = as_of_text
+        pick["min_lead_minutes"] = min_lead
+        kept.append(pick)
+    return kept, skipped
+
+
+def _bookmaker_priority(bookmaker: object) -> int:
+    b = str(bookmaker or "").strip().lower()
+    if any(token in b for token in LOW_PRIORITY_BOOKMAKER_TOKENS):
+        return 0
+    return 1
+
+
+def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
+    # All donor adapters pass through the shared canonicalizer. Keep this
+    # boundary defensive as well because tests, cached ledgers and hand-built
+    # audit indexes can still contain provider vocabulary.
+    normalized, _reason = canonicalize_row(row)
+    if normalized is None:
+        return None
+    day = str(normalized.get("date") or "")
+    home = odds_team_key(normalized.get("home") or "")
+    away = odds_team_key(normalized.get("away") or "")
+    market = str(normalized.get("market") or "")
+    selection = str(normalized.get("selection") or "")
+    if not (day and home and away and market and selection):
+        return None
+    return (day, home, away, market, selection)
+
+
+def _time_match_key(row: dict) -> tuple[str, str, str, str, str] | None:
+    day = str(row.get("date") or "")
+    home = odds_match_team_key(row.get("home") or "")
+    away = odds_match_team_key(row.get("away") or "")
+    market = str(row.get("market") or "")
+    selection = str(row.get("selection") or "")
+    if not (day and home and away and market and selection):
+        return None
+    return (day, home, away, market, selection)
+
+
+def _time_pick_key(pick: dict) -> tuple[str, str, str, str, str]:
+    return (
+        str(pick.get("date") or ""),
+        odds_match_team_key(pick.get("home") or ""),
+        odds_match_team_key(pick.get("away") or ""),
+        str(pick.get("market") or ""),
+        str(pick.get("pick") or ""),
+    )
+
+
+def _market_pick_key(obj: dict, *, selection_key: str) -> tuple[str, str, str]:
+    return (
+        str(obj.get("date") or ""),
+        str(obj.get("market") or ""),
+        str(obj.get(selection_key) or ""),
+    )
+
+
+def _prefer_odds_row(new: dict, old: dict | None) -> bool:
+    if old is None:
+        return True
+    new_priority = _bookmaker_priority(new.get("bookmaker"))
+    old_priority = _bookmaker_priority(old.get("bookmaker"))
+    if new_priority != old_priority:
+        return new_priority > old_priority
+    new_odds = _valid_decimal_odds(new.get("odds")) or 0.0
+    old_odds = _valid_decimal_odds(old.get("odds")) or 0.0
+    if new_odds != old_odds:
+        return new_odds > old_odds
+    return str(new.get("captured_at") or "") > str(old.get("captured_at") or "")
+
+
+def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
+    month = day[:7]
+    path = LOCALDATA / f"{BZZOIRO_ODDS_SOURCE}_{month}.csv.gz"
+    if not path.exists():
+        return []
+    try:
+        with gzip.open(path, "rt", newline="") as fh:
+            return [r for r in csv.DictReader(fh) if r.get("date") == day]
+    except Exception:
+        return []
+
+
+# Persisted API snapshots are named-book boards, but never live requests from
+# the picker.  Each adapter gets the same capture-time containment: a row can
+# influence only a later build, never the card that triggered its capture.
+# The source aliases reflect the unified CSV writers (OddsPAPI writes
+# ``oddspapi`` rows into an ``oddspapi_odds_YYYY-MM`` file).
+THEODDSAPI_ODDS_MAX_AGE_H = 24.0
+ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
+# Lowest OddsPAPI row generation this selection will consume. Must track
+# scripts/capture_oddspapi.py:SCHEMA_VERSION; the pairing is asserted in
+# tests/test_oddspapi_schema_invalidation.py so the two cannot drift.
+# Generation 1 (and unmarked rows) came from the parser that read outcome
+# names from the wrong key and had no fixture identity, so every one of its
+# selections is untrustworthy — not merely the ones with blank teams.
+# Generation 3 additionally fails closed on outcome-identity ambiguity and
+# retains the provider outcome key; generation-2 rows were written without
+# that check and cannot be re-audited from the CSV, so they are superseded.
+# Generation 3 can contain bookings incorrectly normalized as goals. Do not
+# rehabilitate old rows or merely trust their normalized market label.
+# Generation 4 is the goals-only catalog parser; old archives stay untouched.
+ODDSPAPI_MIN_SCHEMA_VERSION = 4
+
+
+def _utc_price_stamp(value: object) -> datetime | None:
+    try:
+        text = str(value or "").strip().replace("Z", "+00:00")
+        if not text:
+            return None
+        stamp = datetime.fromisoformat(text)
+        if stamp.tzinfo is None:
+            return None
+        return stamp.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _cached_named_book_bundle(
+    day: str,
+    *,
+    provider: str,
+    file_prefix: str,
+    raw_source_names: tuple[str, ...],
+    not_after: datetime | None = None,
+    min_schema_version: int | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Read one persisted named-book board with a strict build-time cutoff.
+
+    This is shared by The Odds API and OddsPAPI intentionally: both are
+    provider captures, not a permission to treat a later cache row as an
+    earlier executable quote.  ``raw_rows`` counts provider rows observed;
+    ``usable_rows`` is the independently auditable subset that survived all
+    timing and bookmaker-identity checks.
+    """
+    cutoff = not_after or datetime.now(timezone.utc)
+    if cutoff.tzinfo is None:
+        cutoff = cutoff.replace(tzinfo=timezone.utc)
+    else:
+        cutoff = cutoff.astimezone(timezone.utc)
+    path = LOCALDATA / f"{file_prefix}_{str(day)[:7]}.csv.gz"
+    report = {
+        "status": "absent", "raw_rows": 0, "usable_rows": 0,
+        "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "identity_missing_rows": 0, "stale_schema_rows": 0,
+        "path": str(path),
+    }
+    rows: list[dict] = []
+    accepted_sources = {str(name).strip() for name in raw_source_names}
+    if path.exists():
+        try:
+            with gzip.open(path, "rt", newline="") as fh:
+                for raw in csv.DictReader(fh):
+                    capture_day = str(raw.get("date") or "")[:10]
+                    kickoff_day = (
+                        provider_kickoff_date(
+                            raw.get("kickoff"),
+                            declared_zone=_PROVIDER_DECLARED_ZONES.get(provider),
+                        )
+                        if provider in _KICKOFF_DATE_AUTHORITY_PROVIDERS
+                        else None
+                    )
+                    # When this provider supplies an absolute kickoff, it is
+                    # authoritative over the request/capture date. Invalid
+                    # kickoffs are allowed through only from this day's
+                    # capture so the bundle can reject them fail-closed.
+                    if (kickoff_day or capture_day) != str(day)[:10]:
+                        continue
+                    if str(raw.get("source") or "").strip() not in accepted_sources:
+                        continue
+                    report["raw_rows"] += 1
+                    # Rows persisted by a superseded parser generation are
+                    # bypassed on the generation marker, not on whatever
+                    # symptom that generation happened to show. The file is
+                    # kept intact as evidence; the rows are classified and
+                    # counted, never silently reused and never deleted.
+                    if min_schema_version is not None:
+                        try:
+                            row_schema = int(str(raw.get("schema_version") or 0) or 0)
+                        except (TypeError, ValueError):
+                            row_schema = 0
+                        if row_schema < int(min_schema_version):
+                            report["stale_schema_rows"] += 1
+                            continue
+                    stamp = _utc_price_stamp(raw.get("captured_at"))
+                    if stamp is None:
+                        report["invalid_timestamp_rows"] += 1
+                        continue
+                    if stamp > cutoff:
+                        report["after_build_rows"] += 1
+                        continue
+                    age_h = (cutoff - stamp).total_seconds() / 3600.0
+                    if age_h > THEODDSAPI_ODDS_MAX_AGE_H:
+                        report["stale_rows"] += 1
+                        continue
+                    # A registry declaration cannot manufacture the identity
+                    # of a bookmaker missing from a provider payload.
+                    if not str(raw.get("bookmaker") or "").strip():
+                        continue
+                    # Nor the identity of the fixture. A persisted row with no
+                    # teams cannot join any pick, so counting it as "usable"
+                    # overstated OddsPAPI's supply by 414 rows on 2026-10-03.
+                    if not str(raw.get("home") or "").strip() or not str(
+                            raw.get("away") or "").strip():
+                        report["identity_missing_rows"] += 1
+                        continue
+                    rows.append(psrc.annotate_row(raw, source=provider))
+        except (OSError, csv.Error, gzip.BadGzipFile):
+            report["status"] = "unavailable"
+    report["usable_rows"] = len(rows)
+    if report["status"] != "unavailable":
+        # Selection reads a persisted capture only.  Do not report a network
+        # fetch here merely because the cache contains usable rows.
+        report["status"] = "cache_only" if rows else ("empty" if path.exists() else "absent")
+    observed_raw_rows = int(report["raw_rows"])
+    bundle_stats: dict = {}
+    bundle = _odds_bundle_from_rows(rows, provider=provider, stats=bundle_stats)
+    # Rows rejected BEFORE the bundle still have to be counted, or a board
+    # that was thrown away wholesale reports an indistinguishable "none=0".
+    prebundle_misses = {
+        "fixture_identity_missing": int(report["identity_missing_rows"]),
+        "stale_schema": int(report["stale_schema_rows"]),
+    }
+    prebundle_misses = {k: v for k, v in prebundle_misses.items() if v}
+    if prebundle_misses:
+        bundle["prebundle_misses"] = prebundle_misses
+    report.update(bundle_stats)
+    report["raw_rows"] = observed_raw_rows
+    report["usable_rows"] = len(rows)
+    if stats is not None:
+        stats.update(report)
+    return bundle
+
+
+def theoddsapi_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Return the time-qualified persisted The Odds API named-book board."""
+    return _cached_named_book_bundle(
+        day,
+        provider=THEODDSAPI_ODDS_SOURCE,
+        file_prefix="theoddsapi_odds",
+        raw_source_names=(THEODDSAPI_ODDS_SOURCE,),
+        not_after=not_after,
+        stats=stats,
+    )
+
+
+def oddspapi_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Return the time-qualified persisted OddsPAPI named-book board.
+
+    Capture is opt-in and bounded because of the provider's quota.  Absence of
+    its monthly receipt is an honest empty bundle, never a synthetic fallback.
+    """
+    return _cached_named_book_bundle(
+        day,
+        provider=ODDSPAPI_ODDS_SOURCE,
+        file_prefix=ODDSPAPI_ODDS_SOURCE,
+        raw_source_names=("oddspapi", ODDSPAPI_ODDS_SOURCE),
+        not_after=not_after,
+        min_schema_version=ODDSPAPI_MIN_SCHEMA_VERSION,
+        stats=stats,
+    )
+
+
+def betexplorer_cached_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Read the bounded candidate-snapshot cache as a named-book bundle.
+
+    The cache is written by ``capture_betexplorer.py`` before the final build.
+    No network call is made here.  Its individual row timestamps receive the
+    same post-cutoff/stale containment as the two API CSV boards.
+    """
+    cutoff = not_after or datetime.now(timezone.utc)
+    cutoff = cutoff.replace(tzinfo=timezone.utc) if cutoff.tzinfo is None else cutoff.astimezone(timezone.utc)
+    path = LOCALDATA / f"betexplorer_odds_cache_{str(day)[:10]}.json"
+    report = {
+        "status": "absent", "raw_rows": 0, "usable_rows": 0,
+        "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "path": str(path),
+    }
+    rows: list[dict] = []
+    try:
+        payload = json.loads(path.read_text())
+        fixtures = payload.get("fixtures") if isinstance(payload, dict) else None
+        if not isinstance(fixtures, dict):
+            raise ValueError("invalid BetExplorer cache payload")
+        for entry in fixtures.values():
+            for raw in (entry.get("rows") or []) if isinstance(entry, dict) else []:
+                if not isinstance(raw, dict) or str(raw.get("date") or "")[:10] != str(day)[:10]:
+                    continue
+                report["raw_rows"] += 1
+                stamp = _utc_price_stamp(raw.get("captured_at"))
+                if stamp is None:
+                    report["invalid_timestamp_rows"] += 1
+                    continue
+                if stamp > cutoff:
+                    report["after_build_rows"] += 1
+                    continue
+                if (cutoff - stamp).total_seconds() / 3600.0 > THEODDSAPI_ODDS_MAX_AGE_H:
+                    report["stale_rows"] += 1
+                    continue
+                if not str(raw.get("bookmaker") or "").strip():
+                    continue
+                rows.append(psrc.annotate_row(raw, source=BETEXPLORER_ODDS_SOURCE))
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        report["status"] = "unavailable"
+    report["usable_rows"] = len(rows)
+    if report["status"] != "unavailable":
+        report["status"] = "cache_only" if rows else ("empty" if path.exists() else "absent")
+    observed_raw_rows = int(report["raw_rows"])
+    bundle_stats: dict = {}
+    bundle = _odds_bundle_from_rows(rows, provider=BETEXPLORER_ODDS_SOURCE, stats=bundle_stats)
+    report.update(bundle_stats)
+    report["raw_rows"] = observed_raw_rows
+    report["usable_rows"] = len(rows)
+    if stats is not None:
+        stats.update(report)
+    return bundle
+
+
+def _allow_live_betexplorer_rescue() -> bool:
+    """Emergency-only compatibility switch; final cards use snapshots by default."""
+    return os.environ.get("EDGE_FACTORY_ALLOW_LIVE_BETEXPLORER_RESCUE", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
+# Stale-price containment (2026-10-02): the scoutingstats odds board is only
+# as fresh as its cache file — nothing in the row itself says when the price
+# was captured, because the adapter FABRICATES captured_at = the fixture's
+# starting_at kickoff (_scoutingstats_rows_to_odds). That fabrication made
+# every downstream freshness check see "captured at kickoff" while the feed
+# itself had stopped refreshing on 2026-09-04 (10-01 archive: Malta-Gibraltar
+# @1.28 priced SCOUTINGSTATS_SOLE off a >=27-day-old file). The only honest
+# freshness witness on disk is the cache file's mtime, so pricing retires the
+# board past this horizon until the feed is refreshed. Self-healing: the next
+# generated file carries a current mtime and pricing resumes automatically.
+SCOUTINGSTATS_ODDS_MAX_AGE_H = 30.0
+
+
+def _scoutingstats_cache_age_hours(day: str) -> float | None:
+    """Age of the scoutingstats month cache in hours, or None when absent."""
+    path = LOCALDATA / f"scoutingstats_{day[:7]}.csv.gz"
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    return (datetime.now(timezone.utc).timestamp() - mtime) / 3600.0
+
+
+def _read_cached_scoutingstats(day: str) -> list[dict]:
+    month = day[:7]
+    path = LOCALDATA / f"scoutingstats_{month}.csv.gz"
+    if not path.exists():
+        return []
+    try:
+        with gzip.open(path, "rt", newline="") as fh:
+            return [
+                r for r in csv.DictReader(fh)
+                if r.get("date") == day and r.get("hs") in (None, "")
+            ]
+    except Exception:
+        return []
+
+
+def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
+    out: list[dict] = []
+    for row in rows:
+        base = {
+            "date": row.get("date"),
+            "kickoff": row.get("kickoff") or row.get("time"),
+            "league": row.get("league"),
+            "home": row.get("home"),
+            "away": row.get("away"),
+            "captured_at": row.get("kickoff") or row.get("time") or "",
+            "bookmaker": SCOUTINGSTATS_ODDS_SOURCE,
+        }
+        for market, mapping in (
+            ("1x2", {"home": "odd1", "draw": "oddx", "away": "odd2"}),
+            ("ou_1.5", {"over": "odd_o15", "under": "odd_u15"}),
+            ("ou_2.5", {"over": "odd_o25", "under": "odd_u25"}),
+            ("ou_3.5", {"over": "odd_o35", "under": "odd_u35"}),
+            ("ou_4.5", {"over": "odd_o45", "under": "odd_u45"}),
+            ("btts", {"yes": "odd_gg", "no": "odd_ng"}),
+        ):
+            for selection, col in mapping.items():
+                odds = _valid_decimal_odds(row.get(col))
+                if odds is None:
+                    continue
+                out.append({**base, "market": market, "selection": selection, "odds": odds})
+    return out
+
+
+def _fetch_live_bzzoiro_odds(day: str, stats: dict | None = None) -> list[dict]:
+    try:
+        mod = importlib.import_module("edgefactory.sources.bzzoiro_odds")
+        rows = list(mod.fetch_day(day) or [])
+        if stats is not None and hasattr(mod, "diagnostics"):
+            stats.update(mod.diagnostics())
+        return rows
+    except Exception as exc:
+        if stats is not None and hasattr(locals().get("mod"), "diagnostics"):
+            stats.update(mod.diagnostics())
+        if stats is not None:
+            stats.setdefault("status", "unavailable")
+            stats.setdefault("errors", [str(exc).replace("\\n", " ")[:180]])
+        print(f"bzzoiro_odds enrichment skipped for {day}: {exc}", file=sys.stderr)
+        return []
+
+
+def _refresh_bzzoiro_odds() -> bool:
+    return os.environ.get("BZZOIRO_ODDS_REFRESH", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _kickoff_attributed_odds_row(row: dict, provider: str) -> dict:
+    """Use an absolute provider kickoff as the row's authoritative date.
+
+    Capture/request dates are transport metadata, not evidence that an event
+    belongs on that date. Providers in this narrow allowlist expose absolute
+    ISO kickoffs; if one is absent or malformed, keep the row observable but
+    make its join date empty so matching fails closed as ``date_mismatch``.
+
+    A provider whose stamps are naive *by documented contract* (see
+    ``_PROVIDER_DECLARED_ZONES``) gets its declared zone applied here - the
+    zone comes from the provider's own payload documentation, not from the
+    capture machine's locale, so this is not the banned default-zone
+    behaviour. The shared default remains fail-closed.
+    """
+    attributed = dict(row)
+    source = str(provider or attributed.get("source") or "").strip().lower()
+    if source in _KICKOFF_DATE_AUTHORITY_PROVIDERS:
+        declared_zone = _PROVIDER_DECLARED_ZONES.get(source)
+        attributed["date"] = provider_kickoff_date(
+            attributed.get("kickoff"), declared_zone=declared_zone) or ""
+    return attributed
+
+
+# --- coherent 1x2 book gate (2026-10-12) ---------------------------------
+#
+# The 1x2 index keys on (date, home, away, market, selection) and resolves a
+# same-side tie by bookmaker priority and then by LARGEST odds. That is a
+# reasonable rule while a (fixture, bookmaker) pair can hold only one quote
+# per side. It is not a safe rule when the pair holds several: on
+# 2026-10-11/13 one captured snapshot carried, for a single fixture under the
+# single bookmaker "Pinnacle", a complete three-way book (18.79 / 14.45 /
+# 1.088) PLUS a 16.35 / 1.033 pair and a 1.7813 / 2.06 pair. Two of those
+# three groups were not the full-time 1x2 market at all, so the maximum
+# same-side number (2.06 for the away side) won the tie and was printed,
+# stored and banded as a named-book away price - a phantom ~69% above the
+# real quote (Viking vs Bayern; same build: Galatasaray/Arsenal).
+#
+# The gate below is source-agnostic because the identity question is: a
+# three-way book is self-validating (its three implied probabilities must sum
+# to a plausible margin), a same-side extra quote is not. So, per fixture and
+# per (provider, bookmaker, capture second):
+#
+#   * a complete trio whose overround sits in [1.00, 1.20] exists -> THAT
+#     trio is the book's 1x2 offer; every other quote in the group is refused
+#     (`excluded_not_in_three_way_book`) and may not be priced, boarded or
+#     credited as corroboration;
+#   * no trio, but some side carries several distinct quotes -> the group is
+#     ambiguous and NOTHING in it is priced (`withheld_ambiguous_one_x_two`);
+#     with no coherent book to appeal to, the honest answer is no answer;
+#   * no trio and one quote per side -> left exactly as it was (268 of 514
+#     archived priced picks, and every single-source board, are this case).
+#
+# The bounds are evidence, not taste: 1.00 is the arbitrage floor a single
+# book cannot cross (under it the three quotes are provably not one market),
+# and 1.20 is the widest true three-way margin observed in the archive. Both
+# refusals are counted, and the refused rows stay on the pick's price_board
+# with their marker, so the next occurrence is visible without the raw
+# payload that was missing this time.
+COHERENT_BOOK_OVERROUND_MIN = 1.00
+COHERENT_BOOK_OVERROUND_MAX = 1.20
+
+_EXCLUDED_NOT_IN_BOOK = "excluded_not_in_three_way_book"
+_WITHHELD_AMBIGUOUS = "withheld_ambiguous_one_x_two"
+_WITHHELD_MIXED_EVENTS = "withheld_mixed_events_one_x_two"
+
+
+def _norm_league(value) -> str:
+    return " ".join(str(value or "").lower().split())
+
+
+def _fail_closed_odds(value) -> float | None:
+    """Positive decimal odds, or None. As strict as the index, on purpose."""
+    return _valid_decimal_odds(value)
+
+
+def _tightest_coherent_one_x_two_trio(sides: dict[str, list[dict]]):
+    """Tightest in-range home/draw/away trio for one (fixture, book, second).
+
+    Mirrors the reconciliation the operator was shown for the Viking board:
+    enumerate the quotes, keep only combinations whose implied-probability
+    sum is a plausible book margin, and return the tightest. Returns
+    ``(overround, home_row, draw_row, away_row)`` or ``None``.
+    """
+    best = None
+    for home in sides.get("home", []):
+        for draw in sides.get("draw", []):
+            for away in sides.get("away", []):
+                try:
+                    overround = (1.0 / float(home["odds"]) + 1.0 / float(draw["odds"])
+                                 + 1.0 / float(away["odds"]))
+                except (KeyError, TypeError, ValueError, ZeroDivisionError):
+                    continue
+                if not (COHERENT_BOOK_OVERROUND_MIN <= overround <= COHERENT_BOOK_OVERROUND_MAX):
+                    continue
+                candidate = (round(overround, 6), home["odds"], draw["odds"], away["odds"],
+                             home, draw, away)
+                if best is None or candidate[:4] < best[:4]:
+                    best = candidate
+    return best
+
+
+def _gate_one_x_two_rows(rows: list[dict]) -> tuple[list[dict], list[dict], dict]:
+    """Apply the coherent-book rule to the canonical 1x2 rows of a bundle.
+
+    Returns ``(kept, refused, summary)``. Non-1x2 rows pass through
+    untouched: every other market this pipeline prices already carries its
+    identity in the key (``ou_2.5`` vs ``ou_3.5``), so a same-key collision
+    there is a different question.
+    """
+    groups: dict[tuple, list[dict]] = {}
+    kept: list[dict] = []
+    refused: list[dict] = []
+    summary: dict = {
+        "groups": 0, "excluded_rows": 0, "withheld_fixtures": 0,
+        # Readable fixture names, bounded: an operator reading "1 withheld"
+        # in the receipt has to be able to see WHICH fixture lost its price
+        # without opening the payload nobody retained.
+        "withheld_fixture_names": [], "reason_counts": {},
+    }
+    for row in rows:
+        if str(row.get("market") or "") not in ("1x2", "ht_1x2"):
+            kept.append(row)
+            continue
+        key = (
+            str(row.get("market") or ""),
+            str(row.get("date") or ""),
+            odds_team_key(row.get("home") or ""),
+            odds_team_key(row.get("away") or ""),
+            str(row.get("provider") or ""),
+            str(row.get("bookmaker") or ""),
+            str(row.get("captured_at") or ""),
+        )
+        groups.setdefault(key, []).append(row)
+
+    for key, group in groups.items():
+        summary["groups"] += 1
+        # 2026-10-15 red-team: the group key names the fixture, not the event.
+        # A Pinnacle "Bookings" event with the same team names shared a group
+        # with the real match, and the tightest-overround search then built a
+        # trio from both events. Rows that disagree on league or event id are
+        # two events; with no way to tell which is the match, nothing prices.
+        leagues = {_norm_league(row.get("league")) for row in group} - {""}
+        event_ids = {str(row.get("event_id")) for row in group
+                     if row.get("event_id") not in (None, "")}
+        if len(leagues) > 1 or len(event_ids) > 1:
+            summary["withheld_fixtures"] += 1
+            if len(summary["withheld_fixture_names"]) < 10:
+                summary["withheld_fixture_names"].append(
+                    f"{group[0].get('home') or '?'} vs {group[0].get('away') or '?'}")
+            for row in group:
+                refused.append({**row, "price_coherence": _WITHHELD_MIXED_EVENTS})
+            continue
+        sides: dict[str, list[dict]] = {}
+        for row in group:
+            if _fail_closed_odds(row.get("odds")) is None:
+                continue
+            sides.setdefault(str(row.get("selection") or ""), []).append(row)
+        trio = _tightest_coherent_one_x_two_trio(sides)
+        if trio is not None:
+            in_book = {id(row) for row in trio[4:7]}
+            for row in group:
+                if id(row) in in_book:
+                    kept.append(row)
+                else:
+                    refused.append({
+                        **row,
+                        "price_coherence": _EXCLUDED_NOT_IN_BOOK,
+                        "coherent_trio_overround": trio[0],
+                    })
+            continue
+        ambiguous = any(
+            len({row.get("odds") for row in side_rows}) > 1
+            for selection, side_rows in sides.items()
+            if selection in _ONE_X_TWO_SELECTIONS
+        )
+        if ambiguous:
+            summary["withheld_fixtures"] += 1
+            if len(summary["withheld_fixture_names"]) < 10:
+                summary["withheld_fixture_names"].append(
+                    f"{group[0].get('home') or '?'} vs {group[0].get('away') or '?'}")
+            for row in group:
+                refused.append({**row, "price_coherence": _WITHHELD_AMBIGUOUS})
+            continue
+        kept.extend(group)
+
+    summary["excluded_rows"] = len(refused)
+    reasons: Counter = Counter()
+    for row in refused:
+        reasons[str(row.get("price_coherence") or "")] += 1
+    summary["reason_counts"] = dict(reasons)
+    return kept, refused, summary
+
+
+def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | None = None) -> dict[str, dict]:
+    exact: dict[tuple[str, str, str, str, str], dict] = {}
+    time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
+    market_candidates: dict[tuple[str, str, str], list[dict]] = {}
+    valid_rows = 0
+    canonicalization_dropped = Counter()
+    attributed_rows = [_kickoff_attributed_odds_row(row, provider) for row in rows]
+    usable: list[dict] = []
+    for row in attributed_rows:
+        normalized_row, reason = canonicalize_row(row)
+        if normalized_row is None:
+            canonicalization_dropped[str(reason or "unmappable")] += 1
+            continue
+        row = normalized_row
+        odds = _valid_decimal_odds(row.get("odds"))
+        if odds is None:
+            continue
+        if _odds_row_key(row) is None or _time_match_key(row) is None:
+            continue
+        valid_rows += 1
+        normalized = dict(row)
+        normalized["odds"] = odds
+        normalized.setdefault("provider", provider)
+        usable.append(normalized)
+
+    # Identity hygiene before any index sees these rows: a same-side extra
+    # quote inside one book may not compete on "largest odds". See the gate's
+    # comment for the incident and the bounds.
+    kept_rows, coherence_refused, coherence_summary = _gate_one_x_two_rows(usable)
+
+    for normalized in kept_rows:
+        exact_key = _odds_row_key(normalized)
+        time_key = _time_match_key(normalized)
+        if _prefer_odds_row(normalized, exact.get(exact_key)):
+            exact[exact_key] = normalized
+        time_candidates.setdefault(time_key, []).append(normalized)
+
+    # The board/audit index keeps EVERY usable row, refused ones included and
+    # marked: `market_candidates` is evidence, never a pricing tier, and an
+    # operator has to be able to see the quote the gate threw away (this is
+    # the observability half of the 2026-10-11 incident, where the phantom
+    # survived in the archive with no marker at all). The refused rows are
+    # the gate's marked copies, so the marker travels with the evidence.
+    for normalized in (*kept_rows, *coherence_refused):
+        market_candidates.setdefault(
+            _market_pick_key(normalized, selection_key="selection"), []).append(normalized)
+
+    for key, candidates in time_candidates.items():
+        candidates.sort(
+            key=lambda row: (
+                _kickoff_minutes(_kickoff_value(row)) is None,
+                _kickoff_minutes(_kickoff_value(row)) or 10**9,
+                -_bookmaker_priority(row.get("bookmaker")),
+                -(row.get("odds") or 0.0),
+            )
+        )
+
+    for key, candidates in market_candidates.items():
+        candidates.sort(
+            key=lambda row: (
+                _kickoff_minutes(_kickoff_value(row)) is None,
+                _kickoff_minutes(_kickoff_value(row)) or 10**9,
+                -_bookmaker_priority(row.get("bookmaker")),
+                -(row.get("odds") or 0.0),
+            )
+        )
+
+    if stats is not None:
+        stats.update({
+            "raw_rows": len(rows),
+            "valid_rows": valid_rows,
+            "valid_keys": len(exact),
+            "time_match_keys": len(time_candidates),
+            "market_candidate_keys": len(market_candidates),
+            "canonicalization_dropped": sum(canonicalization_dropped.values()),
+            "canonicalization_drop_reasons": dict(canonicalization_dropped),
+            "coherence_excluded_rows": int(coherence_summary["excluded_rows"]),
+            "coherence_withheld_fixtures": int(coherence_summary["withheld_fixtures"]),
+            "coherence_reason_counts": dict(coherence_summary["reason_counts"]),
+        })
+
+    return {
+        "provider": provider,
+        "exact": exact,
+        "time_candidates": time_candidates,
+        "market_candidates": market_candidates,
+        "raw_rows_list": list(exact.values()),
+        # Coherent-book refusals travel WITH the bundle (not only in the stats
+        # dict a caller may not pass): the source-health passthrough reads
+        # them from here, so a withheld price cannot happen silently.
+        "coherence": coherence_summary,
+        # Preserve provider vocabulary for join-miss accounting.  The matching
+        # indexes above stay canonical; diagnostics must be able to distinguish
+        # an unmappable market/selection from an uncovered fixture instead of
+        # silently losing the row at this boundary.
+        "input_rows": [dict(row) for row in attributed_rows],
+    }
+
+
+def bzzoiro_odds_bundle(
+    day: str,
+    *,
+    live: bool = True,
+    stats: dict | None = None,
+) -> dict[str, dict]:
+    cached_rows = _read_cached_bzzoiro_odds(day)
+    live_rows: list[dict] = []
+    if live and not offline_rebuild() and (_refresh_bzzoiro_odds() or not cached_rows):
+        live_rows = _fetch_live_bzzoiro_odds(day, stats=stats)
+
+    bundle = _odds_bundle_from_rows(cached_rows + live_rows, provider=BZZOIRO_ODDS_SOURCE, stats=stats)
+    if stats is not None:
+        stats.update({
+            "cached_rows": len(cached_rows),
+            "live_rows": len(live_rows),
+            "refreshed": bool(live_rows),
+        })
+        if not live_rows and not stats.get("status"):
+            stats["status"] = "cache_only" if cached_rows else "not_run"
+        stats.setdefault("http_statuses", [])
+        stats.setdefault("errors", [])
+        stats.setdefault("quota_hint", "none")
+        stats.setdefault("best_results", 0)
+        stats.setdefault("comparison_rows", 0)
+        stats.setdefault("rows", 0)
+    return bundle
+
+
+def scoutingstats_odds_bundle(
+    day: str,
+    *,
+    cached_rows: list[dict] | None = None,
+    stats: dict | None = None,
+) -> dict[str, dict]:
+    if cached_rows is not None:
+        # Explicitly injected rows are an audit/backtest constructor; the
+        # caller owns their provenance, so the freshness gate does not apply.
+        source_rows = cached_rows
+    else:
+        age_h = _scoutingstats_cache_age_hours(day)
+        if stats is not None and age_h is not None:
+            stats["cache_age_h"] = round(age_h, 1)
+        if age_h is not None and age_h > SCOUTINGSTATS_ODDS_MAX_AGE_H:
+            # Retire a stale board from pricing entirely (see the constant's
+            # comment): an unmatched price is honest, a weeks-old sole-source
+            # price that LOOKS captured-at-kickoff is not.
+            source_rows: list[dict] = []
+            print(
+                f"scoutingstats odds: RETIRED — cache {age_h / 24:.1f}d old "
+                f"(>{SCOUTINGSTATS_ODDS_MAX_AGE_H:.0f}h); stale feed withheld "
+                f"from pricing until refreshed",
+                file=sys.stderr,
+            )
+            if stats is not None:
+                stats["retired_stale_cache"] = True
+        else:
+            source_rows = _read_cached_scoutingstats(day)
+    odds_rows = _scoutingstats_rows_to_odds(source_rows)
+    bundle = _odds_bundle_from_rows(odds_rows, provider=SCOUTINGSTATS_ODDS_SOURCE, stats=stats)
+    if stats is not None:
+        stats.update({"cached_rows": len(source_rows), "live_rows": 0, "refreshed": False})
+    return bundle
+
+
+def bzzoiro_odds_index(
+    day: str,
+    *,
+    live: bool = True,
+    stats: dict | None = None,
+) -> dict[tuple[str, str, str, str, str], dict]:
+    return bzzoiro_odds_bundle(day, live=live, stats=stats)["exact"]
+
+
+def _fixture_orientation_agrees(pick: dict, row: dict) -> bool:
+    """True when ``row`` lists the pick's fixture home-vs-away, not reversed.
+
+    Compares per-side similarity (home~home + away~away) against the swapped
+    pairing. A tie is ambiguous and fails closed: a side-keyed 1X2 price is
+    only meaningful when we know which team the source calls home.
+    """
+    ph, pa = str(pick.get("home") or ""), str(pick.get("away") or "")
+    rh, ra = str(row.get("home") or ""), str(row.get("away") or "")
+    straight = char_ngram_similarity(ph, rh) + char_ngram_similarity(pa, ra)
+    swapped = char_ngram_similarity(ph, ra) + char_ngram_similarity(pa, rh)
+    return straight > swapped
+
+
+def _row_matches_selection(pick: dict, row: dict | None) -> bool:
+    """Selection-identity invariant for any matched price row.
+
+    Every lookup key already includes the selection, so this never rejects a
+    correct join. It is a hard backstop: a row explicitly labelled for another
+    side/market (e.g. the HOME quote offered for an AWAY pick) must never
+    become the pick's price, whatever produced it.
+    """
+    if not row:
+        return False
+    row_sel = row.get("selection")
+    if row_sel not in (None, "") and str(row_sel) != str(pick.get("pick") or ""):
+        return False
+    row_market = row.get("market")
+    if row_market not in (None, "") and str(row_market) != str(pick.get("market") or ""):
+        return False
+    return True
+
+
+def find_side_keyed_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
+    """``find_odds_row`` plus the selection-identity backstop."""
+    row, method = find_odds_row(pick, odds_data)
+    if row is not None and not _row_matches_selection(pick, row):
+        return None, None
+    return row, method
+
+
+def _exact_join_marker_agrees(pick: dict, row: dict) -> bool:
+    """True when the pick and the matched row carry the SAME squad markers.
+
+    The width-9 key space drops a distinct-entity marker (``norm_team``
+    strips it, so ``Ajax`` / ``Ajax W`` / ``Ajax U21`` all key ``ajax`` —
+    measured marker-blind for 145 of 150 marked names in the live
+    populations). The exact tier therefore cannot tell a squad from its
+    senior side on the key alone, and would hand a women's/reserve/youth
+    price to the senior pick as the most trusted verdict, unquarantined.
+
+    The key space is a certified artefact — re-keying it would move every
+    historical join — so the marker is enforced here instead, on the raw
+    names, as a precondition of the exact tier: fail-closed, and the row
+    falls through to the time/fuzzy tiers, whose ``compact_key`` retains
+    the marker.
+
+    Comparison is per side, on the canonical marker frozenset, so spelling
+    variants of the same marker agree (``W`` / ``Women`` / ``(w)`` are all
+    ``{'w'}``); differing markers (``W`` vs ``U21``) or marked-vs-unmarked
+    do not.
+    """
+
+    return (
+        squad_markers(pick.get("home")) == squad_markers(row.get("home"))
+        and squad_markers(pick.get("away")) == squad_markers(row.get("away"))
+    )
+
+
+def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
+    if "exact" not in odds_data:
+        key = (
+            str(pick.get("date") or ""),
+            odds_team_key(pick.get("home") or ""),
+            odds_team_key(pick.get("away") or ""),
+            str(pick.get("market") or ""),
+            str(pick.get("pick") or ""),
+        )
+        row = odds_data.get(key)
+        if row is not None and not _exact_join_marker_agrees(pick, row):
+            # A caller handed us a bare index with no timed/fuzzy tiers to
+            # fall through to; refusing is the only fail-closed answer.
+            return None, None
+        return row, ("exact" if row else None)
+
+    exact_key = (
+        str(pick.get("date") or ""),
+        odds_team_key(pick.get("home") or ""),
+        odds_team_key(pick.get("away") or ""),
+        str(pick.get("market") or ""),
+        str(pick.get("pick") or ""),
+    )
+    row = odds_data["exact"].get(exact_key)
+    if row and _exact_join_marker_agrees(pick, row):
+        return row, "exact"
+
+    candidates = odds_data["time_candidates"].get(_time_pick_key(pick), [])
+    if candidates:
+        pick_kickoff = _kickoff_value(pick)
+        if pick_kickoff:
+            bounded = [
+                (_kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)), row)
+                for row in candidates
+            ]
+            bounded = [(delta, row) for delta, row in bounded if delta is not None and delta <= 90]
+            if bounded:
+                bounded.sort(key=lambda item: (item[0], -_bookmaker_priority(item[1].get("bookmaker")), -(item[1].get("odds") or 0.0)))
+                return bounded[0][1], "alias_time"
+        return candidates[0], "alias_unique"
+
+    # Systematic Fallback: if exact and time candidate joins fail, fallback to Event-String Fuzzy Jaccard Matcher
+    raw_list = odds_data.get("raw_rows_list", [])
+    if raw_list:
+        pick_str = f"{pick.get('home', '')} {pick.get('away', '')}"
+        pick_kickoff = _kickoff_value(pick)
+        
+        best_row = None
+        best_sim = 0.0
+        
+        for row in raw_list:
+            if str(row.get("market")) != str(pick.get("market")) or str(row.get("selection")) != str(pick.get("pick")):
+                continue
+            # The event-string similarity below is bigram-set based and so
+            # blind to word order: "A B" and a reversed "B A" listing score
+            # ~1.0. For a side-keyed selection that would hand the pick the
+            # OTHER team's price (the reversed row's "away" is our home
+            # team). Require the fixture orientation to agree side-by-side.
+            if not _fixture_orientation_agrees(pick, row):
+                continue
+
+            delta = _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row))
+            if delta is not None and delta <= 90:
+                res_str = f"{row.get('home', '')} {row.get('away', '')}"
+                sim = char_ngram_similarity(pick_str, res_str, n=2)
+                if sim >= 0.40 and sim > best_sim:
+                    best_sim = sim
+                    best_row = row
+                    
+        if best_row is not None:
+            return best_row, "alias_fuzzy"
+
+    return None, None
+
+
+def nearby_odds_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> list[dict]:
+    market_key = _market_pick_key(pick, selection_key="pick")
+    candidates = list(odds_data.get("market_candidates", {}).get(market_key, []))
+    pick_kickoff = _kickoff_value(pick)
+    candidates.sort(
+        key=lambda row: (
+            _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)) is None,
+            _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)) or 10**9,
+            odds_match_team_key(row.get("home") or "") != odds_match_team_key(pick.get("home") or ""),
+            odds_match_team_key(row.get("away") or "") != odds_match_team_key(pick.get("away") or ""),
+        )
+    )
+    out = []
+    for row in candidates[:limit]:
+        out.append({
+            "home": row.get("home"),
+            "away": row.get("away"),
+            "league": row.get("league"),
+            "kickoff": _kickoff_value(row),
+            "market": row.get("market"),
+            "selection": row.get("selection"),
+            "odds": row.get("odds"),
+            "bookmaker": row.get("bookmaker"),
+            "home_key": odds_match_team_key(row.get("home") or ""),
+            "away_key": odds_match_team_key(row.get("away") or ""),
+            "kickoff_delta_minutes": _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)),
+        })
+    return out
+
+
+def _price_board_entry(source: str, row: dict) -> dict:
+    """One build-time price the source showed for this fixture+selection.
+
+    Every entry is self-describing: ``odds_kind`` / ``provider_role`` /
+    ``named_bookmaker`` / ``price_independence_family`` travel with the number
+    so no later reader can mistake a model fair price or an average-book
+    aggregate for a named bookmaker's quote, and so corroboration can be
+    computed over independent FAMILIES rather than a count of API vendors.
+    """
+    source_spec = psrc.spec(source)
+    return {
+        "source": source,
+        "bookmaker": row.get("bookmaker"),
+        "odds": row.get("odds"),
+        "odds_kind": row.get("odds_kind") or source_spec.odds_kind,
+        "provider_role": row.get("provider_role") or source_spec.role,
+        "named_bookmaker": bool(
+            row.get("named_bookmaker", source_spec.named_bookmaker) and row.get("bookmaker")),
+        "price_independence_family": row.get("price_independence_family")
+            or psrc.independence_family(source, row.get("bookmaker")),
+        "captured_at": row.get("captured_at"),   # raw source stamp, no claims
+        "league": row.get("league"),
+        "kickoff": row.get("kickoff"),
+        "market": row.get("market"),
+        "selection": row.get("selection"),
+        "home": row.get("home"),
+        "away": row.get("away"),
+        # Identity, not just price. The 2026-10-11 phantom was unreconstructible
+        # afterwards because the archived board stored the canonical market
+        # ("1x2") and not the container/line it came from, so nobody could tell
+        # a full-time three-way quote from a two-way one that had been folded
+        # into it. These two fields cost nothing and close that hole.
+        "line": row.get("line"),
+        "raw_market": row.get("raw_market"),
+        "raw_selection": row.get("raw_selection"),
+        # Present only on quotes the coherent-book gate refused; names which
+        # rule refused them so the board itself carries the verdict.
+        "price_coherence": row.get("price_coherence"),
+    }
+
+
+_ONE_X_TWO_SELECTIONS = ("home", "draw", "away")
+
+
+def _board_selections(market: str, selection: str) -> tuple[str, ...]:
+    """Side keys captured on the board: the full 1X2 book, else the pick."""
+    if market == "1x2":
+        return _ONE_X_TWO_SELECTIONS
+    return (selection,)
+
+
+def _price_board_sort_key(entry: dict) -> tuple:
+    order = {sel: i for i, sel in enumerate(_ONE_X_TWO_SELECTIONS)}
+    return (
+        str(entry.get("source") or ""),
+        order.get(str(entry.get("selection") or ""), 9),
+        -(float(entry.get("odds") or 0.0)),
+    )
+
+
+def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
+    """Task F (2026-09-06): every price every source is showing for this
+    fixture and market at build time, with source name and value.
+
+    Previously the second-source lookup's result was discarded after
+    PRICE_EVIDENCE_SCOUTINGSTATS_SOLE was stamped; now the full board is
+    persisted on the pick so printed legs carry it into the archive. For a
+    1X2 fixture that means all three side-keyed quotes (home/draw/away), not
+    just the selected side. That makes a home/away positional mix-up visible
+    and prevents a stale home quote being mistaken for an away price. This
+    NEVER changes which price the engine uses — the board is written
+    alongside, after the chosen odds are set. Rows are narrowed to this
+    fixture by the engine's own normalized team keys; plain index bundles
+    (no market_candidates) contribute their exact row. Deduped by
+    (source, bookmaker, selection, odds, captured_at); sorted source,
+    selection, odds.
+    """
+    out: list[dict] = []
+    day = str(pick.get("date") or "")
+    market = str(pick.get("market") or "")
+    selection = str(pick.get("pick") or "")
+    hk = odds_match_team_key(str(pick.get("home") or ""))
+    ak = odds_match_team_key(str(pick.get("away") or ""))
+    seen: set[tuple] = set()
+    for bundle in bundles:
+        if not bundle:
+            continue
+        bundle_source = str(bundle.get("provider") or "")
+        rows: list[dict] = []
+        if "exact" in bundle:  # full bundle shape (build-time path)
+            market_candidates = bundle.get("market_candidates") or {}
+            # For 1X2 keep the complete three-way book together, each quote
+            # under its own side key. Looking only at the selected side is
+            # how a positional home/away regression can survive unnoticed in
+            # an otherwise plausible price.
+            cands = [
+                row
+                for board_selection in _board_selections(market, selection)
+                for row in market_candidates.get((day, market, board_selection), [])
+            ]
+            for row in cands:
+                if not row:
+                    continue
+                if (odds_match_team_key(str(row.get("home") or "")),
+                        odds_match_team_key(str(row.get("away") or ""))) != (hk, ak):
+                    continue
+                rows.append(row)
+        else:  # plain index shape (audit refresh path): exact side-keyed rows
+            for board_selection in _board_selections(market, selection):
+                key = (day, odds_team_key(str(pick.get("home") or "")),
+                       odds_team_key(str(pick.get("away") or "")), market,
+                       board_selection)
+                row = bundle.get(key)
+                if row:
+                    rows.append(row)
+        for row in rows:
+            source = str(row.get("provider") or bundle_source or "")
+            key = (source, str(row.get("bookmaker") or ""),
+                   str(row.get("selection") or ""), row.get("odds"),
+                   str(row.get("captured_at") or ""))
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(_price_board_entry(source, row))
+    out.sort(key=_price_board_sort_key)
+    return out
+
+
+def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
+                       chosen_method=None) -> None:
+    """Attach pick['price_board'] = _collect_price_board(...), marking the
+    engine's chosen price when the chosen row is among the collected rows."""
+    board = _collect_price_board(pick, *bundles)
+    if chosen_row is not None:
+        match = None
+        for e in board:
+            if (str(e.get("source") or "") == str(chosen_source or "")
+                    and float(e.get("odds") or 0.0)
+                        == float(chosen_row.get("odds") or 0.0)
+                    and str(e.get("bookmaker") or "")
+                        == str(chosen_row.get("bookmaker") or "")
+                    and str(e.get("selection") or "")
+                        == str(chosen_row.get("selection") or "")):
+                match = e
+                break
+        if match is None:
+            # chosen row not in an index (hand-built/monkeypatched bundle):
+            # still archive it — the engine-printed price must always appear
+            match = _price_board_entry(str(chosen_source or ""), chosen_row)
+            board.append(match)
+            board.sort(key=_price_board_sort_key)
+        match["chosen"] = True
+        match["match_method"] = chosen_method
+    pick["price_board"] = board
+
+
+# Option C price-quality gate (2026-10-02, operator sign-off): a money leg
+# needs price CORROBORATION — a second, distinct source quoting the same
+# market+selection within this relative deviation of the chosen price.
+# The 10-01 receipt: the whole real-money card rode single-source
+# BETEXPLORER_RESCUE quotes (4/4 legs) after the primary board delivered
+# nothing; a sole-source quote is audit evidence, not execution evidence.
+# 7% is deliberately wider than normal inter-book spread (~2-5%) while far
+# tighter than the stale-quote class (Dordrecht away 1.03 vs 2.00 ≈ 94%).
+PRICE_CORROBORATION_MAX_DEV = 0.07
+
+
+def _stamp_price_corroboration(picks: list[dict]) -> int:
+    """Stamp pick['price_corroborated'] / ['price_corroborators'] from the
+    archived board. Never changes which price the engine uses — the money
+    lane decides what to do with an uncorroborated pick (auto_tickets drops
+    it under execution_safe; paper/audit paths keep full visibility).
+    Returns the count of priced picks that earned corroboration."""
+    n = 0
+    for pick in picks:
+        odds = pick.get("odds")
+        chosen = str(pick.get("odds_source") or "")
+        sel = str(pick.get("pick") or "")
+        market = str(pick.get("market") or "")
+        corroborators: set[str] = set()
+        matched_entries: list[dict] = []
+        chosen_family = psrc.independence_family(chosen, pick.get("bookmaker"))
+        families: set[str] = set()
+        if isinstance(odds, (int, float)) and odds > 1.0:
+            for entry in pick.get("price_board") or []:
+                src = str(entry.get("source") or "")
+                if not src or src == chosen:
+                    continue
+                # A quote the coherent-book gate refused is not evidence for
+                # anything, least of all agreement: the 2026-10-11 phantom was
+                # a same-book extra quote, and a same-side extra quote from
+                # another source would be the same class. Corroboration stays
+                # reserved for quotes that survived identity checks.
+                if entry.get("price_coherence"):
+                    continue
+                if (str(entry.get("market") or "") != market
+                        or str(entry.get("selection") or "") != sel):
+                    continue
+                other = _valid_decimal_odds(entry.get("odds"))
+                if other is None:
+                    continue
+                if abs(other / float(odds) - 1.0) <= PRICE_CORROBORATION_MAX_DEV:
+                    family = str(entry.get("price_independence_family")
+                                 or psrc.independence_family(src, entry.get("bookmaker")))
+                    # Independence is by FAMILY, not by vendor: two APIs
+                    # republishing one model number are one piece of evidence.
+                    if family == chosen_family:
+                        continue
+                    corroborators.add(src)
+                    families.add(family)
+                    matched_entries.append(entry)
+        pick["price_corroborated"] = bool(corroborators)
+        pick["price_corroborators"] = sorted(corroborators)
+        pick["price_corroborating_families"] = sorted(families)
+        pick["price_named_book_corroborated"] = any(
+            entry.get("named_bookmaker") for entry in matched_entries)
+        pick["price_corroboration_sufficient"] = psrc.corroborators_are_sufficient(
+            chosen, matched_entries)
+        n += bool(corroborators)
+    return n
+
+
+def _sportytrader_corrob_flag_on() -> bool:
+    """The only switch that lets SportyTrader reach price corroboration."""
+    return os.environ.get("SPORTYTRADER_CORROBORATOR", "off").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
+def _append_sportytrader_shadow_board(picks: list[dict], day: str) -> tuple[int, dict]:
+    """Add named bookmaker quotes from the shadow board, never replace odds."""
+    path = LOCALDATA / f"sportytrader_odds_shadow_{day}.json"
+    rows, stats = read_shadow_rows(path)
+    added = 0
+    for pick in picks:
+        added += append_price_board_rows(
+            pick, rows, source="sportytrader_odds", team_key=odds_match_team_key,
+        )
+    return added, stats
+
+
+def _apply_sportytrader_corroborator(picks: list[dict], day: str) -> tuple[int, dict]:
+    """Flag gate: OFF returns the exact input object contents unchanged."""
+    if not _sportytrader_corrob_flag_on():
+        return 0, {}
+    return _append_sportytrader_shadow_board(picks, day)
+
+
+def _zero_shadow_stats(status: str = "unavailable") -> dict[str, dict]:
+    """Conservative default stats per shadow source (SHADOW-01 extends the set)."""
+    return {
+        "futbolpronosticos": {"status": status, "raw": 0, "scored": 0},
+        "sportytrader_odds": {"status": status, "st_raw": 0, "st_matched": 0},
+        "betminer": {"status": status, "bm_raw": 0, "bm_scored": 0, "bm_matched": 0},
+        "pinnapi_odds": {"status": status, "pa_raw": 0, "pa_matched": 0},
+        "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0, "bb_matched": 0},
+        "sharpapi_odds": {"status": status, "sa_raw": 0, "sa_matched": 0},
+        "boggio": {"status": status, "bg_raw": 0, "bg_scored": 0, "bg_matched": 0},
+    }
+
+
+def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
+    """Emit compact, secret-free diagnostics only for zero/skipped shadows."""
+    for name, entry in stats.items():
+        raw_key = {"betminer": "bm_raw", "pinnapi_odds": "pa_raw", "betbetter": "bb_raw", "sharpapi_odds": "sa_raw", "boggio": "bg_raw"}.get(name)
+        if raw_key is None:
+            continue
+        if int(entry.get(raw_key) or 0) != 0 and entry.get("status") not in {"not_run", "disabled", "unavailable", "auth", "quota", "cooldown"}:
+            continue
+        statuses = entry.get("http_statuses") or []
+        http = statuses[-1] if statuses else "-"
+        note = re.sub(r"\\s+", " ", str(entry.get("blocker") or entry.get("status") or "unknown"))[:80]
+        print(f"{name} {day}: status={entry.get('status', 'unknown')} http={http} note={note}", file=sys.stderr)
+
+
+def _day_card_fixtures(day: str, picks: list) -> list:
+    """The day's whole card, for comparison against a vendor's board.
+
+    Freshly generated picks are not the card. An intraday pass routinely
+    generates nothing - the day's real selections were frozen that
+    morning and sit in the day archive - and a lane handed an empty card
+    reports an overlap of zero that means "nobody asked". That reads
+    exactly like "nothing matched", which is the false negative this
+    whole diagnostic exists to prevent; it is what the 2026-10-06 run
+    did. The archive is written later in the run, so at this point it
+    still holds the earlier frozen rows, which is precisely what we want.
+
+    Observation only: this card is compared with a price board and never
+    prices, selects, stakes or settles anything. A bad read here can
+    only make a diagnostic less informative, never change a bet.
+    """
+    fresh = [p for p in picks
+             if isinstance(p, dict) and str(p.get("date") or "")[:10] == day]
+    seen = {(str(p.get("home") or "").strip(), str(p.get("away") or "").strip())
+            for p in fresh}
+    out = list(fresh)
+    try:
+        rows = json.loads((dated_artifact_path(ROOT / "localdata", f"picks_{day}.json")).read_text())
+    except Exception:
+        # Missing or unreadable archive must never take the run down: the
+        # fresh card is a worse answer, not a fatal one.
+        return out
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("date") or "")[:10] != day:
+            continue
+        key = (str(row.get("home") or "").strip(),
+               str(row.get("away") or "").strip())
+        if not key[0] or not key[1] or key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+    return out
+
+
+def _record_phase5_betminer_capture(
+    day: str,
+    *,
+    rows: list[dict] | None,
+    stats: dict,
+    started_at: str,
+    error_class: str | None = None,
+) -> None:
+    """Piggyback the existing BetMiner response into the isolated Phase 5 ledger."""
+    phase5_enabled = os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    phase5_context = os.environ.get(
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+    )
+    if not phase5_enabled:
+        return
+    if phase5_context != "official_daily_pipeline":
+        print(
+            "PHASE5_CAPTURE status=skipped_by_mode source=betminer "
+            f"reason=official_daily_pipeline_required context={phase5_context}",
+            file=sys.stderr,
+        )
+        return
+    try:
+        from edgefactory.phase5_shadow import (
+            append_capture_attempt,
+            append_shadow_rows,
+            local_capture_date,
+        )
+    except Exception:
+        return
+
+    capture_day = local_capture_date()
+    diag = {}
+    try:
+        from edgefactory.sources import betminer as bm
+        diag_fn = getattr(bm, "diagnostics", None)
+        if callable(diag_fn):
+            diag = diag_fn() or {}
+    except Exception:
+        diag = {}
+
+    counters = {
+        "rows_fetched": 0,
+        "rows_appended": 0,
+        "rows_bytes_appended": 0,
+        "rows_ignored_historical": 0,
+        "rows_rejected_identity": 0,
+        "rows_rejected_signal": 0,
+    }
+    status = str(stats.get("status") or "failed")
+    error_classes = [error_class] if error_class else []
+    try:
+        result = append_shadow_rows(
+            "betminer", rows or [], capture_day=capture_day,
+            requested_day=day,
+            capture_context=os.environ.get(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+            ),
+            root=LOCALDATA,
+        )
+        counters.update({
+            "rows_fetched": result["rows_seen"] - result["rows_ignored_historical"],
+            "rows_appended": result["rows_appended"],
+            "rows_bytes_appended": result["rows_bytes_appended"],
+            "rows_ignored_historical": result["rows_ignored_historical"],
+            "rows_rejected_identity": result["rows_rejected_identity"],
+            "rows_rejected_signal": result["rows_rejected_signal"],
+        })
+        if status in {"ok", "empty", "cache_only"}:
+            attempt_status = "ok"
+        elif status in {"not_run", "candidate_only", "disabled"}:
+            attempt_status = "not_run"
+        else:
+            attempt_status = "failed"
+    except Exception as exc:
+        attempt_status = "shadow_write_failed"
+        error_classes.append(type(exc).__name__)
+
+    try:
+        append_capture_attempt(
+            "betminer", capture_day=capture_day, status=attempt_status,
+            started_at=started_at,
+            completed_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            requested_days=[day],
+            forward_days=[day],
+            capture_context=os.environ.get(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+            ),
+            source_status=diag.get("status") or stats.get("status"),
+            quota_hint=diag.get("quota_hint"),
+            http_statuses=diag.get("http_statuses") or stats.get("http_statuses") or (),
+            error_classes=error_classes,
+            root=LOCALDATA,
+            **counters,
+        )
+    except Exception:
+        # Phase 5 sidecar failures are diagnostic only and never change the
+        # existing BetMiner shadow, picks, or capture return path.
+        return
+
+
+def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, dict]:
+    """Capture every verified shadow candidate without touching the production path.
+
+    The candidate pass intentionally makes no paid/provider capture. Its sole
+    job is to freeze a fixture shortlist for the final priced pass.
+
+    SHADOW-01 adds betminer (voice), pinnapi_odds (Pinnacle named-book price)
+    and betbetter (keyless CC BY 4.0 benchmark) to the existing
+    futbolpronosticos/sportytrager lane. All five are zero-credit shadow:
+    per-date ledgers + health rows only. None enters consensus weights or
+    the pick path; adapters are inert without their env keys and never raise.
+    """
+    if offline_rebuild():
+        return _zero_shadow_stats("cache_only")
+    if candidate_only_build():
+        return _zero_shadow_stats("candidate_only")
+    if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
+        stats = _zero_shadow_stats("disabled")
+        _shadow_failure_lines(day, stats)
+        return stats
+    stats = _zero_shadow_stats()
+    try:
+        from edgefactory.sources import futbolpronosticos as fp
+        fp_rows, fp_stats = fp.capture_day(day)
+        settled_path = LOCALDATA / "settled_results.json"
+        try:
+            settled_rows = json.loads(settled_path.read_text()).get("rows", [])
+        except (OSError, ValueError, TypeError):
+            settled_rows = []
+        fp_stats["settlement_coverage"] = fp.settlement_coverage(fp_rows, settled_rows)
+        fp.persist_shadow(day, fp_rows, fp_stats, localdata=LOCALDATA)
+        stats["futbolpronosticos"] = fp_stats
+    except Exception as exc:
+        stats["futbolpronosticos"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import sportytrader_odds as st
+        st_rows, st_stats = st.capture_day(day)
+        st.persist_shadow(day, st_rows, st_stats, localdata=LOCALDATA)
+        stats["sportytrader_odds"] = st_stats
+    except Exception as exc:
+        stats["sportytrader_odds"]["blocker"] = str(exc)[:180]
+    bm_phase5_enabled = os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    bm_phase5_started_at = (
+        datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if bm_phase5_enabled else ""
+    )
+    bm_rows: list[dict] = []
+    bm_stats: dict = {"status": "failed", "http_statuses": []}
+    try:
+        from edgefactory.sources import betminer as bm
+        bm_rows, bm_stats = bm.capture_day(day)
+        bm.persist_shadow(day, bm_rows, bm_stats, localdata=LOCALDATA)
+        stats["betminer"] = bm_stats
+        if bm_phase5_enabled:
+            _record_phase5_betminer_capture(
+                day, rows=bm_rows, stats=bm_stats, started_at=bm_phase5_started_at,
+            )
+    except Exception as exc:
+        stats["betminer"]["blocker"] = str(exc)[:180]
+        if bm_phase5_enabled:
+            _record_phase5_betminer_capture(
+                day, rows=bm_rows, stats=bm_stats, started_at=bm_phase5_started_at,
+                error_class=type(exc).__name__,
+            )
+    try:
+        from edgefactory.sources import pinnapi_odds as pinnapi
+        pa_rows, pa_stats = pinnapi.capture_day(day)
+        pinnapi.persist_shadow(day, pa_rows, pa_stats, localdata=LOCALDATA)
+        stats["pinnapi_odds"] = pa_stats
+        # Read-only: how much of today's card the Pinnacle team totals cover.
+        stats["pinnapi_odds"]["card_team_totals"] = pinnapi.card_team_total_coverage(
+            day, card, localdata=LOCALDATA)
+    except Exception as exc:
+        stats["pinnapi_odds"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import betbetter as bb
+        bb_rows, bb_stats = bb.capture_day(day)
+        bb.persist_shadow(day, bb_rows, bb_stats, localdata=LOCALDATA)
+        stats["betbetter"] = bb_stats
+    except Exception as exc:
+        stats["betbetter"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import sharpapi_odds as sa
+        # Our own card, folded with THIS module's team key, so the overlap
+        # the adapter reports is the same notion of a fixture match that
+        # the price join downstream uses.
+        sa_rows, sa_stats = sa.capture_day(
+            day,
+            card=[(f.get("home"), f.get("away")) for f in (card or [])],
+            team_key=odds_match_team_key,
+        )
+        sa.persist_shadow(day, sa_rows, sa_stats, localdata=LOCALDATA)
+        stats["sharpapi_odds"] = sa_stats
+    except Exception as exc:
+        stats["sharpapi_odds"]["status"] = "unavailable"
+        stats["sharpapi_odds"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import boggio
+        bg_rows, bg_stats = boggio.capture_day(day)
+        boggio.persist_shadow(day, bg_rows, bg_stats, localdata=LOCALDATA)
+        stats["boggio"] = bg_stats
+    except Exception as exc:
+        stats["boggio"]["status"] = "unavailable"
+        stats["boggio"]["blocker"] = str(exc)[:180]
+    _shadow_failure_lines(day, stats)
+    return stats
+
+
+def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
+    """Build price bundles from every approved non-primary donor's ledger.
+
+    Boggio (average-book aggregate) and Bet Better (model fair price) were
+    promoted to price donors by the operator; SharpAPI and BetMiner
+    contribute whatever their repaired adapters captured. Every bundle is
+    built from the SAME ``_odds_bundle_from_rows`` machinery as the primary
+    board, so a donor price is matched by the same fixture/market/selection
+    keys and cannot slip in through a looser join.
+
+    A donor with no ledger simply contributes nothing - a missing donor is
+    never an error and never a synthetic row.
+    """
+    root = LOCALDATA if localdata is None else localdata
+    bundles: list[dict] = []
+    for source in ("boggio", "betbetter", "sharpapi_odds", "betminer", "pinnapi_odds"):
+        source_spec = psrc.spec(source)
+        if not source_spec.enabled():
+            continue
+        rows, _stats = read_shadow_rows(root / f"{source}_shadow_{day}.json")
+        if not rows:
+            continue
+        if source == "boggio":
+            # A cached Boggio ledger can predate a stamp-contract repair and
+            # pin pre-repair derived fields (empty join date, withheld
+            # eligibility) on rows whose raw stamps are parseable today.
+            # Re-derive from the raw fields so the bundle sees exactly what a
+            # fresh capture would produce; raw evidence is never rewritten.
+            from edgefactory.sources import boggio as _boggio
+            rows = [_boggio.reattribute_shadow_row(r) for r in rows if isinstance(r, dict)]
+        annotated = []
+        for row in rows:
+            if row.get("price_push_eligible") is False and not source_spec.can_execute():
+                # Keep it for the board, but it can never be chosen below.
+                pass
+            annotated.append(psrc.annotate_row(dict(row), source=source))
+        bundle = _odds_bundle_from_rows(annotated, provider=source)
+        # Keep an all-unmappable bundle for miss diagnostics. It contributes no
+        # candidates to pricing, but dropping it here would turn a parser
+        # failure into the indistinguishable claim that the donor had no rows.
+        bundles.append(bundle)
+    return bundles
+
+
+def _record_bundle_coherence(shadow_stats: dict, bundles) -> None:
+    """Copy each bundle's coherent-book refusal counts onto its source row.
+
+    The gate runs at bundle-build time; the health row is assembled much
+    later, so without this passthrough a refused or withheld 1x2 quote would
+    exist only inside one day's pick archive. Counts only (no row payload):
+    this ends up in a committed receipt.
+    """
+    for bundle in bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        coherence = bundle.get("coherence")
+        if not source or not coherence or source not in shadow_stats:
+            continue
+        entry = shadow_stats[source]
+        entry["coherence_excluded_rows"] = int(coherence.get("excluded_rows") or 0)
+        entry["coherence_withheld_fixtures"] = int(coherence.get("withheld_fixtures") or 0)
+        entry["coherence_reason_counts"] = dict(coherence.get("reason_counts") or {})
+
+
+def coherence_observation_lines(bundles) -> list[str]:
+    """One run-log line per source whose 1x2 index refused or withheld rows.
+
+    The counters also land in the source-health row, but a run has to be
+    readable without opening a receipt: "N quotes refused, M fixtures
+    withheld" next to the source name is the difference between an
+    explainable slate and a mysteriously smaller one.
+    """
+    lines: list[str] = []
+    for bundle in bundles or []:
+        source = str((bundle or {}).get("provider") or "").strip()
+        summary = (bundle or {}).get("coherence") or {}
+        excluded = int(summary.get("excluded_rows") or 0)
+        withheld = int(summary.get("withheld_fixtures") or 0)
+        if not source or not (excluded or withheld):
+            continue
+        reasons = ", ".join(
+            f"{key}={count}" for key, count in sorted((summary.get("reason_counts") or {}).items()))
+        withheld_names = summary.get("withheld_fixture_names") or []
+        named = f": {', '.join(withheld_names[:3])}" if withheld_names else ""
+        lines.append(
+            f"coherent-book gate {source}: {excluded} 1x2 quote(s) refused, "
+            f"{withheld} fixture(s) price-withheld ({reasons or 'no reasons'}){named}")
+    return lines
+
+
+def donor_match_counts(picks: list[dict], donor_bundles: list[dict]) -> dict[str, int]:
+    """Count donor rows that actually join the day's pick slate.
+
+    ``raw`` and ``scored`` are capture/parser counters.  This separate count
+    is deliberately computed after the shared canonicalization boundary, so a
+    large shadow ledger cannot masquerade as usable price supply when its
+    fixture/market/selection vocabulary does not join.
+    """
+    counts: Counter = Counter()
+    for bundle in donor_bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        if not source:
+            continue
+        for pick in picks:
+            row, _method = find_side_keyed_odds_row(pick, bundle)
+            if row is not None:
+                counts[source] += 1
+    return dict(counts)
+
+
+def donor_join_diagnostics(
+    picks: list[dict],
+    donor_bundles: list[dict],
+) -> dict[str, dict]:
+    """Bucket every unmatched provider row by its first honest failure.
+
+    Matching itself still goes through the production one-row bundle and
+    :func:`find_side_keyed_odds_row`; diagnostics do not invent a looser join.
+    The fixture census is consulted only *after* the real matcher says no, to
+    distinguish an uncovered fixture from a covered fixture with no pick for
+    that market/selection.
+    """
+    report: dict[str, dict] = {}
+    pick_days = {str(pick.get("date") or "")[:10] for pick in picks}
+    for bundle in donor_bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        if not source:
+            continue
+        misses: Counter = Counter()
+        vocabulary: Counter = Counter()
+        matched_rows = 0
+        # Misses the board already recorded before this bundle was built
+        # (e.g. persisted rows with no fixture identity).
+        prebundle = Counter({
+            str(reason): int(count or 0)
+            for reason, count in dict(bundle.get("prebundle_misses") or {}).items()
+        })
+        misses.update(prebundle)
+        input_rows = list(bundle.get("input_rows") or bundle.get("raw_rows_list") or [])
+        for raw_row in input_rows:
+            normalized, failure = canonicalize_row(raw_row)
+            if normalized is None:
+                # Four buckets, not two: an *unsupported* market/selection is
+                # recognised provider vocabulary we deliberately do not price;
+                # an *unmapped* one has never been seen. Both are counted; the
+                # vocabulary census records the raw token either way so the
+                # next run prints the provider's actual market strings without
+                # a live call.
+                misses[miss_bucket(failure)] += 1
+                vocabulary[miss_vocabulary_token(failure)] += 1
+                continue
+            if not str(normalized.get("home") or "").strip() or not str(
+                    normalized.get("away") or "").strip():
+                # A priced row with no teams can never join anything. It is
+                # not a fixture-coverage miss and must not be reported as
+                # one: it is a parser/identity defect in the capture.
+                misses["fixture_identity_missing"] += 1
+                continue
+            if normalized.get("timestamp_suspect") is True:
+                misses["timestamp_rejected"] += 1
+                continue
+            row_day = str(normalized.get("date") or "")[:10]
+            if not row_day:
+                # No usable kickoff date at all. This IS a defect: the join
+                # date failed closed because the provider stamp was missing
+                # or unparseable.
+                misses["date_mismatch"] += 1
+                continue
+            if row_day not in pick_days:
+                # A well-formed date outside the slate window. An upcoming
+                # multi-day board (Bet Better publishes one) legitimately
+                # lands here; calling it a "mismatch" implied a bug that is
+                # not there.
+                misses["out_of_window"] += 1
+                continue
+            if _valid_decimal_odds(normalized.get("odds")) is None:
+                # Not one of the six join-key failures: preserve it explicitly
+                # rather than misreporting a malformed/non-price row as a
+                # fixture miss.
+                misses["invalid_price"] += 1
+                continue
+
+            one_row_bundle = _odds_bundle_from_rows([normalized], provider=source)
+            same_day_picks = [
+                pick for pick in picks
+                if str(pick.get("date") or "")[:10] == row_day
+            ]
+            if any(find_side_keyed_odds_row(pick, one_row_bundle)[0] is not None
+                   for pick in same_day_picks):
+                matched_rows += 1
+                continue
+
+            row_exact = (
+                odds_team_key(normalized.get("home") or ""),
+                odds_team_key(normalized.get("away") or ""),
+            )
+            row_alias = (
+                odds_match_team_key(normalized.get("home") or ""),
+                odds_match_team_key(normalized.get("away") or ""),
+            )
+            fixture_exists = any(
+                ((odds_team_key(pick.get("home") or ""),
+                  odds_team_key(pick.get("away") or "")) == row_exact)
+                or ((odds_match_team_key(pick.get("home") or ""),
+                     odds_match_team_key(pick.get("away") or "")) == row_alias)
+                for pick in same_day_picks
+            )
+            misses["no_pick_for_fixture" if fixture_exists else "fixture_key_miss"] += 1
+        report[source] = {
+            "raw_rows": len(input_rows) + sum(prebundle.values()),
+            "matched_rows": matched_rows,
+            "miss_counts": dict(sorted(misses.items())),
+            # Counts of provider market/selection tokens only. No payloads,
+            # no identifiers, nothing credential-bearing.
+            "unmapped_vocabulary": dict(
+                sorted(vocabulary.items(), key=lambda item: (-item[1], item[0]))
+            ),
+        }
+    return report
+
+
+def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 6) -> list[str]:
+    """Compact, stable top-count lines suitable for Actions logs."""
+    lines: list[str] = []
+    for source in sorted(report):
+        row = report[source]
+        counts = Counter(row.get("miss_counts") or {})
+        top = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+        rendered = ",".join(f"{reason}={count}" for reason, count in top) or "none=0"
+        lines.append(
+            f"donor join misses {source}: {rendered} "
+            f"(matched_rows={int(row.get('matched_rows') or 0)} "
+            f"raw_rows={int(row.get('raw_rows') or 0)})"
+        )
+    return lines
+
+
+def donor_vocabulary_lines(report: dict[str, dict], *, limit: int = 12) -> list[str]:
+    """Print the provider tokens behind every canonicalisation miss.
+
+    This is how the next run enumerates a donor's real market/selection
+    vocabulary without a live discovery call: the raw token is already in
+    the captured ledger, so the miss itself can report it.
+    """
+    lines: list[str] = []
+    for source in sorted(report):
+        vocabulary = Counter(report[source].get("unmapped_vocabulary") or {})
+        if not vocabulary:
+            continue
+        top = sorted(vocabulary.items(), key=lambda item: (-item[1], item[0]))[:limit]
+        rendered = " ".join(f"{token}={count}" for token, count in top)
+        lines.append(
+            f"donor unmapped vocabulary {source}: {rendered} "
+            f"(distinct={len(vocabulary)})"
+        )
+    return lines
+
+
+PRICE_COVERAGE_SOURCES = ("betexplorer", "oddspapi", "theoddsapi")
+_PRICE_SUPPORTED_MARKETS = {"1x2", "ht_1x2", "ou_1.5", "ou_2.5", "ou_3.5", "ou_4.5", "btts", "ht_ou_1.5", "ht_ou_2.5"}
+
+
+def _coverage_fixture_key(obj: dict, fallback_day: str | None = None) -> tuple[str, str, str] | None:
+    day = str(obj.get("date") or fallback_day or "")[:10]
+    home = odds_match_team_key(obj.get("home") or "")
+    away = odds_match_team_key(obj.get("away") or "")
+    if not (day and home and away):
+        return None
+    return (day, home, away)
+
+
+def _read_json_obj(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text())
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _coverage_receipts(day: str) -> dict[str, dict]:
+    day10 = str(day)[:10]
+    paths = {
+        "betexplorer": LOCALDATA / f"betexplorer_capture_{day10}.json",
+        "oddspapi": dated_artifact_path(LOCALDATA, f"oddspapi_capture_{day10}.json"),
+        "theoddsapi": dated_artifact_path(LOCALDATA, f"theoddsapi_capture_{day10}.json"),
+    }
+    return {name: _read_json_obj(path) for name, path in paths.items()}
+
+
+def _receipt_keys(receipt: dict, field: str, day: str) -> set[tuple[str, str, str]]:
+    out: set[tuple[str, str, str]] = set()
+    rows = receipt.get(field) if isinstance(receipt, dict) else None
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        key = _coverage_fixture_key(row, day)
+        if key:
+            out.add(key)
+    return out
+
+
+def _bundle_fixture_keys(bundle: dict, day: str) -> set[tuple[str, str, str]]:
+    out: set[tuple[str, str, str]] = set()
+    rows = bundle.get("raw_rows_list") or []
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        key = _coverage_fixture_key(row, day)
+        if key:
+            out.add(key)
+    return out
+
+
+def _named_book_price_matched(pick: dict) -> bool:
+    if pick.get("odds") is None:
+        return False
+    if str(pick.get("price_evidence") or "") in (
+            PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY, PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT):
+        return False
+    return bool(psrc.spec(pick.get("odds_source")).named_bookmaker)
+
+
+def _source_count(receipt: dict, count_key: str, list_key: str, day: str) -> int:
+    try:
+        return int(receipt.get(count_key) or 0)
+    except (AttributeError, TypeError, ValueError):
+        return len(_receipt_keys(receipt, list_key, day))
+
+
+def _print_price_coverage(
+    day: str,
+    picks: list[dict],
+    *,
+    scored: int,
+    betexplorer_bundle: dict,
+    theodds_bundle: dict,
+    oddspapi_bundle: dict,
+) -> None:
+    """Emit the picked-fixture price coverage funnel.
+
+    Counts are derived from same-day capture receipts plus the exact normalized
+    price bundles consumed by this build.  No fuzzy fixture joins are used.
+    ``league_not_carried`` is printed as zero with a note because the current
+    repository has no all-source competition catalogue; structural coverage is
+    derived separately by the archive report.
+    """
+    day10 = str(day)[:10]
+    priceable = [
+        p for p in picks
+        if str(p.get("date") or "")[:10] == day10
+        and str(p.get("market") or "") in _PRICE_SUPPORTED_MARKETS
+    ]
+    pick_fixture_keys = {
+        key for p in priceable
+        if (key := _coverage_fixture_key(p, day10)) is not None
+    }
+    receipts = _coverage_receipts(day10)
+    attempted_by_source = {
+        name: _receipt_keys(receipts.get(name) or {}, "attempted_fixtures", day10)
+        for name in PRICE_COVERAGE_SOURCES
+    }
+    quoted_by_source = {
+        "betexplorer": _bundle_fixture_keys(betexplorer_bundle, day10),
+        "theoddsapi": _bundle_fixture_keys(theodds_bundle, day10),
+        "oddspapi": _bundle_fixture_keys(oddspapi_bundle, day10),
+    }
+    attempted_pick_fixtures = set().union(*attempted_by_source.values()) & pick_fixture_keys if attempted_by_source else set()
+    quoted_pick_fixtures = set().union(*quoted_by_source.values()) & pick_fixture_keys if quoted_by_source else set()
+    picks_matched = sum(1 for p in priceable if _named_book_price_matched(p))
+    picks_unmatched = len(priceable) - picks_matched
+
+    per_source = {
+        "betexplorer": (
+            _source_count(receipts.get("betexplorer") or {}, "attempted", "attempted_fixtures", day10),
+            _source_count(receipts.get("betexplorer") or {}, "candidate_fixtures", "candidate_fixtures", day10),
+        ),
+        "oddspapi": (
+            _source_count(receipts.get("oddspapi") or {}, "attempted", "attempted_fixtures", day10),
+            _source_count(receipts.get("oddspapi") or {}, "fixtures", "candidate_fixtures", day10),
+        ),
+        "theoddsapi": (
+            _source_count(receipts.get("theoddsapi") or {}, "attempted", "attempted_fixtures", day10),
+            _source_count(receipts.get("theoddsapi") or {}, "candidate_fixtures", "candidate_fixtures", day10),
+        ),
+    }
+
+    never_attempted = attempted_no_quote = quote_not_joined = 0
+    for pick in priceable:
+        if _named_book_price_matched(pick):
+            continue
+        key = _coverage_fixture_key(pick, day10)
+        if key is None or key not in attempted_pick_fixtures:
+            never_attempted += 1
+        elif key not in quoted_pick_fixtures:
+            attempted_no_quote += 1
+        else:
+            quote_not_joined += 1
+    league_not_carried = 0
+
+    print(
+        f"coverage: scored={int(scored)} picks={len(priceable)} "
+        f"priceable_candidates={len(pick_fixture_keys)} "
+        f"attempted={len(attempted_pick_fixtures)} "
+        f"fixtures_quoted={len(quoted_pick_fixtures)} "
+        f"picks_matched={picks_matched} picks_unmatched={picks_unmatched} "
+        f"per-source: betexplorer={per_source['betexplorer'][0]}/{per_source['betexplorer'][1]} "
+        f"oddspapi={per_source['oddspapi'][0]}/{per_source['oddspapi'][1]} "
+        f"theoddsapi={per_source['theoddsapi'][0]}/{per_source['theoddsapi'][1]}",
+        file=sys.stderr,
+    )
+    print(
+        f"coverage unmatched_causes: never_attempted={never_attempted} "
+        f"attempted_no_quote={attempted_no_quote} "
+        f"quote_not_joined={quote_not_joined} "
+        f"league_not_carried={league_not_carried} "
+        "league_not_carried_note=not_derived_all_source_competition_catalog_absent",
+        file=sys.stderr,
+    )
+
+
+# Red-team thresholds (2026-10-15 incident). A quote older than this, or with
+# no capture stamp, is never a price. 24h is one full card cycle: the 09:00
+# SAST card reads quotes captured the previous evening at the latest. The
+# incident quotes were 37h old. Tune here, not per source.
+MAX_PRICE_AGE_HOURS = 24.0
+# The widest disagreement tolerated between a chosen price and the median of
+# independent quotes for the same selection. The incident prices were 2.5x
+# and 3.0x their market. Legitimate book-to-book gaps on long prices are
+# typically well under 1.6x; a larger gap is treated as a mis-join until a
+# human confirms it.
+CONSENSUS_MAX_RATIO = 1.6
+
+
+def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
+    """Observe each bundle for THIS pick: healthy? exact fixture match?
+
+    A hand-built plain index carries no ``provider``; the positional defaults
+    preserve the historic contract (first bundle = the primary board, second =
+    the ScoutingStats audit board) so an injected bundle is still attributed
+    to a registered source instead of silently becoming unregistered.
+    """
+    candidates = []
+    for position, bundle in enumerate(bundles):
+        if not bundle:
+            continue
+        default = default_names[position] if position < len(default_names) else ""
+        name = str(bundle.get("provider") or default or "")
+        rows = len(bundle.get("exact") or {}) if "exact" in bundle else len(bundle)
+        row, method = find_side_keyed_odds_row(pick, bundle)
+        refused = None
+        if row is not None:
+            # 2026-10-15 red-team: a quote captured days before the card was
+            # priced was used as today's price (Pinnacle, captured 13 Oct,
+            # priced the 15 Oct card). A quote we cannot date is refused for
+            # the same reason: nothing proves it is current.
+            age = _row_age_hours(row, pick)
+            if age is None:
+                refused = "undated_quote"
+            elif age > MAX_PRICE_AGE_HOURS:
+                refused = "stale_quote"
+        healthy = psrc.status_is_healthy("ok" if rows else "empty", rows)
+        candidates.append(psrc.SourceCandidate(
+            name=name,
+            healthy=healthy,
+            exact_match=bool(row) and method == "exact" and refused is None,
+            rows=rows,
+            freshness_h=_row_age_hours(row, pick),
+            bundle=bundle,
+            extra={
+                "row": None if refused else row,
+                "method": None if refused else method,
+                "refused": refused,
+                "refused_row": row if refused else None,
+            },
+        ))
+    return candidates
+
+
+def _row_age_hours(row: dict | None, pick: dict | None = None) -> float | None:
+    """Age of a matched quote in hours; ``None`` when it cannot be known.
+
+    Measured from the START of the pick's card day (00:00 UTC), not from the
+    wall clock. A live card and a replay of a past card then judge a quote by
+    the same rule, and a fixture dated in the past is not refused just because
+    it is old. With no card date the wall clock is used. A quote stamped after
+    the anchor is age 0, never negative.
+    """
+    if not row:
+        return None
+    stamp = _parse_utc_stamp(row.get("captured_at"))
+    if stamp is None:
+        return None
+    anchor = _card_day_anchor(pick) or datetime.now(timezone.utc)
+    return max(0.0, (anchor - stamp).total_seconds() / 3600.0)
+
+
+def _card_day_anchor(pick: dict | None) -> datetime | None:
+    day = str((pick or {}).get("date") or "").strip()
+    try:
+        return datetime.fromisoformat(day[:10]).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _parse_utc_stamp(value):
+    try:
+        text = str(value or "").strip().replace("Z", "+00:00")
+        if not text:
+            return None
+        stamp = datetime.fromisoformat(text)
+        return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _select_price_detail(pick: dict, bundles) -> dict:
+    """Source selection plus the evidence needed to refuse a bad choice.
+
+    Returns ``{"row", "method", "provider", "refused", "others"}``:
+
+    * ``refused``: ``[(source, reason), ...]`` for quotes that matched the
+      fixture but were refused as stale or undated. Never priced.
+    * ``others``: the odds from the OTHER independent sources quoting the
+      same fixture and selection (non-fresh and refused quotes excluded).
+      Used only to test the chosen price for consensus.
+    """
+    candidates = _bundle_candidates(
+        pick, bundles, default_names=(BZZOIRO_ODDS_SOURCE, SCOUTINGSTATS_ODDS_SOURCE))
+    refused = [(c.name, c.extra["refused"]) for c in candidates if c.extra.get("refused")]
+    matched = [c for c in candidates if c.extra.get("row")]
+    empty = {"row": None, "method": None, "provider": None,
+             "refused": refused, "others": []}
+    if not matched:
+        return empty
+    ranked = psrc.rank_candidates(matched, execution_only=True)
+    if not ranked:
+        ranked = psrc.rank_candidates(matched)
+    if not ranked:
+        # Nothing registered and enabled matched. Fall back ONLY to
+        # unregistered bundles (hand-built indexes and injected audit
+        # bundles), never to a source the operator has deliberately
+        # disabled - a disabled donor must stay silent, not reappear as a
+        # last resort.
+        ranked = [c for c in matched if not psrc.known(c.name)]
+    if not ranked:
+        return empty
+    chosen = ranked[0]
+    chosen_family = psrc.independence_family(
+        chosen.name, chosen.extra["row"].get("bookmaker"))
+    others = []
+    for candidate in matched:
+        if candidate is chosen:
+            continue
+        other_row = candidate.extra["row"]
+        if psrc.independence_family(candidate.name, other_row.get("bookmaker")) == chosen_family:
+            # Two boards quoting one book are one opinion, not corroboration.
+            continue
+        other_odds = _valid_decimal_odds(other_row.get("odds"))
+        if other_odds is not None:
+            others.append(other_odds)
+    return {"row": chosen.extra["row"], "method": chosen.extra["method"],
+            "provider": chosen.name, "refused": refused, "others": others}
+
+
+def select_price_source(pick: dict, bundles) -> tuple[dict | None, str | None, str | None]:
+    """Pick the healthiest approved source quoting THIS fixture+selection.
+
+    Returns ``(row, method, source_name)``. Selection is health-aware, not
+    order-aware: Bzzoiro no longer wins merely because it was built first.
+    A healthy source with a valid exact fixture match beats an unavailable
+    source whatever its historic priority. Sources that are not execution
+    eligible (ScoutingStats, BetMiner) can still be returned - the caller
+    quarantines them - but they are ranked behind anything that can execute.
+    Stale and undated quotes are never returned (see ``_bundle_candidates``).
+    """
+    detail = _select_price_detail(pick, bundles)
+    return detail["row"], detail["method"], detail["provider"]
+
+
+def _source_conflict(chosen_odds: float, others: list[float]) -> dict | None:
+    """Return the disagreement when the chosen price is out of line, else None.
+
+    Red-team rule: a single source can be wrong in a way no internal check
+    sees (2026-10-15: a Pinnacle 1X2 of 4.00 against a 1.33 market). When
+    another independent source quotes the same selection, a chosen price more
+    than CONSENSUS_MAX_RATIO away from the median of those quotes is refused.
+    Ratio, not difference, so a long shot is judged on the same scale as a
+    favourite. Only fires when there is an independent quote to disagree with.
+    """
+    if not others:
+        return None
+    ordered = sorted(others)
+    mid = len(ordered) // 2
+    median = ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2
+    ratio = max(chosen_odds / median, median / chosen_odds)
+    if ratio <= CONSENSUS_MAX_RATIO:
+        return None
+    return {"median": round(median, 4), "independent_quotes": len(ordered),
+            "ratio": round(ratio, 3), "bound": CONSENSUS_MAX_RATIO}
+
+
+def enrich_with_live_odds(
+    picks: list[dict],
+    primary_odds: dict,
+    secondary_odds: dict | None = None,
+    donor_bundles: list[dict] | None = None,
+) -> int:
+    """Attach auditable live-price evidence without promoting weak joins.
+
+    Source selection is HEALTH-AWARE (2026-10-03). The old code hard-coded
+    Bzzoiro as the primary bundle and ScoutingStats as the only fallback;
+    Bzzoiro was "primary" because it was first in the argument list, not
+    because it was the best or healthiest board on the day. Now every
+    approved source - the primary board, the secondary board and the
+    operator-promoted donors - is ranked per pick by health, exact fixture
+    match, execution eligibility, named-book provenance, freshness and only
+    then configured priority.
+
+    What has NOT changed: a non-execution-eligible source (ScoutingStats
+    audit board) is still quarantined from push eligibility, an
+    ``alias_fuzzy`` join is still never allowed to become the operational
+    price, and a pick with no usable quote is still left unpriced.
+    """
+    bundles = [b for b in (primary_odds, secondary_odds, *(donor_bundles or [])) if b]
+    enriched = 0
+    for pick in picks:
+        # Re-derive on every run. A stale quarantine or stale suspect price next
+        # to fresh odds would be as misleading as a stale live price.
+        for field in (
+            "price_evidence",
+            "price_push_eligible",
+            # 2026-10-15 red-team: this was missing, so a quarantine reason
+            # from an earlier run could outlive the price it described.
+            "price_quarantine_reason",
+            "suspect_price",
+            "price_board",
+            "price_donor_role",
+            "price_odds_kind",
+            "price_disclosure",
+            "price_independence_family",
+        ):
+            pick.pop(field, None)
+
+        detail = _select_price_detail(pick, bundles)
+        row, match_method, provider = detail["row"], detail["method"], detail["provider"]
+        source_spec = psrc.spec(provider)
+
+        previous_odds = pick.get("odds")
+        previous_source = pick.get("odds_source") or (
+            "forebet_best" if previous_odds is not None else None
+        )
+        previous_bookmaker = pick.get("bookmaker")
+        previous_captured_at = pick.get("odds_captured_at")
+        previous_league = pick.get("odds_league")
+
+        if not row:
+            _stamp_price_board(pick, bundles)
+            if detail["refused"]:
+                # Something matched but was refused as stale/undated. Say so,
+                # so "no price" is never mistaken for "no quote existed".
+                pick["price_quarantine_reason"] = detail["refused"][0][1]
+            if previous_odds is not None:
+                fallback_source = str(previous_source or "forebet_best").strip()
+                fallback_spec = psrc.spec(fallback_source)
+                pick["odds_source"] = fallback_source
+                pick["odds_match_method"] = "fallback"
+                pick["price_evidence"] = PRICE_EVIDENCE_SOURCE_FALLBACK
+                pick["price_donor_role"] = fallback_spec.role
+                pick["price_odds_kind"] = fallback_spec.odds_kind
+                pick["price_disclosure"] = psrc.donor_disclosure(
+                    fallback_source, previous_bookmaker)
+                pick["price_push_eligible"] = bool(fallback_spec.can_execute())
+                if not pick["price_push_eligible"]:
+                    pick["price_quarantine_reason"] = "source_fallback_not_execution_eligible"
+            else:
+                pick.setdefault("odds_source", None)
+                pick["odds_match_method"] = "none"
+                pick["price_evidence"] = PRICE_EVIDENCE_UNMATCHED
+                pick["price_push_eligible"] = False
+            continue
+
+        method = match_method or "exact"
+        candidate_odds = _valid_decimal_odds(row.get("odds"))
+        if candidate_odds is None:
+            # Defensive: bundles reject invalid odds, but a caller can supply a
+            # hand-built index. Treat it exactly as no usable price.
+            pick["odds_match_method"] = "none"
+            pick["price_evidence"] = PRICE_EVIDENCE_UNMATCHED
+            pick["price_push_eligible"] = False
+            continue
+
+        conflict = None
+        if method != "alias_fuzzy":
+            conflict = _source_conflict(candidate_odds, detail["others"])
+        if method == "alias_fuzzy" or conflict is not None:
+            # Addendum 26: do not let a fuzzy event string join become “best
+            # odds”. Preserve any prior source price, otherwise leave odds n/a;
+            # archive the candidate separately so the audit can grade this
+            # failure mode rather than erase it.
+            # 2026-10-15: the same treatment for a price that contradicts the
+            # independent quotes. Withheld, never silently repriced.
+            _stamp_price_board(pick, bundles,
+                               chosen_row=row, chosen_source=provider,
+                               chosen_method=method)
+            pick["odds_match_method"] = method
+            if method == "alias_fuzzy":
+                pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
+                pick["price_quarantine_reason"] = "alias_fuzzy"
+            else:
+                pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT
+                pick["price_quarantine_reason"] = "source_conflict"
+            pick["price_push_eligible"] = False
+            pick["suspect_price"] = {
+                "odds": candidate_odds,
+                "source": provider or BZZOIRO_ODDS_SOURCE,
+                "bookmaker": row.get("bookmaker"),
+                "captured_at": row.get("captured_at"),
+                "league": row.get("league"),
+                "match_method": method,
+                "conflict": conflict,
+            }
+            if previous_odds is None:
+                pick["odds"] = None
+                pick["odds_source"] = None
+                pick["bookmaker"] = None
+                pick["odds_captured_at"] = None
+                pick["odds_league"] = None
+            else:
+                pick["odds"] = previous_odds
+                pick["odds_source"] = previous_source
+                pick["bookmaker"] = previous_bookmaker
+                pick["odds_captured_at"] = previous_captured_at
+                pick["odds_league"] = previous_league
+            enriched += 1
+            continue
+
+        pick["odds"] = candidate_odds
+        pick["odds_source"] = provider or BZZOIRO_ODDS_SOURCE
+        pick["odds_match_method"] = method
+        pick["bookmaker"] = row.get("bookmaker")
+        pick["odds_captured_at"] = row.get("captured_at")
+        pick["odds_league"] = row.get("league")
+        if previous_odds is not None and previous_source != pick["odds_source"]:
+            pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        # Incident-#6 normalisation: the matched odds row may carry a zoned
+        # kickoff the run-day sibling scan could not see (live-fetched
+        # bzzoiro rows). Idempotent — never overwrites the run-day verdict.
+        resolve_kickoff_utc(pick, odds_row=row, odds_provider=provider)
+
+        # --- truthful price labelling (2026-10-03) ------------------------
+        # The engine must never print a model fair price or an average-book
+        # aggregate as if a named bookmaker were offering it.
+        pick["price_donor_role"] = source_spec.role
+        pick["price_odds_kind"] = row.get("odds_kind") or source_spec.odds_kind
+        pick["price_independence_family"] = psrc.independence_family(
+            provider, row.get("bookmaker"))
+        pick["price_disclosure"] = psrc.donor_disclosure(provider, row.get("bookmaker"))
+
+        if pick["odds_source"] == SCOUTINGSTATS_ODDS_SOURCE:
+            # The secondary fallback matched, but no execution-eligible
+            # provider had a corroborating price for this fixture/selection.
+            pick["price_evidence"] = PRICE_EVIDENCE_SCOUTINGSTATS_SOLE
+            pick["price_push_eligible"] = False
+            pick["price_quarantine_reason"] = "scoutingstats_sole_source"
+        elif not source_spec.can_execute():
+            # Registered, but the operator has not made it stakeable.
+            pick["price_evidence"] = PRICE_EVIDENCE_DONOR_PRICE
+            pick["price_push_eligible"] = False
+            pick["price_quarantine_reason"] = f"{source_spec.name}_not_execution_eligible"
+        elif source_spec.named_bookmaker:
+            pick["price_evidence"] = (
+                PRICE_EVIDENCE_BZZOIRO_PRIMARY
+                if source_spec.name == BZZOIRO_ODDS_SOURCE
+                else PRICE_EVIDENCE_NAMED_BOOKMAKER
+            )
+            pick["price_push_eligible"] = True
+        else:
+            # An approved donor price: usable, but explicitly NOT a named-book
+            # execution quote, and the ticket has to say so.
+            pick["price_evidence"] = PRICE_EVIDENCE_DONOR_PRICE
+            pick["price_push_eligible"] = bool(row.get("price_push_eligible", True))
+        _stamp_price_board(pick, bundles,
+                           chosen_row=row, chosen_source=provider,
+                           chosen_method=method)
+        enriched += 1
+    return enriched
+
+
+def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
+    return enrich_with_live_odds(picks, odds_index, None)
+
+
+def probs_1x2(row):
+    p1, px, p2 = _f(row.get("p1")), _f(row.get("px")), _f(row.get("p2"))
+    if p1 is None or px is None or p2 is None:
+        return None
+    if p1 > 1.5 or px > 1.5 or p2 > 1.5:
+        p1, px, p2 = p1 / 100.0, px / 100.0, p2 / 100.0
+    return p1, px, p2
+
+
+def prob_single(row, col):
+    p = _f(row.get(col))
+    if p is None:
+        return None
+    if p > 1.5:
+        p /= 100.0
+    return p
+
+
+def top_pick(p1, px, p2):
+    best = max(p1, px, p2)
+    return ("home" if best == p1 else ("draw" if best == px else "away")), best
+
+
+def _fixture_kickoff_dates(*rows: dict) -> set[str]:
+    """Kickoff dates reported for one fixture across the sources that saw it.
+
+    Only dated kickoffs contribute; a bare "HH:MM" cannot name a match day and
+    is ignored (fail-closed). Forebet and bzzoiro are the only sources that
+    carry a dated kickoff, so this set normally has 0-2 members.
+    """
+    dates: set[str] = set()
+    for row in rows:
+        if not row:
+            continue
+        kd = kickoff_date(row.get("kickoff"))
+        if kd:
+            dates.add(kd)
+    return dates
+
+
+def fixture_schedule_unstable(*rows: dict) -> tuple[bool, set[str]]:
+    """True when two dated sources disagree on a fixture's kickoff DATE by more
+    than one day.
+
+    Schedule-move guard: the stale/phantom pick class (Viking 08-29 -> 08-30,
+    Hønefoss W 08-29 -> 08-31) fires because the pick is placed against a
+    schedule that is still moving. When the dated sources disagree on the match
+    day by more than a day, the fixture is moving and we suppress rather than
+    bet on it. A one-day spread is tolerated because a 23:00 vs 01:00
+    cross-source timezone artefact is not a reschedule.
+    """
+    dates = _fixture_kickoff_dates(*rows)
+    if len(dates) < 2:
+        return False, dates
+    parsed = sorted(datetime.strptime(d, "%Y-%m-%d").date() for d in dates)
+    return (parsed[-1] - parsed[0]).days > 1, dates
+
+
+def _audit_route(decision, route, status, reason=None, **evidence):
+    """Observability only: never let diagnostic failures affect a pick."""
+    if decision is not None:
+        try:
+            decision[route].update(status=status, reason=reason, **evidence)
+        except Exception as exc:
+            print(f"fixture decision audit failed: {exc}", file=sys.stderr)
+
+
+def _audit_finite(value):
+    value = _f(value)
+    return value if value is not None and math.isfinite(value) else None
+
+
+@contextmanager
+def _fixture_decision_audit(audit, key, data, picks, ml_model, ml_rules, fade_rules,
+                            audit_sources=None):
+    """Attach branch evidence to the existing upcoming/ML fixture entries.
+
+    All evidence is decision-time input, not outcomes. No source fetches,
+    candidate mutation, additional gating or warehouse/model refits.
+    """
+    audit_sources = audit_sources or SOURCES_1X2
+    decision = None
+    entry = None
+    start = len(picks)
+    if audit is not None:
+        try:
+            row0 = next((data[source][key] for source in audit_sources
+                         if key in data.get(source, {})), None) or {}
+            votes = []
+            for source in audit_sources:
+                row = data.get(source, {}).get(key)
+                probabilities = probs_1x2(row or {})
+                selection, maximum = top_pick(*probabilities) if probabilities else (None, None)
+                votes.append({"source": source, "present": bool(row),
+                              **({"home": row.get("home"), "away": row.get("away"),
+                                  "league": row.get("league"), "kickoff": row.get("kickoff") or row.get("time"),
+                                  "kickoff_utc": row.get("kickoff_utc")} if row else {}),
+                              "probabilities_available": probabilities is not None,
+                              "missing_probability_fields": [f for f in ("p1", "px", "p2")
+                                  if row and row.get(f) in (None, "")],
+                              "invalid_probability_fields": [f for f in ("p1", "px", "p2")
+                                  if row and row.get(f) not in (None, "") and _audit_finite(row.get(f)) is None],
+                              "probabilities": ({side: _audit_finite(value) for side, value in
+                                  zip(("home", "draw", "away"), probabilities)} if probabilities else None),
+                              "selection": selection, "top_probability": _audit_finite(maximum)})
+            decision = {
+                "version": 1, "scope": "1x2_candidate_generation", "source_fixture_key": list(key) if isinstance(key, tuple) else str(key),
+                "source_votes": votes,
+                "usable_probability_sources": sum(v["probabilities_available"] for v in votes),
+                "consensus": {"status": "not_evaluated", "reason": "not_reached"},
+                "ml": {"status": "not_scored", "reason": "model_unavailable" if not ml_model
+                       else "no_legacy_probability_input", "model_available": bool(ml_model),
+                       "certified_rule_count": len(ml_rules), "certified_rules": [r.get("rule") for r in ml_rules]},
+                "ml_fade": {"status": "not_scored", "reason": "model_unavailable" if not ml_model
+                       else "no_legacy_probability_input", "model_available": bool(ml_model),
+                       "certified_rule_count": len(fade_rules), "certified_rules": [r.get("rule") for r in fade_rules]},
+            }
+            entry = {"kind": "upcoming_fixture", "home": canonical_display_team(row0.get("home")),
+                     "away": canonical_display_team(row0.get("away")), "league": row0.get("league"),
+                     "kickoff": row0.get("kickoff") or row0.get("time"),
+                     "sport": row0.get("sport", "soccer"), "decision_diagnostics": decision}
+            audit.append(entry)
+        except Exception as exc:
+            decision = None
+            print(f"fixture decision audit failed: {exc}", file=sys.stderr)
+    try:
+        yield decision
+    finally:
+        if decision is not None:
+            try:
+                emitted = picks[start:]
+                decision["emitted_candidate_count"] = len(emitted)
+                decision["emitted_rules"] = [p.get("rule") for p in emitted]
+                decision["primary_reason"] = ("candidate_emitted" if emitted else
+                    decision["consensus"].get("reason") or "unknown_generation_failure")
+                # Input guards precede both independent rule-emission routes.
+                if decision["consensus"].get("reason") in {
+                        "insufficient_probability_sources", "schedule_unstable"}:
+                    for route in ("ml", "ml_fade"):
+                        _audit_route(decision, route, "not_scored", decision["consensus"]["reason"])
+            except Exception as exc:
+                print(f"fixture decision audit finalization failed: {exc}", file=sys.stderr)
+
+
+# --------------------------------------------------------------- consensus --
+def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
+             research_collector: FadeResearchCollector | None = None,
+             fixture_audit: list | None = None):
+    picks, vetoes = [], 0
+    keys = set()
+    for s in SOURCES_1X2:
+        keys |= set(data.get(s, {}))
+
+    # Diagnostic only: the 1X2 gate needs >=2 sources with probabilities per
+    # fixture. Log how many fixtures reach it and what each source contributes,
+    # so a silent source drop (e.g. vitibet) shows up in the run log.
+    _gate_per_source = {
+        s: sum(1 for k in data.get(s, {}) if probs_1x2(data[s][k] or {}) is not None)
+        for s in SOURCES_1X2
+    }
+    _gate_pass = sum(
+        1 for k in keys
+        if sum(1 for s in SOURCES_1X2
+               if probs_1x2((data.get(s, {}).get(k)) or {}) is not None) >= 2
+    )
+    print(
+        f"1x2 gate {day}: upcoming={len(keys)} with_2plus_sources={_gate_pass} "
+        f"per_source_probs={_gate_per_source}",
+        file=sys.stderr,
+    )
+
+    # AUDIT-ONLY (scored-candidate shadow): mirror the exact fixture-level
+    # universe behind the `coverage: scored=` log value. Its fallback
+    # definition n_up is len(keys) — the return below — so one
+    # `upcoming_fixture` entry is appended per key HERE, at the counter's
+    # source. The primary definition (ML-scored fixtures) is appended at the
+    # model-inference increment further down. Appending to a caller-owned
+    # list is the entire effect: picks, vetoes, counters and returns are
+    # untouched when fixture_audit is None (the default) and identical when
+    # it is not.
+    # --- Load ML rules and model ---
+    ml_rules, ml_model = load_ml_rules_and_model()
+    # ml-fade: certified inverse-selection rules derived from ml-meta. They
+    # need the same model inference but grade their OWN side at its OWN odds.
+    ml_fade_rules = load_ml_fade_rules()
+    rolling_hit_rate = None
+    ml_max_p = 0.0
+    ml_scored = 0
+    ml_fade_draw_skipped = 0
+    # Research capture is certification-INDEPENDENT: model inference (and the
+    # research ledger rows derived from it) must run even when no ml-meta /
+    # ml-fade rule is currently certified. Only certified EMISSION is gated on
+    # the rules lists — an empty rules list naturally emits nothing because
+    # the threshold loops below no-op without rules.
+    if ml_model:
+        rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
+
+    for k in keys:
+        with _fixture_decision_audit(fixture_audit, k, data, picks, ml_model,
+                                     ml_rules, ml_fade_rules) as _decision:
+            sels, ps, used = [], [], []
+            for s in SOURCES_1X2:
+                row = data.get(s, {}).get(k)
+                if not row:
+                    continue
+                pr = probs_1x2(row)
+                if pr is None:
+                    continue
+                sel, pmax = top_pick(*pr)
+                sels.append(sel)
+                ps.append(pmax)
+                used.append(s)
+            if len(used) < 2:
+                _audit_route(_decision, "consensus", "rejected", "insufficient_probability_sources",
+                             required_sources=2, observed_sources=len(used))
+                continue
+            
+            fb = data.get("forebet", {}).get(k) or {}
+            fb_quote = {} if _forebet_historical(day) else fb
+            zb = data.get("zulubet", {}).get(k) or {}
+            sa = data.get("statarea", {}).get(k) or {}
+            bz = data.get("bzzoiro", {}).get(k) or {}
+            vb = data.get("vitibet", {}).get(k) or {}
+            anchor = fb or zb or sa or next(data[s][k] for s in used if k in data.get(s, {}))
+        
+            # Fixture-stability guard: a schedule still moving between dated
+            # sources is not a bet we want (stale/phantom pick class). Fail-closed.
+            unstable, ko_dates = fixture_schedule_unstable(fb, bz)
+            if unstable:
+                _audit_route(_decision, "consensus", "rejected", "schedule_unstable",
+                             kickoff_dates=sorted(ko_dates), max_date_spread_days=1)
+                print(
+                    f"fixture-stability guard {day}: skip "
+                    f"{anchor.get('home')} vs {anchor.get('away')} "
+                    f"(kickoff dates differ across sources: {sorted(ko_dates)})",
+                    file=sys.stderr,
+                )
+                continue
+
+            # --- Evaluate ML Rules ---
+            # Model inference runs whenever a serving model exists (see the
+            # certification-independence note above); certified rule LOOPS inside
+            # decide emission. Research capture hooks in after ml_p is computed.
+            if ml_model and (fb or zb or sa):
+                fb_probs = probs_1x2(fb) if fb else None
+                zb_probs = probs_1x2(zb) if zb else None
+                sa_probs = probs_1x2(sa) if sa else None
+                if fb_probs or zb_probs or sa_probs:
+                    # Majority pick from whichever sources are present
+                    sels_maj = []
+                    for pr in [fb_probs, zb_probs, sa_probs]:
+                        if not pr:
+                            continue
+                        best = max(pr)
+                        sel_m = "home" if best == pr[0] else ("draw" if best == pr[1] else "away")
+                        sels_maj.append(sel_m)
+                    if not sels_maj:
+                        continue
+                    p1, p2, p3 = (sels_maj + [None, None, None])[:3]
+                    # Guard: None == None is True in Python, so never let the
+                    # padding values participate. Resolve the majority among the
+                    # NON-None picks only; fall back to the first pick.
+                    non_none = [x for x in (p1, p2, p3) if x is not None]
+                    majority_pick = non_none[0]
+                    if len(non_none) >= 3 and non_none[0] == non_none[2]:
+                        majority_pick = non_none[0]
+                    elif len(non_none) >= 2 and non_none[0] == non_none[1]:
+                        majority_pick = non_none[0]
+                    elif len(non_none) >= 3 and non_none[1] == non_none[2]:
+                        majority_pick = non_none[1]
+                
+                    idx_map = {"home": 0, "draw": 1, "away": 2}
+                    idx = idx_map[majority_pick]
+                    fb_p_feat = fb_probs[idx] if fb_probs else None
+                    zb_p_feat = zb_probs[idx] if zb_probs else None
+                    sa_p_feat = sa_probs[idx] if sa_probs else None
+                
+                    _feat_ps = [x for x in (fb_p_feat, zb_p_feat, sa_p_feat) if x is not None]
+                    avg_p_feat = sum(_feat_ps) / len(_feat_ps)
+                    min_p_feat = min(_feat_ps)
+                    variance = sum((x - avg_p_feat)**2 for x in _feat_ps) / len(_feat_ps)
+                    std_p_feat = math.sqrt(variance)
+                
+                    _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
+                    _col = _odds_map[majority_pick]
+                    pick_odds_feat = _f(fb_quote.get(_col)) or _f(zb.get(_col))
+                
+                    is_home = 1.0 if majority_pick == "home" else 0.0
+                    is_away = 1.0 if majority_pick == "away" else 0.0
+                
+                    comp_type = classify_competition(anchor.get("league"))
+                    cat_friendly = 1.0 if comp_type == "friendly" else 0.0
+                    cat_youth = 1.0 if comp_type == "youth" else 0.0
+                    cat_women = 1.0 if comp_type == "women" else 0.0
+                    cat_cup = 1.0 if comp_type == "cup" else 0.0
+                    cat_league = 1.0 if comp_type == "league" else 0.0
+                
+                    # orphaned-data harvest: mirror the trainer's features exactly.
+                    # HT win prob of the majority pick (forebet HT probs, 0-1)
+                    _fb_ht = (fb or {}).get
+                    _p1h, _pxh, _p2h = _fb_ht("p1_ht"), _fb_ht("px_ht"), _fb_ht("p2_ht")
+                    if None not in (_p1h, _pxh, _p2h):
+                        _ht_trip = (_p1h, _pxh, _p2h)
+                        _m = max(_ht_trip)
+                        _ht_scale = 100.0 if _m > 1.5 else 1.0
+                        ht_p_feat = float(_ht_trip[idx]) / _ht_scale
+                    else:
+                        ht_p_feat = None
+                    _ht_hs = _f(_fb_ht("ht_hs"))
+                    _ht_gs = _f(_fb_ht("ht_gs"))
+                    ht_diff_feat = _ht_hs - _ht_gs if None not in (_ht_hs, _ht_gs) else None
+                    ht_total_feat = _ht_hs + _ht_gs if None not in (_ht_hs, _ht_gs) else None
+                    kelly_feat = _f(_fb_ht("kelly"))
+                    _phs, _pgs = _f(_fb_ht("pred_hs")), _f(_fb_ht("pred_gs"))
+                    pred_total_feat = _phs + _pgs if None not in (_phs, _pgs) else None
+                    pred_diff_feat = _phs - _pgs if None not in (_phs, _pgs) else None
+                    goalsavg_feat = _f(_fb_ht("goalsavg"))
+                    _p_ng = _f(_fb_ht("p_ng"))
+                    _p_under = _f(_fb_ht("p_under"))
+                    _p_gg = _f(_fb_ht("p_gg"))
+                    p_ng_feat = _p_ng / 100.0 if _p_ng is not None and _p_ng > 1.5 else _p_ng
+                    p_under_feat = _p_under / 100.0 if _p_under is not None and _p_under > 1.5 else _p_under
+                    p_gg_feat = _p_gg / 100.0 if _p_gg is not None and _p_gg > 1.5 else _p_gg
+                
+                    # Phase A: statarea half-time prob of the majority pick (0-1)
+                    _sa_ht = (sa or {}).get
+                    _sp1h, _spxh, _sp2h = _sa_ht("p1_ht"), _sa_ht("px_ht"), _sa_ht("p2_ht")
+                    if None not in (_sp1h, _spxh, _sp2h):
+                        _sa_trip = (_sp1h, _spxh, _sp2h)
+                        _sa_scale = 100.0 if max(_sa_trip) > 1.5 else 1.0
+                        sa_ht_p_feat = float(_sa_trip[idx]) / _sa_scale
+                    else:
+                        sa_ht_p_feat = None
+                
+                    feat_dict = {
+                        "fb_p": fb_p_feat, "zb_p": zb_p_feat, "sa_p": sa_p_feat,
+                        "avg_p": avg_p_feat, "min_p": min_p_feat, "std_p": std_p_feat,
+                        "pick_odds": pick_odds_feat,
+                        "is_home": is_home, "is_away": is_away,
+                        "cat_friendly": cat_friendly, "cat_youth": cat_youth, "cat_women": cat_women, "cat_cup": cat_cup, "cat_league": cat_league,
+                        "rolling_hit_rate": rolling_hit_rate,
+                        "ht_p": ht_p_feat, "ht_diff": ht_diff_feat, "ht_total": ht_total_feat,
+                        "kelly": kelly_feat, "pred_total": pred_total_feat, "pred_diff": pred_diff_feat,
+                        "goalsavg": goalsavg_feat, "p_ng": p_ng_feat, "p_under": p_under_feat,
+                        "sa_ht_p": sa_ht_p_feat, "p_gg": p_gg_feat,
+                    }
+                
+                    coefs = ml_model["coef"]
+                    intercept = ml_model["intercept"]
+                    feature_cols = ml_model["feature_cols"]
+                
+                    # Phase 5 K contract: the declared-source columns, built from
+                    # the same per-source rows the election above used. A dark feed
+                    # is REPRESENTED (available=0.0, prob None) rather than dropped,
+                    # so a certified K model serves through this same loop and a
+                    # returning feed is a data event, not a code change.
+                    _k_sources = {}
+                    for _src in PHASE5_K_SOURCES:
+                        _spr = probs_1x2(data.get(_src, {}).get(k) or {})
+                        _k_sources[_src] = (_spr[idx], True) if _spr else (None, False)
+                    feat_dict.update(phase5_source_columns(_k_sources))
+
+                    try:
+                        x, _imputed_cols = phase5_feature_vector(feat_dict, ml_model)
+                    except ValueError as exc:
+                        x = None
+                        _audit_route(_decision, "ml", "rejected", "unavailable_model_features",
+                                     detail=str(exc))
+                    if x is not None:
+                        if _imputed_cols:
+                            _warn_imputed_features(ml_model, _imputed_cols, day)
+                        z = sum(w * val for w, val in zip(coefs, x)) + intercept
+                        ml_p = 1.0 / (1.0 + math.exp(-z))
+                        ml_scored += 1
+                        ml_max_p = max(ml_max_p, ml_p)
+
+                        # AUDIT-ONLY (scored-candidate shadow): one entry per
+                        # ML-scored fixture, appended at the EXACT increment that
+                        # feeds `coverage: scored=` (research_collector.record below
+                        # bumps .scored 1:1 with this point, and ml_scored_day is its
+                        # per-day delta). Observability only — no state changes.
+                        # The entry also carries the scorer's own betting intent
+                        # (1x2 majority side) and the side odds VISIBLE TO THE
+                        # SCORER at this instant: the same source odds columns the
+                        # pick_odds feature reads, scanned without the 1.50 feature
+                        # default (a feature fallback is not a price). Never fetched
+                        # for this purpose, never a named-book/stakeable price —
+                        # captured-price shadow grading only.
+                        if fixture_audit is not None:
+                            try:
+                                _aud_home = canonical_display_team(anchor.get("home"))
+                                _aud_away = canonical_display_team(anchor.get("away"))
+                                _shadow_odds = None
+                                _shadow_odds_src = None
+                                for _sp_name, _sp_row in (("forebet", fb_quote),
+                                                          ("zulubet", zb),
+                                                          ("statarea", sa),
+                                                          ("bzzoiro", bz),
+                                                          ("vitibet", vb)):
+                                    _sp_val = _f((_sp_row or {}).get(_col))
+                                    if _sp_val is not None and _sp_val > 1.0:
+                                        _shadow_odds = float(_sp_val)
+                                        _shadow_odds_src = _sp_name
+                                        break
+                                fixture_audit.append({
+                                    "kind": "ml_scored_fixture",
+                                    "decision_diagnostics": _decision,
+                                    "home": _aud_home,
+                                    "away": _aud_away,
+                                    "league": anchor.get("league"),
+                                    "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                                    "sport": anchor.get("sport", "soccer"),
+                                    "ml_probability": round(float(ml_p), 6),
+                                    "ml_majority_pick": majority_pick,
+                                    "sources_used": list(used),
+                                    "market": "1x2",
+                                    "selection": majority_pick,
+                                    "selection_team": (_aud_home if majority_pick == "home"
+                                                       else _aud_away if majority_pick == "away"
+                                                       else None),
+                                    "shadow_price": _shadow_odds,
+                                    "shadow_price_source": _shadow_odds_src,
+                                    "shadow_price_captured_at_utc": datetime.now(
+                                        timezone.utc).isoformat(timespec="seconds"),
+                                    "shadow_price_as_of_basis": "fetched_this_run",
+                                })
+
+                            except Exception as exc:
+                                print(f"ML fixture audit failed: {exc}", file=sys.stderr)
+
+                        # Research capture (certification-independent): record the
+                        # parent selection + deterministic fade candidate with their
+                        # own opposing-side source quotes. Goes ONLY to the research
+                        # ledger via the collector — never into `picks`, so the
+                        # operational slate, collapse, archives and notifications are
+                        # structurally untouched by this hook.
+                        if research_collector is not None:
+                            research_collector.record(
+                                day=day, anchor=anchor, fb=fb, zb=zb, used=used,
+                                majority_pick=majority_pick, ml_p=ml_p, z_score=z,
+                                model=ml_model,
+                                ml_ht_diff=ht_diff_feat, ml_ht_total=ht_total_feat,
+                            )
+
+                        # Check certified ML rules
+                        # Emit ONE pick at the HIGHEST qualifying threshold. A fixture
+                        # clearing 60 also clears 55 — emitting both duplicated rows
+                        # that the collapse then resolved to the first (>=55), which
+                        # made >=60/65/70 look "never fired" in the ledger/tripwire
+                        # even while the model was firing. One pick, strongest label.
+                        best = None  # (threshold, rule)
+                        for rule in ml_rules:
+                            m = re.search(r">=\s*([\d.]+)", rule["rule"])
+                            if m:
+                                thr = float(m.group(1))
+                                if ml_p * 100.0 >= thr and (best is None or thr > best[0]):
+                                    best = (thr, rule)
+                        _audit_route(_decision, "ml", "emitted" if best else "rejected",
+                                     None if best else ("no_certified_ml_rules" if not ml_rules
+                                                        else "no_qualifying_ml_rule"),
+                                     probability=_audit_finite(ml_p), selection=majority_pick,
+                                     selected_rule=best[1]["rule"] if best else None)
+                        if best is not None:
+                            thr, rule = best
+                            home = canonical_display_team(anchor.get("home"))
+                            away = canonical_display_team(anchor.get("away"))
+                            picks.append({
+                                "date": day, "market": "1x2",
+                                "match": f"{home} vs {away}",
+                                "home": home, "away": away,
+                                "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                                "sport": anchor.get("sport", "soccer"),
+                                "league": anchor.get("league"), "pick": majority_pick,
+                                "avg_p": round(ml_p * 100.0, 1),
+                                "w_score": round(z, 4),
+                                "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
+                                "odds_source": ("forebet_best" if _f(fb_quote.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
+                                "bookmaker": None,
+                                "rule": rule["rule"],
+                                "edge_rule": rule["rule"],
+                                "display_rule": rule["display_rule"] if "display_rule" in rule else f"ML-META≥{thr:.0f}",
+                                "n_way": 3, "edge_n_way": 3,
+                                "confidence": _f(bz.get("confidence")) if bz else None,
+                                "model_version": bz.get("model_version") if bz else None,
+                                "vitibet_index": _f(vb.get("index")) if vb else None,
+                                "sources_used": used,
+                                "source_weights": source_weights or {},
+                                "ml_p": round(ml_p, 4),
+                                # checkpoint ⑫ contract: these MUST be 0 for any pick
+                                # that survives the pre-match guard. Recorded so the
+                                # assertion below has evidence, and so the archive can
+                                # be audited after the fact.
+                                "ml_ht_diff": ht_diff_feat,
+                                "ml_ht_total": ht_total_feat,
+                            })
+
+                        # --- ml-fade: certified inverse-selection sibling family ---
+                        # Derive the fade from the SAME eligible ml-meta selection:
+                        # binary 1X2 home<->away, scored at the FADE side's own odds
+                        # (the opposing column of the same book — never the parent
+                        # pick's price). Draw selections have no honest binary
+                        # inverse: they are excluded EXPLICITLY (counted + reported),
+                        # never silently mapped to anything. The fade fires on its own
+                        # certified thresholds, independently of whether the parent
+                        # ml-meta rule fired.
+                        fade_best = None
+                        for fade_rule in ml_fade_rules:
+                            fm = re.search(r">=\s*([\d.]+)", fade_rule["rule"])
+                            if not fm:
+                                continue
+                            fthr = float(fm.group(1))
+                            if ml_p * 100.0 >= fthr and (fade_best is None or fthr > fade_best[0]):
+                                fade_best = (fthr, fade_rule)
+                        _audit_route(_decision, "ml_fade",
+                                     "emitted" if fade_best and majority_pick != "draw" else "rejected",
+                                     ("no_certified_fade_rules" if not ml_fade_rules else
+                                      "no_qualifying_fade_rule" if not fade_best else
+                                      "draw_has_no_binary_inverse" if majority_pick == "draw" else None),
+                                     probability=_audit_finite(ml_p), parent_selection=majority_pick,
+                                     selected_rule=fade_best[1]["rule"] if fade_best else None)
+                        if fade_best is not None:
+                            fade_sel = inverse_selection(majority_pick)
+                            if fade_sel is None:
+                                ml_fade_draw_skipped += 1
+                            else:
+                                fthr, fade_rule = fade_best
+                                _fade_col = fade_odds_column(majority_pick)
+                                fade_odds = _f(fb_quote.get(_fade_col)) or _f(zb.get(_fade_col)) or None
+                                home = canonical_display_team(anchor.get("home"))
+                                away = canonical_display_team(anchor.get("away"))
+                                picks.append({
+                                    "date": day, "market": "1x2",
+                                    "match": f"{home} vs {away}",
+                                    "home": home, "away": away,
+                                    "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                                    "sport": anchor.get("sport", "soccer"),
+                                    "league": anchor.get("league"),
+                                    "pick": fade_sel,
+                                    "avg_p": fade_avg_p(ml_p),
+                                    "w_score": round(z, 4),
+                                    # The fade is ALWAYS priced at the fade selection's
+                                    # own odds. The parent's price is recorded under
+                                    # derived_from for audit only and is never scored.
+                                    "odds": fade_odds,
+                                    "odds_source": (
+                                        "forebet_best" if _f(fb_quote.get(_fade_col)) is not None
+                                        else "zulubet" if _f(zb.get(_fade_col)) is not None else None),
+                                    "bookmaker": None,
+                                    "rule": fade_rule["rule"],
+                                    "edge_rule": fade_rule["rule"],
+                                    "display_rule": (
+                                        fade_rule.get("display_rule") or f"ML-FADE≥{fthr:.0f}"),
+                                    # Independent identity + explicit derivation provenance
+                                    "edge_family": FADE_FAMILY,
+                                    "parent_family": PARENT_FAMILY,
+                                    "derivation": DERIVATION,
+                                    "inverse_of": majority_pick,
+                                    "derived_from": {
+                                        "family": PARENT_FAMILY,
+                                        "rule": (fade_rule.get("parent_rule")
+                                                 or f"ml-meta avg_p>={fthr:g}"),
+                                        "pick": majority_pick,
+                                        "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
+                                        "ml_p": round(ml_p, 4),
+                                    },
+                                    "n_way": 3, "edge_n_way": 3,
+                                    "confidence": _f(bz.get("confidence")) if bz else None,
+                                    "model_version": bz.get("model_version") if bz else None,
+                                    "vitibet_index": _f(vb.get("index")) if vb else None,
+                                    "sources_used": used,
+                                    "source_weights": source_weights or {},
+                                    "ml_p": round(ml_p, 4),
+                                    # Preserve observed HT evidence for the frozen-feature
+                                    # tripwire; missing observations stay unavailable.
+                                    "ml_ht_diff": ht_diff_feat,
+                                    "ml_ht_total": ht_total_feat,
+                                })
+
+            if len(set(sels)) > 1:
+                _audit_route(_decision, "consensus", "rejected", "voter_disagreement",
+                             votes=dict(Counter(sels)))
+                vetoes += 1
+                continue
+            edge = thr_for(len(used), t1x2)
+            if edge is None:
+                _audit_route(_decision, "consensus", "rejected", "no_consensus_rule_for_source_count",
+                             observed_sources=len(used), available_source_count_slots=sorted(t1x2))
+                continue
+            n_req, thr = edge["n_way"], edge["threshold"]
+
+            # Option 2: Dynamic Competition-Type Gating (Custom Thresholds)
+            comp_type = classify_competition(anchor.get("league"))
+            if comp_type == "cup":
+                thr += 5.0
+            elif comp_type == "friendly":
+                thr += 10.0
+                if n_req < 3:
+                    n_req = 3
+
+            _audit_route(_decision, "consensus", "evaluated", rule=edge.get("rule"),
+                         competition_type=comp_type, base_threshold_pct=_audit_finite(edge["threshold"]),
+                         effective_threshold_pct=_audit_finite(thr), required_sources=n_req,
+                         observed_sources=len(used), observed_avg_probability_pct=_audit_finite(mean(ps)*100))
+            if len(used) < n_req:
+                _audit_route(_decision, "consensus", "rejected", "competition_requires_more_sources")
+                continue
+
+            avg_p = mean(ps) * 100.0
+            if avg_p < thr:
+                _audit_route(_decision, "consensus", "rejected", "below_consensus_threshold",
+                             shortfall_pct_points=_audit_finite(thr-avg_p))
+                continue
+            
+            sel = sels[0]
+            _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
+            _col = _odds_map[sel]
+            odds = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None
+            odds_src = ("forebet_best" if _f(fb_quote.get(_col)) is not None
+                        else "zulubet" if _f(zb.get(_col)) is not None
+                        else None)
+            home = canonical_display_team(anchor.get("home"))
+            away = canonical_display_team(anchor.get("away"))
+        
+            # Weighted consensus score
+            votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
+            _, w_score, _ = weighted_consensus_score(votes)
+
+            # --- Certification-contract gate (operator-authorized 2026-10-10) ---
+            # The certified label may only be stamped when the enforced predicate
+            # IS the named one: every qualifier in the rule string (min_p>=N,
+            # home-only, away-only, odds-LO-HI with INCLUSIVE lower and EXCLUSIVE
+            # upper) must actually hold, and the voter set must BE the electorate
+            # the rule was certified on. Otherwise the row is still emitted --
+            # suppression is not the remedy -- but under an HONEST label naming
+            # exactly what was enforced, never under the certified name.
+            rule_label, display_label = edge["rule"], edge["display_rule"]
+            if edge.get("from_registry"):
+                electorate = edge.get("electorate")
+                electorate_ok = (not electorate) or (set(used) == set(electorate))
+                min_p_req = edge.get("min_p")
+                min_p_ok = (min_p_req is None
+                            or min(ps) * 100.0 >= min_p_req - 1e-9)
+                side_ok = ((not edge.get("home_only") or sel == "home")
+                           and (not edge.get("away_only") or sel == "away"))
+                o_lo, o_hi = edge.get("odds_min"), edge.get("odds_max")
+                odds_ok = ((o_lo is None and o_hi is None)
+                           or (odds is not None and o_lo <= odds < o_hi))
+                _audit_route(_decision, "consensus", "evaluated", registry_contract={
+                    "electorate_matches": electorate_ok, "required_electorate": list(electorate or ()),
+                    "min_probability_matches": min_p_ok, "required_min_probability_pct": min_p_req,
+                    "side_matches": side_ok, "odds_window_matches": odds_ok,
+                    "on_mismatch": "relabel_not_reject"})
+                if not (electorate_ok and min_p_ok and side_ok and odds_ok):
+                    if electorate_ok:
+                        rule_label = display_label = (
+                            f"{edge['n_way']}way-unanimous avg_p>={thr:g}")
+                    else:
+                        rule_label = display_label = (
+                            f"unanimous[{'+'.join(sorted(used))}] avg_p>={thr:g}")
+
+            picks.append({
+                "date": day, "market": "1x2",
+                "match": f"{home} vs {away}",
+                "home": home, "away": away,
+                "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                "sport": anchor.get("sport", "soccer"),
+                "league": anchor.get("league"), "pick": sel,
+                "avg_p": round(avg_p, 1),
+                "w_score": round(w_score, 4),
+                "odds": odds,
+                "odds_source": odds_src,
+                "bookmaker": None,
+                "rule": rule_label,
+                "edge_rule": rule_label,
+                "display_rule": display_label,
+                "n_way": len(used), "edge_n_way": n_req,
+                "confidence": _f(bz.get("confidence")),
+                "model_version": bz.get("model_version"),
+                "vitibet_index": _f(vb.get("index")),
+                "sources_used": used,
+                "source_weights": source_weights or {},
+            })
+            _audit_route(_decision, "consensus", "emitted", selected_rule=rule_label)
+    if fixture_audit is not None:
+        try:
+            diagnostics = [e["decision_diagnostics"] for e in fixture_audit
+                           if e.get("kind") == "upcoming_fixture" and e.get("decision_diagnostics")]
+            reasons = Counter(d.get("primary_reason") for d in diagnostics)
+            print(f"fixture attrition {day}: source_keys={len(keys)} "
+                  f"decision_records={len(diagnostics)} reasons={json.dumps(dict(sorted(reasons.items())))}",
+                  file=sys.stderr)
+            for route in ("consensus", "ml", "ml_fade"):
+                counts = Counter(d[route].get("reason") or d[route].get("status") for d in diagnostics)
+                print(f"fixture attrition {day} route={route}: {json.dumps(dict(sorted(counts.items())))}",
+                      file=sys.stderr)
+        except Exception as exc:
+            print(f"fixture attrition summary failed: {exc}", file=sys.stderr)
+    if (ml_rules or ml_fade_rules) and ml_model and ml_scored:
+        thr_list = sorted(
+            {float(m.group(1)) for r in ml_rules if (m := re.search(r">=\s*([\d.]+)", r.get("rule", "")))}
+        )
+        n_ml = sum(1 for p in picks if p.get("rule", "").startswith("ml-meta"))
+        n_fade = sum(1 for p in picks if p.get("rule", "").startswith("ml-fade"))
+        fade_note = (
+            f", ml-fade {n_fade} pick(s)"
+            + (f", {ml_fade_draw_skipped} draw-selection(s) excluded (no inverse)"
+               if ml_fade_draw_skipped else "")
+            if ml_fade_rules else ""
+        )
+        print(
+            f"ML-meta {day}: scored {ml_scored} fixture(s), max ml_p = {ml_max_p * 100.0:.1f}% "
+            f"(certified thresholds: {', '.join(f'{t:.0f}' for t in thr_list)}) "
+            f"-> {n_ml} pick(s){fade_note}",
+            file=sys.stderr,
+        )
+        # Persist for the tripwire's ceiling check — but ONLY for the primary
+        # target day. The future-planner runs picks_today for tomorrow too,
+        # and its (thinner) slate would overwrite this file with a stale max,
+        # making the tripwire report a phantom ceiling (e.g. 38.7% from the
+        # 08-13 scan while the real 08-12 max was 62.9%).
+        if day == date.today().isoformat():
+            try:
+                state_path = LOCALDATA / "ml_meta_state.json"
+                state = {"date": day, "scored": ml_scored, "max_ml_p": ml_max_p,
+                         "thresholds": thr_list, "picks": sum(1 for p in picks if p.get("rule", "").startswith("ml-meta"))}
+                state_path.write_text(json.dumps(state, indent=2))
+            except Exception:
+                pass
+    return picks, vetoes, len(keys)
+
+
+def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds):
+    if edge is None:
+        return []
+    n_req, thr = edge["n_way"], edge["threshold"]
+    picks = []
+    keys = set()
+    for s in sources:
+        keys |= set(data.get(s, {}))
+    for k in keys:
+        sels, confs, used = [], [], []
+        for s in sources:
+            row = data.get(s, {}).get(k)
+            if not row:
+                continue
+            p = prob_single(row, col_map[s])
+            if p is None:
+                continue
+            sel = yes_no[0] if p >= 0.5 else yes_no[1]
+            sels.append(sel)
+            # Primary-side probability (matches the miner's avg_p definition);
+            # the complementary side is rejected by the directional guard below.
+            confs.append(p)
+            used.append(s)
+        if len(used) < 2:
+            continue
+        if len(set(sels)) > 1:
+            continue
+        # Directional-certification guard (2026-09-01): binary edges are
+        # walk-forward certified on the PRIMARY side only. The miner's avg_p is
+        # the primary-side probability (p_over / p_gg), so ``avg_p >= thr`` can
+        # only ever be satisfied by over/yes — the complement (under/no) has no
+        # sample under this rule. Firing it would bet a population the
+        # certification never tested (the OU25 unders were doing exactly this).
+        # Re-enable only after a symmetric rule is mined and certified.
+        if sels[0] != yes_no[0]:
+            continue
+
+        comp_type = classify_competition(anchor := next(data[s][k] for s in used if k in data.get(s, {})))
+        adj_thr = thr
+        adj_n_req = n_req
+        if comp_type == "cup":
+            adj_thr += 5.0
+        elif comp_type == "friendly":
+            adj_thr += 10.0
+            if adj_n_req < 3:
+                adj_n_req = 3
+
+        if len(used) < max(2, adj_n_req):
+            continue
+
+        avg_p = mean(confs) * 100.0
+        if avg_p < adj_thr:
+            continue
+        fb = data.get("forebet", {}).get(k) or {}
+        fb_quote = {} if _forebet_historical(day) else fb
+        bz = data.get("bzzoiro", {}).get(k) or {}
+        anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
+        unstable, ko_dates = fixture_schedule_unstable(fb, bz)
+        if unstable:
+            print(
+                f"fixture-stability guard {day}: skip "
+                f"{anchor.get('home')} vs {anchor.get('away')} "
+                f"(kickoff dates differ across sources: {sorted(ko_dates)})",
+                file=sys.stderr,
+            )
+            continue
+        sel = sels[0]
+        odds = _f(fb_quote.get(outcome_odds[sel])) if fb_quote else None
+        home = canonical_display_team(anchor.get("home"))
+        away = canonical_display_team(anchor.get("away"))
+
+        # Same certification-contract gate as eval_1x2 (operator-authorized
+        # 2026-10-10): qualifiers are enforced, and the certified label is
+        # stamped only for the certified electorate; otherwise an honest
+        # enforced-predicate label. min_p here reads the binary confidences.
+        rule_label, display_label = edge["rule"], edge["display_rule"]
+        if edge.get("from_registry"):
+            electorate = edge.get("electorate")
+            electorate_ok = (not electorate) or (set(used) == set(electorate))
+            min_p_req = edge.get("min_p")
+            min_p_ok = (min_p_req is None
+                        or min(confs) * 100.0 >= min_p_req - 1e-9)
+            side_ok = ((not edge.get("home_only") or sel == "home")
+                       and (not edge.get("away_only") or sel == "away"))
+            o_lo, o_hi = edge.get("odds_min"), edge.get("odds_max")
+            odds_ok = ((o_lo is None and o_hi is None)
+                       or (odds is not None and o_lo <= odds < o_hi))
+            if not (electorate_ok and min_p_ok and side_ok and odds_ok):
+                if electorate_ok:
+                    rule_label = display_label = (
+                        f"{edge['n_way']}way-unanimous avg_p>={adj_thr:g}")
+                else:
+                    rule_label = display_label = (
+                        f"unanimous[{'+'.join(sorted(used))}] avg_p>={adj_thr:g}")
+
+        picks.append({
+            "date": day, "market": market,
+            "match": f"{home} vs {away}",
+            "home": home, "away": away,
+            "kickoff": anchor.get("kickoff") or anchor.get("time"),
+            "sport": anchor.get("sport", "soccer"),
+            "league": anchor.get("league"), "pick": sel,
+            "avg_p": round(avg_p, 1), "odds": odds,
+            "odds_source": "forebet_best" if odds is not None else None,
+            "bookmaker": None,
+            "rule": rule_label,
+            "edge_rule": rule_label,
+            "display_rule": display_label,
+            "n_way": len(used), "edge_n_way": n_req,
+            "confidence": _f(bz.get("confidence")),
+            "model_version": bz.get("model_version"),
+            "vitibet_index": None,
+            "sources_used": used,
+        })
+    return picks
+
+
+# --------------------------------------------------------------------- run --
+def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None,
+            research_collector: FadeResearchCollector | None = None,
+            fixture_audit: list | None = None):
+    current_registry = load_post_forebet_registry()
+    if current_registry is not None:
+        return eval_post_forebet(day, current_registry, fixture_audit=fixture_audit)
+    data = fetch_all(day)
+    effective_weights = dict(source_weights_1x2 or {})
+    if _forebet_historical(day):
+        # Keep historical registry metadata auditable, but make the retired
+        # source weightless in every post-cutoff production consensus.
+        effective_weights["forebet"] = 0.0
+    picks, vetoes, n_up = eval_1x2(day, data, t1x2,
+                                   source_weights=effective_weights,
+                                   research_collector=research_collector,
+                                   fixture_audit=fixture_audit)
+    picks += eval_binary(day, data, "ou_2.5", SOURCES_OU, OU_COL, ou_edge,
+                         ("over", "under"),
+                         {"over": "odd_over", "under": "odd_under"})
+    picks += eval_binary(day, data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
+                         ("yes", "no"),
+                         {"yes": "odd_gg", "no": "odd_ng"})
+    # File each pick under its true match date when the kickoff carries one
+    # (ISO or DD-MM), rather than the scan day, so the per-day archive and the
+    # audit settle it on the calendar day the result donor uses. Bare "HH:MM"
+    # kickoffs keep the scan day (fail-closed: a bare time names no date).
+    for p in picks:
+        resolved = kickoff_date(p.get("kickoff") or p.get("time"), fallback_date=day)
+        if resolved:
+            p["date"] = resolved
+    # Incident-#6 real fix (Task A): resolve kickoff_utc at ingest from the
+    # fetch-time rows of the same fixture (scoutingstats "...Z", vitibet
+    # "+02:00", ...). Never overwrites kickoff; naive-only fixtures stay
+    # unresolved and the live guard's region fallback covers them.
+    attach_kickoff_normalisation(picks, data)
+    picks.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
+    return picks, vetoes, n_up, data
+
+
+def _odds_source_rank(source: object) -> int:
+    s = str(source or "")
+    if s == BZZOIRO_ODDS_SOURCE:
+        return 2
+    if s == SCOUTINGSTATS_ODDS_SOURCE:
+        return 1
+    return 0
+
+
+_BUCKET_SEVERITY = {
+    BUCKET_CERTIFIED: 0,
+    BUCKET_CAUTION: 10,
+    BUCKET_WL_CTX: 20,
+    BUCKET_WL_UNCORROBORATED_PRICE: 25,
+    BUCKET_WL_SUSPECT_PRICE: 30,
+    BUCKET_WL_ODDS: 35,
+    BUCKET_SKIP_VETO: 50,
+    BUCKET_SKIP_DEAD: 60,
+}
+
+
+def _bucket_severity(bucket: object) -> int:
+    return _BUCKET_SEVERITY.get(str(bucket or BUCKET_CAUTION), _BUCKET_SEVERITY[BUCKET_CAUTION])
+
+
+def _event_base_key(pick: dict) -> tuple[str, str, str, str, str]:
+    return (
+        str(pick.get("date") or ""),
+        operational_team_key(pick.get("home") or ""),
+        operational_team_key(pick.get("away") or ""),
+        str(pick.get("market") or ""),
+        str(pick.get("pick") or ""),
+    )
+
+
+def _same_event_cluster(a: dict, b: dict) -> bool:
+    a_min = _kickoff_minutes(_kickoff_value(a))
+    b_min = _kickoff_minutes(_kickoff_value(b))
+    if a_min is None or b_min is None:
+        return True
+    return abs(a_min - b_min) <= 180
+
+
+def _representative_score(pick: dict) -> tuple:
+    comment = pick.get("statistical_comment") or ""
+    mu, sigma = re.search(r"n=(\d+)", comment), re.search(r"Avg Goals: ([\d.]+)", comment)
+    has_rich_stats = 2 if (mu and int(mu.group(1)) >= 100 and sigma) else (1 if comment else 0)
+    if pick.get("contract_schema") == "post_forebet_v1":
+        # Replacing the old constant comment with numeric evidence is display
+        # work, not a change to which contract represents a duplicate fixture.
+        has_rich_stats = 1
+    return (
+        -has_rich_stats,  # prefer picks with 📊 stats (richer = higher priority)
+        _bucket_severity(pick.get("bucket")),
+        _kickoff_value(pick) is not None,
+        _odds_source_rank(pick.get("odds_source")),
+        pick.get("odds_match_method") == "exact",
+        pick.get("odds_match_method") == "alias_time",
+        float(pick.get("w_score") or 0),
+        float(pick.get("avg_p") or 0),
+        int(pick.get("n_way") or 0),
+        -len(str(pick.get("match") or "")),
+    )
+
+
+def _with_duplicate_metadata(group: list[dict]) -> dict:
+    rep = dict(max(group, key=_representative_score))
+    if len(group) <= 1:
+        return rep
+
+    ctx = dict(rep.get("ctx") or {})
+    buckets = [str(p.get("bucket") or BUCKET_CAUTION) for p in group]
+    rules = sorted({str(p.get("display_rule") or p.get("rule") or "?") for p in group})
+    matches = sorted({str(p.get("match") or "") for p in group if p.get("match")})
+    keys = sorted({
+        f"{operational_team_key(p.get('home') or '')} vs {operational_team_key(p.get('away') or '')}"
+        for p in group
+    })
+
+    worst = max(group, key=lambda p: _bucket_severity(p.get("bucket")))
+    rep["bucket"] = worst.get("bucket", rep.get("bucket", BUCKET_CAUTION))
+    rep["duplicate_rows_collapsed"] = len(group) - 1
+    rep["duplicate_bucket_sources"] = sorted(set(buckets), key=_bucket_severity)
+    rep["duplicate_rules_collapsed"] = rules
+    rep["duplicate_matches_collapsed"] = matches
+    ctx["duplicate_alias_collapse"] = "true"
+    if any(_unanchored_identity_merge(rep, p) for p in group if p is not rep):
+        # Visibility: this collapse could not consult the 180-minute
+        # reschedule guard because a twin carried a bare clock.
+        ctx["duplicate_kickoff_unanchored"] = "true"
+    ctx["duplicate_bucket_sources"] = ",".join(rep["duplicate_bucket_sources"])
+    ctx["duplicate_event_keys"] = ",".join(keys)
+    rep["ctx"] = ctx
+    return rep
+
+
+def canonical_fixture_identity(pick: dict) -> tuple[str, str, str]:
+    """Deterministic (date, home key, away key) fixture identity.
+
+    Uses the canonical team key (ASCII transliteration + curated explicit
+    aliases from Config/entity_overrides.json). No fuzzy matching: this is
+    the same key the shadow ledger and settlement use, so one real fixture
+    spelled two ways ("Italy vs Türkiye" / "Italy vs Turkey") yields ONE
+    identity here.
+    """
+    return (
+        str(pick.get("date") or "")[:10],
+        ledger_team_key(pick.get("home") or "", width=24),
+        ledger_team_key(pick.get("away") or "", width=24),
+    )
+
+
+def near_duplicate_fixture_warnings(picks: list[dict]) -> list[dict]:
+    """Detect fixtures that normalization alone could NOT join.
+
+    Same trading date + same canonical league + one team key identical and
+    the other differing. This is a VISIBILITY tripwire only — it never
+    merges anything (merging on this heuristic would be fuzzy matching).
+    A pair the curated alias layer already resolved never reaches here,
+    because the duplicate collapse has folded it into one row first.
+    """
+    out: list[dict] = []
+    rows = list(picks)
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            a, b = rows[i], rows[j]
+            a_date, a_home, a_away = canonical_fixture_identity(a)
+            b_date, b_home, b_away = canonical_fixture_identity(b)
+            if a_date != b_date or not a_date:
+                continue
+            if canonical_league(a.get("league")) != canonical_league(b.get("league")):
+                continue
+            same_home = a_home == b_home and a_home != ""
+            same_away = a_away == b_away and a_away != ""
+            if same_home == same_away:
+                continue  # both identical (true dupe, collapse owns it) or both differ
+            out.append({
+                "date": a_date,
+                "league": canonical_league(a.get("league")),
+                "shared_side": "home" if same_home else "away",
+                "rows": [
+                    {
+                        "match": str(a.get("match") or f"{a.get('home')} vs {a.get('away')}"),
+                        "home_key": a_home, "away_key": a_away,
+                        "source": str(a.get("odds_source") or a.get("source") or "?"),
+                        "kickoff": format_kickoff(a),  # SAST display, never the raw feed text
+                    },
+                    {
+                        "match": str(b.get("match") or f"{b.get('home')} vs {b.get('away')}"),
+                        "home_key": b_home, "away_key": b_away,
+                        "source": str(b.get("odds_source") or b.get("source") or "?"),
+                        "kickoff": format_kickoff(b),
+                    },
+                ],
+            })
+    return out
+
+
+def print_near_duplicate_fixture_tripwire(picks: list[dict], day: str = "",
+                                          stream=None) -> int:
+    """Print a loud warning block for unjoined near-duplicate fixtures."""
+    stream = stream if stream is not None else sys.stderr
+    warnings = near_duplicate_fixture_warnings(picks)
+    if not warnings:
+        return 0
+    print("=" * 72, file=stream)
+    print(f"!! NEAR-DUPLICATE FIXTURE TRIPWIRE {day}: {len(warnings)} unjoined pair(s)",
+          file=stream)
+    print("!! One team key matches, the other does not. NOTHING was merged.",
+          file=stream)
+    print("!! If these are the same real match, add a curated alias to "
+          "Config/entity_overrides.json -> teams.", file=stream)
+    for w in warnings:
+        print(f"!!   [{w['date']}] league={w['league']} shared={w['shared_side']}",
+              file=stream)
+        for row in w["rows"]:
+            print(f"!!     {row['match']!r} keys=({row['home_key']}|{row['away_key']}) "
+                  f"src={row['source']} ko={row['kickoff']}", file=stream)
+    print("=" * 72, file=stream)
+    return len(warnings)
+
+
+_GENERIC_NAME_TOKENS = frozenset({
+    "fc", "cf", "sc", "ac", "cd", "ca", "club", "afc", "sk", "if", "fk",
+    "bk", "ik", "ff", "ssc", "ks", "mfk", "nk", "hk", "us", "as",
+})
+
+
+def _name_tokens(name: object) -> list[str]:
+    """Distinctive tokens, with curated abbreviations expanded.
+
+    "Drogheda Utd" and "Drogheda United" must link (one club); the
+    expansion table is an explicit dictionary, never a similarity score.
+    """
+    out = []
+    for token in re.findall(r"[a-z0-9]+", fold_ascii(name)):
+        if token in _GENERIC_NAME_TOKENS:
+            continue
+        expanded = expand_team_token(token)
+        if expanded:
+            out.append(expanded)
+    return out
+
+
+def _token_prefix_link(a_name: object, b_name: object) -> bool:
+    """Deterministic same-club link: one name's tokens PREFIX the other's.
+
+    "Aldershot" / "Aldershot Town", "Hannover" / "Hannover 96",
+    "Ebbsfleet" / "Ebbsfleet United" — the dominant real pattern in the
+    archives (the read-only audit found thousands). This is structural
+    containment, not similarity: "Manchester City" / "Manchester United"
+    and "Launceston City" / "Launceston United" do NOT link, because
+    neither token sequence is a prefix of the other.
+
+    Strictly tighter than the bigram rule it guards: a prefix link still
+    has to clear the marker, league and degenerate vetoes.
+    """
+    ta, tb = _name_tokens(a_name), _name_tokens(b_name)
+    if not ta or not tb:
+        return False
+    short, long_ = (ta, tb) if len(ta) <= len(tb) else (tb, ta)
+    return long_[:len(short)] == short
+
+
+# Tokens that say nothing about WHICH competition this is: every feed
+# prefixes/suffixes them differently ("World UEFA Nations League" vs
+# "International,Uefa Nations League A Grp. 1" — the SAME competition).
+_GENERIC_LEAGUE_TOKENS = frozenset({
+    "world", "international", "intl", "uefa", "conmebol", "concacaf",
+    "caf", "afc", "ofc", "fifa", "grp", "group", "qual", "qualification",
+    "qualifiers", "qualifying", "round", "stage", "div", "division",
+    "league", "liga", "cup", "a", "b", "c", "d", "1", "2", "3", "4",
+})
+
+
+def _league_core_tokens(name: object) -> set[str]:
+    return {t for t in canonical_league(name).split()
+            if t not in _GENERIC_LEAGUE_TOKENS}
+
+
+def _leagues_conflict(a_league: object, b_league: object) -> bool:
+    """True only when two labels name DIFFERENT competitions.
+
+    Deliberately conservative: feeds spell one competition many ways, so
+    a mere string difference is not evidence. Only fully DISJOINT
+    distinctive token sets count ("Spain La Liga" vs "Ecuador Serie A"
+    -> {spain} vs {ecuador, serie} -> conflict), while
+    "World UEFA Nations League" vs "International,Uefa Nations League A
+    Grp. 1" -> {nations} vs {nations} -> no conflict.
+    """
+    ta, tb = _league_core_tokens(a_league), _league_core_tokens(b_league)
+    if not ta or not tb or "unknown" in ta or "unknown" in tb:
+        return False
+    return ta.isdisjoint(tb)
+
+
+# Curated pairs of DISTINCT clubs whose deterministic keys collide after
+# structure-token stripping / width truncation. Explicit and reviewed, the
+# mirror image of the curated alias table: aliases say "one club, two
+# spellings", this says "two clubs, one key". Never a heuristic.
+DISTINCT_TEAM_PAIRS: frozenset[frozenset[str]] = frozenset({
+    frozenset({"barcelona", "barcelona sc"}),
+    frozenset({"olympiakos", "olympiakos nicosia"}),
+    frozenset({"river plate", "river plate asuncion"}),
+    frozenset({"arsenal", "arsenal sarandi"}),
+    frozenset({"al ahli", "al ahly"}),
+})
+
+
+def _curated_distinct_clubs(a_name: str, b_name: str) -> bool:
+    a, b = fold_ascii(a_name).strip(), fold_ascii(b_name).strip()
+    return a != b and frozenset({a, b}) in DISTINCT_TEAM_PAIRS
+
+
+def _merge_veto_reason(rep: dict, pick: dict) -> str | None:
+    """Deterministic reasons two picks may NEVER be merged as one fixture.
+
+    Tightening-only: every reason here REFUSES a merge the old collapse
+    might have made on bigram similarity alone. Measured examples from the
+    2026-10-05 identity sweep (all were above the 0.40 merge threshold):
+    Turkey/Turkey U21 (0.62), Girona/Girona B (0.83), Barcelona/Barcelona
+    SC (0.80), Man City/Man United (0.59), Arsenal/Arsenal Sarandí (0.50).
+    """
+    for side in ("home", "away"):
+        a_name = str(rep.get(side) or "")
+        b_name = str(pick.get(side) or "")
+        # S8: curated distinct clubs that share a key. Checked FIRST: a
+        # kickoff match is necessary but NEVER sufficient, and these pairs
+        # pass every key-equality test by construction.
+        if _curated_distinct_clubs(a_name, b_name):
+            return f"curated_distinct_clubs:{side}"
+        # S2: distinct-entity markers (U21/B/W/Reserves/Youth) are hard vetoes
+        if markers_conflict(a_name, b_name):
+            return f"squad_marker_conflict:{side}"
+        # S3: canonical disagreement. "Linked" means some CURATED table
+        # says these are one club: the entity overrides, or the local
+        # odds-matching alias maps. All explicit, none fuzzy.
+        # NB: odds_team_key is deliberately NOT consulted — it is the
+        # width-9 key, where "Manchester City" and "Manchester United"
+        # both truncate to "mancheste" (the R3 collision class).
+        op_a, op_b = operational_team_key(a_name), operational_team_key(b_name)
+        src_a, src_b = source_team_key(a_name), source_team_key(b_name)
+        linked = (canonical_team(a_name) == canonical_team(b_name)
+                  or (op_a == op_b and len(op_a) >= MIN_IDENTITY_KEY_LEN)
+                  # the curated voter-row alias table (single-sourced from
+                  # Config/entity_overrides.json + evidence-proven pairs,
+                  # e.g. Borussia M'gladbach / Mönchengladbach)
+                  or (src_a == src_b and len(src_a) >= MIN_IDENTITY_KEY_LEN)
+                  or _token_prefix_link(a_name, b_name))
+        if not linked:
+            return f"canonical_team_disagreement:{side}"
+        # S4: degenerate keys identify nothing; only exact raw equality may merge
+        if is_degenerate_team_key(canonical_team_key(a_name)):
+            if fold_ascii(a_name) != fold_ascii(b_name):
+                return f"degenerate_identity:{side}"
+    # different known competitions are different fixtures (Barcelona vs
+    # Barcelona SC, Olympiakos vs Olympiakos Nicosia, River Plate vs
+    # River Plate Asunción)
+    if _leagues_conflict(rep.get("league"), pick.get("league")):
+        return "league_disagreement"
+    return None
+
+
+def _kickoff_is_anchored(row: dict) -> bool:
+    """True when a row's kickoff names a calendar instant, not a bare clock.
+
+    A bare "14:45" (the naive foreign-clock render, incident-#6 family)
+    carries no date and cannot distinguish two occurrences of the same
+    fixture, so it must not be used to argue that two rows with identical
+    canonical identity are different events.
+    """
+    if str(row.get("kickoff_utc") or "").strip():
+        return True
+    value = _kickoff_value(row)
+    if not value:
+        return False
+    return kickoff_date(value) is not None
+
+
+def _unanchored_identity_merge(rep: dict, pick: dict) -> bool:
+    """Would this merge rely on a kickoff that cannot be trusted?
+
+    True when two rows share one canonical fixture identity but at least
+    one carries a bare clock, so the 180-minute reschedule guard could not
+    be consulted. Recorded on the surviving row so the audit can see which
+    collapses used the unanchored path.
+    """
+    if canonical_fixture_identity(pick) != canonical_fixture_identity(rep):
+        return False
+    if _kickoff_instants_agree(rep, pick) is not None:
+        return False  # decided on resolved UTC instants, not a bare clock
+    return not (_kickoff_is_anchored(rep) and _kickoff_is_anchored(pick))
+
+
+def _resolved_kickoff_instant(row: dict):
+    """The AUTHORITATIVE kickoff instant (``kickoff_utc``), if resolved."""
+    text = str(row.get("kickoff_utc") or "").strip()
+    if not text:
+        return None
+    try:
+        stamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return stamp if stamp.tzinfo is not None else None
+
+
+def _kickoff_instants_agree(rep: dict, pick: dict) -> bool | None:
+    """Compare resolved UTC instants; ``None`` when they are unavailable.
+
+    The raw ``kickoff`` text is a per-feed rendering — one source prints
+    "05-10, 19:45" and another the naive foreign clock "14:45" for the
+    SAME instant, which is exactly how the 2026-10-05 twins escaped the
+    collapse. ``kickoff_utc`` is the pipeline's own resolved answer
+    (incident-#6 ingest fix) and is strictly more trustworthy, so when
+    both rows have it, it decides.
+    """
+    a_dt, b_dt = _resolved_kickoff_instant(rep), _resolved_kickoff_instant(pick)
+    if a_dt is None or b_dt is None:
+        return None
+    return abs((a_dt - b_dt).total_seconds()) <= 180 * 60
+
+
+def _canonical_identity_collapse(rep: dict, pick: dict) -> bool:
+    """Same real fixture by deterministic identity?
+
+    Requires identical canonical fixture identity (date + both canonical
+    team keys). The 180-minute reschedule guard still applies whenever
+    BOTH rows carry an anchored kickoff; when either kickoff is a bare
+    clock it carries no occurrence information and cannot veto the merge.
+    """
+    if canonical_fixture_identity(pick) != canonical_fixture_identity(rep):
+        return False
+    resolved = _kickoff_instants_agree(rep, pick)
+    if resolved is not None:
+        return resolved
+    if _kickoff_is_anchored(rep) and _kickoff_is_anchored(pick):
+        return _same_event_cluster(rep, pick)
+    return True
+
+
+def stamp_identity_degenerate(picks: list[dict]) -> int:
+    """Mark rows whose team identity is unusable (S4). Report-only."""
+    n = 0
+    for pick in picks:
+        bad = [side for side in ("home", "away")
+               if is_degenerate_team_key(canonical_team_key(pick.get(side) or ""))]
+        if bad:
+            ctx = dict(pick.get("ctx") or {})
+            ctx["identity_degenerate"] = ",".join(bad)
+            pick["ctx"] = ctx
+            n += 1
+    return n
+
+
+def ledger_key_collisions(picks: list[dict]) -> list[dict]:
+    """Same frozen-ledger key tuple, different real teams (S5).
+
+    ``_day_archive_row_key`` is a width-9 key: "Manchester City" and
+    "Manchester United" both reduce to ``mancheste``; so do Barcelona /
+    Barcelona SC, Nottingham / Nottingham Forest, Universidad Católica /
+    Universidad de Chile. Rekeying the frozen ledger would rewrite audited
+    history, so this is REPORT-ONLY: the colliding rows are named, stamped
+    and never silently treated as one row.
+    """
+    by_key: dict[tuple, list[dict]] = {}
+    for pick in picks:
+        key = _day_archive_row_key(pick, str(pick.get("date") or "")[:10])
+        by_key.setdefault(key, []).append(pick)
+    out: list[dict] = []
+    for key, rows in by_key.items():
+        if len(rows) < 2:
+            continue
+        # curated-alias-linked spellings of ONE team are not a collision
+        canon = {canonical_team(r.get("home")) + "|" + canonical_team(r.get("away"))
+                 for r in rows}
+        if len(canon) == 1:
+            continue
+        out.append({"key": key, "rows": rows,
+                    "teams": sorted({f"{r.get('home')} vs {r.get('away')}" for r in rows})})
+        for r in rows:
+            ctx = dict(r.get("ctx") or {})
+            ctx["ledger_key_collision"] = "true"
+            r["ctx"] = ctx
+    return out
+
+
+def cross_keyer_identity_warnings(picks: list[dict]) -> dict[str, list]:
+    """Report-only daily sweep for the identity bug CLASS (S6).
+
+    (a) ``merged``: different raw names collapsing onto one canonical key
+        without any curated alias linking them (possible false merge);
+    (b) ``split``: curated-alias-linked raw names that still produce more
+        than one key somewhere in the keyer stack (possible identity
+        split, the Türkiye defect class).
+    """
+    raws: set[str] = set()
+    for pick in picks:
+        for side in ("home", "away"):
+            name = str(pick.get(side) or "").strip()
+            if name:
+                raws.add(name)
+
+    merged: dict[str, set[str]] = {}
+    for raw in raws:
+        merged.setdefault(canonical_team_key(raw, width=24), set()).add(raw)
+    merged_warnings = []
+    for key, names in sorted(merged.items()):
+        if len(names) < 2:
+            continue
+        if len({resolve_team_alias(n)[0].lower() for n in names}) == 1:
+            continue  # curated alias says these ARE one club
+        merged_warnings.append({"key": key, "names": sorted(names)})
+
+    # SPLIT: spellings the curated table says are ONE team, but some
+    # keyer still maps to more than one key. Compared WITHIN each keyer
+    # (across spellings), never across keyers — different keyers have
+    # different, legitimate noise rules (norm_entity_team strips
+    # "Sporting", source_team_key does not), and comparing those would
+    # warn forever about nothing.
+    groups: dict[str, set[str]] = {}
+    for raw in raws:
+        canonical, matched = resolve_team_alias(raw)
+        if matched:
+            groups.setdefault(canonical.lower(), set()).add(raw)
+    split_warnings = []
+    for canonical, spellings in sorted(groups.items()):
+        if len(spellings) < 2:
+            continue
+        keyers = {
+            "canonical": {canonical_team_key(n, width=24) for n in spellings},
+            "entity": {canonical_team(n) for n in spellings},
+            "source": {source_team_key(n) for n in spellings},
+            "ledger": {ledger_team_key(n, width=24) for n in spellings},
+        }
+        split = {name: sorted(keys) for name, keys in keyers.items() if len(keys) > 1}
+        if split:
+            split_warnings.append({"canonical_name": canonical,
+                                   "spellings": sorted(spellings),
+                                   "split_keyers": split})
+    return {"merged": merged_warnings, "split": split_warnings}
+
+
+def mixed_script_names(picks: list[dict]) -> list[dict]:
+    """Report-only: team names mixing Latin with Cyrillic/Greek homoglyphs.
+
+    A single Cyrillic "a" in "Sp\u0430rt\u0430k" is invisible to a human
+    and folds to a DIFFERENT key than "Spartak" in every keyer, silently
+    reproducing the duplicate-fixture incident. Transliterating it would
+    be a guess, so this flags the row instead of merging it.
+    """
+    out: list[dict] = []
+    seen: set[str] = set()
+    for p in picks or []:
+        for side in ("home", "away"):
+            name = str(p.get(side) or "")
+            anomaly = script_anomaly(name)
+            if anomaly and name not in seen:
+                seen.add(name)
+                out.append({"name": name, "anomaly": anomaly,
+                            "key": canonical_team_key(name)})
+    return out
+
+
+def print_identity_sweep(picks: list[dict], day: str = "", stream=None) -> dict[str, int]:
+    """Print the S4/S5/S6 identity summary lines. Report-only."""
+    stream = stream if stream is not None else sys.stderr
+    degenerate = stamp_identity_degenerate(picks)
+    collisions = ledger_key_collisions(picks)
+    sweep = cross_keyer_identity_warnings(picks)
+    anomalies = mixed_script_names(picks)
+    counts = {
+        "identity_degenerate": degenerate,
+        "ledger_key_collision": len(collisions),
+        "cross_keyer_merged": len(sweep["merged"]),
+        "cross_keyer_split": len(sweep["split"]),
+        "mixed_script_name": len(anomalies),
+    }
+    print(f"identity sweep {day}: " + " ".join(f"{k}={v}" for k, v in counts.items()),
+          file=stream)
+    for a in anomalies:
+        print(f"!! MIXED SCRIPT TEAM NAME {a['name']!r} ({a['anomaly']}): "
+              "homoglyph codepoints fold away, so this row can split from "
+              "its Latin-spelled twin — verify the feed spelling",
+              file=stream)
+    for c in collisions:
+        print(f"!! LEDGER KEY COLLISION {c['key']}: {c['teams']} "
+              "(not merged, settled separately)", file=stream)
+    for w in sweep["merged"]:
+        print(f"!! IDENTITY MERGE WARNING key={w['key']}: {w['names']} "
+              "(no curated alias links these)", file=stream)
+    for w in sweep["split"]:
+        print(f"!! IDENTITY SPLIT WARNING {w['canonical_name']!r} "
+              f"spellings={w['spellings']} split_in={w['split_keyers']}", file=stream)
+    return counts
+
+
+def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
+    clusters: list[list[dict]] = []
+    for pick in picks:
+        matched = False
+        pick_home = pick.get("home", "")
+        pick_away = pick.get("away", "")
+        pick_date = str(pick.get("date") or "")[:10]
+        pick_market = str(pick.get("market") or "")
+        pick_sel = str(pick.get("pick") or "")
+        
+        for cluster in clusters:
+            rep = cluster[0]
+            rep_date = str(rep.get("date") or "")[:10]
+            rep_market = str(rep.get("market") or "")
+            rep_sel = str(rep.get("pick") or "")
+            
+            if pick_date == rep_date and pick_market == rep_market and pick_sel == rep_sel:
+                # DETERMINISTIC path first (2026-10-05 Türkiye/Turkey split):
+                # identical canonical fixture identity (transliteration +
+                # curated alias) is the same real match by construction, so
+                # it collapses even when the two sources render the name
+                # differently ("Italy vs Türkiye" / "Italy vs Turkey")
+                # and the fuzzy bigram path would miss them.
+                # No gate is weakened: this only ever merges rows that are
+                # already identical in date, market, selection and both
+                # canonical team keys. The 180-minute reschedule guard
+                # still applies whenever both rows carry an anchored
+                # (dated) kickoff.
+                veto = _merge_veto_reason(rep, pick)
+                if veto is not None:
+                    # never merge these two, by any path
+                    continue
+                if _canonical_identity_collapse(rep, pick):
+                    cluster.append(pick)
+                    matched = True
+                    break
+                # Same date, market, selection. Now check kickoff and fuzzy team similarity
+                if _same_event_cluster(rep, pick):
+                    # Compute team Jaccard bigram similarity
+                    h_sim = char_ngram_similarity(pick_home, rep.get("home", ""), n=2)
+                    a_sim = char_ngram_similarity(pick_away, rep.get("away", ""), n=2)
+                    
+                    # Group if both are similar, or one matches exactly and the other is similar
+                    if (h_sim >= 0.40 and a_sim >= 0.40) or (pick_home == rep.get("home") and a_sim >= 0.40) or (pick_away == rep.get("away") and h_sim >= 0.40):
+                        cluster.append(pick)
+                        matched = True
+                        break
+                        
+        if not matched:
+            clusters.append([pick])
+
+    out: list[dict] = []
+    removed = 0
+    for cluster in clusters:
+        out.append(_with_duplicate_metadata(cluster))
+        removed += max(0, len(cluster) - 1)
+
+    out.sort(key=lambda r: (-_bucket_severity(r.get("bucket")), -float(r.get("w_score") or 0.0), -float(r.get("avg_p") or 0)))
+    return out, removed
+
+
+def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
+    return collapse_final_operational_picks(picks)
+
+
+def _day_archive_row_key(row: dict, day: str) -> tuple[str, str, str, str, str]:
+    """Stable identity for a frozen 1X2 ledger row.
+
+    Must mirror ``audit_recent_picks._archive_pick_key`` so the engine ledger
+    and the audit's fail-closed superset verification agree on row identity.
+    """
+    return (
+        str(row.get("date") or day)[:10],
+        ledger_team_key(row.get("home") or ""),
+        ledger_team_key(row.get("away") or ""),
+        str(row.get("market") or "").lower(),
+        str(row.get("pick") or "").lower(),
+    )
+
+
+def _day_archive_row_key_legacy(row: dict, day: str) -> tuple[str, str, str, str, str]:
+    """Pre-2026-10-05 ledger row key (transliteration only, no aliases,
+    empty key for degenerate names). Read-side only: rows frozen before
+    the deploy are keyed this way and must still dedupe against a fresh
+    run instead of silently doubling."""
+    return (
+        str(row.get("date") or day)[:10],
+        research_ledger_team_key(row.get("home") or ""),
+        research_ledger_team_key(row.get("away") or ""),
+        str(row.get("market") or "").lower(),
+        str(row.get("pick") or "").lower(),
+    )
+
+
+def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
+    """Append-only merge for the per-day frozen pick ledger.
+
+    The engine re-runs the same target day several times per day (official
+    cycle, late-slate scan, CLV-only sweeps). After kickoff a rerun can
+    legitimately find an empty or partial slate; writing that over the
+    earlier frozen rows silently erases audited history (2026-08-05: the
+    evening run emptied the 6-row 08-05 ledger, and the next audit lost
+    4 of 6 slate rows — Addendum 27.18).
+
+    Doctrine (same as the orchestrator's kickoff-stacking ledger and the
+    audit's ``dedupe_archived_picks`` first-frozen-wins rule):
+
+    - rows already in the ledger are never dropped by a later same-day run;
+    - on an identity conflict the earlier frozen payload wins (pick-time
+      state is authoritative; the audit's payload-identical superset check
+      depends on it);
+    - rows dated to a different day are not preserved (the audit loader
+      filters those too, so keeping them would only add noise);
+    - an unreadable prior file is treated as empty (fresh wins) — the same
+      corrupt-file doctrine daily.py applies to the stacked ledger.
+    """
+    merged: list = []
+    seen: set = set()
+    seen_identity: dict = {}
+
+    def _collides(key, row) -> bool:
+        """Same width-9 ledger key, different real fixture (S5).
+
+        Rekeying the frozen ledger would rewrite audited history, so the
+        collision is handled by REFUSING to treat the rows as one: both
+        are kept, stamped, and settled separately.
+        """
+        ident = (canonical_team(row.get("home")), canonical_team(row.get("away")))
+        prior = seen_identity.get(key)
+        if prior is None or prior == ident:
+            return False
+        ctx = dict(row.get("ctx") or {})
+        ctx["ledger_key_collision"] = "true"
+        row["ctx"] = ctx
+        print(f"warn: frozen-ledger key collision {key}: "
+              f"{row.get('home')} vs {row.get('away')} kept as a separate row",
+              file=sys.stderr)
+        return True
+
+    for row in existing:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("date") or day)[:10] != day:
+            continue
+        key = _day_archive_row_key(row, day)
+        if key in seen and not _collides(key, row):
+            continue
+        seen.add(key)
+        seen.add(_day_archive_row_key_legacy(row, day))
+        seen_identity.setdefault(key, (canonical_team(row.get("home")),
+                                       canonical_team(row.get("away"))))
+        merged.append(row)
+    for row in fresh:
+        key = _day_archive_row_key(row, day)
+        legacy_key = _day_archive_row_key_legacy(row, day)
+        if legacy_key in seen and key not in seen and not _collides(legacy_key, row):
+            # the frozen row was written under the pre-fix key (accented,
+            # aliased or degenerate name): same row, do not double it
+            continue
+        if key in seen and not _collides(key, row):
+            # first-frozen-wins, UNLESS the shared key covers two different
+            # real fixtures (width-9 collision) — then keep both (S5).
+            continue
+        seen.add(key)
+        seen_identity.setdefault(key, (canonical_team(row.get("home")),
+                                       canonical_team(row.get("away"))))
+        merged.append(row)
+    return merged
+
+
+_ENH_FLOORS_CACHE: dict[str, dict] = {}
+
+
+def _enh_floor_table(day: str) -> dict:
+    """The day's derived floor table, computed once per render (cached).
+
+    Read-only, and resolved through THIS module's ``LOCALDATA`` at call time —
+    the same constant the picks themselves come from — so a scratch or test root
+    derives from its own registry, never from the repository's. An unreadable
+    registry yields an empty table and every line falls back to the operator's
+    static floor, which is the pre-R2 render.
+    """
+    key = str(day or "")[:10] or date.today().isoformat()
+    if key not in _ENH_FLOORS_CACHE:
+        try:
+            from edgefactory.enh_registry import derive_floors_for_day
+            _ENH_FLOORS_CACHE[key] = derive_floors_for_day(LOCALDATA.parent, key)
+        except Exception:
+            _ENH_FLOORS_CACHE[key] = {"floors": {}, "rows": []}
+    return _ENH_FLOORS_CACHE[key]
+
+
+def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
+    """Use the actual slip admission verdict, including quote/source evidence.
+
+    No global-rate EV, derived price-floor or ceiling. All supported priced
+    markets compete. A model/calibrated/legacy/mismatched rate is NO BET, not
+    "realized". Unpriced rows have no actionable enhancement line.
+    """
+    rec_market = p.get("recommended_enhancement")
+    if not rec_market:
+        return None
+    rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
+    # RT-6: archived/legacy picks can carry None or string probabilities —
+    # a formatting crash here would kill the whole render.
+    from edgefactory.enh_registry import enhancement_ml_probability
+    ml_probability = enhancement_ml_probability(p, rec_market)
+    rec_prob_text = (f"ML rank {ml_probability:.1%} (experimental)"
+                     if ml_probability is not None else "fixture probability unavailable")
+    rec_price = p.get("enhancement_price")
+    if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
+            and math.isfinite(rec_price) and rec_price > 1.0):
+        return None  # NaN/inf/junk must never render as a price (RT-2)
+    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
+    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
+    edge = p.get("enhancement_edge_sample")
+    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
+    # Operator 2026-10-14: no floor and no ceiling. The board gate is the slip's
+    # gate: the shared MIN_LEG_ODDS minimum and valid realized cohort evidence.
+    try:
+        from auto_tickets import MIN_LEG_ODDS, enhancement_legs
+    except ModuleNotFoundError:  # imported as scripts.picks_today in isolated tests
+        from scripts.auto_tickets import MIN_LEG_ODDS, enhancement_legs
+    below_min = rec_price < MIN_LEG_ODDS
+    admitted = any(l.get("market") == rec_market and l.get("verdict") == "fire"
+                   for l in enhancement_legs([p], registry_root=LOCALDATA.parent, execution_safe=True))
+    if not below_min and admitted:
+        return (f"     🔬 {rec_label} {rec_prob_text} @ {rec_price:.2f}{book}"
+                f"{edge_txt}{src} — minimum {MIN_LEG_ODDS:.2f}")
+    why = (f"below minimum {MIN_LEG_ODDS:.2f}" if below_min
+           else "no supported cohort payout or executable quote evidence")
+    return (f"     🚫 {rec_label} {rec_prob_text} @ {rec_price:.2f}{book}"
+            f" — no bet: {why}{src}")
+
+
+def print_buckets(buckets: dict, title_date: str = ""):
+    print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
+    print("=" * 60)
+    print(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    unavailable = bzzoiro_status_line()
+    if unavailable:
+        print(f"⚠️  {unavailable}")
+    health_day = str(title_date).split(", ")[-1] if title_date else date.today().isoformat()
+    print(f"{daily_status_block(health_day)}")
+    print()
+    for b in BUCKET_ORDER:
+        picks = buckets.get(b, [])
+        label = BUCKET_LABELS.get(b, b)
+        print(f"{label}")
+        print("=" * 60)
+        if not picks:
+            print("  (none)")
+            print()
+            continue
+        for p in picks:
+            if p.get("odds") is not None:
+                o = f"@{p['odds']:.2f}"
+                if p.get("odds_source") == BZZOIRO_ODDS_SOURCE and p.get("bookmaker"):
+                    o += f" {p['bookmaker']}"
+            else:
+                o = "@n/a"
+            ctx = p.get("ctx", {})
+            ctx_str = (
+                f"  league={ctx.get('league_key','?')}:{ctx.get('league','?')}  "
+                f"team={ctx.get('home_norm','?')}:{ctx.get('team_h','?')}/"
+                f"{ctx.get('away_norm','?')}:{ctx.get('team_a','?')}  "
+                f"odds_band={ctx.get('odds_band_name','?')}:{ctx.get('odds_band','?')}  "
+                f"comp_type={ctx.get('comp_type_name','?')}:{ctx.get('competition_type','?')}"
+            )
+            market = p.get("market_type", p.get("market", "?"))
+            tier = p.get("odds_tier", "?")
+            label = honest_display_label(p)
+            kickoff = format_kickoff(p)
+            w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
+            
+            warn_str = ""
+            rec = p.get("recommended_market")
+            if rec and rec not in ("keep_1x2", "unknown"):
+                risk = p.get("draw_risk_flag", "")
+                label_txt = rec.upper().replace('_', ' ')
+                if risk == "EXTREME":
+                    warn_str = f"  [⛔ {risk} DRAW/PRICE RISK — {label_txt}]"
+                else:
+                    warn_str = f"  [⚠️ {risk} DRAW RISK — {label_txt}]"
+                    
+            print(f"  [{label}] {p['match'][:45]:45s} KO {kickoff:5s} -> {p['pick'].upper():5s}  avg {format_pick_probability(p)}{w_str} {o}  [{market}/{tier}]{warn_str}")
+            if ctx:
+                print(ctx_str)
+            evidence = p.get("price_evidence")
+            if evidence:
+                quarantine = p.get("price_quarantine_reason") or "none"
+                print(
+                    f"     price_evidence={evidence} push_eligible={p.get('price_push_eligible')} "
+                    f"quarantine={quarantine}"
+                )
+            if p.get("suspect_price"):
+                suspect = p["suspect_price"]
+                print(
+                    f"     suspect_price={suspect.get('odds')} source={suspect.get('source')} "
+                    f"method={suspect.get('match_method')}"
+                )
+            statistical_comment = strip_retired_top_scores(p.get("statistical_comment"))
+            if statistical_comment:
+                print(f"     {statistical_comment}")
+            notes = p.get("event_notes", [])
+            if notes:
+                event_text = " | ".join(format_event_note(note) for note in notes)
+                # Vetoed core pick -> side-products are shadow research, never advice.
+                shadow_tag = " [SHADOW — paper]" if p.get("bucket") == "SKIPPED_VETO" else ""
+                print(f"     🔥{shadow_tag} Possible Events: {event_text}")
+            rec_line = enhancement_board_line(p)
+            if rec_line:
+                print(rec_line)
+        print()
+    print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
+    print("⚠️  Bet only what you can afford to lose.")
+
+
+# ---------------------------------------------------------------- betexplorer --
+BE_RESCUE_TARGET_LEGS = 4  # legacy live-rescue cap; disabled for final cards by default
+
+
+def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) -> None:
+    """Keep cached/rescue BetExplorer rows as corroboration candidates.
+
+    This is intentionally additive: it never changes the engine's chosen
+    price or chosen marker. The price-corroboration pass can therefore see a
+    second-source 1X2 quote even when rescue was skipped because Bzzoiro or
+    ScoutingStats already priced the fixture.
+    """
+    board = list(pick.get("price_board") or [])
+    seen = {
+        (str(entry.get("source") or ""), str(entry.get("bookmaker") or ""),
+         str(entry.get("selection") or ""), entry.get("odds"),
+         str(entry.get("captured_at") or ""))
+        for entry in board
+    }
+    for row in rows:
+        entry = _price_board_entry(source, row)
+        key = (source, str(entry.get("bookmaker") or ""),
+               str(entry.get("selection") or ""), entry.get("odds"),
+               str(entry.get("captured_at") or ""))
+        if key not in seen:
+            board.append(entry)
+            seen.add(key)
+    board.sort(key=_price_board_sort_key)
+    pick["price_board"] = board
+
+
+def _betexplorer_matching_row(rows: list[dict], pick: dict) -> dict | None:
+    """The row that prices this pick's own selection on this pick's market."""
+    sel = str(pick.get("pick") or "")
+    market = str(pick.get("market") or "")
+    return next(
+        (r for r in rows
+         if str(r.get("selection") or "") == sel
+         and str(r.get("market") or "") == market),
+        None,
+    )
+
+
+def _apply_betexplorer_row(pick: dict, matching_row: dict, rows: list[dict], *,
+                           bundles: tuple | None, source: str) -> bool:
+    """Attach one BetExplorer row to `pick`; True when the pick was priced.
+
+    ONE code path for both the network-free cache read and the bounded rescue
+    fetch (repo doctrine: "One code path, or the harness lies"), so a cached
+    price and a fetched price always land an identical field set. Returns False
+    (leaving the pick untouched) when the row carries no usable decimal price.
+    """
+    new_odds = _valid_decimal_odds(matching_row.get("odds"))
+    if new_odds is None:
+        return False
+    previous_odds = pick.get("odds")
+    previous_source = pick.get("odds_source")
+    pick["odds"] = new_odds
+    pick["odds_source"] = source
+    pick["odds_match_method"] = "betexplorer"
+    pick["bookmaker"] = matching_row.get("bookmaker")
+    pick["odds_captured_at"] = matching_row.get("captured_at")
+    pick["odds_league"] = matching_row.get("league")
+    pick["price_evidence"] = PRICE_EVIDENCE_BETEXPLORER_RESCUE
+    pick["price_push_eligible"] = True
+    pick.pop("price_quarantine_reason", None)
+    pick.pop("suspect_price", None)
+    if previous_odds is not None and previous_source != pick["odds_source"]:
+        pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+    be_bundle = _odds_bundle_from_rows(rows, provider=source)
+    if bundles is not None:
+        # Keep every BetExplorer 1X2 row on the board; the selected row is
+        # marked while the other sides remain corroboration candidates.
+        _stamp_price_board(
+            pick, (*bundles, be_bundle), chosen_row=matching_row,
+            chosen_source=source, chosen_method="betexplorer",
+        )
+    else:
+        _append_betexplorer_board_rows(pick, rows, source)
+    # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
+    resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=source)
+    return True
+
+
+def enrich_unmatched_with_betexplorer(
+    picks: list[dict],
+    day: str,
+    *,
+    max_fetches: int = 12,
+    bundles: tuple | None = None,
+    stats: dict | None = None,
+) -> int:
+    try:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "edgefactory.sources.betexplorer_odds",
+            str(ROOT / "src" / "edgefactory" / "sources" / "betexplorer_odds.py"),
+        )
+        _be_mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_be_mod)
+        betexplorer_odds_rows_for_pick = _be_mod.betexplorer_odds_rows_for_pick
+        reset_fetch_count = _be_mod.reset_fetch_count
+        _BE_SOURCE = _be_mod.BETEXPLORER_ODDS_SOURCE
+    except Exception:
+        print("  betexplorer_odds: adapter not available, skipping", file=sys.stderr)
+        return 0
+
+    from edgefactory.util import norm_team as _norm_team
+
+    reset_fetch_count()
+    _be_mod._MAX_FETCHES_PER_RUN = max(0, int(max_fetches))
+    enriched = 0
+    # Existing live-source prices count toward the bounded rescue target, but
+    # are never fetched again. This makes a sparse day cheap without reducing
+    # the primary/secondary corroboration board.
+    priced_before = sum(
+        1 for pick in picks
+        if pick.get("odds") is not None
+        and str(pick.get("odds_source") or "") in {
+            BZZOIRO_ODDS_SOURCE, SCOUTINGSTATS_ODDS_SOURCE,
+            BETEXPLORER_ODDS_SOURCE,
+        }
+    )
+    priced = priced_before
+    target = max(0, int(os.environ.get("EDGE_FACTORY_BE_RESCUE_TARGET_LEGS", str(BE_RESCUE_TARGET_LEGS))))
+    for pick in picks:
+        method = str(pick.get("odds_match_method") or "")
+
+        # (1) NETWORK-FREE SEAM FIRST, and for EVERY pick. A fresh same-day
+        # cache read costs nothing, so no budget decision may skip it. Before
+        # 2026-10-12 the rescue budget was checked first and `break` returned
+        # from the whole loop, so once four legs were priced by any source every
+        # later leg was abandoned — including legs whose prices were already on
+        # disk. Receipt: Ludogorets-Arda (1.50/4.00/6.50) and Elfsborg-Halmstad
+        # (1.36/5.25/8.00) were captured at 01:05Z and cached under this run's
+        # own key, yet the board published them with odds=None /
+        # odds_match_status="unmatched". A leg may be unpriced because there is
+        # no price — never because of ordering.
+        cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+        if cached_rows or _be_mod.cached_fixture_present(pick, day):
+            if cached_rows:
+                matching_row = _betexplorer_matching_row(cached_rows, pick)
+                if pick.get("odds") is None and matching_row is not None:
+                    if _apply_betexplorer_row(pick, matching_row, cached_rows,
+                                              bundles=bundles, source=_BE_SOURCE):
+                        enriched += 1
+                        priced += 1
+                else:
+                    # Not this pick's selection, or already priced by a live
+                    # source (which is never overwritten): keep the rows as
+                    # board corroboration only.
+                    _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
+            # The cache is authoritative for this fixture this run — an empty
+            # entry is a resolved answer, not a miss.
+            continue
+
+        # (2) A live source already priced this fixture: do not rescue it.
+        if method not in ("fallback", "none", "alias_fuzzy"):
+            continue
+
+        # (3) Bounded rescue. `continue`, never `break`: once the target is met
+        # no further REQUEST is made, but every later pick still reaches its free
+        # cache read at (1) on this pass.
+        if priced >= target:
+            continue
+
+        rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
+        if not rows:
+            continue
+        matching_row = _betexplorer_matching_row(rows, pick)
+        if matching_row is None:
+            continue
+        if _apply_betexplorer_row(pick, matching_row, rows,
+                                  bundles=bundles, source=_BE_SOURCE):
+            enriched += 1
+            priced += 1
+
+    if stats is not None:
+        stats.update(_be_mod.run_stats())
+        # Network-attempt counters (priced lane + market-tab detail requests),
+        # so the run log shows what BetExplorer actually saw.
+        stats.update(_be_mod.request_stats())
+        stats["be_priced_before"] = priced_before
+        stats["be_priced_after"] = priced
+        stats["be_target_legs"] = target
+    return enriched
+
+
+def main():
+    # Keep the historical positional form (``picks_today.py YYYY-MM-DD``)
+    # while accepting the operator-standard form used by the runbook and
+    # daily orchestration (``picks_today.py --date YYYY-MM-DD``). Treating the
+    # flag as a date silently created ``picks_--date.json`` and mixed an
+    # invalid pseudo-day into the source-health receipt.
+    argv = sys.argv[1:]
+    if argv[:1] == ["--date"]:
+        if len(argv) != 2:
+            raise SystemExit("usage: picks_today.py [--date YYYY-MM-DD]")
+        days = [argv[1]]
+    elif len(argv) == 1 and argv[0].startswith("--date="):
+        days = [argv[0].split("=", 1)[1]]
+    else:
+        days = argv or [date.today().isoformat()]
+    if offline_rebuild() and load_post_forebet_registry() is None:
+        raise SystemExit("offline rebuild refused: no post-Forebet operating registry; no legacy fallback")
+    t1x2, ou_edge, btts_edge, fallback = load_thresholds()
+    edge_meta = load_edge_meta()
+    purity = load_purity()
+    purity_missing = not bool(purity)
+    # Veto re-mine resolution overlay (Phase 1/2): shadow-logs resolution_*
+    # fields on every pick's ctx ALWAYS (accrual log from day one); applies
+    # the resolved league verdict only when the flag is "1" (>=30-settled
+    # gate required before enabling — see PHASE1_2_VETO_RESOLUTION_SPEC.md).
+    veto_resolution_on = os.environ.get("EDGE_FACTORY_VETO_RESOLUTION") == "1"
+    _veto_contexts = (purity or {}).get("contexts", {}) if isinstance(purity, dict) else {}
+    _veto_pools = build_pool_table(_veto_contexts) if _veto_contexts else {}
+    as_of = pick_run_as_of()
+    lead_minutes = min_lead_minutes()
+    candidate_only = candidate_only_build()
+    print(
+        f"operational as_of={as_of.isoformat(timespec='seconds')} min_lead={lead_minutes}m "
+        f"build={'candidate' if candidate_only else 'priced_final'}",
+        file=sys.stderr,
+    )
+
+    source_weights_1x2 = load_source_weights("1x2")
+    if source_weights_1x2:
+        print(
+            "Weighted consensus active — source LBs: "
+            + ", ".join(f"{s}={lb:.3f}" for s, lb in sorted(source_weights_1x2.items())),
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "Weighted consensus: no certified weighted edge yet — using uniform weights.",
+            file=sys.stderr,
+        )
+
+    if fallback:
+        print("no certified registry-backed 1x2 thresholds -> 1x2 blocked; "
+              "no guessed legacy operating point",
+              file=sys.stderr)
+    if purity_missing:
+        print("purity_registry.json missing – all contexts will be UNKNOWN → WATCHLIST",
+              file=sys.stderr)
+    elif (purity or {}).get("roi_population_status") == "unverified_legacy_population":
+        print("purity_registry.json HELD (roi_population_status=unverified_legacy_population): "
+              "VETO/CAUTION retained, ALLOW/BOOST suppressed. No promotion from unverified "
+              "purity evidence until a priced-only re-assay is committed.", file=sys.stderr)
+
+    all_picks: list = []
+    context_floor_drops: Counter = Counter()
+    total_vetoes = 0
+    total_upcoming = 0
+    shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0,
+                    "bm_raw": 0, "bm_scored": 0, "pa_raw": 0, "pa_matched": 0,
+"bb_raw": 0, "bb_scored": 0, "sa_raw": 0, "sa_matched": 0,
+                    "bg_raw": 0, "bg_scored": 0, "oa_raw": 0,
+                    "oa_usable": 0, "oa_matched": 0, "op_raw": 0,
+                    "op_usable": 0, "op_matched": 0}
+
+    # ML-fade research capture: certification-independent collection of every
+    # model-scored fixture (parent + deterministic fade candidate) into the
+    # tracked research ledger. Research rows NEVER join all_picks.
+    research_collector = FadeResearchCollector()
+
+    # Open warehouse connection to dynamically query historical realized stats
+    con = None
+    try:
+        import duckdb
+        con = duckdb.connect(str(LOCALDATA / "warehouse.duckdb"), read_only=True)
+    except Exception:
+        con = None
+
+    # The warehouse is immutable during this build; discard this evidence cache
+    # with this invocation, never persist it into another capture/build phase.
+    cohort_cache = {}
+    for day in days:
+        ml_scored_before = int(getattr(research_collector, "scored", 0) or 0)
+        # Fixture-level audit mirror of the `coverage: scored=` universe
+        # (AUDIT-ONLY; consumed by the scored-candidate shadow hook below).
+        fixture_audit: list[dict] = []
+        picks, vetoes, n_up, data = run_day(day, t1x2, ou_edge, btts_edge,
+                                            source_weights_1x2=source_weights_1x2,
+                                            research_collector=research_collector,
+                                            fixture_audit=fixture_audit)
+        ml_scored_day = max(0, int(getattr(research_collector, "scored", 0) or 0) - ml_scored_before)
+        total_vetoes += vetoes
+        total_upcoming += n_up
+        generation_rejections = []
+        picks, pre_match_skips = filter_operational_pre_match_picks(
+            picks,
+            as_of=as_of,
+            min_lead=lead_minutes,
+            rejection_audit=generation_rejections,
+        )
+        if pre_match_skips:
+            details = ", ".join(f"{k}={v}" for k, v in sorted(pre_match_skips.items()))
+            print(f"pre-match guard {day}: skipped {sum(pre_match_skips.values())} ({details})", file=sys.stderr)
+
+        # Checkpoint ⑫ tripwire. Fail-closed and LOUD: the >=55 operating point
+        # is calibrated against an all-zero ht_diff/ht_total scale, so a
+        # non-zero value on a bettable pick means the engine is scoring on a
+        # scale its threshold was never tuned for.
+        _breaches = ml_meta_contract_breaches(picks)
+        if _breaches:
+            generation_rejections.extend({"row": dict(p), "stage": "ml_contract",
+                "reason": "ml_meta_constant_feature_breach", "evidence": {
+                    "constant_features": {k: p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES}}}
+                for p in picks if str(p.get("rule") or "").startswith("ml-meta")
+                and any(p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES))
+            picks = [p for p in picks
+                     if not str(p.get("rule") or "").startswith("ml-meta")
+                     or not any(p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES)]
+            print(
+                f"\U0001f6a8 ML-META CONTRACT BROKEN on {day}: "
+                f"{len(_breaches)} bettable pick(s) had a non-zero "
+                f"{'/'.join(ML_META_CONSTANT_FEATURES)} and were WITHHELD. "
+                "Those features are 0 for every legitimate pre-kickoff "
+                "prediction; the avg_p threshold is calibrated against that "
+                "all-zero scale. Do not bet ml-meta legs until this is "
+                "explained. See HANDOVER checkpoint 12.",
+                file=sys.stderr,
+            )
+            try:
+                (LOCALDATA / f"ml_meta_contract_breach_{day}.json").write_text(
+                    json.dumps({"date": day, "withheld": len(_breaches),
+                                "features": list(ML_META_CONSTANT_FEATURES),
+                                "picks": _breaches}, indent=2))
+            except Exception:
+                pass
+
+        # Shadow/donor capture runs BEFORE enrichment (2026-10-03): the
+        # operator-promoted donors (Boggio average prices, Bet Better fair
+        # prices, SharpAPI books) can only reach the price board if their
+        # ledgers for `day` exist by the time the bundles are built. Capture
+        # is still shadow-only and still writes its own ledgers.
+        shadow_stats = _capture_shadow_candidates(
+            day,
+            card=_day_card_fixtures(day, picks),
+        )
+
+        bzz_stats: dict = {}
+        scouting_stats: dict = {}
+        odds_bundle = bzzoiro_odds_bundle(day, live=not (candidate_only or offline_rebuild()), stats=bzz_stats)
+        # Persist upstream zero-run evidence for visibility only. This never
+        # alters enrichment, certification, or ticket eligibility.
+        record_bzzoiro_run(day, bzz_stats)
+        secondary_bundle = scoutingstats_odds_bundle(
+            day,
+            cached_rows=list(data.get("scoutingstats", {}).values()),
+            stats=scouting_stats,
+        )
+        # TheOddsAPI is a cached named-book board, not another live request.
+        # Its cutoff is this pick build's ``as_of`` so a later CLV snapshot
+        # cannot time-travel into an already-generated card.
+        theodds_stats: dict = {}
+        theodds_bundle = theoddsapi_odds_bundle(day, not_after=as_of, stats=theodds_stats)
+        oddspapi_stats: dict = {}
+        oddspapi_bundle = oddspapi_odds_bundle(day, not_after=as_of, stats=oddspapi_stats)
+        betexplorer_cache_stats: dict = {}
+        betexplorer_bundle = betexplorer_cached_odds_bundle(
+            day, not_after=as_of, stats=betexplorer_cache_stats,
+        )
+        # All populated boards enter one matcher. Source contribution priority,
+        # not construction position, resolves healthy exact named-book ties.
+        donor_bundles = [
+            betexplorer_bundle, theodds_bundle, oddspapi_bundle,
+            *donor_odds_bundles(day),
+        ]
+        enriched_n = enrich_with_live_odds(
+            picks, odds_bundle, secondary_bundle, donor_bundles=donor_bundles)
+        theodds_matches = donor_match_counts(picks, [theodds_bundle]).get(THEODDSAPI_ODDS_SOURCE, 0)
+        oddspapi_matches = donor_match_counts(picks, [oddspapi_bundle]).get(ODDSPAPI_ODDS_SOURCE, 0)
+        betexplorer_matches = donor_match_counts(picks, [betexplorer_bundle]).get(BETEXPLORER_ODDS_SOURCE, 0)
+        donor_matches = donor_match_counts(picks, donor_bundles)
+        # Every donor that can leave rows unmatched gets per-reason miss
+        # accounting. The rule is the one written when OddsPAPI was added:
+        # a counted miss is worth more than a silent zero.
+        diagnosed_donor_names = {
+            "betbetter", "boggio", "betminer", "pinnapi_odds", "sharpapi_odds",
+            # OddsPAPI is a named-book price source, not a shadow donor, but
+            # it captured 414 usable rows and matched zero with no miss
+            # accounting at all. A counted miss is worth more than a silent
+            # zero, so it gets the same per-reason buckets.
+            ODDSPAPI_ODDS_SOURCE,
+            # Same argument, extended to the two boards that are actually
+            # alive. Through 2026-10-03..07 these were the ONLY priced
+            # sources returning rows, and they were the only ones with no
+            # miss accounting at all: 1,423 unmatched TheOddsAPI rows and 98
+            # unmatched BetExplorer rows over five days, every one of them
+            # recorded as a silent zero. That is the single largest blind
+            # spot in the price funnel, and it is exactly the surface the
+            # `coverage unmatched_causes` line claims to explain.
+            THEODDSAPI_ODDS_SOURCE,
+            BETEXPLORER_ODDS_SOURCE,
+        }
+        donor_join_report = donor_join_diagnostics(
+            picks,
+            [bundle for bundle in donor_bundles
+             if str(bundle.get("provider") or "") in diagnosed_donor_names],
+        )
+        for source_name, stats_name, scored_key, raw_key in (
+            ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
+            ("boggio", "bg_matched", "bg_scored", "bg_raw"),
+            ("betminer", "bm_matched", "bm_scored", "bm_raw"),
+            ("pinnapi_odds", "pa_matched", "pa_scored", "pa_raw"),
+            ("sharpapi_odds", "sa_matched", "sa_scored", "sa_raw"),
+        ):
+            if source_name in shadow_stats:
+                entry = shadow_stats[source_name]
+                if scored_key not in entry:
+                    entry[scored_key] = int(entry.get(stats_name) or entry.get(raw_key) or 0)
+                entry[stats_name] = int(donor_matches.get(source_name, 0))
+                join_row = donor_join_report.get(source_name) or {}
+                entry["join_miss_counts"] = dict(join_row.get("miss_counts") or {})
+                entry["join_matched_rows"] = int(join_row.get("matched_rows") or 0)
+        # The coherent-book gate's refusals, per donor (2026-10-12).
+        _record_bundle_coherence(shadow_stats, donor_bundles)
+        oddspapi_join_row = donor_join_report.get(ODDSPAPI_ODDS_SOURCE) or {}
+        if oddspapi_join_row:
+            oddspapi_stats["join_miss_counts"] = dict(
+                oddspapi_join_row.get("miss_counts") or {})
+            oddspapi_stats["join_matched_rows"] = int(
+                oddspapi_join_row.get("matched_rows") or 0)
+        for line in donor_join_miss_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in coherence_observation_lines(donor_bundles):
+            print(line, file=sys.stderr)
+        for line in donor_vocabulary_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in kickoff_offset_lines(kickoff_display_offset_census(picks)):
+            print(line, file=sys.stderr)
+
+        be_stats: dict = {}
+        if candidate_only:
+            be_stats["status"] = "candidate_only"
+            be_enriched = 0
+        elif not offline_rebuild() and _allow_live_betexplorer_rescue():
+            # Emergency-only compatibility route. Normal final cards already
+            # have a bounded pre-build snapshot in betexplorer_bundle.
+            be_enriched = enrich_unmatched_with_betexplorer(
+                picks, day, bundles=(odds_bundle, secondary_bundle, *donor_bundles), stats=be_stats)
+        else:
+            be_stats["status"] = "snapshot_only"
+            be_enriched = 0
+
+        # Load the price index AFTER the rescue above, on purpose: the
+        # rescue's fetch writes today's BetExplorer detail ledger, and that
+        # ledger is itself a price source for the enhancement board
+        # (schema 2, merged behind EDGE_FACTORY_ENH_BOARD). Loading the
+        # index earlier would leave a fixture rescued in this very run
+        # unpriced on the board.
+        prices_index = load_prices_index(ROOT, day)
+
+        # Shadow stats were captured above, before bundle construction.
+        fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
+        st_shadow_stats = shadow_stats.get("sportytrader_odds", {})
+        bm_shadow_stats = shadow_stats.get("betminer", {})
+        pa_shadow_stats = shadow_stats.get("pinnapi_odds", {})
+        bb_shadow_stats = shadow_stats.get("betbetter", {})
+        sa_shadow_stats = shadow_stats.get("sharpapi_odds", {})
+        bg_shadow_stats = shadow_stats.get("boggio", {})
+        shadow_totals["raw"] += int(fp_shadow_stats.get("raw") or 0)
+        shadow_totals["scored"] += int(fp_shadow_stats.get("scored") or 0)
+        shadow_totals["st_raw"] += int(st_shadow_stats.get("st_raw") or 0)
+        shadow_totals["st_matched"] += int(st_shadow_stats.get("st_matched") or 0)
+        shadow_totals["bm_raw"] += int(bm_shadow_stats.get("bm_raw") or 0)
+        shadow_totals["bm_scored"] += int(bm_shadow_stats.get("bm_scored") or 0)
+        shadow_totals["pa_raw"] += int(pa_shadow_stats.get("pa_raw") or 0)
+        shadow_totals["pa_matched"] += int(pa_shadow_stats.get("pa_matched") or 0)
+        shadow_totals["bb_raw"] += int(bb_shadow_stats.get("bb_raw") or 0)
+        shadow_totals["bb_scored"] += int(bb_shadow_stats.get("bb_scored") or 0)
+        shadow_totals["sa_raw"] += int(sa_shadow_stats.get("sa_raw") or 0)
+        shadow_totals["sa_matched"] += int(sa_shadow_stats.get("sa_matched") or 0)
+        shadow_totals["bg_raw"] += int(bg_shadow_stats.get("bg_raw") or 0)
+        shadow_totals["bg_scored"] += int(bg_shadow_stats.get("bg_scored") or 0)
+        shadow_totals["oa_raw"] += int(theodds_stats.get("raw_rows") or 0)
+        shadow_totals["oa_usable"] += int(theodds_stats.get("usable_rows") or 0)
+        shadow_totals["oa_matched"] += int(theodds_matches or 0)
+        shadow_totals["op_raw"] += int(oddspapi_stats.get("raw_rows") or 0)
+        shadow_totals["op_usable"] += int(oddspapi_stats.get("usable_rows") or 0)
+        shadow_totals["op_matched"] += int(oddspapi_matches or 0)
+        print(
+            f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
+            f"scored={fp_shadow_stats.get('scored', 0)} "
+            f"st_raw={st_shadow_stats.get('st_raw', 0)} "
+            f"st_matched={st_shadow_stats.get('st_matched', 0)} "
+            f"bm_raw={bm_shadow_stats.get('bm_raw', 0)} "
+            f"bm_scored={bm_shadow_stats.get('bm_scored', 0)} "
+            f"pa_raw={pa_shadow_stats.get('pa_raw', 0)} "
+            f"pa_matched={pa_shadow_stats.get('pa_matched', 0)} "
+            f"bb_raw={bb_shadow_stats.get('bb_raw', 0)} "
+            f"bb_scored={bb_shadow_stats.get('bb_scored', 0)} "
+            f"sa_raw={sa_shadow_stats.get('sa_raw', 0)} "
+            f"sa_matched={sa_shadow_stats.get('sa_matched', 0)} "
+            f"bg_raw={bg_shadow_stats.get('bg_raw', 0)} "
+            f"bg_scored={bg_shadow_stats.get('bg_scored', 0)} "
+            f"theodds_raw={theodds_stats.get('raw_rows', 0)} "
+            f"theodds_usable={theodds_stats.get('usable_rows', 0)} "
+            f"theodds_matched={theodds_matches} "
+            f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
+            f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
+            f"oddspapi_matched={oddspapi_matches} "
+            f"betexplorer_raw={betexplorer_cache_stats.get('raw_rows', 0)} "
+            f"betexplorer_usable={betexplorer_cache_stats.get('usable_rows', 0)} "
+            f"betexplorer_matched={betexplorer_matches} "
+            f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
+            file=sys.stderr,
+        )
+        _apply_sportytrader_corroborator(picks, day)
+
+        def _rows_have_price(rows: object) -> bool:
+            if not isinstance(rows, dict):
+                return False
+            price_fields = ("odd1", "oddx", "odd2", "odd_o25", "odd_u25", "odd_gg", "odd_ng")
+            return any(_valid_decimal_odds(row.get(field)) is not None
+                       for row in rows.values() if isinstance(row, dict)
+                       for field in price_fields)
+
+        health_observations: dict[str, dict] = {}
+        for source_name in ALL_SOURCES:
+            source_rows = data.get(source_name, {})
+            source_count = len(source_rows) if isinstance(source_rows, dict) else 0
+            health_observations[source_name] = {
+                "fetched": source_name in data,
+                "rows": source_count,
+                "can_fetch_today": source_name in data,
+                "can_price": _rows_have_price(source_rows),
+                "can_vote": source_name in SOURCES_1X2 + SOURCES_OU + SOURCES_BTTS and source_count > 0,
+                "freshness_h": 0.0 if source_name in data else None,
+            }
+        bzz_status = str(bzz_stats.get("status") or "not_run")
+        # The PREDICTION and ODDS lanes are separate accesses and must be
+        # reported separately (2026-10-10: predictions captured 537 rows
+        # through the configured token while the odds endpoint 403'd; the
+        # prediction row inherited the odds lane's auth blocker, which read
+        # as "the configured secret is absent" — an unverified claim).
+        bzz_prediction_rows = len(data.get("bzzoiro") or {})
+        health_observations["bzzoiro"] = {
+            "fetched": bzz_prediction_rows > 0,
+            "rows": bzz_prediction_rows,
+            "can_fetch_today": bzz_prediction_rows > 0,
+            "can_price": False,
+            "can_vote": bzz_prediction_rows > 0,
+            "freshness_h": 0.0 if bzz_prediction_rows > 0 else None,
+            "blocker": None if bzz_prediction_rows > 0 else (
+                "no bzzoiro prediction rows for today in the warehouse; the "
+                "prediction capture stage outcome is not carried into this "
+                "build - the odds-lane status below is a different access"),
+            "status": "ok" if bzz_prediction_rows > 0 else None,
+            "reason": None,
+        }
+        health_observations["bzzoiro_odds"] = {
+            "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
+            "rows": int(bzz_stats.get("rows") or bzz_stats.get("cached_rows") or 0),
+            "can_fetch_today": bzz_status in {"ok", "empty"},
+            "can_price": bool(bzz_stats.get("rows") or bzz_stats.get("cached_rows")),
+            "can_vote": False,
+            "freshness_h": 0.0 if bzz_status == "ok" else None,
+            "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+            # Credential-blocked diagnostics only: the operator must be able
+            # to tell "the key/plan was rejected" from "the endpoint moved".
+            "status": bzz_status or None,
+            "reason": zero_row_reason(
+                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint"),
+                credential_configured=bzz_stats.get("credential_configured")),
+        }
+        be_cache_rows = int(betexplorer_cache_stats.get("usable_rows") or 0)
+        health_observations["betexplorer"] = {
+            "fetched": False,
+            "rows": be_cache_rows,
+            "be_raw": int(betexplorer_cache_stats.get("raw_rows") or 0),
+            "be_usable": be_cache_rows,
+            "be_matched": int(betexplorer_matches or 0),
+            "can_fetch_today": False,
+            "can_price": bool(be_cache_rows),
+            "can_vote": False,
+            "freshness_h": None,
+            "status": betexplorer_cache_stats.get("status") or be_stats.get("status"),
+            "blocker": (
+                "run cooling down after 2 HTTP 429 responses"
+                if be_stats.get("be_cooling_down")
+                else "cache-only pre-build snapshot; final card makes no live rescue"
+                if be_cache_rows else "no pre-build BetExplorer rows"
+            ),
+        }
+        health_observations["futbolpronosticos"] = {
+            "fetched": fp_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(fp_shadow_stats.get("scored") or 0),
+            "raw": int(fp_shadow_stats.get("raw") or 0),
+            "scored": int(fp_shadow_stats.get("scored") or 0),
+            "can_fetch_today": fp_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": False,
+            "can_vote": False,
+            "freshness_h": 0.0 if fp_shadow_stats.get("status") == "ok" else None,
+            "blocker": fp_shadow_stats.get("blocker") or (
+                "settled-count coverage mismatch: " + str(fp_shadow_stats.get("settlement_coverage"))
+                if (fp_shadow_stats.get("settlement_coverage") or {}).get("mismatch") else None
+            ),
+        }
+        health_observations["betminer"] = {
+            "fetched": bm_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(bm_shadow_stats.get("bm_scored") or 0),
+            "bm_raw": int(bm_shadow_stats.get("bm_raw") or 0),
+            "bm_scored": int(bm_shadow_stats.get("bm_scored") or 0),
+            "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            # Conditional price donor: only rows whose provenance the response
+            # actually identified count, and BetMiner is never execution-eligible.
+            "can_price": int(bm_shadow_stats.get("bm_priced") or 0) > 0,
+            # Zero voice credit until the echo test passes and the operator promotes.
+            "can_vote": False,
+            "freshness_h": 0.0 if bm_shadow_stats.get("status") == "ok" else None,
+            "blocker": bm_shadow_stats.get("blocker"),
+            "status": bm_shadow_stats.get("status"),
+            "reason": bm_shadow_stats.get("reason"),
+        }
+        health_observations["pinnapi_odds"] = {
+            "fetched": pa_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(pa_shadow_stats.get("pa_scored") or 0),
+            "pa_raw": int(pa_shadow_stats.get("pa_raw") or 0),
+            "pa_scored": int(pa_shadow_stats.get("pa_scored") or 0),
+            "pa_matched": int(pa_shadow_stats.get("pa_matched") or 0),
+            "can_fetch_today": pa_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            "can_price": int(pa_shadow_stats.get("pa_scored") or 0) > 0,
+            # Price donor, never a vote; corroboration stays default-off.
+            "can_vote": False,
+            "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
+            # Request-contract discriminators: which auth mechanism replied,
+            # what sport/event was asked for, and what the payload looked
+            # like. Without these a zero is unreadable, and they are
+            # otherwise confined to the gitignored shadow ledger.
+            **pinnapi_contract_observation(pa_shadow_stats),
+            "blocker": pa_shadow_stats.get("blocker"),
+            # An authenticated HTTP 200 that returns no events is VALID-EMPTY,
+            # not "unavailable". Reporting it as unavailable told the operator
+            # to go and fix an integration that is already working.
+            "status": pa_shadow_stats.get("status"),
+            "reason": zero_row_reason(
+                pa_shadow_stats.get("status"),
+                pa_shadow_stats.get("http_statuses"),
+                pa_shadow_stats.get("quota_hint"),
+            ),
+        }
+        health_observations["theoddsapi"] = {
+            # This stage deliberately does not make an API request.  A usable
+            # cached capture may price a pick, but it is not a fresh fetch.
+            "fetched": False,
+            "rows": int(theodds_stats.get("usable_rows") or 0),
+            "oa_raw": int(theodds_stats.get("raw_rows") or 0),
+            "oa_usable": int(theodds_stats.get("usable_rows") or 0),
+            "oa_matched": int(theodds_matches or 0),
+            "can_fetch_today": False,
+            "can_price": int(theodds_stats.get("usable_rows") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": None,
+            "blocker": (
+                "cache-only pre-build snapshot; selection does not fetch provider"
+                if theodds_stats.get("status") == "cache_only"
+                else ("no pre-build TheOddsAPI rows" if theodds_stats.get("status") in {"absent", "empty"}
+                      else "TheOddsAPI cache unreadable")
+            ),
+            "status": theodds_stats.get("status"),
+            "reason": None,
+        }
+        # The pre-build capture receipt carries the quota/auth evidence the
+        # cached bundle cannot (observed 2026-10-10: the capture receipt
+        # recorded HTTP 429 while the health line printed a bare "no rows",
+        # which reads as a quiet slate). Surface it as the lane's status.
+        _op_receipt = _coverage_receipts(day).get("oddspapi") or {}
+        _op_http = _op_receipt.get("http_status")
+        _op_status = (
+            str(oddspapi_stats.get("status") or "").strip()
+            or ("quota" if _op_http == 429 else None)
+            or ("auth" if _op_http in (401, 403) else None)
+        )
+        health_observations["oddspapi_odds"] = {
+            # As with TheOddsAPI, this selection stage consumes only a
+            # persisted pre-build snapshot; it does not claim an HTTP fetch.
+            "fetched": False,
+            "rows": int(oddspapi_stats.get("usable_rows") or 0),
+            "op_raw": int(oddspapi_stats.get("raw_rows") or 0),
+            "op_usable": int(oddspapi_stats.get("usable_rows") or 0),
+            "op_matched": int(oddspapi_matches or 0),
+            "can_fetch_today": False,
+            "can_price": int(oddspapi_stats.get("usable_rows") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": None,
+            "blocker": (
+                "cache-only pre-build snapshot; selection does not fetch provider"
+                if oddspapi_stats.get("status") == "cache_only"
+                else (f"pre-build capture stopped on HTTP {_op_http} "
+                      f"({'rate-limited' if _op_status == 'quota' else 'credential'}); "
+                      f"retry_after={(_op_receipt.get('rate_limit') or {}).get('retry_after_s')}"
+                      if _op_status in {"quota", "auth"} and _op_http
+                      else "no pre-build OddsPAPI rows" if oddspapi_stats.get("status") in {"absent", "empty"}
+                      else "OddsPAPI cache unreadable")
+            ),
+            "status": _op_status or oddspapi_stats.get("status"),
+            "reason": zero_row_reason(_op_status, [_op_http] if _op_http else []),
+            # Same per-reason join accounting the shadow donors already had.
+            "join_miss_counts": dict(oddspapi_stats.get("join_miss_counts") or {}),
+            "join_matched_rows": int(oddspapi_stats.get("join_matched_rows") or 0),
+        }
+        health_observations["betbetter"] = {
+            "fetched": bb_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(bb_shadow_stats.get("bb_scored") or 0),
+            "bb_raw": int(bb_shadow_stats.get("bb_raw") or 0),
+            "bb_scored": int(bb_shadow_stats.get("bb_scored") or 0),
+            "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            # Approved FAIR-price donor (operator promotion 2026-10-03). These
+            # are model fair odds, never bookmaker quotes - the role label in
+            # source_health keeps that distinction visible.
+            "can_price": int(bb_shadow_stats.get("bb_scored") or 0) > 0,
+            # A fair price is price evidence, never a vote.
+            "can_vote": False,
+            "freshness_h": 0.0 if bb_shadow_stats.get("status") == "ok" else None,
+            "blocker": bb_shadow_stats.get("blocker"),
+            "status": bb_shadow_stats.get("status"),
+            "reason": bb_shadow_stats.get("reason"),
+        }
+        health_observations["sharpapi_odds"] = {
+            "fetched": sa_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(sa_shadow_stats.get("sa_scored") or 0),
+            "sa_raw": int(sa_shadow_stats.get("sa_raw") or 0),
+            "sa_scored": int(sa_shadow_stats.get("sa_scored") or 0),
+            "sa_matched": int(sa_shadow_stats.get("sa_matched") or 0),
+            "can_fetch_today": sa_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            "can_price": int(sa_shadow_stats.get("sa_scored") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
+            # Board-shape context: how big the board was, how much of it was
+            # in-play, which competitions were on it, and whether the page
+            # hit its own limit. Without these a zero names no action.
+            **sharpapi_board_observation(sa_shadow_stats),
+            "blocker": sa_shadow_stats.get("blocker"),
+            "status": sa_shadow_stats.get("status"),
+            "reason": sa_shadow_stats.get("reason"),
+        }
+        health_observations["boggio"] = {
+            "fetched": bg_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(bg_shadow_stats.get("bg_scored") or 0),
+            "bg_raw": int(bg_shadow_stats.get("bg_raw") or 0),
+            "bg_scored": int(bg_shadow_stats.get("bg_scored") or 0),
+            "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            # Approved AVERAGE-bookmaker price donor (operator promotion
+            # 2026-10-03). Not a named bookmaker, never named-book corroboration.
+            "can_price": int(bg_shadow_stats.get("bg_scored") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": 0.0 if bg_shadow_stats.get("status") == "ok" else None,
+            "blocker": bg_shadow_stats.get("blocker"),
+            "status": bg_shadow_stats.get("status"),
+            "reason": bg_shadow_stats.get("reason"),
+        }
+        health_observations["sportytrader_odds"] = {
+            "fetched": st_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(st_shadow_stats.get("st_matched") or 0),
+            "st_raw": int(st_shadow_stats.get("st_raw") or 0),
+            "st_matched": int(st_shadow_stats.get("st_matched") or 0),
+            "can_fetch_today": st_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": int(st_shadow_stats.get("st_matched") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": 0.0 if st_shadow_stats.get("status") == "ok" else None,
+            "blocker": st_shadow_stats.get("blocker") or (
+                "training-only after Cloudflare challenge" if st_shadow_stats.get("training_only") else None
+            ),
+        }
+        # The bundle provider name and the source-health key are not always
+        # the same string: BetExplorer's board is published as
+        # `betexplorer_odds` but its health row is keyed `betexplorer`.
+        # Without this alias the join report is computed and then silently
+        # dropped on the `in health_observations` test.
+        join_report_health_key = {BETEXPLORER_ODDS_SOURCE: "betexplorer"}
+        for source_name, join_row in donor_join_report.items():
+            health_key = join_report_health_key.get(source_name, source_name)
+            if health_key in health_observations:
+                health_observations[health_key]["join_miss_counts"] = dict(
+                    join_row.get("miss_counts") or {})
+                health_observations[health_key]["join_matched_rows"] = int(
+                    join_row.get("matched_rows") or 0)
+                # The coherent-book gate's refusals ride the same row: the
+                # gate drops prices, and a dropped price must never be
+                # invisible. (The builder lifts these for pinnapi; passing
+                # them here keeps the wiring in one place for every source.)
+                health_observations[health_key].update(
+                    coherence_observation(shadow_stats.get(source_name) or {}))
+        persist_daily_source_health(day, health_observations)
+        print(daily_status_block(day), file=sys.stderr)
+        # Source ROLES, printed next to health: the pipeline must never imply
+        # that every source returning a number is a bookmaker source.
+        for line in source_role_lines(day):
+            print(f"  {line}", file=sys.stderr)
+        print(psrc.policy_line(), file=sys.stderr)
+
+        corroborated_n = _stamp_price_corroboration(picks)
+        priced_n = sum(1 for p in picks if p.get("odds") is not None)
+
+        if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n or picks:
+            exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
+            alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
+            alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
+            alias_fuzzy_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_fuzzy")
+            fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
+            none_n = sum(1 for p in picks if p.get("odds_match_method") == "none")
+            betexp_n = sum(1 for p in picks if p.get("odds_match_method") == "betexplorer")
+            bzz_n = sum(1 for p in picks if p.get("odds_source") == BZZOIRO_ODDS_SOURCE)
+            scouting_n = sum(1 for p in picks if p.get("odds_source") == SCOUTINGSTATS_ODDS_SOURCE)
+            be_source_n = sum(1 for p in picks if p.get("odds_source") == BETEXPLORER_ODDS_SOURCE)
+            uncorroborated_n = sum(
+                1 for p in picks if p.get("price_evidence") == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE
+            )
+            suspect_price_n = sum(
+                1 for p in picks if p.get("price_evidence") == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
+            )
+            print(
+                f"live odds enrichment {day}: "
+                f"picks={len(picks)} "
+                f"bzz_status={bzz_stats.get('status', 'unknown')} "
+                f"bzz_http={','.join(str(x) for x in (bzz_stats.get('http_statuses') or [])) or 'none'} "
+                f"bzz_errors={len(bzz_stats.get('errors') or [])} "
+                f"bzz_quota_hint={bzz_stats.get('quota_hint', 'none')} "
+                f"bzz_cached={bzz_stats.get('cached_rows', 0)} "
+                f"bzz_live={bzz_stats.get('live_rows', 0)} "
+                f"bzz_valid_keys={bzz_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
+                f"bzz_alias_keys={bzz_stats.get('time_match_keys', len(odds_bundle.get('time_candidates', {})))} "
+                f"ss_cached={scouting_stats.get('cached_rows', 0)} "
+                f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
+                f"ss_retired={bool(scouting_stats.get('retired_stale_cache', False))} "
+                f"ss_age_h={scouting_stats.get('cache_age_h', 'n/a')} "
+                f"corroborated={corroborated_n}/{priced_n} "
+                f"enriched={enriched_n} betexplorer={be_enriched} "
+                f"be_429={be_stats.get('be_429', 0)} "
+                f"be_cooling_down={bool(be_stats.get('be_cooling_down', False))} "
+                f"be_cached={be_stats.get('be_cached', 0)} "
+                f"bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
+                f"theodds_raw={theodds_stats.get('raw_rows', 0)} "
+                f"theodds_usable={theodds_stats.get('usable_rows', 0)} "
+                f"theodds_matched={theodds_matches} "
+                f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
+                f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
+                f"oddspapi_matched={oddspapi_matches} "
+                f"betexplorer_raw={betexplorer_cache_stats.get('raw_rows', 0)} "
+                f"betexplorer_usable={betexplorer_cache_stats.get('usable_rows', 0)} "
+                f"betexplorer_matched={betexplorer_matches} "
+                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
+                f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
+                f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",
+                file=sys.stderr,
+            )
+
+        day_picks: list[dict] = []
+
+        for p in picks:
+            rule = p.get("rule", "")
+            # Absence of evidence != health: a rule missing from the registry
+            # must NOT default to HEALTHY (that would let unconfirmed edges
+            # wear the CERTIFIED_CLEAN label). Default to WATCH; only the
+            # decay monitor's explicit HEALTHY verdict earns the clean bucket.
+            meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "WATCH"})
+            ctx = lookup_context(purity, p)
+            resolution_contexts, resolution_pools = _veto_contexts, _veto_pools
+            if p.get("contract_schema") == "post_forebet_v1":
+                resolution_contexts = (purity or {}).get("contract_contexts", {}).get(rule, {})
+                resolution_pools = build_pool_table(resolution_contexts)
+            ctx = apply_resolution_to_ctx(
+                ctx, resolution_contexts, resolution_pools, veto_resolution_on,
+                sport=p.get("sport", "soccer"),
+                market=p.get("market", "1x2"),
+                rule=p.get("edge_rule") or p.get("rule", ""),
+            )
+            bucket = bucket_pick(p, ctx,
+                                 edge_status=meta.get("status", "certified"),
+                                 decay_verdict=meta.get("decay_verdict", "HEALTHY"))
+            if bucket is None:
+                context_floor_drops[
+                    str(p.get("bucket_drop_reason") or "context_floor")
+                ] += 1
+                continue
+            p["ctx"] = {k: v for k, v in ctx.items() if not k.startswith("_")}
+            p["bucket"] = bucket
+            p["edge_status"] = meta.get("status", "certified")
+            p["decay_verdict"] = meta.get("decay_verdict", "HEALTHY")
+
+            p["market_type"] = p.get("market", "1x2")
+            p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
+            evidence = str(p.get("price_evidence") or "")
+            if evidence in (PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY,
+                            PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT):
+                p["odds_match_status"] = "suspect"
+            elif evidence == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE:
+                p["odds_match_status"] = "uncorroborated"
+            else:
+                p["odds_match_status"] = "matched" if p.get("odds") is not None else "unmatched"
+            
+            annotate_market_recommendation(p)
+            
+            if p.get("contract_schema") != "post_forebet_v1":
+                p["statistical_comment"] = get_statistical_comment(
+                    con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3))
+
+            # One exact cohort supplies both the visible statistics and priced
+            # enhancement competition. No second warehouse scan for display.
+            # The same real run-as-of is serialized by operational filtering
+            # below. Make it available BEFORE pricing candidate probes too;
+            # never use a bookmaker clock or a later wall-clock to admit them.
+            p["as_of"] = as_of.isoformat(timespec="seconds")
+            enh = compute_dynamic_enhancement(con, p, prices_index,
+                                              cohort_cache=cohort_cache)
+            p.update(enh)
+
+            # Real-odds overlay: attach best captured price for mappable markets
+            # (pilot: match o/u 2.5) and the certification state from the registry.
+            # Everything else stays display-only — no unpriced recommendation is real.
+            attach_enhancement_price(p, prices_index)
+            p["enhancement_state"] = enh_status_for(p.get("recommended_enhancement"), ROOT)
+            
+            day_picks.append(p)
+
+        collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
+        if removed_dupes:
+            print(f"operational final pick collapse {day}: removed={removed_dupes}", file=sys.stderr)
+        # Visibility tripwire: anything that still looks like one fixture
+        # under two spellings AFTER canonical collapse needs a curated
+        # alias. Printed loudly; never auto-merged.
+        print_near_duplicate_fixture_tripwire(collapsed_day_picks, day=day)
+        # Report-only identity sweep (degenerate keys, frozen-ledger key
+        # collisions, cross-keyer merge/split candidates). Zero behaviour
+        # change: it only stamps ctx flags and prints counts.
+        print_identity_sweep(collapsed_day_picks, day=day)
+
+        if not candidate_only:
+            _print_price_coverage(
+                day, collapsed_day_picks,
+                scored=ml_scored_day or n_up,
+                betexplorer_bundle=betexplorer_bundle,
+                theodds_bundle=theodds_bundle,
+                oddspapi_bundle=oddspapi_bundle,
+            )
+
+        # AUDIT-ONLY scored-candidate shadow ledger: persist the full per-day
+        # scored candidate universe (every emitted candidate row, including
+        # the ones bucket assignment and the operational collapse drop)
+        # BEFORE final pick/ticket selection. The `coverage: scored=` log
+        # value above is persisted alongside for reconciliation — it is a
+        # FIXTURE-level count (ml_scored_day or n_up) while the ledger is
+        # candidate-level; the shadow report prints both and explains the
+        # difference. A write failure is reported and ignored: observability
+        # must never change picks, buckets, archives or tickets.
+        try:
+            from edgefactory import scored_candidate_shadow as _scs
+            # File fixture records under the same calendar date the pipeline
+            # files candidates under (kickoff_date resolution, fail-closed to
+            # the scan day) so the fixture<->candidate join stays exact.
+            _scs_fixtures = []
+            for _fx in fixture_audit:
+                _fx = dict(_fx)
+                _fx["trading_date"] = (
+                    kickoff_date(_fx.get("kickoff"), fallback_date=day) or day
+                )
+                _scs_fixtures.append(_fx)
+            _scs.record_picks_build(
+                day=day,
+                scored_rows=picks,
+                generation_rejections=generation_rejections,
+                slate_rows=collapsed_day_picks,
+                pre_collapse_rows=day_picks,
+                pipeline_scored_log=int(ml_scored_day or n_up),
+                scored_fixtures=_scs_fixtures,
+                ml_scored_day=int(ml_scored_day),
+                n_up=int(n_up),
+                price_supported_markets=_PRICE_SUPPORTED_MARKETS,
+                root=LOCALDATA,
+            )
+        except Exception as _scs_exc:  # noqa: BLE001 - audit-only, fail-soft
+            print(
+                f"scored-candidate shadow ledger failed (audit-only; picks "
+                f"unchanged): {_scs_exc}",
+                file=sys.stderr,
+            )
+
+        all_picks.extend(collapsed_day_picks)
+
+        # Evidence-on-all-buckets (2026-08-05): persist a frozen per-day
+        # archive for EVERY processed day so the odds-capture shortlist
+        # (src/edgefactory/sources/theoddsapi.py shortlist()) can price
+        # tomorrow's fixtures — including vetoed-but-clean matches (the
+        # SKIPPED_VETO bucket is the audit's best ROI bucket). Mirrors the
+        # archive shape daily.py writes; the capture reads it regardless of
+        # bucket. Append-only (Addendum 27.18): earlier frozen rows are
+        # merged back in via merge_day_archive_rows — a post-kickoff rerun
+        # that finds an empty/partial slate must never erase audited history.
+        import subprocess
+        try:
+            build_sha = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        except Exception:  # noqa: BLE001 - provenance is not a prerequisite to run
+            build_sha = "unavailable"
+        _enh_quarantined = stamp_pick_evidence(
+            collapsed_day_picks, git_sha=build_sha,
+            built_at=datetime.now(timezone.utc).isoformat())
+        for _match, _market, _why in _enh_quarantined:
+            print(f"enhancement withheld {day}: {_match} [{_market}] — {_why}",
+                  file=sys.stderr)
+        _day_archive = dated_artifact_path(ROOT / "localdata", f"picks_{day}.json")
+        try:
+            _day_archive.parent.mkdir(parents=True, exist_ok=True)
+            _existing_rows: list = []
+            if _day_archive.exists():
+                try:
+                    _raw_existing = json.loads(_day_archive.read_text())
+                    if isinstance(_raw_existing, list):
+                        _existing_rows = _raw_existing
+                except Exception:
+                    # Unreadable prior ledger: fresh wins (daily.py's
+                    # corrupt-archive doctrine); warn rather than die.
+                    print(f"warn: unreadable day archive {_day_archive}; writing fresh run", file=sys.stderr)
+            _merged_rows = merge_day_archive_rows(_existing_rows, collapsed_day_picks, day)
+            _preserved = len(_merged_rows) - len(collapsed_day_picks)
+            if _preserved > 0:
+                print(
+                    f"day archive {day}: preserved {_preserved} earlier frozen rows "
+                    f"(fresh run yielded {len(collapsed_day_picks)})",
+                    file=sys.stderr,
+                )
+            _day_archive.write_text(json.dumps(_merged_rows, indent=2, sort_keys=True))
+        except OSError:
+            print(f"warn: could not write day archive {_day_archive}", file=sys.stderr)
+
+    # ------------------------------------------------------------------
+    # ML-fade research capture: merge this run's scored fixtures into the
+    # tracked research ledger. This path is deliberately OUTSIDE the
+    # operational pipeline above: no bucket assignment, no archive/notify,
+    # no auto-ticket, no registry contact. FIRST-seen rows are frozen
+    # (bet-time quote, model key, prediction); re-observation only refreshes
+    # latest quotes. Fail-closed guards:
+    #   - the same operational pre-match guard (kickoff trusted, >= min lead)
+    #     is applied to research candidates, so nothing kicks off mid-bet;
+    #   - a missing purity registry (the frozen veto-context surface the
+    #     research rules are declared AGAINST) disables the ledger write with
+    #     a loud warning rather than storing research out of context;
+    #   - serving-model drift vs the frozen method prints a visible warning
+    #     (recorded fully by the checkpoint evaluation).
+    research_candidates = research_collector.finalize()
+    if research_candidates:
+        kept_research, research_skips = filter_operational_pre_match_picks(
+            [dict(r) for r in research_candidates],
+            as_of=as_of, min_lead=lead_minutes,
+        )
+        if research_skips:
+            print(f"research capture pre-match guard: skipped "
+                  f"{sum(research_skips.values())} ({research_skips})",
+                  file=sys.stderr)
+        if purity_missing:
+            print(
+                "🚨 ML-FADE RESEARCH CAPTURE DISABLED this run: "
+                "purity_registry.json missing — the frozen veto-context "
+                "surface the research rules are declared against is absent, "
+                "so the ledger is NOT written (fail-closed)",
+                file=sys.stderr,
+            )
+        elif kept_research:
+            _ledger_path = ROOT / "localdata" / RESEARCH_LEDGER_NAME
+            _now_iso = as_of.isoformat(timespec="seconds")
+            try:
+                _ledger = load_research_ledger(_ledger_path)
+            except Exception as exc:
+                print(f"🚨 research ledger unreadable ({exc}) — refusing to "
+                      "merge this run (fail-closed; no partial writes)",
+                      file=sys.stderr)
+            else:
+                _r_rules, _r_model = load_ml_rules_and_model()
+                drift = detect_model_drift(_r_model)
+                if drift["drifted"]:
+                    print("🚨 ML-FADE RESEARCH MODEL DRIFT: "
+                          + "; ".join(drift["reasons"]), file=sys.stderr)
+                merge_stats = merge_research_candidates(
+                    _ledger, kept_research, now=_now_iso,
+                    expected_model_key=drift["model_key"])
+                save_research_ledger(_ledger_path, _ledger, now=_now_iso)
+                ms = merge_stats.as_dict()
+                print(f"ml-fade research capture: +{ms['added_parent']} parent / "
+                      f"+{ms['added_fade']} fade rows "
+                      f"(scored {research_collector.scored}, draws excluded "
+                      f"{research_collector.draw_excluded}, identity-skipped "
+                      f"{research_collector.identity_skipped}, repriced "
+                      f"{ms['repriced']}, observed {ms['observed_only']})")
+
+    if con:
+        try:
+            con.close()
+        except Exception:
+            pass
+
+    buckets: dict[str, list] = {b: [] for b in BUCKET_ORDER}
+    for p in all_picks:
+        b = p.get("bucket", BUCKET_CAUTION)
+        buckets.setdefault(b, []).append(p)
+
+    for b in buckets:
+        buckets[b].sort(key=lambda r: -(r.get("avg_p") if r.get("avg_p") is not None else -math.inf))
+
+    title = ", ".join(days) if days else date.today().isoformat()
+    print_buckets(buckets, title_date=title)
+
+    n_clean = len(buckets[BUCKET_CERTIFIED])
+    n_caution = len(buckets[BUCKET_CAUTION])
+    n_wl_odds = len(buckets[BUCKET_WL_ODDS])
+    n_wl_uncorroborated = len(buckets[BUCKET_WL_UNCORROBORATED_PRICE])
+    n_wl_suspect = len(buckets[BUCKET_WL_SUSPECT_PRICE])
+    n_wl_ctx = len(buckets[BUCKET_WL_CTX])
+    # Evidence is generated offline by report_sportytrader_7pct.py. Echo the
+    # latest receipt into the run log, but never let a missing/stale report
+    # gate picks or alter the 7% constant.
+    for _report_path in (
+        LOCALDATA / "sportytrader_7pct_report.json",
+        ROOT / "docs" / "operator" / "archive" / "SPORTYTRADER-7PCT-REPORT.json",
+    ):
+        try:
+            _test_7pct = json.loads(_report_path.read_text()).get("test_7pct", {})
+        except (OSError, ValueError, TypeError):
+            continue
+        print(
+            f"test_7pct eligible={_test_7pct.get('eligible', 0)} "
+            f"gained={_test_7pct.get('gained', 0)} "
+            f"rate={_test_7pct.get('rate', 'n/a')} "
+            f"max_deviation={float(_test_7pct.get('max_deviation', PRICE_CORROBORATION_MAX_DEV)):.0%}",
+            file=sys.stderr,
+        )
+        break
+    n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
+    n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
+    n_ctx_dropped = sum(context_floor_drops.values())
+    summary = (f"Summary: CLEAN={n_clean} CAUTION={n_caution} "
+               f"WATCHLIST_odds={n_wl_odds} "
+               f"WATCHLIST_uncorroborated_price={n_wl_uncorroborated} "
+               f"WATCHLIST_suspect_price={n_wl_suspect} "
+               f"WATCHLIST_ctx={n_wl_ctx} "
+               f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead} "
+               f"ctx_floor_dropped={n_ctx_dropped}  "
+               f"shadow_fp_raw={shadow_totals['raw']} shadow_fp_scored={shadow_totals['scored']} "
+               f"st_raw={shadow_totals['st_raw']} st_matched={shadow_totals['st_matched']} "
+               f"bm_raw={shadow_totals['bm_raw']} bm_scored={shadow_totals['bm_scored']} "
+               f"pa_raw={shadow_totals['pa_raw']} pa_matched={shadow_totals['pa_matched']} "
+               f"bb_raw={shadow_totals['bb_raw']} bb_scored={shadow_totals['bb_scored']} "
+               f"sa_raw={shadow_totals['sa_raw']} sa_matched={shadow_totals['sa_matched']} "
+               f"({total_vetoes} vetoes, {total_upcoming} matches)")
+    print(f"\n{summary}")
+    if context_floor_drops:
+        detail = " ".join(f"{k}={v}" for k, v in sorted(context_floor_drops.items()))
+        print(f"context floor: {n_ctx_dropped} caveated leg(s) dropped below the "
+              f"odds floor and NOT archived ({detail})")
+
+    # Layer A: Alert on UNKNOWN league verdicts so missing aliases are caught
+    # immediately instead of requiring cross-file manual inspection.
+    unknown_leagues: Counter = Counter()
+    for p in all_picks:
+        ctx = p.get("ctx", {}) or {}
+        if str(ctx.get("league") or ctx.get("league_raw") or "") in ("UNKNOWN", "?"):
+            unknown_leagues[str(ctx.get("league_raw") or "?")] += 1
+    if unknown_leagues:
+        print("\n⚠️  UNKNOWN league verdicts (consider adding to entity_overrides.json):")
+        for league_raw, count in unknown_leagues.most_common(30):
+            print(f"     {count:>3}x  {league_raw}")
+
+    final_picks = all_picks
+
+    _json_path = ROOT / "localdata" / "picks_today.json"
+    _json_path.parent.mkdir(parents=True, exist_ok=True)
+    # Rows retained from historical archives keep their original provenance.
+    _json_path.write_text(json.dumps(final_picks, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

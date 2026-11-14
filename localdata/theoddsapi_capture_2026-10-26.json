@@ -1,0 +1,58 @@
+{
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 20,
+  "captured_at": "2026-10-26T19:10:32+00:00",
+  "date": "2026-10-26",
+  "due_reasons": {},
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
+  "quoted_fixtures": [],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_already_passed": 3,
+    "kickoff_mismatch": 1,
+    "priced": 4,
+    "retry_cooldown": 13
+  },
+  "skipped": [
+    "Sepsi OSK Sfantu Gheorghe|Universitatea Craiova (retry cooldown (6h after failed attempt))",
+    "FC Copenhagen|Odense (priced)",
+    "Al Ahli|Al Gharafa (retry cooldown (6h after failed attempt))",
+    "Floriana|Zabbar St. Patrick (retry cooldown (6h after failed attempt))",
+    "Flamengo|Atl\u00e9tico Mineiro (retry cooldown (6h after failed attempt))",
+    "Be\u015fikta\u015f|Ba\u015fak\u015fehir (retry cooldown (6h after failed attempt))",
+    "Paris Saint Germain|Olympique Lyonnais (retry cooldown (6h after failed attempt))",
+    "ATK Mohun Bagan|Chennaiyin (retry cooldown (6h after failed attempt))",
+    "Santa Clara|Benfica (priced)",
+    "Grobi\u0146a|Riga (kickoff already passed)",
+    "Al Ula|Al-Orobah FC (retry cooldown (6h after failed attempt))",
+    "Geylang International|Hougang United (retry cooldown (6h after failed attempt))",
+    "FC K\u00f8benhavn|Odense BK (retry cooldown (6h after failed attempt))",
+    "Mladost \u017ddralovi|Jadran LP (kickoff already passed)",
+    "Montpellier|RED Star FC 93 (priced)",
+    "WARN kickoff-mismatch Galatasaray|Fenerbah\u00e7e: pick legacy display says 18:30 SAST, captured rows say 20:30 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Galatasaray|Fenerbah\u00e7e (kickoff already passed)",
+    "Paris Saint Germain|Lyon (priced)",
+    "FC Iberia 1999|FC Torpedo Kutaisi (retry cooldown (6h after failed attempt))",
+    "Rizespor|Trabzonspor (retry cooldown (6h after failed attempt))",
+    "Sevilla|Osasuna (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "not_due",
+  "unmatched_reasons": {}
+}

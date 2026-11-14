@@ -1,0 +1,731 @@
+# Fixture identity SPLIT — Türkiye vs Turkey (2026-10-05)
+
+One real match printed twice in the 2026-10-05 picks report:
+
+```text
+[2WAY-UNANIMOUS>=60] Italy vs Türkiye   KO 05-10, 19:45 -> HOME avg 70% @1.42 zulubet
+[2WAY-UNANIMOUS>=60] Italy vs Turkey    KO 14:45        -> HOME avg 64% @1.47
+```
+
+## 1. Root cause — confirmed in the repo (pre-fix)
+
+```python
+norm_team("Turkey")        == "turkey"
+norm_team("Türkiye")       == "trkiye"     # diacritic DELETED, not transliterated
+ledger_team_key("Türkiye") == "turkiye"    # transliterates, still != "turkey"
+```
+
+Two independent bugs:
+
+1. **`norm_team` deleted diacritics.** `re.sub(r"[^a-z]", "", name.lower())`
+   dropped every non-ASCII letter, so accented names produced keys that
+   joined to nothing (`Beşiktaş` -> `beikta`, `Atlético` -> `atltico`) and
+   disagreed with `ledger_team_key`, which folds first. Three key spaces
+   for one team.
+2. **No curated exonym alias.** Türkiye<->Turkey (the 2022 rename) was not
+   in `Config/entity_overrides.json` -> `teams`, so even perfect
+   transliteration (`turkiye`) could not join `turkey`.
+
+Damage: duplicate scored candidates with conflicting evidence (70%/64%,
+n=900/n=1810, 1.42/1.47), duplicate-collapse bypassed, archived count
+inflated, the frozen ACCA carrying one arbitrary variant, two fixture
+identities in the shadow ledger (the mirror image of the collision case —
+invisible to the collision detector), one variant permanently unsettleable,
+and worst case double stake exposure on one match.
+
+## 2. Blast radius — EVERY consumer of the normalizers
+
+Deploy epoch: this change takes effect on the deploy of branch
+`arena/01a10c3f-edge-factory`. "Re-keyed" below means the key an accented
+or exonym-aliased name produces changes at that epoch.
+
+| # | Consumer | Key | Status |
+|---|---|---|---|
+| 1 | `picks_today.lookup_context` (ladder/purity team verdicts) | `canonical_team` (+ variants) | **RE-KEYED INTENTIONALLY — live gating change, see §2a** |
+| 2 | `assay_purity.py` (builds the purity registry team keys) | `canonical_team` | re-keyed intentionally; new registry rows write canonical keys, old rows stay and are still read via the variant lookup |
+| 3 | `picks_today` operational collapse / `_day_archive_row_key` | `ledger_team_key` | re-keyed intentionally (this is the fix); archive merge is append-only and recomputes keys on read |
+| 4 | `audit_recent_picks._archive_pick_key` | `ledger_team_key` | re-keyed in lockstep with #3 (test asserts the two keys are equal) |
+| 5 | `audit_recent_picks` warehouse/candidate joins | `norm_team` 9/14 + `norm_team_sql` | unaffected by persistence: both sides are normalized at read time; accented names now join instead of missing |
+| 6 | `scored_candidate_shadow` candidate/fixture/occurrence ids | `ledger_team_key(24)` | re-keyed intentionally — ONE identity for the pair going forward; old split records untouched (epoch note §8) |
+| 7 | `scored_candidate_shadow.settle_candidate` / `load_settled_overlay` | was `norm_team` | **dual-key protected**: canonical + transliterated + frozen legacy, exact lookups |
+| 8 | `auto_tickets` settled map / `pick_result` (`_exact_result_keys`) | was `norm_team` | **dual-key protected**, tried before the pre-existing fallback |
+| 9 | `auto_tickets` rolling hit-rate / bucket PnL / slice reports | grade via #8 | protected transitively by #8; grading inputs unchanged |
+| 10 | `ml_fade_research.event_key` + `TeamMatcher` (research ledger, persists `event_key`) | was `ledger_team_key` | **FROZEN**: now calls `util.research_ledger_team_key` (pre-alias transliteration), byte-identical to the pre-fix key — no ledger re-keying |
+| 11 | `daily.match_market_key` (kickoff-stacking ledger merge) | `ledger_team_key` | unaffected: keys are recomputed on read for BOTH archived and fresh rows in the same process; cross-spelling rows now supersede correctly instead of duplicating |
+| 12 | `sync_supabase.event_source_ref` (remote `source_ref`, upsert key) | `ledger_team_key` | re-keyed at the epoch; only forward-dated picks are synced and picks are collapsed before sync, so at most a historical remote row keeps its old ref (never updated again anyway) — epoch-noted, no rewrite |
+| 13 | `entities._override_lookup` / `_registry_lookup` (learned `entity_registry.json`) | `norm_team` | **dual-key protected**: legacy key added to the candidate list, so learned aliases keyed under the old normalization still resolve |
+| 14 | `enh_pricing` (enhancement price index + hit keys) | `norm_team` | unaffected: index and lookup are built in the same process from the same function |
+| 15 | `export_settled_results.py` (overlay writer) | `norm_team`, `norm_team_sql` | re-keyed on write going forward; readers (#7, #8) accept old and new keys |
+| 16 | `warehouse.py` / `warehouse_replay.validation_gate` / `replay_harness` | `norm_team_sql`, injected `norm_team` | unaffected: live/recon maps are built from the same injected function within one run; SQL mirror updated in lockstep (`norm_team_sql` now folds; `norm_team_sql_legacy` frozen) |
+| 17 | `mine_betexplorer`, `backfill_betexplorer`, `capture_betexplorer`, `sources/betexplorer_odds`, `sources/theoddsapi` | `norm_team` | unaffected: read-time joins on both sides; accented fixtures now match instead of missing |
+| 18 | `audit_source_independence`, `o25_tracker`, `scored_candidate_segment_report` | `norm_team` | unaffected: read-time aggregation keys, no persisted key |
+| 19 | `clv.py` | — | does not use team normalizers (joins on pick identity supplied by the caller); unaffected |
+| 20 | `identity.source_team_key` (voter-row seam) | own 24-char key | extended with the curated exonym pairs; drift test added (§4) |
+
+### 2a. 🔴 LIVE GATING CHANGE — team-verdict inheritance (intended, documented)
+
+The ladder's team context is keyed by `canonical_team`. With the curated
+alias applied, `Türkiye` keys as `turkey` instead of `turkiye`.
+
+Measured against the live `localdata/purity_registry.json` (22,929 team
+context entries): **8 of 22 curated alias groups have their learned
+evidence under only SOME spellings**, and four of those carry a
+restrictive verdict:
+
+| alias group | keys | entries | verdicts |
+|---|---|---|---|
+| Turkey | `turkey` / `turkiye` | 0 / 8 | VETO, UNKNOWN (only under `turkiye`) |
+| Czech Republic | `czechrepublic` / `czechia` | 9 / 0 | VETO, UNKNOWN |
+| Côte d'Ivoire | `cotedivoire` / `ivorycoast` | 7 / 0 | VETO, UNKNOWN |
+| Ulsan HD | `ulsanhd` / `ulsanhyundai` | 8 / 0 | CAUTION, UNKNOWN |
+| (+ 07 Vestur, Cape Verde, Klaksvik, zvyahel) | | | UNKNOWN only |
+
+Canonicalizing the lookup key ALONE would have orphaned that evidence —
+for Türkiye it would have turned an existing **VETO into UNKNOWN**, i.e.
+loosened a live gate. That is not acceptable, so the lookup is now
+**variant-union and fail-closed**:
+
+* `entities.canonical_team_variants()` returns the canonical key, the
+  pre-alias key, and every curated sibling spelling's key;
+* `picks_today._team_verdict()` resolves each variant through the
+  unchanged per-key path (`exact -> any-league -> prefix scan`) and keeps
+  the MOST SEVERE verdict (`VETO > CAUTION > ALLOW > BOOST > UNKNOWN`);
+  UNKNOWN never displaces a verdict found under another spelling.
+
+Net live effect, stated plainly: **a veto learned under one spelling now
+vetoes every spelling of that team.** On the 2026-10-05 slate both
+`Italy vs Türkiye` and `Italy vs Turkey` now resolve `team_a=VETO`
+(verified against the live registry) — previously only the accented row
+did, and the Turkey-spelled variant is the one the frozen ACCA carried.
+This is a TIGHTENING and it is intended: one team, one verdict. It is a
+live behavior change beyond duplicate collapse, and the earlier
+"no live gate changed" claim was wrong as written.
+
+Tests: `test_accented_spelling_inherits_canonical_team_verdict`,
+`test_verdict_merge_is_fail_closed_not_fail_open`,
+`test_unknown_never_displaces_an_existing_verdict`,
+`test_non_aliased_team_lookup_is_unchanged`.
+
+## 3. Normalization change
+
+* `norm_team_legacy()` — NEW, frozen byte-for-byte copy of the old
+  behaviour, for reader-side dual-key lookups only.
+* `norm_team()` — now ASCII-folds (`fold_ascii`: NFKD + combining-mark
+  strip + the extended Nordic table) before noise stripping:
+  `Türkiye -> turkiye`, `Beşiktaş -> besiktas`, `Atlético -> atletico`.
+* `norm_team_sql()` — ASCII-folds identically; `norm_team_sql_legacy()`
+  keeps the frozen expression.
+* `canonical_team_key()` / `ledger_team_key()` — transliteration **plus**
+  the curated alias layer; `explain_team_key()` makes alias application
+  visible (never silent).
+
+**Tightening check (documented, fail-closed):** an accented name now keys
+exactly like its ASCII spelling — and therefore inherits that spelling's
+behaviour, including the PRE-EXISTING width-9 noise-token collision class
+(`norm_team` strips `atletico`/`real`/`u21`..., so `Atletico Madrid` and
+`Real Madrid` have both keyed to `madrid` since long before this change,
+and `Turkey U21` has always keyed to `turkey`). No NEW collision class is
+created; `test_transliteration_does_not_merge_previously_distinct_teams`
+proves no merge appears beyond the curated alias pairs, measured against
+the pre-fix operational key. Identity seams that must not collide use
+`identity.source_team_key` (24 chars, squad tokens preserved) — the test
+asserts `source_team_key("Türkiye") != source_team_key("Turkey U21")`.
+
+## 4. Curated aliases added (explicit, reviewed, never fuzzy)
+
+`Config/entity_overrides.json` -> `teams`:
+`Türkiye`/`Turkiye`/`türkiye`/`turkiye`/`Turkey` -> `Turkey`;
+`Czechia`/`Czech Republic` -> `Czech Republic`.
+Mirrored as raw-name pairs in `identity.TEAM_KEY_RAW_ALIASES` (plus the
+already-curated `Ivory Coast`/`Côte d'Ivoire`, `Cabo Verde`/`Cape Verde`)
+so the voter-row identity seam resolves them too. No learned or fuzzy
+source feeds these entries; `alias_fuzzy` remains quarantined and
+non-stakeable.
+
+## 4a. Alias-table drift guard
+
+Curated aliases exist in two places by design — `Config/entity_overrides.json`
+(entity/context layer) and `identity.TEAM_KEY_RAW_ALIASES` (voter-row
+seam). `test_curated_alias_tables_do_not_drift` fails if any exonym pair
+in the identity table disagrees with the override file's canonicalization,
+so the two curated sources can never diverge silently.
+
+## 5. Duplicate collapse + tripwire
+
+* `canonical_fixture_identity(pick)` = (date, canonical home key,
+  canonical away key).
+* `collapse_final_operational_picks` gains a DETERMINISTIC first path:
+  identical date/market/selection **and** identical canonical identity
+  collapses. The 180-minute reschedule guard still applies whenever both
+  rows carry an *anchored* (dated) kickoff; a bare clock (`"14:45"`,
+  no date) carries no occurrence information and cannot veto the merge.
+  The pre-existing fuzzy bigram path is untouched.
+* The dropped twin is persisted by the shadow ledger with the existing
+  `duplicate_fixture` rejection code — never two stakeable legs.
+### 5a. Bare-clock merge — behavior change vs pre-fix (measured)
+
+Replaying the OLD collapse (`git show main:scripts/picks_today.py`) against
+the new one on identical inputs:
+
+| case | pre-fix | post-fix |
+|---|---|---|
+| identical names, one bare clock (apparent 300-min gap) | merged=0 | **merged=1** (flagged) |
+| identical names, both anchored, 300 min apart | merged=0 | merged=0 |
+| Türkiye/Turkey, one bare clock | merged=0 | merged=1 (flagged) |
+
+So the bare-clock merge IS new; it is not merely the old behavior under a
+new key. The trade-off, stated explicitly: a same-day, same-competition
+double-header between the SAME two teams would be falsely merged when one
+row carries an unanchored clock. That fixture pattern does not occur in
+football, while cross-source clock drift occurs daily, and the failure it
+prevents (two stakeable legs on one match) is the one with money attached.
+
+Mitigations, all verifiable:
+* anchored kickoffs >180 min apart still REFUSE to merge
+  (`test_anchored_kickoffs_more_than_180_min_apart_never_merge`, plus the
+  pre-existing `test_kickoffs_outside_180_min_do_not_cluster`);
+* every merge that could not consult the guard is stamped
+  `ctx.duplicate_kickoff_unanchored = "true"` on the surviving row, so the
+  audit can list exactly which collapses relied on it
+  (`test_unanchored_merge_is_flagged_for_audit`).
+
+Reconciliation with the shadow ledger's fail-closed occurrence policy:
+the ledger fails CLOSED on an AMBIGUOUS legacy fixture_id because there it
+cannot tell two real occurrences apart and money may already be attached
+to the wrong one. Here the direction of risk is inverted — refusing to
+merge produces two stakeable legs on one match — so the operational
+collapse fails toward ONE stake and records the uncertainty as a flag
+instead of silently keeping both.
+
+* `near_duplicate_fixture_warnings()` / `print_near_duplicate_fixture_tripwire()`:
+  after collapse, any same-date, same-canonical-league pair where ONE team
+  key matches and the other does not prints a loud warning block naming
+  both rows, their keys and their sources. It never merges anything — the
+  merge only ever happens through transliteration + curated alias.
+
+## 6. Shadow / settlement coherence
+
+`fixture_id`, `candidate_id` and `fixture_occurrence_id` are identical for
+both spellings going forward (test + smoke). Old split records stay on
+disk as written; no history is rewritten. Settlement resolves across
+spellings: a result recorded as "Turkey" grades a pick captured as
+"Türkiye", and results persisted under the old diacritic-deleting key
+still settle through the legacy reader key.
+
+## 7. Secondary findings (reported, not silently changed)
+
+1. **Bare `KO 14:45`.** Provenance: the raw feed text is deliberately never
+   rewritten (`attach_kickoff_display` docstring — rewriting could move a
+   kickoff LATER, the one direction the lead guard must never be nudged).
+   A source that emits a bare local clock with no date and no offset
+   yields `zoned_kickoff_to_utc -> None`; with no sibling or odds-row
+   witness, `kickoff_source = unresolved`, `kickoff_sast = None`, and the
+   report falls back to printing the raw bare clock. This is the
+   incident-#6 naive-foreign-clock family. **No kickoff guard was
+   weakened**; the only use made of it here is the narrow statement that a
+   bare clock cannot prove two identical fixtures are different events.
+2. **`Moss vs Kongsvinger` CERTIFIED_CLEAN with `league=no2:UNKNOWN`.**
+   Under current policy in `bucket_pick`, an UNKNOWN league verdict is a
+   hard blocker only for the short-odds-sniper class (`1x2` home below
+   `SHORT_ODDS_SNIPER_MAX`, with a narrow ultra-short soft exception).
+   Outside that class, UNKNOWN (as opposed to VETO or CAUTION) does not
+   block certification when the odds band is known and decay is HEALTHY.
+   So the printed row **is policy-conformant as written** — not a gating
+   bug. Whether UNKNOWN should ever earn the CERTIFIED_CLEAN *label* is a
+   policy question for the operator; no gate was changed here.
+
+## 8. Identity epoch split (audit-only distortion)
+
+Accented / exonym-aliased teams carry **different fixture, candidate and
+occurrence ids before and after the deploy** of this branch. No history is
+rewritten — that is the deliberate choice — so:
+
+* rolling 7/14/30-day reports whose window SPANS the deploy date will see
+  one real team as two fixture identities (e.g. `turkiye` rows before,
+  `turkey` rows after). Read a window-spanning identity split as an
+  artefact of this change, **not** as signal.
+* settlement is NOT affected: the readers accept canonical, transliterated
+  and frozen-legacy keys (§2 rows 7–8).
+* the ml-fade research ledger is NOT affected: its identity is frozen
+  (§2 row 10).
+* the purity registry is NOT orphaned: the variant-union lookup reads both
+  spellings (§2a).
+
+Review this note again once every rolling window in use begins after the
+deploy date; it can be retired then.
+
+### 8a. Degenerate `deg<hash>` keys and the epoch
+
+Short/punctuation-only names (`CP`, `II`, `W`) used to normalize to the
+**empty string**, so every one of them collided on a single identity.
+They now key to `deg<hash>` (`is_degenerate_team_key`). That key is NOT
+cosmetic: it reaches persisted row identities through
+`canonical_team_key` → `ledger_team_key` → `_day_archive_row_key`.
+
+* Hash input is case- and whitespace-normalized (`fold_ascii` lowercases
+  and collapses runs of whitespace), so `"Athletic  Club"`,
+  `"athletic club"` and `" ATHLETIC CLUB "` produce one key.
+* **Settlement** was already safe: its readers try `norm_team_legacy`,
+  which still yields the pre-fix `''`, so frozen rows keep grading.
+* **Archive merge** was not. `_day_archive_row_key_legacy()` rebuilds the
+  pre-fix tuple from the frozen `research_ledger_team_key`, and
+  `merge_day_archive_rows` now skips a fresh row whose legacy key is
+  already present in the frozen file, registering both keys. Without it a
+  pre-fix degenerate row and its post-fix twin would have been written as
+  two rows for one match — the original incident, one epoch later.
+* Nothing is rewritten in place. This is a reader-side legacy path only.
+
+## 9. Tests
+
+New: `tests/test_team_identity_transliteration.py` (27 tests) — accented
+corpus transliteration; `norm_team`/`ledger_team_key` agreement; frozen
+legacy key; one canonical key for Türkiye/Turkey (+ other exonyms); alias
+explicit and visible; no false merges; end-to-end dedupe (one survivor,
+one collapsed twin, `duplicate_alias_collapse` metadata); tripwire silent
+when the alias resolves and loud when it cannot, merging nothing; distinct
+fixtures not collapsed; settlement across spellings and from legacy keys;
+one shadow identity for the pair; archive merge not inflated and engine
+key == audit key.
+
+Smoke: `python tools/smoke_fixture_identity_dedupe.py` -> `SMOKE: PASS`.
+
+Explicit parity run:
+`tests/test_scored_candidate_shadow_tickets.py::test_identical_ticket_output_with_shadow_on_off_and_crashing`
+-> **PASSED** (ticket stdout byte-identical with the audit ledger on, off,
+and crashing).
+
+Validation: `python -m pytest tests/ -q` -> **1300 passed**;
+`python -m compileall scripts src tests` clean; `git diff --check` clean;
+no `.github/workflows/*` or `localdata/*` changes.
+
+Unchanged: kickoff guards (the pre-match guard and the 180-minute
+anchored reschedule guard), `_fixture_orientation_agrees`,
+`_row_matches_selection`, odds floors, veto BANDS and thresholds, ladder
+structure, staking, freeze/write-once, ticket output parity.
+
+Live behaviour changes, complete list (all intended, all tested):
+1. duplicate collapse now catches cross-spelling twins (the fix);
+2. team verdicts are now shared across spellings of one team, fail-closed
+   — a veto learned under any spelling vetoes all of them (§2a);
+3. two rows with one canonical identity merge when a bare clock makes the
+   180-minute guard unusable, stamped `duplicate_kickoff_unanchored` (§5a).
+
+## 10. Identity sweep — the bug CLASS (2026-10-05, second pass)
+
+Türkiye/Turkey was one instance of "same real entity, several keys".
+A sweep of the pre-fix keyers found five defect classes. Each is now closed by a
+deterministic rule (never fuzz) and covered by
+`tests/test_identity_identity defect_sweep.py`.
+
+| # | Species | Example (reproduced) | Closed by |
+|---|---|---|---|
+| R1 | exonym/rename SPLIT | Côte d'Ivoire/Ivory Coast, FC København/Copenhagen, Bayern München/Munich, 1.FC Köln/Cologne, Internazionale/Inter, Man Utd/Manchester United, PSG/Paris SG, FCSB/Steaua, Başakşehir, Wolves, Napoli, Göteborg, Legia, Dinamo București, Sporting | **S1**: 17 curated groups (174 spellings) in `Config/entity_overrides.json`; one canonical key per group, each with a nearest-distinct-neighbour guard test (Inter≠AC Milan, Sporting CP≠Sporting Gijón, Austria Wien≠Austria Lustenau, …) |
+| R2 | false MERGE in the final collapse | Turkey/Turkey U21 (sim 0.62), Girona/Girona B (0.83), Barcelona/Barcelona SC (0.80), Man City/Man United (0.59), Olympiakos/Olympiakos Nicosia, River Plate/River Plate Asunción, Arsenal/Arsenal Sarandí — all above the 0.40 bigram threshold | **S2** squad-marker hard veto + **S3** canonical-disagreement veto + league-conflict veto |
+| R3 | width-9 frozen-ledger collision | `mancheste` (City/United), `barcelona`, `nottingha`, `universid` | **S5** report-only tripwire: colliding rows are kept apart, stamped `ctx.ledger_key_collision`, and ambiguous result keys are dropped so those legs stay pending. The ledger is NOT rekeyed (history stays byte-identical) |
+| R4 | degenerate/empty keys | `Athletic Club`, `Sporting Club`, Cyrillic/Greek names → `""` | **S4**: unique non-empty `deg<hash>` keys, `is_degenerate_team_key`, merge refused unless raw strings match, `ctx.identity_degenerate` stamped and counted |
+| R5 | stopword amputation | `Sporting CP`→`cp`, `Atlético Madrid`→`madrid` | **S4/S3**: degenerate guard + canonical/league vetoes; curated canonical names chosen to avoid degenerate keys (Sporting canonicalizes to "Sporting Lisbon", not "CP") |
+
+### What merges and what does not (measured, same anchored kickoff)
+
+| pair | result |
+|---|---|
+| Türkiye / Turkey | MERGE (curated alias) |
+| Aldershot / Aldershot Town, Hannover / Hannover 96, Ebbsfleet / Ebbsfleet United | MERGE (`_token_prefix_link`: structural containment, not similarity) |
+| IFK Mariehamn / Mariehamn | MERGE (curated odds-alias link) |
+| Turkey / Turkey U21, Brazil / Brazil U20, Girona / Girona B, Arsenal / Arsenal W | REFUSE — `squad_marker_conflict` |
+| Man City / Man United, Launceston City / Launceston United | REFUSE — `canonical_team_disagreement` |
+| Barcelona / Barcelona SC, Olympiakos / Olympiakos Nicosia, Arsenal / Arsenal Sarandí | REFUSE — `league_disagreement` |
+| Athletic Club / Sporting Club | REFUSE — `degenerate_identity` |
+
+**Tightening-only proof.** Every similar name pair in the archives (395
+pairs over 110 days, bigram ≥ 0.40) replayed through the old and new
+collapse with equal anchored kickoffs: **unchanged 133, newly REFUSED
+262, newly ALLOWED 0.**
+
+### Two defects this pass found in the FIRST pass's own work
+
+1. **League veto was too strict.** Keyed on canonical-league inequality,
+   it blocked the very merge this branch exists for: the twins' feeds
+   spell the competition differently ("World UEFA Nations League" vs
+   "International,Uefa Nations League A Grp. 1"). Replaced with
+   `_leagues_conflict`, which fires only on fully DISJOINT distinctive
+   tokens. Caught by running the real 2026-10-05 slate, not by unit tests.
+2. **The collapse compared untrusted clock text.** Both twins already
+   carried the SAME resolved `kickoff_utc` (`2026-10-05T18:45:00+00:00`);
+   the collapse was comparing the raw renders ("05-10, 19:45" vs "14:45",
+   300 min apart) and refusing. `_kickoff_instants_agree` now decides on
+   `kickoff_utc` whenever both rows have it — strictly more accurate than
+   the naive text, and it shrinks the §5a unanchored-merge path to rows
+   whose kickoff the pipeline genuinely could not resolve.
+
+### Alias single-sourcing (supersedes §4a)
+
+`identity.TEAM_KEY_RAW_ALIASES` now DERIVES the curated override pairs
+from `Config/entity_overrides.json` at import, so the two tables cannot
+drift. The sweep had already found four that had: Ulsan Hyundai, KPV-j,
+Zvyagel and Maxline were canonicalized for contexts but still split at
+the voter-row seam. `entities._override_lookup` also routes team lookups
+through the same indexed table (it previously missed folded spellings
+such as "07 vestur"). Guarded by
+`test_every_curated_alias_group_agrees_in_every_keyer`.
+
+### Daily tripwire + historical audit
+
+* `print_identity_sweep()` runs after collapse every build (report-only):
+  `identity_degenerate`, `ledger_key_collision`, `cross_keyer_merged`,
+  `cross_keyer_split`. On the real 2026-10-05 slate: collapse 6 -> 5 rows
+  (the twin carries `duplicate_fixture`), all four counters **0**.
+* `tools/audit_identity_collisions.py` (read-only, mutates nothing) swept
+  110 days of archives: **6,744 same-day key collisions (2,167 SUSPECT**,
+  e.g. `Lokomotiv Plovdi`/`Lokomotíva Zvolen`, `Universitario de Vinto`/
+  `Universitatea Craiova`, `Launceston City`/`Launceston United`**)**,
+  5,190 split candidates, 54 degenerate-key names. Report:
+  `docs/operator/IDENTITY-COLLISION-AUDIT-2026-10-05.md`. These are
+  historical facts about frozen data — nothing was rewritten.
+
+### Known residual (documented, not fixed)
+
+Two different clubs whose names differ only by a generic token AND whose
+competitions are unknown or share a distinctive token can still merge
+(e.g. Barcelona / Barcelona SC with both leagues blank). The league veto
+closes the realistic cases; the ledger-collision tripwire and the daily
+sweep make the rest visible. Fixing it properly needs a country/
+competition field on every candidate, which the feeds do not reliably
+supply today.
+
+## 11. Closing round — merge gate evidence
+
+### 11a. Every newly-refused merge, classified (item 1)
+
+Tightening-only was re-proven by replaying **395 real archived pairs**
+through the pre-fix and post-fix collapse. "Newly allowed = 0" is
+necessary but not sufficient: a wrongly REFUSED merge recreates the
+original incident (two stakeable legs for one match). So every refusal
+was classified and ground-truthed.
+
+| veto reason | pre-fix refusals | after the fixes below |
+|---|---|---|
+| `squad_marker_conflict` | 120 | 120 |
+| `canonical_team_disagreement` | 142 | 136 |
+| **total newly REFUSED** | **262** | **256** |
+| **newly ALLOWED** | **0** | **0** |
+| unchanged | 133 | 139 |
+
+**Data-driven same-fixture test** (does the pair ever share an opponent
+on a common archive day?) over all 262: `same-fixture 0`,
+`distinct-evidence 19`, `no co-occurrence 243`. Two of the 19 were in
+fact one club and were linked deterministically — no fuzzy matching:
+
+| pair | mechanism |
+|---|---|
+| `Borussia M'gladbach` / `Borussia Mönchengladbach` | `source_team_key` equality in the veto's link test |
+| `Drogheda United` / `Drogheda Utd` | `TEAM_TOKEN_EXPANSIONS` (`utd`→`united`) inside `_name_tokens` |
+
+**Stratified manual sample**, seed 7, 31 pairs (15 marker / 16
+canonical): Bayer Leverkusen vs (w), Motherwell vs Youth,
+`Independiente Res.` vs `Independiente del Valle`, Spain vs Spain U21,
+Rapid Vienna vs Rapid Wien II, Hapoel Acre vs Hapoel Tel Aviv, Molde vs
+Moldova, Barrow vs Barry Town, Lille vs Lillestrøm, Catania vs
+Catanzaro, Port Vale vs Portugal, … — **all genuinely distinct, 0
+same-fixture refusals.**
+
+Deliberately left refused, no evidence either way: `Al Ahli` /
+`Al Ahly` (different clubs in most feeds). The collision tripwire makes
+any future conflict visible rather than guessing now.
+
+Guard rails held: `Launceston City`/`Launceston United`,
+`Manchester City`/`Manchester United`, `Al Nasar`/`Al Nassr` still veto.
+
+### 11b. Frozen real-slate regression (item 4)
+
+`tests/fixtures/slate_2026-10-05_identity_split.json` is a sanitized
+freeze of the 6-row inflated slate (no URLs, no credentials, no provider
+payloads; test data under `tests/`, never `localdata`).
+`tests/test_identity_collision_sweep.py` replays the whole collapse path
+against it: 6 → 5 rows, the twin merges on `kickoff_utc` despite
+disagreeing raw clock text, the league-spelling divergence does not veto,
+the archive merge yields one Italy row, and all four sweep counters are
+zero. Both defects caught in the second pass were invisible to synthetic
+unit tests and visible here.
+
+### 11c. `settlement_ambiguous_pending` (item 5)
+
+`_drop_ambiguous_result_keys` fails closed on a result key covering two
+real fixtures, which leaves those legs pending **forever**. It now
+returns the colliding fixtures as well as the count, and settlement
+prints `settlement_ambiguous_pending=N` plus one
+`!! AMBIGUOUS SETTLEMENT KEY <day>: <fixtures>` line each, so an operator
+resolves them (manual verified result, or a curated alias) instead of
+watching them accumulate silently.
+
+### 11d. Terminology (item 2)
+
+The informal metaphor from the incident channel is gone from every
+filename, identifier, counter, doc heading and report string. The terms
+of art are **identity collision** (two teams, one key) and **identity
+split** (one team, two keys). `test_identity_roach_sweep.py` was renamed
+to `tests/test_identity_collision_sweep.py` with `git mv`, preserving
+history.
+
+## 12. Red-team pass — adversarial findings (2026-10-05)
+
+Adversarial posture: the attacks below were designed to BREAK the fix and
+were **run and recorded before any repair**. Tests:
+`tests/test_identity_adversarial.py` (22).
+
+| # | Attack | Result on the branch BEFORE repair | Disposition |
+|---|---|---|---|
+| 1a | NFC vs NFD spellings (`Türkiye`, `Beşiktaş`, every curated spelling) | **PASS** — all 174 curated spellings + probes key identically in all keyers (NFKD runs inside `fold_ascii`) | locked by test |
+| 1b | Homoglyph `Sp‑а‑rt‑а‑k` (Cyrillic а) | **FAIL (confirmed)** — `spartak` vs `sprtk` in all three keyers, nothing flagged it | not repairable without a transliteration dependency → `script_anomaly()` + sweep counter `mixed_script_name=N` + `!! MIXED SCRIPT TEAM NAME` line; never auto-merged |
+| 1c | ZWSP / NBSP / soft hyphen / RLM / LRM / BOM, inside and around a name | **PASS** — identical keys | locked by test |
+| 1d | Turkish dotted `İ` (`İstanbul Başakşehir`, `DİYARBAKIR`) | **PASS** | locked by test |
+| 2 | `W Connection`, `B 1903`, `B36 Tórshavn`, `II Keila`, `Degerfors IF` vs `Degerfors` | **FAIL (confirmed)** — `W Connection` carried marker `w`; `B 1903` keyed to a sentinel; `Degerfors IF`/`Degerfors` was refused `degenerate_identity:home` | curated `MARKER_EXEMPT_NAMES`; numeric names fall back to the alphanumeric compact key (`B 1903` → `b1903`); all four same-club pairs now merge; `Keila II` keeps its genuine marker |
+| 3 | Sentinel integrity (`Degerfors`, `Degenhardt FC`, `deg12345678`) | **FAIL (confirmed)** — the sentinel was a plain `deg` **string prefix**, so real clubs starting "deg" were classified degenerate (this *caused* finding 2's Degerfors case) | sentinel moved out of the key alphabet: `deg~<hash>`; keys only ever contain `[a-z0-9_]`, so collision is impossible by construction; the old `deg[0-9a-f]{8}` form is recognised read-side only |
+| 4 | Two distinct clubs, identical `kickoff_utc`, both leagues blank (`Barcelona` vs `Barcelona SC`) | **FAIL (confirmed)** — merged (keys are equal after `sc` stripping, so no veto could fire) | curated `DISTINCT_TEAM_PAIRS` ("two clubs, one key" — the mirror of the alias table), checked FIRST in `_merge_veto_reason`; kickoff agreement is now explicitly necessary-never-sufficient |
+| 5 | Epoch shadowing: `Turkey U21` legacy key `turkey` == `Turkey` canonical key | **FAIL (confirmed)** — `norm_team`/`norm_team_legacy` strip `u21`, and the existing similarity fallback scores `turkeyu21`/`turkey` at exactly 0.80 (the acceptance bar) | `_marker_boundary_blocks()`: the chain stops at a distinct-entity marker. Real names behind each loaded key are registered (`SETTLED_KEY_NAMES`) so marker sets are compared exactly; where names are unknown only an explicit suffix conflict blocks, keeping legacy marker-blind rows settleable. Guarded legs print `settlement_marker_guarded=N` |
+| 6a | Survivorship bias — replay historical CORRECT merges | **PASS** — 518 archived rows carry collapse metadata; 10 record ≥2 distinct member spellings; all 10 clusters still collapse to one row, identical to pre-fix code | replayed in-suite |
+| 6b | Alias config deleted / malformed JSON | **FAIL (confirmed, silent)** — degraded to zero aliases with no signal, so every exonym fixture would split again unnoticed | all-or-nothing degradation kept (never half-applied) and now announced: `!! TEAM ALIAS CONFIG UNAVAILABLE …` on stderr + `ALIAS_CONFIG_WARNINGS` |
+| 6c | Idempotence — collapse the frozen slate twice | **PASS** — 6→5 then 5→5, byte-identical | locked by test |
+
+### 12a. Methodology correction to the round-2 proof
+
+Replaying the archives through the whole pipeline (old `main` vs this
+branch) on same-day candidate pairs above the old 0.40 merge threshold:
+**80 candidate pairs, 4 newly refused (`league_disagreement`, from round
+2), 7 newly ALLOWED.** All 7 are the curated exonym merges the fix
+exists to make — `Türkiye`/`Turkey` ×5 and `Czech Republic`/`Czechia` ×2,
+i.e. the incident itself. Round 2's "newly allowed = 0" was measured at
+the **veto-predicate** level, which cannot see merges enabled by
+alias-driven key *equality*; the pipeline-level number is the honest one
+and it is 7 intended merges, not 0.
+
+Against the branch head immediately before this red-team pass, the
+repairs above produce **0 newly refused and 0 newly allowed** on the same
+80 pairs: the Degerfors/B 1903/W Connection/Barcelona-SC cases do not
+occur in the archives, which is exactly why only adversarial inputs
+exposed them.
+
+### 12b. Residual, accepted
+
+* Homoglyph names cannot be transliterated deterministically here; they
+  are flagged, not merged (1b).
+* `Al Ahli`/`Al Ahly` remain refused (and are now on the curated
+  distinct-clubs list) — different clubs in most feeds.
+* Non-Latin-only names (wholly Cyrillic/Greek) still key to a `deg~`
+  sentinel: fail-closed, visible via `identity_degenerate`.
+
+## 13. Youth/reserve squad-identity hardening handoff verification (2026-10-05)
+
+This section records only evidence generated in this session on branch
+`arena/01a10d17-edge-factory`. The three short commit IDs named in the
+handoff were not present in this checkout, so the work below was rebuilt
+and measured on this branch rather than cherry-picked.
+
+| Check | Command run | Actual result | Disposition |
+|---|---|---|---|
+| Handoff commits available locally? | `pwd && git status --short --branch && git log --oneline --decorate --max-count=12`<br>`git branch -a --contains 01032fc || true; git branch -a --contains d5e6797 || true; git branch -a --contains 90cfc1d || true; git cat-file -t 01032fc 2>/dev/null || true; git cat-file -t d5e6797 2>/dev/null || true; git cat-file -t 90cfc1d 2>/dev/null || true`<br>`git fetch --all --prune --tags && git show-ref --heads --tags`<br>`git fsck --no-reflogs --unreachable --lost-found 2>/dev/null; git reflog --date=iso` | `## arena/01a10d17-edge-factory` at `5927fab ... Fix duplicate-fixture identity split + identity collision hardening (#37)`.<br>`git branch --contains` reported `error: malformed object name 01032fc`, `d5e6797`, `90cfc1d`; `git cat-file` returned no object type.<br>`git show-ref` listed only `refs/heads/arena/01a10d17-edge-factory` and `refs/heads/main`, both at `5927fab...`.<br>Reflog showed clone/checkout only; no unreachable commits were printed. | Could not cherry-pick/rebase the named commits in this environment. Rebuilt the squad-identity hardening directly and covered it with tests below. |
+| Baseline local-archive measurement before this session's fix | `tmp=$(mktemp -d); ... cp -a Config $tmp/Config; git show HEAD~2:src/edgefactory/util.py > $tmp/src/edgefactory/util.py; git show HEAD~2:src/edgefactory/scored_candidate_shadow.py > $tmp/src/edgefactory/scored_candidate_shadow.py; git show HEAD~2:scripts/auto_tickets.py > $tmp/scripts/auto_tickets.py; git show HEAD~2:Config/entity_overrides.json > $tmp/Config/entity_overrides.json; ln -s /home/user/Edge-Factory/localdata $tmp/localdata; PYTHONPATH=$tmp/src .venv/bin/python - <<'PY' ... load_archived_picks(); _collect_settled_facts(); pick_result(...) ... PY` | `old_archived_picks 1729`<br>`old_graded 1590`<br>`old_squad_legs_total 113`<br>`old_squad_legs_graded 102`<br>`old_ambiguous_keys 27`<br>`old_marker_guarded_legs 8` | The prompt's quoted `1611`, `1489`, `86/94`, `26` figures were not reproduced in this checkout. Local baseline here is the output shown. The temp snapshot copied the full `Config/` directory so `verified_results.json` was present. |
+| Post-fix local-archive measurement | `PYTHONPATH=src .venv/bin/python - <<'PY' ... load_archived_picks(); _collect_settled_facts(); pick_result(...) ... PY` | `archived_picks 1729`<br>`graded 1593`<br>`squad_legs_total 113`<br>`squad_legs_graded 105`<br>`ambiguous_keys 0`<br>`marker_guarded_legs 5`<br>stderr included `settlement_ambiguous_pending=0`. | Improved local grading by 3 legs, improved squad-leg grading by 3 legs, and reduced local ambiguous settlement keys from 27 to 0. |
+| Status-change audit old vs new | `tmp=$(mktemp -d); ... cp -a Config $tmp/Config; old auto_tickets snapshot ... > /tmp/old_status2.json; PYTHONPATH=src .venv/bin/python ... > /tmp/new_status2.json; .venv/bin/python - <<'PY' ... compare results ... PY` | `status_changes 3`<br>`newly_graded 3`<br>`newly_ungraded 0`<br>`reversed 0`<br>Changed rows printed:<br>`Korona II Kielce vs Radomiak Radom`: `old None`, `new win`.<br>`Vukovar '91 vs Dinamo Zagreb B`: `old None`, `new loss`.<br>`Górnik Zabrze II vs Olimpia Grudziadz`: `old None`, `new win`. | No already-graded senior leg reversed after rerunning the comparison with the full `Config/` directory, including `verified_results.json`, present in the old snapshot. The earlier `Pafos` flip was a measurement harness artefact caused by omitting `Config/verified_results.json` from the temporary old snapshot. The three newly graded legs are exact/level-tolerant second-team joins with same-day archive result evidence; covered by `tests/test_squad_identity.py`. |
+| Pafos verified-result precedence provenance | `PYTHONPATH=src .venv/bin/python - <<'PY' ... print localdata Pafos donor rows, load_verified_results() rows, and canonical/norm keys ... PY` | Donor rows printed: `forebet_settled` = `Pafos 2-2 Dinamo Tirana` (`outcome draw`), `bettingclosed_settled` = `Pafos 4-2 KS Dinamo Tirana` (`outcome home`), `scoutingstats_settled` = `Pafos FC 4-2 Dinamo City` (`outcome home`). Verified row printed: `operator_verified` = `Pafos 4-2 Dinamo Tirana` (`outcome home`) with `verified_at 2026-09-01` evidence in `Config/verified_results.json`. Keys printed: `canonical ('2026-08-27', 'pafos', 'dinamotir')`, `norm_team ('2026-08-27', 'pafos', 'dinamotir')`. | Verified rows intentionally outrank donor rows in every exact key space. Regression pinned by `test_verified_result_overrides_canonical_donor_key`; the corrected old-vs-new comparison above shows `reversed 0` once the old snapshot includes `verified_results.json`. |
+| Senior leg must not grade from youth result, and youth leg must not grade from senior result | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py -q` | `13 passed in 0.39s` | Covered by `test_auto_ticket_senior_result_never_grades_youth_leg_and_vice_versa`, `test_shadow_settlement_senior_result_never_grades_youth_candidate`, and `test_level_tolerant_lookup_never_synthesizes_senior_boundary_key`. |
+| Legacy-blind keys cannot be written back for squad rows | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_legacy_blind_lookup_keys_are_tagged_and_not_written_for_squad_rows -q` | `1 passed` | `_exact_result_lookup_specs("Turkey U21", "Spain U21")` still exposes `("turkey", "spain", True)` as a tagged compatibility key, but `_result_write_keys` / `_exact_result_keys` return only `("turkey_u21", "spain_u21")`. |
+| `_level_tolerant_lookup` fails closed when sibling second teams disagree | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_level_tolerant_lookup_fails_closed_on_disagreeing_second_teams -q` | `1 passed` | The second-team family lookup returns `None` when U20 and U23 sibling keys on the same date produce different outcomes. |
+| Senior-key parity for real senior names | `PYTHONPATH=src .venv/bin/python - <<'PY' ... materialize old util/config from git show HEAD; sample 5000 senior-only archive fixtures; compare old.canonical_team_key and old exact keys to new canonical_team_key and _exact_result_keys ... PY` | `senior_fixture_sample 5000`<br>`canonical_team_key_diffs 0`<br>`exact_result_keys_diffs 0` | Senior keys in the 5,000-fixture senior-only sample were byte-identical for `canonical_team_key` and `_exact_result_keys`. |
+| Unicode and marker-veto adversarial classes still pass | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py tests/test_identity_collision_sweep.py tests/test_identity_adversarial.py tests/test_team_identity_transliteration.py -q` | `96 passed in 0.45s` | No regression in the existing Unicode, marker-veto, exonym, sentinel, and collision-sweep adversarial tests; new squad tests are included in the same run. |
+| Residual local ambiguous-key investigation | `PYTHONPATH=src .venv/bin/python - <<'PY' ... at._collect_settled_facts(); print(len(at.AMBIGUOUS_SETTLEMENT_KEYS)); ... PY` after marker-stem fix but before curated residual aliases | `ambiguous 10` with residual rows including `Charleston Battery vs Charlotte Independence` / `Charleston vs Charlotte Independ.`, `Neftci Baku W` / `Neftçi Bakı W`, `A.D. Isidro Meta` / `AD Isidro Metapan`, `Al Arabi Kuwait` / `Al-Arabi Club(KU`, `Ellas Syros` / `Ellas Syrou`, and `Egnatia Rrogozhine` / `Egnatia Rrogozhi`. | Added curated explicit aliases only for measured archive spelling/truncation pairs in `Config/entity_overrides.json`; no fuzzy matching. |
+| Residual ambiguous keys after curated aliases | `PYTHONPATH=src .venv/bin/python - <<'PY' ... at._collect_settled_facts(); print('ambiguous', len(at.AMBIGUOUS_SETTLEMENT_KEYS)) ... PY` | `ambiguous 0` | Local residual ambiguous settlement keys resolved to zero. Covered by `test_curated_archive_truncation_aliases_are_explicit_and_marker_safe`. |
+| Ambiguity detector still has live test coverage after local residuals reached zero | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_ambiguity_detector_still_drops_distinct_width_collision -q` | `1 passed` | Synthetic Manchester City / Manchester United width collision still drops the colliding key. Existing adversarial tests also keep spelling-variant rows settleable and truly distinct conflicting fixtures dropped. |
+| Is `SECOND_TEAM_MARKERS` too broad for U20/U23? | `PYTHONPATH=src .venv/bin/python - <<'PY' ... scan localdata settled+picks for same day / same club stem / same opponent with both u20 and u23 ... PY` | `u20_and_u23_same_club_same_day_same_opponent 0` | No local evidence of U20 and U23 sides of one club meeting the same opponent on the same date. Kept the family lookup uniqueness-guarded anyway; disagreement returns `None`. |
+| Broader second-team level-split evidence | `PYTHONPATH=src .venv/bin/python - <<'PY' ... scan localdata settled+picks for second-team same-day same-opponent level splits ... PY` | `second_team_same_day_same_opponent_level_splits 158`.<br>Samples printed included `Brisbane Roar FC Youth` / `Brisbane Roar U21`, `Koln (Youth)` / `Koln II`, `Atl. San Luis U2` / `Atl. San Luis U21`, `Novorizontino U2` / `Novorizontino U20`, and `Brisbane Roar II` / `Brisbane Roar U23`. | Confirms feeds use several labels for the same second-team level family. The implementation tries the family only when a second-team marker is already present and never synthesizes the empty senior marker. |
+| u1x / academy evidence | Same scan command as above, printing `u17_u18_u19_name_occurrences` and `academy_name_occurrences`. | `u17_u18_u19_name_occurrences 2047 unique_names 513` with sample `Athletico-PR U17`, `Germany U19 W`, etc.<br>`academy_name_occurrences 105 unique_names 23` with sample `Puskas Academy`, `Wick Academy`, `Academy Pandev`, `Inter Academy U20`, `BFF Academy U19`, `Tottenham Hotspur Academy`. | Did not add a `u1x` tolerant family: exact U17/U18/U19 markers already remain distinct. Did not broaden academy treatment: archive evidence mixes senior club names containing Academy with youth-team academy names. |
+| Report-before-fix failure captured | Initial full-suite command before adjusting the synthetic placeholder test: `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` | Failed once: `tests/test_auto_tickets_rolling.py::test_settle_losing_day_moves_bank_no_notification` with `assert 120.0 == 50.0`; stderr showed `settlement_marker_guarded=1 :: 2026-08-20 Team b vs Other b ...`. | Recorded before fixing. The test used synthetic `Team b`, which is now intentionally parsed as a reserve marker; the test fixture now uses non-marker placeholders. Production code was not loosened. |
+| Full suite | `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` | `1373 passed in 32.84s` | Green after adding tests and adjusting the synthetic placeholder. |
+| Parity test | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_scored_candidate_shadow_tickets.py::test_identical_ticket_output_with_shadow_on_off_and_crashing -q` | `1 passed in 0.05s` | Ticket stdout parity remains green. |
+| Smoke | `PYTHONPATH=src .venv/bin/python tools/smoke_fixture_identity_dedupe.py` | Ended with `SMOKE: PASS (3/3 cases)`. | Smoke green. |
+| Marker-guard counter operator visibility | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_marker_guard_summary_is_operator_visible_even_at_zero -q` | `1 passed in 0.05s`; the test asserts `settlement_marker_guarded_pending=0` at zero and `settlement_marker_guarded_pending=1` after a guarded marked leg is recorded. | Added `_report_marker_guarded_settlement()` and wired it into `main()` settlement/today/backfill paths, so production logs show the guard is wired even when quiet. |
+| CI backlog/log access | `gh run list --limit 5 --json databaseId,workflowName,status,conclusion,headBranch,headSha,createdAt,url`<br>`gh run view 37343204736 --log | wc -c`<br>`gh run view 37343204736 --json jobs,conclusion,status,headSha,headBranch,workflowName,createdAt` | Run list returned recent successful runs, including `37343204736` on branch `arena/01a10c3f-edge-factory`.<br>`gh run view 37343204736 --log | wc -c` printed `0`; stderr ended in `EOF` while fetching logs. The signed log URL emitted by `gh` is not recorded here.<br>JSON job view showed both jobs completed with `conclusion: success`. | Production backlog collision classes beyond localdata: not verified. Logs were not retrievable via `gh run view --log` in this environment. |
+| Paths touched | `git diff --name-only && git status --short` | At the time of the check before this doc append: `Config/entity_overrides.json`, `scripts/auto_tickets.py`, `src/edgefactory/scored_candidate_shadow.py`, `src/edgefactory/util.py`, `tests/test_auto_tickets_rolling.py`; untracked `tests/test_squad_identity.py`. | No `.github/workflows/*` or `localdata/*` paths touched. This doc section was appended afterwards. |
+
+### 13a. Curated residual-alias adjudication
+
+Every alias below was added explicitly to `Config/entity_overrides.json`; no
+`alias_fuzzy` result is consulted. The evidence column is from local archive
+commands in this session (settled rows plus pick archives), not from name
+similarity.
+
+| Alias spellings | Canonical | Archive evidence used |
+|---|---|---|
+| `Charleston` / `Charleston Battery` | `Charleston Battery` | Same-day common opponents appeared in the scan (`Brooklyn` on 2026-08-02 and `Las Vegas Lights` on 2026-08-30); the residual ambiguous row was the same 2026-07-12 fixture against `Charlotte Independ.` / `Charlotte Independence`. |
+| `Charlotte Independ.` / `Charlotte Independence` | `Charlotte Independence` | Abbreviation/truncation of one club name in the same 2026-07-12 inverse fixture against `Charleston` / `Charleston Battery`. |
+| `Neftci Baku` / `Neftçi Bakı` | `Neftci Baku` | Transliteration/diacritic variant in the residual women's fixture `Neftci Baku W` / `Neftçi Bakı W`; marker suffix remains `w`, so this does not cross the senior boundary. |
+| `Buducnost` / `Budućnost Podgorica` | `Buducnost Podgorica` | Diacritic plus city-suffix spelling variant in the same residual women's fixture against the Neftci/Neftçi pair; marker suffix remains `w`. |
+| `Ulricehamn` / `Ulricehamns IFK` | `Ulricehamns IFK` | Residual 2026-08-05 women's fixture against `Elfsborg W`; the suffix `IFK` is the club-designator expansion and marker suffix remains `w`. |
+| `A.D. Isidro Meta` / `AD Isidro Metapan` | `AD Isidro Metapan` | Feed truncation: scan found same-day/common-opponent evidence against `Aguila` (2026-08-08) and paired `Cacahuatique` / `CD Cacahuatique` rows (2026-07-25 and 2026-09-27). |
+| `Al-Arabi Club(KU` / `Al Arabi Kuwait` | `Al Arabi Kuwait` | Feed truncation/country qualifier: exact same archive day and opponent, `East Bengal`, on 2026-08-12. |
+| `St Patricks Dublin` / `St. Patricks Athletic` | `St. Patricks Athletic` | Repeated same-day common-opponent evidence (`Wexford Youths`, `Shamrock Rovers`) and paired opponent spellings (`Drogheda Utd` / `Drogheda United`, `Waterford United` / `Waterford FC`). |
+| `Giravanz K.` / `Giravanz Kitakyu` | `Giravanz Kitakyu` | `K.` abbreviation: same-day common-opponent evidence against `Okinawa SV`, `Tochigi SC`, `Matsumoto Yamaga`, `Ehime FC`, `Gainare Tottori`, and `Kagoshima United`. |
+| `Ellas Syrou` / `Ellas Syros` | `Ellas Syros` | Same Greek club spelling variant/genitive feed form; common-opponent evidence against `Marko` (2026-08-24) and `Apollon Pontou` (2026-09-07). |
+| `Egnatia Rrogozhi` / `Egnatia Rrogozhine` | `Egnatia Rrogozhine` | Feed truncation/terminal spelling variant; scan found paired same-day fixtures against `Lillestrom` / `Lillestrom SK` on 2026-08-20 and 2026-08-27 plus other paired opponent spellings. |
+
+Pairs such as `Dinamo Tbilisi` / `US Mondorf-les-bains` did **not** receive a
+new Config alias in this round; they were already resolved by deterministic
+structural containment (`US Mondorf` is a prefix of `US Mondorf-les-bains`) and
+therefore were absent from the residual list after the marker-stem fix.
+
+Implementation notes for this section:
+
+* `canonical_team_key` now builds operational keys from club stem plus squad suffix for explicit markers including `U-21`, `Under 21`, `Sub 20`, `Jong`, `Frauen`, `Amateure`, `Primavera` when it follows a club stem, trailing `2`, and truncated `U2` as `u2x`.
+* `_exact_result_keys` is write-safe: marker-aware canonical / transliterated / frozen-legacy keys are written; old marker-blind keys are exposed only through tagged lookup specs and are skipped for marked legs.
+* `SECOND_TEAM_MARKERS = {b, res, youth, u20, u21, u22, u23, u2x}` is tried as a family only when a second-team marker is already present. The empty senior marker is never synthesized, and disagreeing sibling outcomes fail closed.
+* No fuzzy matching was added. The residual zero-ambiguity improvement uses only explicit aliases added to `Config/entity_overrides.json` plus deterministic club-stem comparison after equal marker sets.
+
+## 14. Follow-up stack on PR #38 head — curated residual aliases and kickoff UTC boundary
+
+Base for this follow-up was the PR #38 head, not `main`:
+`2e93d0e Expose marker-guard settlement summary` on branch
+`arena/01a10d17-edge-factory`. The local ambiguity baseline immediately
+before this follow-up stayed at `settlement_ambiguous_pending=0`, with an
+empty `AMBIGUOUS_SETTLEMENT_KEYS` list. The production value
+`settlement_ambiguous_pending=21` remains operator-reported and was not
+locally reproduced in this sandbox.
+
+### 14a. Ground-truthed alias additions from archive rows
+
+Each alias below was added explicitly to `Config/entity_overrides.json`; no
+fuzzy, prefix, or substring rule was introduced. The archive evidence was
+read from local donor/settled files in this session. Remaining local
+ambiguous keys after these additions: none (`local_ambiguous_count 0`).
+
+| Alias spellings | Canonical | Archive evidence used |
+|---|---|---|
+| `Kiyovu Sport` / `Kiyovu Sports` | `Kiyovu Sports` | `forebet.csv.gz` and `zulubet.csv.gz` both carry the same Rwanda top-flight fixture on `2025-04-25`: `Vision vs Kiyovu Sport(s)`, score `0-1`; Forebet league code `Rw1`, Zulubet league `Rwanda National Soccer League`. Additional same-date/opponent agreement was observed for `Rutsiro` on `2025-05-16` and `Gasogi United` on `2026-04-03`. |
+| `San Martin S.J.` / `San Martin San Juan` | `San Martin San Juan` | `forebet.csv.gz` row `2024-02-18`, league `Ar2`, `San Martin San Juan vs Gimnasia Jujuy`, score `2-1`; `statarea.csv.gz` row same date/opponent/score, league `Argentina,Primera Nacional`, `San Martin S.J. (Argentina) vs Gimnasia Jujuy (Argentina)`. |
+| `Dinamo Samarkand` / `Dinamo Samarqand` | `Dinamo Samarqand` | `forebet.csv.gz` row `2024-04-05`, league `Uz1`, `FC Bunyodkor vs Dinamo Samarkand`, score `0-0`; `statarea.csv.gz` row same date/opponent/score, league `Uzbekistan,Superliga`, `FC Bunyodkor (Uzbekistan) vs Dinamo Samarqand (Uzbekistan)`. |
+
+### 14b. Refused correctness case retained
+
+`Juventud Unida SL` and `Juventud Unida Univ.` remain distinct by policy and
+by test, despite archive rows that can share a date/opponent. No alias was
+added for this pair. Regression coverage:
+`test_juventud_unida_san_luis_and_universitario_remain_distinct` asserts the
+24-character canonical keys differ and `_same_club_names()` refuses the pair.
+
+### 14c. The Odds API 60-minute kickoff mismatch boundary
+
+The three 2026-10-05 warning rows were traced to a donor-ingest boundary:
+`picks_today.json` already carries `kickoff_utc` matching the captured
+The Odds API row, but `_pick_kickoff_utc()` ignored it and reparsed the
+human display string as Africa/Johannesburg local time minus two hours. That
+made the planner compare `17:45Z` with captured `18:45Z` for Montenegro vs
+Armenia and France vs Belgium, and `15:00Z` with captured `16:00Z` for Cyprus
+vs Latvia. The fix is narrow: `_pick_kickoff_utc()` now prefers a valid
+`kickoff_utc` field and only falls back to the legacy display-string parse
+for old rows without `kickoff_utc`. The mismatch tolerance and lead-window
+guards were not changed.
+
+Evidence summary from local archive scans:
+
+| Measurement | Result |
+|---|---|
+| Before fix: The Odds API pick/display mismatches >15m | `48` rows: `2026-08/+60m=7`, `2026-09/+60m=10`, `2026-10/+60m=31`; the three named internationals were in the 2026-10 `+60m` class. |
+| After fix: mismatches >15m | `9` rows remain: seven August rows without `kickoff_utc`, plus two September rows with larger `+480m`/`+300m` disagreements that remain guarded. |
+| Named 2026-10 internationals after fix | `kickoff_mismatch_count 0`; planner skip lines become ordinary `priced, close window not open` rows. |
+
+### 14d. Follow-up clarifications before merge
+
+**Kickoff mismatch guard field sources.** The pick side of the comparison now
+reads `pick["kickoff_utc"]` first, falling back to the legacy `pick["kickoff"]`
+`DD-MM, HH:MM` parse only when `kickoff_utc` is absent. Command output:
+
+```text
+nl -ba src/edgefactory/sources/theoddsapi.py | sed -n '758,792p;886,894p'
+760 def _pick_kickoff_utc(pick: dict) -> datetime | None:
+761     resolved = str(pick.get("kickoff_utc") or "").strip()
+...
+769     raw = str(pick.get("kickoff") or "").strip()
+...
+891         "kickoff": event.get("commence_time") or pick.get("kickoff"),
+```
+
+The captured-row side reads `existing_rows[].kickoff`; for rows written by the
+The Odds API adapter, that field is `event["commence_time"]` unless the event
+omits it, in which case the adapter falls back to the pick display string.
+`plan_auto()` compares those two resolved instants and still emits
+`WARN kickoff-mismatch` when they differ by more than `KICKOFF_MISMATCH_MIN`:
+
+```text
+nl -ba scripts/capture_theodds.py | sed -n '244,300p'
+258             iso = (r.get("kickoff") or "").replace("Z", "+00:00")
+...
+287         row_ko = _fixture_row_kickoff(f, existing_rows, match_fn) if has_rows else None
+288         if row_ko is not None and kickoff is not None:
+289             delta_m = abs((row_ko - kickoff).total_seconds()) / 60.0
+290             if delta_m > KICKOFF_MISMATCH_MIN:
+291                 skips.append(
+292                     f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
+```
+
+A new regression test proves the warning path still fires when the pick has a
+valid `kickoff_utc` but the captured row carries a genuinely different kickoff:
+`test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement` feeds
+`kickoff_utc=2026-10-05T18:45:00+00:00` against an existing captured row at
+`2026-10-05T19:45:00Z` and asserts the warning contains `pick lists 18:45Z`,
+`captured rows say 19:45Z`, and `Δ=60m`. Targeted validation:
+
+```text
+PYTHONPATH=src .venv/bin/python -m pytest tests/test_capture_plan_kickoff.py::test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement tests/test_squad_identity.py::test_followup_aliases_are_pinned_without_local_ambiguous_backlog tests/test_squad_identity.py::test_juventud_unida_san_luis_and_universitario_remain_distinct -q
+...                                                                      [100%]
+3 passed in 0.13s
+```
+
+This means the guard is not blind for independent disagreement between
+`pick["kickoff_utc"]` and captured-row `kickoff`. It is also true that when
+`kickoff_utc` and the The Odds API captured row agree, this path no longer
+uses the raw human display string as an independent contradiction signal; that
+is intentional because the display string is zone-free provenance, not an
+instant.
+
+**Residual prevalence scan explanation.** The after-fix residuals were listed
+with old-display parse and new `kickoff_utc` parse side-by-side:
+
+```text
+PYTHONPATH=src .venv/bin/python - <<'PY'
+# scans localdata/theoddsapi_odds_*.csv.gz against picks_*.json and prints
+# rows where the post-fix pick instant still differs from captured kickoff by >15m
+PY
+after_residual_count 9
+('picks_2026-08-03.json', '2026-08-03', 'Halmstad', 'Sirius', '03-08, 18:00', None, None, None, 'Halmstads BK', 'IK Sirius', '2026-08-03T17:00:00+00:00', '2026-08-03T16:00:00+00:00', 60, '2026-08-03T16:00:00+00:00', 60)
+('picks_2026-08-08.json', '2026-08-08', 'PSV Eindhoven', 'Fortuna Sittard', '08-08, 19:00', None, None, None, 'PSV Eindhoven', 'Fortuna Sittard', '2026-08-08T18:00:00+00:00', '2026-08-08T17:00:00+00:00', 60, '2026-08-08T17:00:00+00:00', 60)
+('picks_2026-08-08.json', '2026-08-08', 'Viking', 'Sarpsborg 08 FF', '08-08, 15:00', None, None, None, 'Viking FK', 'Sarpsborg FK', '2026-08-08T14:00:00+00:00', '2026-08-08T13:00:00+00:00', 60, '2026-08-08T13:00:00+00:00', 60)
+('picks_2026-08-10.json', '2026-08-10', 'Sirius', 'IF Brommapojkarna', '10-08, 18:00', None, None, None, 'IK Sirius', 'IF Brommapojkarna', '2026-08-10T17:00:00+00:00', '2026-08-10T16:00:00+00:00', 60, '2026-08-10T16:00:00+00:00', 60)
+('picks_2026-08-11.json', '2026-08-11', 'Celje', 'Ararat-Armenia', '11-08, 19:15', None, None, None, 'NK Celje', 'FC Ararat-Armenia', '2026-08-11T18:15:00+00:00', '2026-08-11T17:15:00+00:00', 60, '2026-08-11T17:15:00+00:00', 60)
+('picks_2026-08-11.json', '2026-08-11', 'Kauno Žalgiris', 'Dinamo Zagreb', '11-08, 18:00', None, None, None, 'FK Kauno Žalgiris', 'Dinamo Zagreb', '2026-08-11T17:00:00+00:00', '2026-08-11T16:00:00+00:00', 60, '2026-08-11T16:00:00+00:00', 60)
+('picks_2026-09-08.json', '2026-09-08', 'Porto', 'Manchester City', '2026-09-08 21:00:00', '2026-09-08T11:00:00+00:00', 'derived_odds_row', "scoutingstats_odds kickoff '2026-09-08T11:00:00Z'", 'Porto', 'Manchester City', '2026-09-08T19:00:00+00:00', None, None, '2026-09-08T11:00:00+00:00', 480)
+('picks_2026-09-08.json', '2026-09-08', 'Borussia Dortmund', 'Villarreal', '2026-09-08 21:00:00', '2026-09-08T14:00:00+00:00', 'derived_odds_row', "scoutingstats_odds kickoff '2026-09-08T14:00:00Z'", 'Borussia Dortmund', 'Villarreal', '2026-09-08T19:00:00+00:00', None, None, '2026-09-08T14:00:00+00:00', 300)
+('picks_morning_2026-08-10.json', '2026-08-10', 'Sirius', 'IF Brommapojkarna', '10-08, 18:00', None, None, None, 'IK Sirius', 'IF Brommapojkarna', '2026-08-10T17:00:00+00:00', '2026-08-10T16:00:00+00:00', 60, '2026-08-10T16:00:00+00:00', 60)
+```
+
+Interpretation:
+
+* The seven August `+60m` residual rows all have `kickoff_utc=None`; they stay
+  on the legacy display fallback and therefore are untouched by this fix. One
+  of the seven is the duplicate morning archive for Sirius / IF Brommapojkarna.
+* The two September large deltas were not manufactured by the fix; they were
+  previously unobservable on this path because the old parser returned `None`
+  for raw strings shaped like `YYYY-MM-DD HH:MM:SS`. The new `kickoff_utc`
+  reader exposes two real donor disagreements: the pick instant came from
+  `scoutingstats_odds` (`11:00Z` and `14:00Z`), while the captured The Odds API
+  rows say `19:00Z`. The guard now remains active for those rows instead of
+  skipping comparison.
+
+**Alias tests and local fail-closed coverage.** Local data did not reproduce a
+non-zero ambiguous backlog before or after these follow-up aliases:
+`settlement_ambiguous_pending=0`, `local_ambiguous_count 0`, and an empty full
+list. The new positive alias test pins the three follow-up alias pairs directly
+against the canonicalizer even though the local warehouse has no backlog row for
+them, and the Juventud negative test pins the refused pair. Because local data
+now has zero ambiguous settlement keys, the fail-closed ambiguous-key path is
+not exercised by live local rows in this checkout; synthetic coverage
+(`test_ambiguity_detector_still_drops_distinct_width_collision`) is carrying
+that guard.

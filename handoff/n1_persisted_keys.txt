@@ -1,0 +1,174 @@
+== N-1(a) the sites where a source_team_key-derived key is persisted ==
+
+* localdata/auto_tickets_state.json
+    field  : open_slips[].accas[].legs[].fixture_key = [day, home, away] (RAW)
+    writes : auto_tickets._stamp_fixture_keys
+    reads  : auto_tickets.leg_lookup_key/_folded_leg_key
+    class  : RECOMPUTED AT READ - safe (raw spellings, re-folded at settle)
+
+* localdata/enhancement_tickets_state.json (runtime, gitignored)
+    field  : open_slips[].accas[].legs[].fixture_key = (day, key, key, PICK) (FOLDED)
+    writes : auto_tickets.enhancement_legs
+    reads  : auto_tickets.leg_lookup_keys
+    class  : COMPARED against a recomputed value - compatibility tier added (N-1b)
+
+* localdata/coverage_inventory.json
+    field  : sources.*.duplicate_keys.examples[].key = source|date|key::key|market
+    writes : scripts/coverage_inventory.py:_fixture_key (same shape as edgefactory.remine.source_row_key)
+    reads  : scripts/remine_gap.py / remine_backfill.py read remine.source_row_key against it (collision)
+    class  : PERSISTED AND COMPARED - measured below; add a legacy tier only if a stored key embeds a folded token (none today)
+
+* localdata/phase5_shadow/rows.jsonl
+    field  : identity.home_key / identity.away_key
+    writes : edgefactory.phase5_shadow.build_row
+    reads  : scripts/fit_phase5_candidate.py
+    class  : PERSISTED, churns, NOT a settlement join (era_pair_key, display-derived, is what the certifier reads)
+
+* localdata/purity_registry.json
+    field  : registry keys
+    writes : edgefactory.entities (team_identity_words fold_tokens=False)
+    reads  : purity contexts
+    class  : FROZEN BY DESIGN - passes fold_tokens=False
+
+* localdata/ml_fade_research_ledger.json
+    field  : ledger identity keys
+    writes : edgefactory.ml_fade_research (its own fold)
+    reads  : ledger reconciliation
+    class  : FROZEN BY DESIGN - documented in identity.py
+
+* localdata/scored_candidate_shadow_*.jsonl
+    field  : home_key/away_key/fixture_id
+    writes : edgefactory.scored_candidate_shadow (ledger_team_key width=24)
+    reads  : its own dedup
+    class  : WIDTH-24 LEDGER KEY - the token fold never reaches it
+
+* localdata/card_enrich_call_ledger.jsonl
+    field  : fixture_key
+    writes : scripts/capture_card_enrich.py
+    reads  : boggio staleness check
+    class  : MEASURED: values are '' and 'listing' only - no team key
+
+* localdata/clv_unmatched_*.json
+    field  : home_key/away_key
+    writes : scripts/audit_clv.py (picks_today.odds_match_team_key)
+    reads  : audit reading
+    class  : ODDS-MATCHING SURFACE - out of the identity fold's scope
+
+* localdata/betexplorer_odds_cache_*.json
+    field  : fixtures['date|home|away']
+    writes : betexplorer_odds._fixture_cache_key/_team_cache_key
+    reads  : cache read (same key)
+    class  : LOWERCASE-ALNUM KEY - no token fold; stable
+
+* localdata/betexplorer_match_shadow_*.json (runtime, not committed)
+    field  : home_key/away_key
+    writes : scripts/capture_betexplorer_match.py (source_team_key)
+    reads  : same script: seen = {(home_key, away_key)} dedup
+    class  : COMPARED against a recomputed value - a pre-fold row is re-requested (cost, not a lost settlement)
+
+* localdata/settled_results.json, localdata/picks_*.json
+    field  : home / away (display spellings)
+    writes : capture + settlement writers
+    reads  : auto_tickets._result_write_keys (canonical/norm keys)
+    class  : DISPLAY TEXT - keys recomputed at read; the fold's key space here is norm_team/canonical, which the token fold does not touch
+
+symbol check (each named symbol must exist in the tree):
+    ok  auto_tickets.py: _stamp_fixture_keys
+    ok  auto_tickets.py: leg_lookup_keys
+    ok  auto_tickets.py: enhancement_legs
+    ok  auto_tickets.py: leg_lookup_key
+    ok  coverage_inventory.py: _fixture_key
+    ok  remine_gap.py: source_row_key
+    ok  audit_clv.py: odds_match_team_key
+    ok  capture_betexplorer_match.py: source_team_key
+    ok  phase5_shadow.py: home_key
+    ok  scored_candidate_shadow.py: ledger_team_key
+    ok  betexplorer_odds.py: _fixture_cache_key
+    ok  betexplorer_odds.py: _team_cache_key
+    ok  entities.py: fold_tokens=False
+    ok  identity.py: TEAM_TOKEN_FOLDS
+    ok  identity.py: migrate_folded_key
+    ok  remine.py: def source_row_key
+
+== N-1(a)(d) committed artifacts: stored keys embedding a foldable token ==
+
+localdata/clv_unmatched_2026-09-17.json
+    away_key  ([6].away_key): 1 value(s), 1 distinct: ['nasarawautd']
+        'nasarawautd' -> migrate_folded_key -> 'nasarawaunited'
+
+localdata/clv_unmatched_2026-10-03.json
+    away_key  ([13].away_key): 1 value(s), 1 distinct: ['ayrutd']
+        'ayrutd' -> migrate_folded_key -> 'ayrunited'
+
+localdata/phase5_shadow/rows.jsonl
+    away_key  (identity.away_key): 5 value(s), 2 distinct: ['maidstoneutd', 'persepammadurautd']
+        'maidstoneutd' -> migrate_folded_key -> 'maidstoneunited'
+        'persepammadurautd' -> migrate_folded_key -> 'persepammaduraunited'
+    home_key  (identity.home_key): 9 value(s), 4 distinct: ['ayrutd', 'dundeeutd', 'sheffieldutd', 'suttonutd']
+        'ayrutd' -> migrate_folded_key -> 'ayrunited'
+        'dundeeutd' -> migrate_folded_key -> 'dundeeunited'
+
+localdata/scored_candidate_shadow_2026-10-09.jsonl
+    home_key  (fixture_identity_components.home_key): 25 value(s), 1 distinct: ['suttonutd']
+        'suttonutd' -> migrate_folded_key -> 'suttonunited'
+
+localdata/scored_candidate_shadow_2026-10-10.jsonl
+    home_key  (fixture_identity_components.home_key): 90 value(s), 3 distinct: ['ayrutd', 'dundeeutd', 'sheffieldutd']
+        'ayrutd' -> migrate_folded_key -> 'ayrunited'
+        'dundeeutd' -> migrate_folded_key -> 'dundeeunited'
+
+files whose KEY-typed values embed a foldable token: 5 (values: 131)
+files where 'utd' appears only in DISPLAY strings: 43
+
+but a stored token only CHURNS if the artifact's own key function folds it:
+    clv_unmatched_*.json                       picks_today.odds_match_team_key    folds the token: no - stored keys stable
+    scored_candidate_shadow_*.jsonl            util.ledger_team_key(width=24)     folds the token: no - stored keys stable
+    phase5_shadow/rows.jsonl                   identity.source_team_key           folds the token: YES - stored keys churn
+    coverage_inventory.json (writer _fixture_key) identity.source_team_key           folds the token: YES - stored keys churn
+    betexplorer_odds_cache_*.json              betexplorer_odds._team_cache_key   folds the token: no - stored keys stable
+    auto_tickets_state.json (raw triples)      auto_tickets._folded_leg_key       folds the token: YES - stored keys churn
+    canonical settlement keys                  util.canonical_team_key            folds the token: no - stored keys stable
+
+== N-1(a) working-tree runtime state (not committed) ==
+localdata/clv_unmatched_2026-09-17.json
+    away_key  ([6].away_key): ['nasarawautd']
+localdata/clv_unmatched_2026-10-03.json
+    away_key  ([13].away_key): ['ayrutd']
+localdata/scored_candidate_shadow_2026-10-09.jsonl
+    home_key  (fixture_identity_components.home_key): ['suttonutd']
+localdata/scored_candidate_shadow_2026-10-10.jsonl
+    home_key  (fixture_identity_components.home_key): ['ayrutd', 'dundeeutd', 'sheffieldutd']
+localdata/phase5_shadow/rows.jsonl
+    away_key  (identity.away_key): ['maidstoneutd', 'persepammadurautd']
+    home_key  (identity.home_key): ['ayrutd', 'dundeeutd', 'sheffieldutd', 'suttonutd']
+enhancement lane state file present: False (enhancement_tickets_state.json) - its legs carry folded keys by construction, which is what the compatibility tier covers
+
+== N-1(d) churn: stored keys that move when recomputed now ==
+phase5_shadow/rows.jsonl: 14 key(s) move BECAUSE OF THE FOLD;
+  106 move for another reason (evidence written under a different
+  rule at some earlier date - reported as found, not counted as this
+  round's churn); 14452 unchanged
+    fold:  'Persepam Madura Utd': stored 'persepammadurautd' -> now 'persepammaduraunited' (the fold)
+    fold:  'Sutton Utd': stored 'suttonutd' -> now 'suttonunited' (the fold)
+    fold:  'Persepam Madura Utd': stored 'persepammadurautd' -> now 'persepammaduraunited' (the fold)
+    fold:  'Sutton Utd': stored 'suttonutd' -> now 'suttonunited' (the fold)
+    other: 'SC Paderborn 07': stored 'paderborn07' -> now 'paderborn' (NOT the fold: the pre-fold key is 'paderborn')
+    other: 'VfB Stuttgart': stored 'vfbstuttgart' -> now 'stuttgart' (NOT the fold: the pre-fold key is 'stuttgart')
+    other: 'FC Porto B': stored 'portob' -> now 'portoii' (NOT the fold: the pre-fold key is 'portoii')
+coverage_inventory.json: stored keys embedding a foldable token: 0 (scanned above) -> no row churns today
+auto_tickets_state.json: every leg fixture_key is the raw triple (measured below) -> no stored key churns
+  legs carrying fixture_key: 4; of those, raw-spelling triples: 4
+
+== verdict ==
+* recomputed at read (safe): the main lane's raw triples, the settlement
+  key space (_result_write_keys -> canonical/norm_team, which the token
+  fold never touches), the odds cache key, every display-text path.
+* compared against a stored value, and therefore given acceptance:
+  the enhancement lane's frozen folded keys -> leg_lookup_keys() adds
+  migrate_folded_key() as a READ-ONLY candidate behind the primary key,
+  records LEGACY_KEY_HITS when it answers, and tests/
+  test_settlement_fixture_identity.py pins the behaviour (5 tests).
+* persisted but not joined (no acceptance needed; listed so nobody
+  mistakes them for clean): phase5_shadow identity keys (churn measured
+  above), ml-fade and purity registries (frozen by design), the
+  width-24 scored-candidate ledger, the CLV audit's odds-matching keys.

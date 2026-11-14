@@ -1,0 +1,103 @@
+{
+  "date_counts": {
+    "2026-10-19": 238,
+    "2026-10-20": 55,
+    "2026-10-21": 34,
+    "2026-10-22": 44,
+    "2026-10-23": 58,
+    "2026-10-24": 234,
+    "2026-10-25": 178,
+    "2026-10-26": 8
+  },
+  "emitted": [
+    {
+      "date": "2026-10-19",
+      "fixture": "Omonia Nicosia vs Olympiakos",
+      "kickoff": "19-10, 17:00"
+    },
+    {
+      "date": "2026-10-19",
+      "fixture": "Hapoel Kfar Shalem vs Hapoel Acre",
+      "kickoff": "19-10, 17:00"
+    },
+    {
+      "date": "2026-10-19",
+      "fixture": "Mes Shahr-e Babak vs Persepolis FC",
+      "kickoff": "2026-10-19T14:00:00+02:00"
+    },
+    {
+      "date": "2026-10-19",
+      "fixture": "Bursaspor vs Pendikspor",
+      "kickoff": "19-10, 18:00"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-19.jsonl",
+      "sha256": "758f31b548ae5664b66b2ee63bb75a0b2831a4b5f4ae258aa25b7f878f2d69ce"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-20.jsonl",
+      "sha256": "9702ffa7e559dfef04ab0dbe8897df4837546cc14e36bde773a7294896594c7d"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-21.jsonl",
+      "sha256": "20e794e3113dc57a2a7ea207bbc0540b465b801e389c815816f848e0e9eb3b0b"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-22.jsonl",
+      "sha256": "1dfcb2777cc2dfa378f9d13f33271fe32809f0e87f28f54ad210edd092f6c065"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-23.jsonl",
+      "sha256": "51506d34c537b7e04439a1869cf252207378245d6a6b28ee2425adf159d4300b"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-24.jsonl",
+      "sha256": "05c870e9f9aafe153b59efe4510652bdfdae09766c2cd7acd52c5bad616f9d64"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-25.jsonl",
+      "sha256": "16003647708597f6c770cbf8d1831088dea3f4586bf9b01086b053388fbd58c1"
+    },
+    {
+      "path": "localdata/scored_candidate_shadow_2026-10-26.jsonl",
+      "sha256": "689976126825db351e495c3ccd0d13633b586749743a47dfbe979baf3763fe44"
+    },
+    {
+      "path": "localdata/edges_consensus.json",
+      "sha256": "3b9c09180ae9acc567c6fa75bf8bd40b78e0bc2d6802b26f9814f2613cb8e643"
+    }
+  ],
+  "ml_registry_status_counts": {
+    "benched": 6,
+    "candidate": 8
+  },
+  "ml_routes": {
+    "insufficient_probability_sources": 184,
+    "no_certified_ml_rules": 40,
+    "no_legacy_probability_input": 14
+  },
+  "other_date_source_sets": {
+    "bzzoiro_only": 611
+  },
+  "other_day_reasons": {
+    "insufficient_probability_sources": 611
+  },
+  "persisted_evidence_commit": "008f8cfc74f4cffea46b19a35426c2bc8d69f069",
+  "run_id": "20261019T192636-3969ca2a-picks_build",
+  "scope": "Read-only persisted-run diagnosis; no provider calls or selection changes.",
+  "source_scan_keys": 849,
+  "target_day_reasons": {
+    "below_consensus_threshold": 27,
+    "candidate_emitted": 4,
+    "insufficient_probability_sources": 184,
+    "voter_disagreement": 23
+  },
+  "vitibet_target_day": {
+    "complete_probability_triples": 93,
+    "missing_all_three_probabilities": 110,
+    "present": 203
+  },
+  "workflow_run_id": "39307259942"
+}

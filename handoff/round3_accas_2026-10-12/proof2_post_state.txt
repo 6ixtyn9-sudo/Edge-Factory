@@ -1,0 +1,5 @@
+lane file  enhancement_tickets_state.json -> bank: 119.375 | open_slips: [] | history entries: 1
+history[-1]: {"date": "2026-10-12", "staked_pct": 25.0, "returned_pct": 44.375, "accas": [{"odds": 3.55, "won": true}, {"odds": 3.55, "won": false}], "bank_pct": 119.375}
+events: []
+main file  auto_tickets_state.json exists: False
+bank move check: 100.0 + (returned 44.375 - staked 25.0) = 119.375 -> matches bank 119.375

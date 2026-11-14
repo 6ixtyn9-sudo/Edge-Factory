@@ -1,0 +1,22 @@
+Recent picks audit — 2026-08-01 to 2026-10-12
+ archived pick rows: 1331
+ archived pick dates: 73
+ same-day rows excluded: 13
+ eligible prior picks: 1318
+ settled picks: 1270
+ pending/unmatched result picks: 18
+ rescheduled result picks (settled ±3d): 13
+ voided event picks: 9
+ settled via shared overlay facts: 981
+ ambiguous result picks: 8
+ hit rate: 0.688189
+ ROI: -0.010044
+ veto deep-dive (SKIPPED_VETO): settled=626 roi=-0.011228 | trusted n=281 roi=0.027738 | soft n=318 roi=-0.04566
+   odds <1.50: settled=378 wins=299 roi=0.007804
+   odds 1.50-2.00: settled=205 wins=113 roi=-0.084857
+   odds 2.00-3.00: settled=16 wins=11 roi=0.4825
+   odds unpriced: settled=27 wins=18 roi=None
+ possible-events notes scored: 5837/5837
+ stat-line avg-goals MAE: 1.550245 (n=1222)
+ json: /tmp/r6d_wt/localdata/picks_audit_rolling.json
+ markdown: /tmp/r6d_wt/localdata/picks_audit_2026-10-12.md

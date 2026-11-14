@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-19",
+  "scope": "Read-only diagnosis, latest available persisted pre-merge build; not a fresh provider run",
+  "run_summary": {
+    "build_day": "2026-10-19",
+    "event_type": "run_summary",
+    "fixtures_materialized": 1,
+    "git_sha": "7ed725e3ffc6754700b8c4425f25b373498900d7",
+    "pipeline_ml_scored_day": 42,
+    "pipeline_n_up": 858,
+    "pipeline_scored_log": 42,
+    "recorded_at_utc": "2026-10-19T13:27:11+00:00",
+    "run_id": "20261019T132711-9c2f083b-picks_build",
+    "schema_version": 1,
+    "scored_definition": "pipeline 'coverage: scored=' counts ML-scored fixtures (ml_scored_day) falling back to the upcoming-fixture key union (n_up); scored_fixture events mirror that EXACT universe one entry per counter increment, while shadow_scored counts emitted scored candidate rows (one per fixture/market/selection/rule). Both levels are persisted and reconciled.",
+    "shadow_fixture_ml_entries": 42,
+    "shadow_fixture_upcoming_entries": 858,
+    "shadow_scored": 1,
+    "shadow_scored_fixtures": 42,
+    "slate_price_supported": 1,
+    "slate_total": 1,
+    "stage": "picks_build",
+    "trading_date": "2026-10-19",
+    "workflow_run_id": "39256463413"
+  },
+  "observed_fixture_events": 42,
+  "materialized": 1,
+  "non_materialized_reason_counts": {
+    "no_candidate_emitted": 41,
+    "materialized": 1
+  },
+  "shadow_price_reason_counts": {
+    "no_captured_price": 18,
+    "captured_while_scored_as_upcoming_kickoff_unproven": 24
+  },
+  "active_consensus_thresholds": {
+    "2": {
+      "n_way": 2,
+      "threshold": 70.0,
+      "rule": "2way-unanimous avg_p>=70",
+      "display_rule": "2WAY-UNANIMOUS\u226570",
+      "market": "1x2",
+      "from_registry": true,
+      "electorate": [
+        "forebet",
+        "zulubet"
+      ],
+      "min_p": null,
+      "home_only": false,
+      "away_only": false,
+      "odds_min": null,
+      "odds_max": null
+    },
+    "3": {
+      "n_way": 3,
+      "threshold": 65.0,
+      "rule": "3way-unanimous avg_p>=65",
+      "display_rule": "3WAY-UNANIMOUS\u226565",
+      "market": "1x2",
+      "from_registry": true,
+      "electorate": [
+        "forebet",
+        "zulubet",
+        "statarea"
+      ],
+      "min_p": null,
+      "home_only": false,
+      "away_only": false,
+      "odds_min": null,
+      "odds_max": null
+    }
+  },
+  "certified_ml_rules": 0,
+  "certified_fade_rules": 0,
+  "ml_model_present": true,
+  "direct_ou_rule": null,
+  "direct_btts_rule": null,
+  "current_archive_unique_fixtures": 2,
+  "current_archive_buckets": {
+    "SKIPPED_VETO": 2
+  },
+  "enhancement_reasons_across_two_archived_parent_rows": {
+    "below_line_threshold": 31,
+    "no_cohort_rate": 26,
+    "recommended": 2,
+    "eligible_not_selected": 6,
+    "unpriced": 7,
+    "below_min_leg_odds": 4
+  },
+  "exact_per_fixture_gate_failure_split_available": false,
+  "limitations": [
+    "858 is the source-key union, not 858 valid bettable games.",
+    "42 ML-scored fixtures is not a claim that only 42 had two usable voters; ML requires an additional eligible legacy-source input.",
+    "The latest rebuild emits Bursaspor; the merged daily archive also retains earlier Mes Shahr-e Babak, so these populations must not be conflated.",
+    "Generic no_candidate_emitted does not distinguish disagreement, insufficient source coverage, insufficient consensus probability or pre-match/context removal.",
+    "No certified ML rules is not equivalent to all fixtures failing a 65% ML threshold; the 65/70 gates are consensus-rate gates.",
+    "SKIPPED_VETO is in ticket-eligible BUCKETS; the enhancement parent tag does not block staking.",
+    "The latest recorded build SHA predates merged PR100; no claim the enabled code has run yet."
+  ],
+  "inputs_sha256": {
+    "localdata/scored_candidate_shadow_2026-10-19.jsonl": "8146cad648c1990a4f784af8f1689e9061536a92130644767b875f9c7155771a",
+    "localdata/source_health_2026-10-19.json": "f3b1d1cd947928b419ac77865041943c8eb560fd153e98d2195e7275e11350c0",
+    "localdata/picks_2026-10-19.json": "f72bd50a8b51134d91e7d4d7a61e131c3fee7ac55543cab3ee094ef162dff98e",
+    "localdata/edges_consensus.json": "3b9c09180ae9acc567c6fa75bf8bd40b78e0bc2d6802b26f9814f2613cb8e643",
+    "localdata/auto_tickets_2026-10-19.txt": "997fc4c9ff2fe10d2e3902c1f744f147cca0320b012855479c1c9681bb0e1725",
+    "localdata/autobets_enh_tickets_2026-10-19.txt": "1fd1fecc5eccf0ede85b8fc2b5dcc82308acc99b45367e4a08c0401b6f712576",
+    "localdata/oddspapi_capture_2026-10-19.json": "d95266bac424cca3468af1da6b28790853eecf0da08c9a1d94e6925f61a1245e",
+    "localdata/theoddsapi_capture_2026-10-19.json": "3e9db2b63b3cd50791c1c995f2452ca34ee26a784ef6966fe996091d0f6d2a63",
+    "scripts/picks_today.py": "6dc698e187890c10eef8b32bb018111860aea1d6411a4190ea845b4044ae3b50",
+    "scripts/auto_tickets.py": "c537381ef29703b5c9a93363dd8aac40bcbe16494882a930ef2419981693d526"
+  }
+}

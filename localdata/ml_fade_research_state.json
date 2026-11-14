@@ -1,0 +1,434 @@
+{
+ "checkpoint_frozen_at": "2026-09-20",
+ "eval_count": 23,
+ "history": [
+  {
+   "due_reasons": [
+    "bootstrap (no checkpoint has ever run)"
+   ],
+   "eval_at": "2026-09-21T00:19:31+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-21.md",
+   "rule_candidate": "observing",
+   "settled_fade": 5,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-21.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-21.txt"
+   },
+   "warnings": []
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 82 (>= 50)"
+   ],
+   "eval_at": "2026-09-23T09:22:28+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-23.md",
+   "rule_candidate": "observing",
+   "settled_fade": 87,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-23.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-23.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 14% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 70% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 63 (>= 50)"
+   ],
+   "eval_at": "2026-09-25T09:40:34+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-25.md",
+   "rule_candidate": "observing",
+   "settled_fade": 150,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-25.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-25.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 17% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 67% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 64 (>= 50)"
+   ],
+   "eval_at": "2026-09-26T09:39:44+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-26.md",
+   "rule_candidate": "observing",
+   "settled_fade": 214,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-26.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-26.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 17% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 64% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 244 (>= 50)"
+   ],
+   "eval_at": "2026-09-27T09:54:08+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-27.md",
+   "rule_candidate": "observing",
+   "settled_fade": 458,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-27.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-27.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 9% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 57% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 111 (>= 50)"
+   ],
+   "eval_at": "2026-09-28T09:21:52+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-28.md",
+   "rule_candidate": "observing",
+   "settled_fade": 569,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-28.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-28.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 7% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 59% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 73 (>= 50)"
+   ],
+   "eval_at": "2026-09-30T09:18:11+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-30.md",
+   "rule_candidate": "observing",
+   "settled_fade": 642,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-30.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-30.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 8% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 58% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "monthly checkpoint (last 2026-09, now 2026-10)"
+   ],
+   "eval_at": "2026-10-01T09:15:36+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-01.md",
+   "rule_candidate": "observing",
+   "settled_fade": 655,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-01.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-01.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 8% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 57% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 50 (>= 50)"
+   ],
+   "eval_at": "2026-10-03T09:16:03+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-03.md",
+   "rule_candidate": "observing",
+   "settled_fade": 705,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-03.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-03.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 10% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 53% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 141 (>= 50)"
+   ],
+   "eval_at": "2026-10-04T09:22:38+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-04.md",
+   "rule_candidate": "observing",
+   "settled_fade": 846,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-04.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-04.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 10% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 44% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 61 (>= 50)"
+   ],
+   "eval_at": "2026-10-05T09:19:28+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-05.md",
+   "rule_candidate": "observing",
+   "settled_fade": 907,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-05.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-05.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 11% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 41% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 64 (>= 50)"
+   ],
+   "eval_at": "2026-10-07T09:52:36+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-07.md",
+   "rule_candidate": "observing",
+   "settled_fade": 971,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-07.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-07.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 14% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 38% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 51 (>= 50)"
+   ],
+   "eval_at": "2026-10-09T09:56:08+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-09.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1022,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-09.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-09.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 15% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 36% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 72 (>= 50)"
+   ],
+   "eval_at": "2026-10-10T09:51:27+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-10.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1094,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-10.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-10.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 15% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 34% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 217 (>= 50)"
+   ],
+   "eval_at": "2026-10-11T10:04:31+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-11.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1311,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-11.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-11.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 13% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 28% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 166 (>= 50)"
+   ],
+   "eval_at": "2026-10-12T09:43:20+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-12.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1477,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-12.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-12.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 12% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 25% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 86 (>= 50)"
+   ],
+   "eval_at": "2026-10-14T10:19:36+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-14.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1563,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-14.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-14.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 13% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 24% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 91 (>= 50)"
+   ],
+   "eval_at": "2026-10-16T09:53:39+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-16.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1654,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-16.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-16.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 14% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 22% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 59 (>= 50)"
+   ],
+   "eval_at": "2026-10-17T10:05:31+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-17.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1713,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-17.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-17.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 15% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 22% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 248 (>= 50)"
+   ],
+   "eval_at": "2026-10-18T10:00:30+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-18.md",
+   "rule_candidate": "observing",
+   "settled_fade": 1961,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-18.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-18.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 14% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 19% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 159 (>= 50)"
+   ],
+   "eval_at": "2026-10-19T10:10:45+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-19.md",
+   "rule_candidate": "observing",
+   "settled_fade": 2120,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-19.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-19.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 13% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 18% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 65 (>= 50)"
+   ],
+   "eval_at": "2026-10-21T10:19:24+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-21.md",
+   "rule_candidate": "observing",
+   "settled_fade": 2185,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-21.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 13% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 17% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
+  },
+  {
+   "due_reasons": [
+    "monthly checkpoint (last 2026-10, now 2026-11)"
+   ],
+   "eval_at": "2026-11-01T11:31:33+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-11-01.md",
+   "rule_candidate": "observing",
+   "settled_fade": 2200,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-11-01.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 13% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 17% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
+  }
+ ],
+ "last_eval_active_day": "2026-11-01",
+ "last_eval_at": "2026-11-01T11:31:33+02:00",
+ "last_eval_settled_fade": 2200,
+ "model_drift": {
+  "drifted": false,
+  "model_key": "a45beab0c878",
+  "reasons": []
+ },
+ "policy": {
+  "active_day_increment": 30,
+  "monthly": true,
+  "rule_candidate_gates": {
+   "min_priced_per_book": 150,
+   "min_roi": 0.0,
+   "min_settled_fade": 200,
+   "min_wilson_lb": 0.55
+  },
+  "settled_increment": 50
+ },
+ "schema": 1
+}

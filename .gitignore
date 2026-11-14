@@ -1,0 +1,276 @@
+# data — migrating to Supabase, never commit
+# Broad ignores come FIRST so specific negations below can re-include files
+# (in .gitignore, the LAST matching pattern wins).
+*.csv
+*.csv.gz
+*.duckdb
+*.duckdb.wal
+
+# Ignore localdata contents entirely (directory is created at runtime).
+localdata/*
+
+# --- Negations: files that ARE committed to the repo ---
+# Regenerated on each run; committed so they survive cache eviction.
+!localdata/edges_consensus.json
+!localdata/purity_registry.json
+
+# Core pre-split history (immutable settled matches before 2025-06-01).
+# These 3 concatenated files give CI the deep training history it needs to
+# certify edges and assay purity WITHOUT any local intervention.
+# ~37M total. Pre-split data never changes, so commit once = autonomous forever.
+!localdata/forebet.csv.gz
+!localdata/zulubet.csv.gz
+!localdata/statarea.csv.gz
+
+# B0 gap-aware re-mining coverage inventory (operator review artifact).
+!localdata/coverage_inventory.json
+!localdata/remine_audit_*.jsonl
+!localdata/backfill_ledger.jsonl
+!localdata/sa_hist_*.csv.gz
+
+# Picks/performance snapshots intentionally committed for audit/review.
+# Keep the rest of localdata ignored, but allow all generated picks outputs
+# such as daily picks, audit reports, morning snapshots, rolling summaries,
+# manifests, and today/next-2-days exports.
+# Raw daily pick dumps are preserved in Actions Cache & Artifacts, not Git
+localdata/picks_202*.json
+localdata/picks_morning_202*.json
+
+# Retain operational exports, manifests, and audit reports
+localdata/picks_today.json
+localdata/picks_next_2days.json
+!localdata/picks_next_2days_manifest.json
+!localdata/picks_audit_*.md
+!localdata/picks_*.txt
+# Addendum 21: settled-score facts shared across machines (bot-owned)
+!localdata/settled_results.json
+
+# Analysis artifacts intentionally committed for performance review.
+!localdata/clv_*
+!localdata/betexplorer_results_2026-*.csv.gz
+!localdata/betexplorer_odds_2026-*.csv.gz
+!localdata/sent_ledger_20*.json
+!localdata/supabase_sync_manifest_20*.json
+
+# secrets
+.env
+*.env
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+build/
+dist/
+
+# os/editor
+.DS_Store
+.idea/
+.vscode/
+!localdata/discovery_sent_ledger_20*.json
+!localdata/enhancement_registry.json
+!localdata/theoddsapi_usage.json
+!localdata/theoddsapi_sports.json
+!localdata/theoddsapi_attempts_20*.json
+!localdata/theoddsapi_capture_20*.json
+!localdata/theoddsapi_odds_2026-*.csv.gz
+# Bounded OddsPAPI captures are a named-book receipt used by a later build.
+!localdata/oddspapi_capture_20*.json
+!localdata/oddspapi_odds_2026-*.csv.gz
+# Round 3: the OddsPAPI market-id census and the served-catalog vocabulary
+# snapshot are the DURABLE join-layer evidence (distinct market ids with
+# classification/label/period/line, expected-vs-loss parse-skip split,
+# unresolved-1x2 provider tuples). The "persist pipeline state" step runs
+# `git add -A localdata/`, which silently drops ignored files - run
+# 37138618268 (2026-10-03) wrote both and persisted neither until these
+# negations existed. Provider data only; never credentials or URLs.
+!localdata/oddspapi_market_census_*.json
+!localdata/source_health/
+!localdata/source_health/**
+# The bounded BetExplorer snapshot is the raw receipt for its final-card rows.
+!localdata/betexplorer_odds_cache_20*.json
+!localdata/betexplorer_capture_20*.json
+# Per-match BetExplorer detail for priced fixtures: match-page blocks (H2H,
+# last results, standings excerpt) and one comparison response per market
+# (1X2, O/U, AH, DNB, DC, BTTS) with its per-bookmaker rows and handicap
+# lines. No raw HTML; markets/rows/text are capped, and the capture receipt
+# is its only reader - pricing never touches this file.
+!localdata/betexplorer_match_detail_20*.json
+# Compact source-health receipts are the auditable attempt/join trail.  Raw
+# shadow ledgers stay ignored: they can be large and are not needed to prove
+# whether a source supplied a price.
+!localdata/source_health_20*.json
+!localdata/source_health_state.json
+# BetMiner's one-call/day endpoint-contract receipt. It contains only endpoint,
+# status, scrubbed schema keys/counts and timestamp (never a key or raw body).
+!localdata/betminer_probe_20*.json
+# card_enrich's per-call budget ledger: opaque pool digests, provider header
+# readings and what each call bought. It bounds the shared Boggio family pot across runs, so it must survive cache eviction
+# (the raw shadow snapshots it describes now also persist via whitelist below for 7-day dedup, bounded to 14 days).
+!localdata/card_enrich_call_ledger.jsonl
+# card_enrich H2H snapshots: retained for 7-day staleness dedup, bounded to 14 days
+# via prune in persist_snapshots() — this PR adds prune (cutoff = day-14, glob + unlink),
+# main before e9722c9 had none (verified git show origin/main:src/edgefactory/sources/boggio.py | grep -c prune =0),
+# after merge bounded. Without prune, whitelisted dir would grow forever.
+# Burn math: daily.yml runs 5x/day, 6 H2H/run =30/day. With persist +14d prune, 7-day cooling
+# makes extra crons free: 6 calls/week ~24/month vs cap 90 (operator ruling, not 26) vs pot 200
+# (100/key x2) minus reserve 20. Production MAX_CALLS_PER_RUN=1 + same-day cache = ~1/day = ~30/month,
+# total ~54/month fits doubled pot. Honest framing from persist_snapshots() and reason for whitelist.
+# Operator paste on main e9722c9 is '90'/'20' plain literals, not secrets ref, at 51-52 in simplified file
+# (135-136 in commented file) after ODDSPAPI_MAX_FIXTURES beside TZ — verified via yaml.safe_load
+# that keys are under jobs.run-autonomous-agent.env dict with nonzero int.
+!localdata/card_enrich_shadow_*.json
+
+# Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
+!localdata/shadow_sent_ledger_20*.json
+
+# Truthfulness artifacts: silence-detector findings and delivery-failure
+# ledgers persist so the operator can inspect history, not just logs.
+!localdata/edge_firing_tripwire.json
+!localdata/notify_delivery_failures_*.json
+
+# Heavy-run completion is separate from future forecast archives. The bot uses
+# this marker to guarantee one full capture/build/mine run per calendar day.
+!localdata/official_run_20*.json
+
+# Rolling auto-tickets state and slips (must persist across bot runs)
+!localdata/auto_tickets_state.json
+!localdata/acca_gate_state.json
+!localdata/acca_gate_log.jsonl
+!localdata/auto_tickets_slice_ledger.jsonl
+!localdata/auto_tickets_20*.txt
+!localdata/auto_tickets_20*.json
+# Enhancement lane slips (renamed from enhancement_tickets_* so they sit beside
+# the main autobets slips). Financial state is durable Git evidence, just like
+# the main lane; a cold cache must never erase bank/history.
+!localdata/enhancement_tickets_state.json
+!localdata/autobets_enh_tickets_20*.txt
+# LEGACY freeze markers (pre OP-01 T2). The lock now lives write-once inside
+# auto_tickets_state.json (`frozen_by_date`), which is already committed; no
+# new .frozen files are created. Existing ones are still read for compat and
+# are never deleted, so they stay allowlisted.
+!localdata/auto_tickets_20*.frozen
+!localdata/auto_tickets_performance.txt
+!localdata/auto_tickets_performance.json
+!localdata/autobets_enh_tickets_performance.txt
+!localdata/autobets_enh_tickets_performance.json
+!localdata/auto_tickets_takeprofit_*.json
+
+!localdata/o25_tracker_report.txt
+
+# Curated team-name aliases for settlement lookup (hand-maintained, not generated)
+!localdata/team_aliases.json
+
+# Phase 5 evidence and activation state use the existing localdata persistence path.
+# Keep append-only ledgers/registry plus compact config, verdict, and receipt artefacts durable.
+# The daily workflow unions append-only evidence across cache/rebase races and uploads a recovery artifact.
+!localdata/phase5_shadow/
+!localdata/phase5_shadow/rows.jsonl
+!localdata/phase5_shadow/attempts.jsonl
+!localdata/phase5_shadow/status.json
+!localdata/phase5_shadow/evaluation.json
+!localdata/phase5_activation/
+!localdata/phase5_activation/active_era.json
+!localdata/phase5_activation/registry.jsonl
+!localdata/phase5_activation/mutation_receipts.jsonl
+!localdata/phase5_reconciliation/
+!localdata/phase5_reconciliation/**
+# Raw scored-candidate evidence stays in cache and the dedicated 30-day
+# Actions artifact; a single daily file can exceed GitHub's 100 MiB limit.
+# Older tracked snapshots remain readable, but persistence excludes updates.
+localdata/scored_candidate_shadow_*.jsonl
+# Raw shadow capture ledgers are DELIBERATELY NOT COMMITTED. The 30-day
+# prune in scripts/clean_localdata.py bounds the RUNNER WORKING DIRECTORY
+# only — it does not bound Git history: committing daily shadow payloads
+# (e.g. BetBetter's ~1,371 raw rows/day) would grow repository history
+# indefinitely. Revisit only with an explicit size policy (compact
+# diagnostic receipts, not raw payloads).
+
+# ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
+# (bot-owned, tracked so certification-independent evidence survives cache
+# eviction — the pipeline's "persist pipeline state to git" step commits them
+# every run). Reports moved from artifact-only to git-tracked per operator
+# direction 2026-09-21 (audit trail like the CLV reports). One report set is
+# written only when a checkpoint actually evaluates, never per-run.
+!localdata/ml_fade_research_ledger.json
+!localdata/ml_fade_research_state.json
+!localdata/ml_fade_research_report_*.md
+!localdata/ml_fade_checkpoint_contexts_*.txt
+!localdata/ml_fade_checkpoint_price_study_*.txt
+
+# Local read-only audit/test scratch (reports belong in docs/operator).
+.cache/
+
+# Explicit operator-approved, unplaced enhancement resets survive stale caches.
+!localdata/autobets_enh_tickets_20*_reset.json
+# Operator-confirmed reversal of a settlement that booked an unplaced card.
+!localdata/autobets_enh_tickets_20*_settled_reconciliation.json
+
+# Compact recovery receipt only; raw history and key inventories stay cached.
+!localdata/prediction_history_guard.json
+localdata/prediction_history_keys.json.gz
+
+# Original, timestamped schedule-only evidence recovered for ENH admission.
+# Separate prefix prevents these receipts entering prediction/warehouse globs.
+!localdata/schedule_scoutingstats_????-??.csv.gz
+!localdata/schedule_vitibet_????-??.csv.gz
+
+# Exact live decision receipts and read-only replay report (existing ticket families).
+!localdata/autobets_enh_tickets_20*_decision*.json
+!localdata/replay_parity.json
+
+# Large decision snapshots are compressed under the existing audit directory.
+# Read legacy root copies, but never publish them back into the daily listing.
+localdata/auto_tickets_????-??-??_decision*.json
+localdata/autobets_enh_tickets_????-??-??_decision*.json
+
+# Independent forward autobets_ML lane: immutable predictions and own performance.
+# Separate prefix; never consumed as a Main/ENH picks or financial-state file.
+# Daily human cards are TXT only; frozen JSON lives under phase5_reconciliation.
+localdata/autobets_ML_20??-??-??.json
+!localdata/autobets_ML_20??-??-??.txt
+!localdata/autobets_ML_performance.json
+!localdata/autobets_ML_performance.txt
+
+# Mutable lane state, matching the Main/ENH state-file convention.
+!localdata/autobets_ML_state.json
+
+# Preserve conflicting paper evidence for review; never silently reset a paper bank.
+!localdata/autobets_ML_integrity_block.json
+!localdata/autobets_ML_conflicts/
+!localdata/autobets_ML_conflicts/**
+
+# Byte-preserving cold daily evidence; current outputs stay at the root.
+!localdata/archive/
+localdata/archive/**
+!localdata/archive/**/
+!localdata/archive/auto_tickets/????/??/auto_tickets_????-??-??.txt
+!localdata/archive/autobets_ML/????/??/autobets_ML_????-??-??.txt
+!localdata/archive/autobets_enh_tickets/????/??/autobets_enh_tickets_????-??-??.txt
+!localdata/archive/betminer_probe/????/??/betminer_probe_????-??-??.json
+!localdata/archive/card_enrich_shadow/????/??/card_enrich_shadow_????-??-??.json
+!localdata/archive/ml_fade_checkpoint_contexts/????/??/ml_fade_checkpoint_contexts_????-??-??.txt
+!localdata/archive/ml_fade_checkpoint_price_study/????/??/ml_fade_checkpoint_price_study_????-??-??.txt
+!localdata/archive/ml_fade_research_report/????/??/ml_fade_research_report_????-??-??.md
+!localdata/archive/oddspapi_capture/????/??/oddspapi_capture_????-??-??.json
+!localdata/archive/picks/????/??/picks_????-??-??.json
+!localdata/archive/picks/????/??/picks_????-??-??.txt
+!localdata/archive/picks_morning/????/??/picks_morning_????-??-??.json
+!localdata/archive/remine_audit/????/??/remine_audit_????-??-??.jsonl
+!localdata/archive/source_health/????/??/source_health_????-??-??.json
+!localdata/archive/theoddsapi_capture/????/??/theoddsapi_capture_????-??-??.json
+
+# Multipart receipt shards (retained in cache & workflow artifacts, not Git history)
+*.part-*
+localdata/phase5_reconciliation/ml_paper_receipts/*.json
+
+# Ephemeral daily probe caches and audits
+localdata/betexplorer_match_detail_*.json
+localdata/betexplorer_odds_cache_*.json
+localdata/picks_audit_*.md

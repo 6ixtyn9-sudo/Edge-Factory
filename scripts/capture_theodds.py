@@ -1,0 +1,805 @@
+#!/usr/bin/env python3
+"""capture_theodds.py — snapshot The Odds API prices for the frozen daily shortlist.
+
+This is not a consensus voter. It captures named-book observations for the
+second, final pricing pass of a two-pass candidate → price → ticket build (and
+for CLV). The candidate pass cannot use a row captured after it began;
+picks_today enforces that per-row timestamp cutoff rather than backfilling an
+already-made card.
+
+Wired into scripts/daily.py via --auto at the existing CLV capture points, so
+the established commands cover everything:
+
+    python3 scripts/daily.py --auto-run      # 3h service loop (official + intraday)
+    python3 scripts/daily.py --auto-once     # one smart iteration (GitHub Actions)
+
+Manual / debug usage:
+
+    PYTHONPATH=src python3 scripts/capture_theodds.py --self-test           # offline, no key needed
+    PYTHONPATH=src python3 scripts/capture_theodds.py --dry-run [--date D]  # coverage + cost estimate, 0 credits
+    PYTHONPATH=src python3 scripts/capture_theodds.py [--date D]            # full snapshot now (all fixtures)
+    PYTHONPATH=src python3 scripts/capture_theodds.py --auto [--date D]     # timing-driven (what daily.py calls)
+    PYTHONPATH=src python3 scripts/capture_theodds.py --refresh-sports      # rebuild sport-key cache (free)
+    PYTHONPATH=src python3 scripts/capture_theodds.py --usage               # per-key ring status
+
+--auto semantics (idempotent across 3h iterations):
+  * first snapshot per fixture: once per day, skipped near/after kickoff
+  * a changed request/parser scope (markets, lines, regions or books) schedules
+    one upgrade snapshot even for previously priced fixtures. Legacy receipts
+    have unknown scope and get one upgrade; unavailable markets do not cause
+    repeated purchases after a successful scoped response.
+  * close snapshot per fixture: once per day, only within ODDS_API_CLOSE_WINDOW_MIN
+    (default 45) minutes before kickoff
+  * an attempts ledger (localdata/theoddsapi_attempts_<date>.json) blocks
+    re-tries for 6h per fixture/snapshot-type so failures cannot bleed credits
+    every iteration.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import gzip
+import hashlib
+import importlib
+import json
+import os
+import re
+import sys
+from collections import Counter
+from datetime import date as _date
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+REPO = Path(__file__).resolve().parents[1]
+LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA") or (REPO / "localdata"))
+SOURCE_NAME = "theoddsapi_odds"
+CLOSE_WINDOW_MIN = int(os.environ.get("ODDS_API_CLOSE_WINDOW_MIN", "45") or 45)
+START_GRACE_MIN = 30          # don't first-capture a match this close to/after kickoff
+ATTEMPT_RETRY_HOURS = 6       # failure cooldown per fixture/snapshot-type
+KICKOFF_MISMATCH_MIN = 15     # pick-listed vs captured-API kickoff divergence guard
+_SAST_TZ = ZoneInfo("Africa/Johannesburg")  # the operator's clock: log kickoffs in SAST
+
+
+from edgefactory.util import dated_artifact_path
+
+
+def _sast_hm(stamp: datetime) -> str:
+    """Kickoff clock for an operator log line: SAST, never UTC."""
+    return stamp.astimezone(_SAST_TZ).strftime("%H:%M SAST")
+
+# Pick-side kickoff provenance tags, mirrored by value (not imported) from
+# edgefactory.sources.theoddsapi.PICK_KICKOFF_SOURCE_UTC / _LEGACY: this module
+# intentionally defers importing that package until main() runs (see the
+# importlib.import_module() call below), so --help/--self-test stay usable
+# without PYTHONPATH=src. A bare string-tag contract keeps that lazy-import
+# boundary while still letting plan_auto() tell a real UTC witness apart from
+# a legacy display-string assumption.
+PICK_KICKOFF_SOURCE_UTC = "pick_kickoff_utc"
+PICK_KICKOFF_SOURCE_LEGACY = "legacy_display_fallback"
+
+
+def _month_file(day: str) -> Path:
+    return LOCALDATA / f"{SOURCE_NAME}_{day[:7]}.csv.gz"
+
+
+def _receipt_path(day: str) -> Path:
+    return dated_artifact_path(LOCALDATA, f"theoddsapi_capture_{str(day)[:10]}.json")
+
+
+def _fixture_receipt(f: dict) -> dict:
+    return {
+        "date": str(f.get("date") or "")[:10],
+        "home": f.get("home") or "",
+        "away": f.get("away") or "",
+        "league": f.get("league") or "",
+        "kickoff": f.get("kickoff") or "",
+    }
+
+
+def _line_reason(line: str) -> str:
+    if "(" not in line or not line.endswith(")"):
+        return "unknown"
+    return line.rsplit("(", 1)[1][:-1].strip() or "unknown"
+
+
+def _skip_reason(line: str) -> str:
+    """Normalize auto-planner skip lines into stable due-gate counters.
+
+    Fixture names can contain parenthesised tokens (``Team (w)``), and some
+    reasons also contain parentheses (``retry cooldown (6h...)``).  Parse from
+    the known reason vocabulary rather than splitting at the first ``" ("``;
+    otherwise women-team fixture names become bogus receipt keys such as
+    ``w)|Chelsea_(w)_(priced``.
+    """
+    text = str(line)
+    if text.startswith("WARN kickoff-mismatch"):
+        return "kickoff_mismatch"
+    if " (" not in text or not text.endswith(")"):
+        return "unknown"
+    body = text[:-1]
+    candidates = [body[i + 2:].strip() for i in range(len(body)) if body.startswith(" (", i)]
+    reason = ""
+    known = {
+        "priced, close window not open",
+        "priced",
+        "kickoff already passed",
+        "too close to kickoff for first capture",
+    }
+    for candidate in candidates:
+        if candidate.startswith("retry cooldown"):
+            reason = candidate
+            break
+        if candidate in known:
+            reason = candidate
+            break
+    if not reason and candidates:
+        reason = candidates[-1]
+    if reason.startswith("retry cooldown"):
+        return "retry_cooldown"
+    if reason == "priced, close window not open":
+        return "priced_close_window_not_open"
+    if reason == "priced":
+        return "priced"
+    if reason == "kickoff already passed":
+        return "kickoff_already_passed"
+    if reason == "too close to kickoff for first capture":
+        return "too_close_for_first_capture"
+    return reason.replace(" ", "_") or "unknown"
+
+
+def _skip_reason_counts(lines: list[str]) -> dict[str, int]:
+    return dict(Counter(_skip_reason(line) for line in lines))
+
+
+def _write_receipt(day: str, payload: dict) -> None:
+    try:
+        payload = {
+            "schema": 1,
+            "source": "theoddsapi",
+            "date": str(day)[:10],
+            "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            **payload,
+        }
+        LOCALDATA.mkdir(parents=True, exist_ok=True)
+        path = _receipt_path(day)
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str))
+        tmp.replace(path)
+    except Exception as exc:  # noqa: BLE001 - receipt must never break capture
+        print(f"theoddsapi: receipt write failed: {exc}", file=sys.stderr)
+
+
+def _read_month(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    try:
+        with gzip.open(path, "rt", newline="") as fh:
+            return list(csv.DictReader(fh))
+    except Exception:
+        return []
+
+
+def _write_month(path: Path, rows: list[dict], columns: list[str]) -> None:
+    tmp = path.with_suffix(".tmp")
+    with gzip.open(tmp, "wt", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=columns, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+    tmp.replace(path)
+
+
+def append_rows(day: str, rows: list[dict], columns: list[str]) -> int:
+    """Merge new rows into the monthly gz; full-row dedupe keeps both snapshots."""
+    path = _month_file(day)
+    existing = _read_month(path)
+    seen = {tuple(str(r.get(c, "")) for c in columns) for r in existing}
+    added = 0
+    for r in rows:
+        key = tuple(str(r.get(c, "")) for c in columns)
+        if key not in seen:
+            seen.add(key)
+            existing.append(r)
+            added += 1
+    existing.sort(key=lambda r: (str(r.get("date")), str(r.get("kickoff")),
+                                 str(r.get("home")), str(r.get("market")),
+                                 str(r.get("selection")), str(r.get("bookmaker")),
+                                 str(r.get("captured_at"))))
+    if added:
+        LOCALDATA.mkdir(parents=True, exist_ok=True)
+        _write_month(path, existing, columns)
+    return added
+
+
+# ---------------------------------------------------------------- attempts ledger
+
+def _attempts_path(day: str) -> Path:
+    return LOCALDATA / f"theoddsapi_attempts_{day}.json"
+
+
+def _load_attempts(day: str) -> dict:
+    try:
+        if _attempts_path(day).exists():
+            data = json.loads(_attempts_path(day).read_text())
+            if isinstance(data, dict):
+                return data
+    except Exception:
+        pass
+    return {}
+
+
+def _save_attempts(day: str, attempts: dict) -> None:
+    try:
+        LOCALDATA.mkdir(parents=True, exist_ok=True)
+        path = _attempts_path(day)
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(attempts, indent=2, sort_keys=True))
+        os.replace(tmp, path)  # atomic: no torn attempts files on overlapping runs
+    except Exception as exc:
+        print(f"theoddsapi: attempts ledger write failed: {exc}", file=sys.stderr)
+
+
+def _recent(iso_ts: str | None, hours: float, now: datetime | None = None) -> bool:
+    if not iso_ts:
+        return False
+    try:
+        ts = datetime.fromisoformat(str(iso_ts).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return ((now or datetime.now(timezone.utc)) - ts).total_seconds() < hours * 3600
+
+
+def _fixture_key(f: dict) -> str:
+    return f"{f.get('home')}|{f.get('away')}"
+
+
+def capture_scope(mod) -> str:
+    """Identity of the request/parser scope, not a claim of market availability."""
+    scope = {name: sorted(set(getattr(mod, name)))
+             for name in ("MARKETS", "REGIONS", "TOTAL_POINTS", "BOOKMAKERS")}
+    return hashlib.sha256(json.dumps(scope, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def record_attempts(due, updates, attempts, rows, match_fn, scope, now_iso):
+    """Only actual returned fixture rows establish success (including partial batches).
+
+    Missing provider markets do not cause repeated purchases: a successful
+    scoped request is recorded even when only some requested markets return.
+    Empty/aborted/budget-skipped fixtures retain the normal failure cooldown.
+    """
+    for f in due:
+        fk = _fixture_key(f)
+        snap = updates.get(fk)
+        if not snap:
+            continue
+        rec = attempts.setdefault(fk, {})
+        fail = "close_fail_at" if snap == "close_at" else "fail_at"
+        quoted = any(str(r.get("date"))[:10] == str(f.get("date"))[:10]
+                     and match_fn(f.get("home"), r.get("home"))
+                     and match_fn(f.get("away"), r.get("away")) for r in rows)
+        if quoted:
+            rec[snap] = now_iso
+            rec["capture_scope"] = scope
+            rec.pop(fail, None)
+        else:
+            rec[fail] = now_iso
+
+
+def _fixture_priced(f: dict, existing_rows: list[dict], match_fn) -> bool:
+    """Fixture already has same-month odds rows — cross-feed name tolerant
+    (pick 'Halmstad' vs stored 'Halmstads BK' must count as priced)."""
+    for r in existing_rows:
+        if match_fn(f.get("home"), r.get("home")) and match_fn(f.get("away"), r.get("away")):
+            return True
+    return False
+
+
+# Provenance tag for the captured-row side of the kickoff-mismatch guard. A
+# parsed ISO/Z/offset kickoff from an already-captured odds row is a real UTC
+# witness (the-odds-api's own commence_time) — there's no "legacy" row variant.
+ROW_KICKOFF_SOURCE_UTC = "captured_row_utc"
+
+
+def _fixture_row_kickoff(f: dict, existing_rows: list[dict], match_fn) -> datetime | None:
+    """Kickoff (UTC) from already-captured rows for this fixture, if present.
+
+    Team orientation tolerant (straight or swapped home/away). The picks listing
+    occasionally carries a non-local (e.g. UK) kickoff time; the API commence_time
+    on captured rows is authoritative, so the planner compares the two sources."""
+    if not match_fn:
+        return None
+    for r in existing_rows or []:
+        try:
+            straight = match_fn(f.get("home"), r.get("home")) and match_fn(f.get("away"), r.get("away"))
+            swapped = match_fn(f.get("home"), r.get("away")) and match_fn(f.get("away"), r.get("home"))
+            if not (straight or swapped):
+                continue
+            iso = (r.get("kickoff") or "").replace("Z", "+00:00")
+            if iso:
+                return datetime.fromisoformat(iso)
+        except Exception:
+            continue
+    return None
+
+
+def _kickoff_mismatch_detail(line: str) -> str | None:
+    """Classify a kickoff-mismatch WARN line into a specific sub-reason.
+
+    Reads a stable, machine-readable `[kickoff_mismatch_detail=...]` tag that
+    `plan_auto` appends to each mismatch WARN line, rather than pattern-matching
+    the human-readable prose -- so a future wording tweak to the warning text
+    cannot silently break this classification (it would instead just fail to
+    find the bracketed tag and `_kickoff_mismatch_detail_counts` would notice
+    lines are going unclassified).
+
+    Purely additive bookkeeping: callers must keep counting every line that
+    starts with "WARN kickoff-mismatch" under the existing `kickoff_mismatch`
+    bucket (see `_skip_reason`); this only adds finer-grained detail so logs
+    and receipts can distinguish *why* the guard did what it did.
+    """
+    if not line.startswith("WARN kickoff-mismatch"):
+        return None
+    m = re.search(r"\[kickoff_mismatch_detail=(\w+)\]", line)
+    return m.group(1) if m else None
+
+
+def _kickoff_mismatch_detail_counts(lines: list[str]) -> dict[str, int]:
+    counts: Counter = Counter()
+    for line in lines:
+        detail = _kickoff_mismatch_detail(line)
+        if detail:
+            counts[detail] += 1
+    return dict(counts)
+
+
+def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *,
+              now: datetime | None = None, kickoff_fn=None, kickoff_source_fn=None,
+              match_fn=None, requested_scope: str | None = None,
+              ml_freeze: datetime | None = None) -> tuple[list[dict], dict, list[str]]:
+    """Decide which fixtures need a snapshot this iteration.
+
+    Returns (due_fixtures, updates, skip_lines). `updates` maps fixture key ->
+    snapshot type so the caller can stamp the attempts ledger after the run.
+
+    `kickoff_source_fn(fixture) -> (datetime | None, str | None)` is the
+    provenance-aware pick-side resolver (e.g.
+    edgefactory.sources.theoddsapi._pick_kickoff_with_source). When supplied
+    it takes precedence over the plain `kickoff_fn` so the kickoff-mismatch
+    guard below can tell a real `pick_kickoff_utc` witness apart from a
+    `legacy_display_fallback` assumption. Callers that only pass `kickoff_fn`
+    keep the original conservative (provenance-unknown) behavior.
+    """
+    now = now or datetime.now(timezone.utc)
+
+    due: list[dict] = []
+    updates: dict[str, str] = {}
+    skips: list[str] = []
+    for f in fixtures:
+        fk = _fixture_key(f)
+        rec = attempts.get(fk, {})
+        if kickoff_source_fn:
+            kickoff, kickoff_source = kickoff_source_fn(f)
+        else:
+            kickoff = kickoff_fn(f) if kickoff_fn else None
+            kickoff_source = None
+        has_rows = _fixture_priced(f, existing_rows, match_fn) if match_fn else False
+
+        # Kickoff divergence guard: if captured rows disagree with the listing
+        # by more than KICKOFF_MISMATCH_MIN, this fires. The *default* and
+        # *provenance-unknown* response stays maximally conservative: plan from
+        # the EARLIER time so a fixture can never be captured after a true
+        # kickoff. Only when we can PROVE the earlier side is merely a legacy
+        # display-string assumption (not a UTC witness) and the later side is
+        # a real captured-row UTC witness do we plan from the later, real time
+        # instead — otherwise a stale timezone guess would starve the slate of
+        # a legitimate close-window snapshot. Every branch still warns.
+        row_ko = _fixture_row_kickoff(f, existing_rows, match_fn) if has_rows else None
+        row_source = ROW_KICKOFF_SOURCE_UTC if row_ko is not None else None
+        if row_ko is not None and kickoff is not None:
+            delta_m = abs((row_ko - kickoff).total_seconds()) / 60.0
+            if delta_m > KICKOFF_MISMATCH_MIN:
+                is_pick_utc = kickoff_source == PICK_KICKOFF_SOURCE_UTC
+                is_pick_legacy = kickoff_source == PICK_KICKOFF_SOURCE_LEGACY
+                is_row_utc = row_source == ROW_KICKOFF_SOURCE_UTC
+                if is_pick_legacy and is_row_utc:
+                    # Non-starving override: the earlier time is only a legacy
+                    # display-string assumption; the captured row is a real
+                    # UTC witness, so plan from it rather than letting the
+                    # legacy guess falsely mark the fixture already-passed.
+                    skips.append(
+                        f"WARN kickoff-mismatch {fk}: pick legacy display says {_sast_hm(kickoff)}, "
+                        f"captured rows say {_sast_hm(row_ko)} (Δ={delta_m:.0f}m; planning from "
+                        f"captured UTC witness, display-fallback override) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]")
+                    kickoff = row_ko
+                elif is_pick_utc and is_row_utc:
+                    # Both sides are real UTC witnesses and still disagree:
+                    # stay strict/fail-closed exactly as before.
+                    skips.append(
+                        f"WARN kickoff-mismatch {fk}: pick kickoff_utc says {_sast_hm(kickoff)}, "
+                        f"captured rows say {_sast_hm(row_ko)} (Δ={delta_m:.0f}m; planning from "
+                        f"the earlier real UTC witness) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_planned_from_earlier_utc]")
+                    kickoff = min(kickoff, row_ko)
+                else:
+                    # Provenance unknown/unrecognized on at least one side: no
+                    # extra trust signal to safely override, so behave exactly
+                    # like the original guard (earlier-of-two, fail-closed).
+                    skips.append(
+                        f"WARN kickoff-mismatch {fk}: pick lists {_sast_hm(kickoff)}, captured rows say "
+                        f"{_sast_hm(row_ko)} (Δ={delta_m:.0f}m; planning from the earlier, "
+                        f"legacy-grade provenance only) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_legacy_only]")
+                    kickoff = min(kickoff, row_ko)
+
+        in_close_window = False
+        started = False
+        if kickoff is not None:
+            mins_to_kickoff = (kickoff - now).total_seconds() / 60.0
+            in_close_window = -15 <= mins_to_kickoff <= CLOSE_WINDOW_MIN
+            started = mins_to_kickoff < START_GRACE_MIN * -1
+
+        if started:
+            skips.append(f"{fk} (kickoff already passed)")
+            continue
+
+        # Explicit v2 PAPER request: one bounded refresh of stale fixture
+        # quotes inside the six-hour window ending at today's 09:00 SAST.
+        # Uses the SAME adapter budget and failure cooldown, not a new source,
+        # key ring, retry path or relaxed admission rule. Default auto is intact.
+        if (ml_freeze is not None and ml_freeze.tzinfo is not None
+                and ml_freeze.astimezone(_SAST_TZ).hour == 9
+                and ml_freeze.astimezone(_SAST_TZ).date() == now.astimezone(_SAST_TZ).date()
+                and ml_freeze - timedelta(hours=6) <= now < ml_freeze
+                and kickoff is not None and kickoff >= ml_freeze + timedelta(minutes=30)
+                and not rec.get("ml_pre_freeze_at")
+                and not _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS, now)
+                and not _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now)):
+            from edgefactory.odds_normalization import parse_zoned_timestamp
+            fresh = any(
+                match_fn and match_fn(f.get("home"), r.get("home"))
+                and match_fn(f.get("away"), r.get("away"))
+                and str(r.get("date"))[:10] == str(f.get("date"))[:10]
+                and str(r.get("bookmaker") or "").strip()
+                and not any(x in str(r.get("bookmaker")).casefold()
+                            for x in ("matchbook", "betfair", "smarkets", "betdaq"))
+                and (row_kickoff := parse_zoned_timestamp(r.get("kickoff"))) is not None
+                and abs((row_kickoff - kickoff).total_seconds()) <= 300
+                and (stamp := parse_zoned_timestamp(r.get("captured_at"))) is not None
+                and ml_freeze - timedelta(hours=6) <= stamp <= now
+                for r in existing_rows)
+            if not fresh:
+                due.append(f)
+                updates[fk] = "ml_pre_freeze_at"
+                continue
+
+        if in_close_window and not rec.get("close_at") and not _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now):
+            due.append(f)
+            updates[fk] = "close_at"
+            continue
+
+        # Legacy rows/receipts cannot attest that today's configured market
+        # scope was requested. Upgrade once; never infer completeness from h2h.
+        scope_due = requested_scope is not None and rec.get("capture_scope") != requested_scope
+        if scope_due and _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now):
+            skips.append(f"{fk} (retry cooldown ({ATTEMPT_RETRY_HOURS}h after failed attempt))")
+            continue
+        if (scope_due or (not has_rows and not rec.get("first_at") and not rec.get("scope_at"))) and not _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS, now):
+            if kickoff is not None and (kickoff - now).total_seconds() < START_GRACE_MIN * 60 and not in_close_window:
+                skips.append(f"{fk} (too close to kickoff for first capture)")
+                continue
+            due.append(f)
+            updates[fk] = "scope_at" if scope_due and (has_rows or rec.get("first_at")) else "first_at"
+            continue
+
+        if _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS, now):
+            reason = f"retry cooldown ({ATTEMPT_RETRY_HOURS}h after failed attempt)"
+        elif has_rows or rec.get("first_at") or rec.get("scope_at"):
+            reason = "priced, close window not open" if kickoff else "priced"
+        else:
+            reason = "waiting"
+        skips.append(f"{fk} ({reason})")
+
+    return due, updates, skips
+
+
+def _self_test(mod) -> int:
+    """Offline parse/match checks against embedded fixtures; no network."""
+    sports = [
+        {"key": "soccer_sweden_allsvenskan", "group": "Soccer", "title": "Allsvenskan", "active": True},
+        {"key": "soccer_norway_eliteserien", "group": "Soccer", "title": "Eliteserien", "active": True},
+    ]
+    pick = {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
+            "date": "2026-08-03", "kickoff": "03-08, 18:00"}
+    events = [
+        {"id": "evt_wrong", "sport_key": "soccer_sweden_allsvenskan",
+         "commence_time": "2026-08-03T16:00:00Z", "home_team": "IK Sirius", "away_team": "Halmstads BK"},
+        {"id": "evt_right", "sport_key": "soccer_sweden_allsvenskan",
+         "commence_time": "2026-08-03T16:00:00Z", "home_team": "Halmstads BK", "away_team": "IK Sirius"},
+    ]
+    payload = {"id": "evt_right", "sport_key": "soccer_sweden_allsvenskan", "sport_title": "Allsvenskan",
+               "bookmakers": [
+                   {"key": "pinnacle", "title": "Pinnacle", "last_update": "2026-08-03T10:00:00Z",
+                    "markets": [
+                        {"key": "h2h", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Halmstads BK", "price": 2.10},
+                                      {"name": "Draw", "price": 3.40},
+                                      {"name": "IK Sirius", "price": 3.25}]},
+                        {"key": "totals", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Over", "price": 1.95, "point": 2.5},
+                                      {"name": "Under", "price": 1.85, "point": 2.5},
+                                      {"name": "Over", "price": 9.0, "point": 4.5}]},
+                        {"key": "totals_alt", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Over", "price": 1.30, "point": 1.5}]},
+                        {"key": "btts", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Yes", "price": 1.95},
+                                      {"name": "No", "price": 1.80}]},
+                        {"key": "team_totals", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Halmstads BK Over 1.5", "price": 1.30},
+                                      {"name": "IK Sirius Under 1.5", "price": 2.10}]},
+                        {"key": "double_chance", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "HomeOrDraw", "price": 1.05},
+                                      {"name": "AwayOrDraw", "price": 4.50},
+                                      {"name": "HomeOrAway", "price": 1.02}]},
+                    ]}]}
+    failures = []
+
+    def check(label: str, cond: bool) -> None:
+        print(f"  [{'PASS' if cond else 'FAIL'}] {label}")
+        if not cond:
+            failures.append(label)
+
+    check("league resolves to sport key", mod.sport_key_for_league("Sweden Allsvenskan", sports) == "soccer_sweden_allsvenskan")
+    check("uncovered league returns None", mod.sport_key_for_league("Belarus Vysshaya Liga", sports) is None)
+    check("short league norm cannot false-hit", mod.sport_key_for_league("Ie2", sports + [{"key": "soccer_spl", "group": "Soccer", "title": "Scottish Premiership", "active": True}]) is None)
+    ev = mod.match_event(pick, events)
+    check("pair-constrained match ignores swapped fixture", ev is not None and ev["id"] == "evt_right")
+    rows = mod.rows_from_event_odds(pick, events[1], payload)
+    check("14 rows parsed (3x h2h + 3x totals incl 4.5 + 1x totals_alt@1.5 + 2x btts "
+          "+ 2x team_totals + 3x double_chance)", len(rows) == 14)
+    sel = {(r["market"], r["selection"]): r["odds"] for r in rows}
+    check("h2h home price", sel.get(("1x2", "home")) == 2.10)
+    check("h2h draw price", sel.get(("1x2", "draw")) == 3.40)
+    check("ou_2.5 under price", sel.get(("ou_2.5", "under")) == 1.85)
+    check("ou_4.5 over price", sel.get(("ou_4.5", "over")) == 9.0)
+    check("ou_1.5 over price (totals_alt)", sel.get(("ou_1.5", "over")) == 1.30)
+    check("btts yes price", sel.get(("btts", "yes")) == 1.95)
+    check("btts no price", sel.get(("btts", "no")) == 1.80)
+    check("team_totals home over 1.5", sel.get(("tt_home_1.5", "over")) == 1.30)
+    check("team_totals away under 1.5", sel.get(("tt_away_1.5", "under")) == 2.10)
+    check("double_chance 1x", sel.get(("dc", "1x")) == 1.05)
+    check("double_chance 12", sel.get(("dc", "12")) == 1.02)
+    check("unknown market ignored", all(r["market"] != "totals_alt" for r in rows))
+    check("schema columns", set(mod.COLUMNS) == set(rows[0].keys()) if rows else False)
+
+    # key rotation ring (offline, pure; ledger redirected so real state is untouched)
+    import tempfile
+    real_usage_file = mod.USAGE_FILE
+    mod.USAGE_FILE = Path(tempfile.mkdtemp()) / "usage_test.json"
+    os.environ["ODDS_API_KEYS"] = "aaa,bbb"
+    mod.API_KEYS = ("aaa", "bbb")
+    fp_a, fp_b = mod._key_fp("aaa"), mod._key_fp("bbb")
+    ring = mod._key_ring()
+    check("daily ring contains all keys", set(ring) == {"aaa", "bbb"} and len(ring) == 2)
+    mod._mark_exhausted(fp_a, "test")
+    active = mod._active_key()
+    check("exhausted key skipped by active_key", active == "bbb")
+    mod._mark_exhausted(fp_b, "test")
+    check("ring fully exhausted -> None", mod._active_key() is None)
+    mod.unmark_exhausted()
+    check("unmark restores ring", mod._active_key() in ("aaa", "bbb"))
+    mod.USAGE_FILE = real_usage_file
+    del os.environ["ODDS_API_KEYS"]
+    mod.API_KEYS = mod._parse_keys()
+
+    # plan_auto: cross-feed priced check (pick names vs API-stored names)
+    fix = [{"home": "Halmstad", "away": "Sirius", "kickoff": "03-08, 18:00", "date": "2026-08-03"}]
+    existing = [{"home": "Halmstads BK", "away": "IK Sirius"}]
+    due, updates, skips = plan_auto(fix, existing, {}, match_fn=mod._team_names_match)
+    check("plan_auto: priced fixture (renamed by API) not re-due", not due)
+    due, updates, skips = plan_auto(fix, [], {}, match_fn=mod._team_names_match)
+    check("plan_auto: unpriced fixture due for first capture", len(due) == 1 and updates.get("Halmstad|Sirius") == "first_at")
+
+    # year-boundary: fixture year comes from pick date, never wall-clock
+    ny = mod._pick_kickoff_utc({"kickoff": "01-01, 12:00", "date": "2027-01-01"})
+    check("kickoff year from pick date (Jan fixture in Dec run)", ny is not None and ny.year == 2027)
+    yb = mod._pick_kickoff_utc({"kickoff": "31-12, 23:00", "date": "2026-12-31"})
+    check("kickoff year from pick date (Dec 31 fixture)", yb is not None and yb.year == 2026)
+
+    print(f"self-test: {'PASS' if not failures else 'FAIL'} ({len(failures)} failures)")
+    return 0 if not failures else 1
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--date", default=_date.today().isoformat(), help="match date YYYY-MM-DD (default: today)")
+    ap.add_argument("--snapshot", default="adhoc", choices=["pick_time", "close", "adhoc"], help="label for manual runs")
+    ap.add_argument("--auto", action="store_true", help="timing-driven mode called by daily.py (pick_time/close windows)")
+    ap.add_argument("--ml-precutoff", action="store_true",
+                    help="with --auto: one budget/cooldown-controlled stale-quote refresh before 09:00 SAST")
+    ap.add_argument("--dry-run", action="store_true", help="no network, no credits: coverage + cost estimate")
+    ap.add_argument("--self-test", action="store_true", help="offline parse checks, no key needed")
+    ap.add_argument("--refresh-sports", action="store_true", help="force sport-key cache rebuild (free)")
+    ap.add_argument("--usage", action="store_true", help="print per-key ring status and exit")
+    args = ap.parse_args()
+    if args.ml_precutoff and not args.auto:
+        ap.error("--ml-precutoff requires --auto")
+
+    mod = importlib.import_module("edgefactory.sources.theoddsapi")
+
+    if args.self_test:
+        return _self_test(mod)
+
+    if args.usage:
+        status = mod.ledger_status()
+        print(f"theoddsapi usage ({status['month']}): "
+          f"{status['credits_local']}/{status['budget']} local credits across {status['n_keys']} key(s); "
+          f"cost_per_event={status['cost_per_event']}")
+        for k in status["keys"]:
+            flag = " EXHAUSTED" if k["exhausted"] else ""
+            print(f"  {k['fp']}: local={k['credits_local']}/{k['budget']} "
+                  f"server_used={k['server_used']} server_remaining={k['server_remaining']}{flag}")
+        return 0
+
+    fixtures = mod.shortlist(args.date)
+    print(f"date={args.date} shortlist={len(fixtures)} fixture(s)")
+    receipt_base = {
+        "requested_scope": capture_scope(mod),
+        "requested_markets": list(mod.MARKETS),
+        "requested_total_points": list(mod.TOTAL_POINTS),
+        "candidate_fixtures": len(fixtures),
+        "attempted": 0,
+        "fixtures_with_rows": 0,
+        "rows": 0,
+        "added": 0,
+        "status": "empty",
+        "attempted_fixtures": [],
+        "quoted_fixtures": [],
+        "unmatched_reasons": {},
+        "skipped": [],
+        "skip_reasons": {},
+        "due_reasons": {},
+        "errors": [],
+    }
+
+    if args.dry_run:
+        sports = []
+        if mod.SPORTS_CACHE_FILE.exists():
+            try:
+                sports = json.loads(mod.SPORTS_CACHE_FILE.read_text()).get("sports", [])
+            except Exception:
+                sports = []
+        if not sports:
+            print("sport-key cache: MISSING (first live run will fetch /sports — free)")
+        covered = 0
+        for f in fixtures:
+            key = mod.sport_key_for_league(f.get("league"), sports) if sports else None
+            mark = key or "UNKNOWN (league may not be covered)"
+            covered += bool(key)
+            print(f"  - {f['home']} vs {f['away']}  [{f['league']}] -> {mark}")
+        est = (covered or len(fixtures)) * mod.cost_per_event()
+        status = mod.ledger_status()
+        print(f"estimated cost: ~{est} credit(s)/snapshot "
+              f"({mod.cost_per_event()}/event = {len(mod.MARKETS)} markets x {len(mod.REGIONS)} regions)")
+        print(f"ledger: {status['credits_local']}/{status['budget']} used this month across "
+              f"{status['n_keys']} key(s); server_remaining={status['server_remaining']}")
+        print("dry-run: 0 credits spent")
+        _write_receipt(args.date, {**receipt_base, "status": "dry_run"})
+        return 0
+
+    if not mod.enabled():
+        print("No The Odds API keys configured. Set ODDS_API_KEYS in .env (see .env.example).", file=sys.stderr)
+        _write_receipt(args.date, {**receipt_base, "status": "disabled", "errors": ["no ODDS_API_KEYS configured"]})
+        return 2
+
+    if args.refresh_sports:
+        sports = mod.load_sports(refresh=True)
+        print(f"sports cache refreshed: {len(sports)} active soccer keys")
+        return 0
+
+    # live fetch paths -------------------------------------------------------
+    if args.auto:
+        existing = _read_month(_month_file(args.date))
+        attempts = _load_attempts(args.date)
+        due, updates, skips = plan_auto(fixtures, existing, attempts,
+                                        kickoff_source_fn=mod._pick_kickoff_with_source,
+                                        match_fn=mod._team_names_match,
+                                        requested_scope=capture_scope(mod),
+                                        ml_freeze=(datetime.fromisoformat(args.date).replace(tzinfo=_SAST_TZ, hour=9)
+                                                   if args.ml_precutoff else None))
+        skip_counts = _skip_reason_counts(skips)
+        mismatch_detail_counts = _kickoff_mismatch_detail_counts(skips)
+        due_counts = dict(Counter(updates.values()))
+        for line in skips:
+            print(f"  skip {line}")
+        if skip_counts:
+            print(f"auto: skipped={len(skips)} skip_reasons={json.dumps(skip_counts, sort_keys=True)}")
+        if mismatch_detail_counts:
+            print(f"auto: kickoff_mismatch_detail={json.dumps(mismatch_detail_counts, sort_keys=True)}")
+        if not due:
+            print("auto: nothing due this iteration (0 credits)")
+            _write_receipt(args.date, {
+                **receipt_base,
+                "status": "not_due",
+                "skipped": skips,
+                "skip_reasons": skip_counts,
+                "kickoff_mismatch_detail": mismatch_detail_counts,
+                "due_reasons": due_counts,
+            })
+            return 0
+        print(f"auto: {len(due)} fixture(s) due -> fetching due_reasons={json.dumps(due_counts, sort_keys=True)}")
+    else:
+        due = fixtures
+        updates = {_fixture_key(f): "first_at" for f in fixtures}
+        attempts = _load_attempts(args.date)
+        skips = []
+        skip_counts = {}
+        mismatch_detail_counts = {}
+        due_counts = dict(Counter(updates.values()))
+
+    try:
+        rows, unmatched, matched = mod.fetch_fixtures(due, day=args.date)
+    except Exception as exc:
+        print(f"capture aborted: {exc}", file=sys.stderr)
+        record_attempts(due, updates, attempts, [], mod._team_names_match,
+                        capture_scope(mod), datetime.now(timezone.utc).isoformat())
+        _save_attempts(args.date, attempts)
+        _write_receipt(args.date, {
+            **receipt_base,
+            "attempted": len(due),
+            "attempted_fixtures": [_fixture_receipt(f) for f in due],
+            "skipped": skips,
+            "skip_reasons": skip_counts,
+            "kickoff_mismatch_detail": mismatch_detail_counts,
+            "due_reasons": due_counts,
+            "status": "error",
+            "errors": [type(exc).__name__],
+        })
+        return 1
+
+    added = append_rows(args.date, rows, mod.COLUMNS) if rows else 0
+    now_iso = datetime.now(timezone.utc).isoformat()
+    record_attempts(due, updates, attempts, rows, mod._team_names_match,
+                    capture_scope(mod), now_iso)
+    _save_attempts(args.date, attempts)
+
+    status = mod.ledger_status()
+    print(f"capture done: rows={len(rows)} new_appended={added} -> {_month_file(args.date).name}")
+    print(f"ledger: {status['credits_local']}/{status['budget']} local across {status['n_keys']} key(s); "
+          f"near-term remaining={status['server_remaining']}")
+    quoted: dict[tuple[str, str], dict] = {}
+    for row in rows or []:
+        key = (str(row.get("home") or ""), str(row.get("away") or ""))
+        quoted.setdefault(key, {
+            "date": str(row.get("date") or args.date)[:10],
+            "home": row.get("home") or "",
+            "away": row.get("away") or "",
+            "league": row.get("league") or "",
+            "kickoff": row.get("kickoff") or "",
+        })
+    _write_receipt(args.date, {
+        **receipt_base,
+        "attempted": len(due),
+        "attempted_fixtures": [_fixture_receipt(f) for f in due],
+        "fixtures_with_rows": matched,
+        "quoted_fixtures": list(quoted.values()),
+        "rows": len(rows),
+        "added": added,
+        "status": "ok" if rows else "empty",
+        "skipped": skips,
+        "skip_reasons": skip_counts,
+        "kickoff_mismatch_detail": mismatch_detail_counts,
+        "due_reasons": due_counts,
+        "unmatched_reasons": dict(Counter(_line_reason(line) for line in unmatched)),
+        "unmatched": unmatched[:100],
+    })
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

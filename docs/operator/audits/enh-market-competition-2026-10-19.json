@@ -1,0 +1,1139 @@
+{
+  "scope": "All available archived cohort-backed markets compete within each retained fixture",
+  "source_report_sha256": "64282612373c8dc6578197eaff6ee57f8afb19cc38a5bfdd7edd25465ac5f4b6",
+  "coverage": {
+    "snapshots": 80,
+    "changed_fixture_choices": 0,
+    "priced_in_band_candidates": 48,
+    "newly_admitted_candidates": 22,
+    "newly_admitted_under_candidates": 22,
+    "new_candidates_shadowed_by_higher_rate": 22,
+    "fixtures_with_new_candidates": 17
+  },
+  "new_candidates_by_market": {
+    "match_under_25": 17,
+    "match_under_35": 3,
+    "match_under_45": 2
+  },
+  "winning_markets_shadowing_new_candidates": {
+    "match_over_25": 14,
+    "home_over_05": 2,
+    "home_over_15": 3,
+    "away_under_15": 3
+  },
+  "baseline_winning_markets": {
+    "match_over_25": 14,
+    "home_over_05": 1,
+    "home_over_15": 1,
+    "away_under_15": 1
+  },
+  "parity_winning_markets": {
+    "match_over_25": 14,
+    "home_over_05": 1,
+    "home_over_15": 1,
+    "away_under_15": 1
+  },
+  "details": [
+    {
+      "fixture": [
+        "2026-10-15",
+        "benfica",
+        "celtic"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.7364,
+        "price": 1.32,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-15T10:15:18.527540+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.7364,
+        "price": 1.32,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-15T10:15:18.527540+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.26359999999999995,
+          "price": 3.37,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-15T10:15:18.527540+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.7364,
+          "price": 1.32,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-15T10:15:18.527540+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.26359999999999995,
+          "price": 3.37,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-15T10:15:18.527540+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "los angeles fc",
+        "austin fc"
+      ],
+      "baseline": {
+        "market": "home_over_05",
+        "rate": 0.8906,
+        "price": 1.38,
+        "source": "oddspapi",
+        "book": "betfirst.be",
+        "captured_at": "2026-10-14T22:11:32.236227+00:00"
+      },
+      "proposed": {
+        "market": "home_over_05",
+        "rate": 0.8906,
+        "price": 1.38,
+        "source": "oddspapi",
+        "book": "betfirst.be",
+        "captured_at": "2026-10-14T22:11:32.236227+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.43379999999999996,
+          "price": 2.86,
+          "source": "oddspapi",
+          "book": "efortuna.ro",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_under_35",
+          "rate": 0.6538999999999999,
+          "price": 1.86,
+          "source": "oddspapi",
+          "book": "efortuna.ro",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "home_over_05",
+          "rate": 0.8906,
+          "price": 1.38,
+          "source": "oddspapi",
+          "book": "betfirst.be",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "away_under_15",
+          "rate": 0.8016,
+          "price": 2.55,
+          "source": "oddspapi",
+          "book": "betfirst.be",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_35",
+          "rate": 0.6538999999999999,
+          "price": 1.86,
+          "source": "oddspapi",
+          "book": "efortuna.ro",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_25",
+          "rate": 0.5662,
+          "price": 1.595,
+          "source": "oddspapi",
+          "book": "1xbit",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.43379999999999996,
+          "price": 2.86,
+          "source": "oddspapi",
+          "book": "efortuna.ro",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_35",
+          "rate": 0.3461,
+          "price": 2.45,
+          "source": "oddspapi",
+          "book": "hardrockbet",
+          "captured_at": "2026-10-14T22:11:32.236227+00:00",
+          "legacy_eligible": true
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "nashville sc",
+        "sporting kansas city"
+      ],
+      "baseline": {
+        "market": "home_over_15",
+        "rate": 0.8186,
+        "price": 1.95,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-14T22:11:28.283222+00:00"
+      },
+      "proposed": {
+        "market": "home_over_15",
+        "rate": 0.8186,
+        "price": 1.95,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-14T22:11:28.283222+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.2651,
+          "price": 3.75,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_under_35",
+          "rate": 0.44189999999999996,
+          "price": 2.15,
+          "source": "oddspapi",
+          "book": "hardrockbet",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_under_45",
+          "rate": 0.6465000000000001,
+          "price": 1.5,
+          "source": "oddspapi",
+          "book": "hardrockbet",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "home_over_15",
+          "rate": 0.8186,
+          "price": 1.95,
+          "source": "oddspapi",
+          "book": "napoleonsports.be",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_over_25",
+          "rate": 0.7349,
+          "price": 1.42,
+          "source": "oddspapi",
+          "book": "dafabet",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_45",
+          "rate": 0.6465000000000001,
+          "price": 1.5,
+          "source": "oddspapi",
+          "book": "hardrockbet",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_35",
+          "rate": 0.5581,
+          "price": 1.961,
+          "source": "oddspapi",
+          "book": "kalshi",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_35",
+          "rate": 0.44189999999999996,
+          "price": 2.15,
+          "source": "oddspapi",
+          "book": "hardrockbet",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_45",
+          "rate": 0.3535,
+          "price": 3.04,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.2651,
+          "price": 3.75,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-14T22:11:28.283222+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "torreense",
+        "sunderland"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5981,
+        "price": 1.66,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-15T10:15:19.149315+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5981,
+        "price": 1.66,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-15T10:15:19.149315+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.40190000000000003,
+          "price": 2.33,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-15T10:15:19.149315+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.5981,
+          "price": 1.66,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-15T10:15:19.149315+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.40190000000000003,
+          "price": 2.33,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-15T10:15:19.149315+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-16",
+        "heerenveen",
+        "excelsior"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5716,
+        "price": 1.38,
+        "source": "theoddsapi",
+        "book": "Nordic Bet",
+        "captured_at": "2026-10-16T16:10:52.177911+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5716,
+        "price": 1.38,
+        "source": "theoddsapi",
+        "book": "Nordic Bet",
+        "captured_at": "2026-10-16T16:10:52.177911+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.4284,
+          "price": 2.94,
+          "source": "theoddsapi",
+          "book": "Nordic Bet",
+          "captured_at": "2026-10-16T16:10:52.177911+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.5716,
+          "price": 1.38,
+          "source": "theoddsapi",
+          "book": "Nordic Bet",
+          "captured_at": "2026-10-16T16:10:52.177911+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.4284,
+          "price": 2.94,
+          "source": "theoddsapi",
+          "book": "Nordic Bet",
+          "captured_at": "2026-10-16T16:10:52.177911+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "as roma",
+        "genoa"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5836,
+        "price": 1.98,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-17T13:09:56.786298+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5836,
+        "price": 1.98,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-17T13:09:56.786298+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.4164,
+          "price": 2.02,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T13:09:56.786298+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.5836,
+          "price": 1.98,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T13:09:56.786298+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.4164,
+          "price": 2.02,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T13:09:56.786298+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "fenerbahce",
+        "alanyaspor"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.683,
+        "price": 1.62,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-16T22:11:39.877876+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.683,
+        "price": 1.62,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-16T22:11:39.877876+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.31699999999999995,
+          "price": 2.42,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-16T22:11:39.877876+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.683,
+          "price": 1.62,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-16T22:11:39.877876+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.31699999999999995,
+          "price": 2.42,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-16T22:11:39.877876+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "kashima antlers",
+        "v-varen nagasaki"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5662,
+        "price": 1.75,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.007452+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5662,
+        "price": 1.75,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.007452+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.43379999999999996,
+          "price": 2.28,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-16T22:11:41.007452+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.5662,
+          "price": 1.75,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-16T22:11:41.007452+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.43379999999999996,
+          "price": 2.28,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-16T22:11:41.007452+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "kashiwa reysol",
+        "nagoya grampus"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5892,
+        "price": 1.63,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.215092+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5892,
+        "price": 1.63,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.215092+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.41080000000000005,
+          "price": 2.48,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-16T22:11:41.215092+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.5892,
+          "price": 1.63,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-16T22:11:41.215092+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.41080000000000005,
+          "price": 2.48,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-16T22:11:41.215092+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "salford city",
+        "crawley town"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.7294,
+        "price": 1.44,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-16T22:11:39.078165+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.7294,
+        "price": 1.44,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-16T22:11:39.078165+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.27059999999999995,
+          "price": 2.75,
+          "source": "theoddsapi",
+          "book": "William Hill",
+          "captured_at": "2026-10-16T22:11:39.078165+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.7294,
+          "price": 1.44,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-16T22:11:39.078165+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.27059999999999995,
+          "price": 2.75,
+          "source": "theoddsapi",
+          "book": "William Hill",
+          "captured_at": "2026-10-16T22:11:39.078165+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "tokyo verdy",
+        "fc tokyo"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.6215,
+        "price": 2.14,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-17T01:17:32.189821+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.6215,
+        "price": 2.14,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-17T01:17:32.189821+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.37849999999999995,
+          "price": 1.82,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T01:17:32.189821+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.6215,
+          "price": 2.14,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T01:17:32.189821+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.37849999999999995,
+          "price": 1.82,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T01:17:32.189821+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "union berlin",
+        "borussia dortmund"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.6403,
+        "price": 1.51,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-17T10:10:28.149368+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.6403,
+        "price": 1.51,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-17T10:10:28.149368+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.3597,
+          "price": 2.61,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-17T10:10:28.149368+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.6403,
+          "price": 1.51,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-17T10:10:28.149368+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.3597,
+          "price": 2.61,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-17T10:10:28.149368+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "venezia",
+        "napoli"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.6262,
+        "price": 1.85,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-17T07:13:11.532980+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.6262,
+        "price": 1.85,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-17T07:13:11.532980+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.3738,
+          "price": 2.15,
+          "source": "theoddsapi",
+          "book": "BetAnything",
+          "captured_at": "2026-10-17T07:13:11.532980+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.6262,
+          "price": 1.85,
+          "source": "theoddsapi",
+          "book": "Matchbook",
+          "captured_at": "2026-10-17T07:13:11.532980+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.3738,
+          "price": 2.15,
+          "source": "theoddsapi",
+          "book": "BetAnything",
+          "captured_at": "2026-10-17T07:13:11.532980+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "lyon",
+        "nice"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.6184,
+        "price": 1.75,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-18T10:10:33.651246+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.6184,
+        "price": 1.75,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-18T10:10:33.651246+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.3816,
+          "price": 2.25,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-18T10:10:33.651246+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.6184,
+          "price": 1.75,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-18T10:10:33.651246+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.3816,
+          "price": 2.25,
+          "source": "theoddsapi",
+          "book": "1xBet",
+          "captured_at": "2026-10-18T10:10:33.651246+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "panathinaikos",
+        "asteras tripolis"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.7243,
+        "price": 1.65,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-17T22:10:30.362554+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.7243,
+        "price": 1.65,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-17T22:10:30.362554+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.2757,
+          "price": 2.33,
+          "source": "theoddsapi",
+          "book": "LeoVegas (SE)",
+          "captured_at": "2026-10-17T22:10:30.362554+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.7243,
+          "price": 1.65,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-17T22:10:30.362554+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.2757,
+          "price": 2.33,
+          "source": "theoddsapi",
+          "book": "LeoVegas (SE)",
+          "captured_at": "2026-10-17T22:10:30.362554+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "real madrid",
+        "sevilla"
+      ],
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.7364,
+        "price": 1.42,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-18T04:13:11.259644+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.7364,
+        "price": 1.42,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-18T04:13:11.259644+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.2636,
+          "price": 2.94,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-18T04:13:11.259644+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "match_over_25",
+          "rate": 0.7364,
+          "price": 1.42,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-18T04:13:11.259644+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.2636,
+          "price": 2.94,
+          "source": "theoddsapi",
+          "book": "Betsson",
+          "captured_at": "2026-10-18T04:13:11.259644+00:00",
+          "legacy_eligible": false
+        }
+      ]
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "seattle sounders",
+        "cf montreal"
+      ],
+      "baseline": {
+        "market": "away_under_15",
+        "rate": 0.8239,
+        "price": 2.8,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-17T22:10:36.173894+00:00"
+      },
+      "proposed": {
+        "market": "away_under_15",
+        "rate": 0.8239,
+        "price": 2.8,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-17T22:10:36.173894+00:00"
+      },
+      "newly_admitted": [
+        {
+          "market": "match_under_25",
+          "rate": 0.3197,
+          "price": 3.04,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_under_35",
+          "rate": 0.544,
+          "price": 1.81,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_under_45",
+          "rate": 0.7165,
+          "price": 1.42,
+          "source": "oddspapi",
+          "book": "dafabet",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": false
+        }
+      ],
+      "full_priced_in_band_pool": [
+        {
+          "market": "away_under_15",
+          "rate": 0.8239,
+          "price": 2.8,
+          "source": "oddspapi",
+          "book": "napoleonsports.be",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_45",
+          "rate": 0.7165,
+          "price": 1.42,
+          "source": "oddspapi",
+          "book": "dafabet",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_25",
+          "rate": 0.6803,
+          "price": 1.471,
+          "source": "oddspapi",
+          "book": "kalshi",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_35",
+          "rate": 0.544,
+          "price": 1.81,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_35",
+          "rate": 0.456,
+          "price": 2.222,
+          "source": "oddspapi",
+          "book": "kalshi",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": true
+        },
+        {
+          "market": "match_under_25",
+          "rate": 0.3197,
+          "price": 3.04,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": false
+        },
+        {
+          "market": "match_over_45",
+          "rate": 0.2835,
+          "price": 3.8,
+          "source": "oddspapi",
+          "book": "betfair-ex",
+          "captured_at": "2026-10-17T22:10:36.173894+00:00",
+          "legacy_eligible": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Final daily archives, not freeze-time universes; NOT an as-traded replay.",
+    "Archived cohort training cutoffs/voter-regime comparability unverified; no refit attempted.",
+    "Only exact-name same-day result joins, no fuzzy/rescheduled substitutions.",
+    "Only time-verifiable OddsPapi/TheOddsAPI prices; missing ScoutingStats history NOT inferred.",
+    "Rates only for archived markets or their exact complements; unknown rates excluded.",
+    "Counterfactual cards use current production recipe; not historic placement claims.",
+    "No bookmaker receipts. Small sample and policy chosen after observing history.",
+    "No parameter search, stake/bucket changes, synthetic prices, or betting-hold release."
+  ],
+  "verdict": "NO_CHANGED_SELECTIONS_IN_RETAINED_FULL_POOL",
+  "production_changed": false
+}

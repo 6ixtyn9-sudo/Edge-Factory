@@ -1,0 +1,85 @@
+[
+  {
+    "_note": "Shape of the OddsPAPI /markets catalog response exactly as documented (oddspapi.io docs, GET /markets): a bare JSON array of market objects carrying marketId, marketLength, marketName, playerProp, sportId, handicap (the line for over/under markets), period, marketType and outcomes[] (outcomeId -> outcomeName). Entries 101/104/106 are the documentation's own examples verbatim. 10194 is the market id observed in the 2026-10-03 run payload whose outcomes were named 'Over 2.5'/'Under 2.5' - the catalog's handicap 2.5 is that line. 10262 'Over Under First Half' is the first-half example observed in the same run's payload; its period is not 'fulltime', which is what classifies it unsupported rather than totals. The _note key is ignored by the parser.",
+    "marketId": 101,
+    "marketLength": 3,
+    "marketName": "Full Time Result",
+    "playerProp": false,
+    "sportId": 10,
+    "handicap": 0,
+    "period": "fulltime",
+    "marketType": "1x2",
+    "outcomes": [
+      {"outcomeId": 101, "outcomeName": "1"},
+      {"outcomeId": 102, "outcomeName": "X"},
+      {"outcomeId": 103, "outcomeName": "2"}
+    ]
+  },
+  {
+    "marketId": 104,
+    "marketLength": 2,
+    "marketName": "Both Teams To Score",
+    "playerProp": false,
+    "sportId": 10,
+    "handicap": 0,
+    "period": "fulltime",
+    "marketType": "totals",
+    "outcomes": [
+      {"outcomeId": 104, "outcomeName": "Yes"},
+      {"outcomeId": 105, "outcomeName": "No"}
+    ]
+  },
+  {
+    "marketId": 106,
+    "marketLength": 2,
+    "marketName": "Over Under Full Time",
+    "playerProp": false,
+    "sportId": 10,
+    "handicap": 0.5,
+    "period": "fulltime",
+    "marketType": "totals",
+    "outcomes": [
+      {"outcomeId": 106, "outcomeName": "Over"},
+      {"outcomeId": 107, "outcomeName": "Under"}
+    ]
+  },
+  {
+    "marketId": 10194,
+    "marketLength": 2,
+    "marketName": "Over Under Full Time",
+    "playerProp": false,
+    "sportId": 10,
+    "handicap": 2.5,
+    "period": "fulltime",
+    "marketType": "totals",
+    "outcomes": [
+      {"outcomeId": 10194, "outcomeName": "Over"},
+      {"outcomeId": 10195, "outcomeName": "Under"}
+    ]
+  },
+  {
+    "marketId": 10262,
+    "marketLength": 2,
+    "marketName": "Over Under First Half",
+    "playerProp": false,
+    "sportId": 10,
+    "handicap": 1.5,
+    "period": "1st-half",
+    "marketType": "totals",
+    "outcomes": [
+      {"outcomeId": 10262, "outcomeName": "Over"},
+      {"outcomeId": 10263, "outcomeName": "Under"}
+    ]
+  },
+  {
+    "marketId": 10701,
+    "marketLength": 2,
+    "marketName": "Asian Handicap Full Time",
+    "playerProp": false,
+    "sportId": 10,
+    "handicap": -0.5,
+    "period": "fulltime",
+    "marketType": "handicap",
+    "outcomes": []
+  }
+]

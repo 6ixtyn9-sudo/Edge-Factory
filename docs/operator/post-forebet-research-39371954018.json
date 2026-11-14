@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "run_id": 39371954018,
+  "check_run_id": 118461574636,
+  "api": "https://api.github.com/repos/6ixtyn9-sudo/Edge-Factory/check-runs/118461574636/annotations",
+  "status": "RESEARCH ONLY \u2014 not activated, not forward proof",
+  "limitations": "Only complete unmasked candidate JSON objects extracted. Masked or truncated records omitted; no guessed thresholds. This is not the complete passing set.",
+  "annotation_slices": [
+    {
+      "title": "Post-Forebet passing candidates 1/1",
+      "length": 4096,
+      "sha256": "8dc18b6023567403ec044147dec08e8214a8814885e4e05dc0cf0c9735917610"
+    }
+  ],
+  "passing_candidates": [
+    {
+      "follow_source": null,
+      "holds": [
+        "new_predicate_requires_serving_validation"
+      ],
+      "market": "1x2",
+      "rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=40",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.798,
+        "hit": 0.5446,
+        "n": 1781,
+        "n_priced": 1781,
+        "roi": -0.0608,
+        "wilson_lb": 0.5214,
+        "wins": 970
+      },
+      "valid": {
+        "avg_odds": 1.75,
+        "hit": 0.5963,
+        "n": 815,
+        "n_priced": 815,
+        "roi": 0.0014,
+        "wilson_lb": 0.5623,
+        "wins": 486
+      },
+      "view": null,
+      "where": null
+    },
+    {
+      "follow_source": null,
+      "holds": [
+        "new_predicate_requires_serving_validation"
+      ],
+      "market": "1x2",
+      "rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=50",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.548,
+        "hit": 0.644,
+        "n": 882,
+        "n_priced": 882,
+        "roi": -0.0293,
+        "wilson_lb": 0.6118,
+        "wins": 568
+      },
+      "valid": {
+        "avg_odds": 1.507,
+        "hit": 0.6878,
+        "n": 442,
+        "n_priced": 442,
+        "roi": 0.015,
+        "wilson_lb": 0.6431,
+        "wins": 304
+      },
+      "view": null,
+      "where": null
+    },
+    {
+      "follow_source": null,
+      "holds": [
+        "new_predicate_requires_serving_validation"
+      ],
+      "market": "1x2",
+      "rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=55",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.435,
+        "hit": 0.7086,
+        "n": 556,
+        "n_priced": 556,
+        "roi": -0.0008,
+        "wilson_lb": 0.6695,
+        "wins": 394
+      },
+      "valid": {
+        "avg_odds": 1.412,
+        "hit": 0.7474,
+        "n": 289,
+        "n_priced": 289,
+        "roi": 0.0401,
+        "wilson_lb": 0.6943,
+        "wins": 216
+      },
+      "view": null,
+      "where": null
+    },
+    {
+      "follow_source": null,
+      "holds": [
+        "new_predicate_requires_serving_validation"
+      ],
+      "market": "1x2",
+      "rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=0",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 1.8,
+        "hit": 0.5422,
+        "n": 1125,
+        "n_priced": 1125,
+        "roi": -0.0683,
+        "wilson_lb": 0.513,
+        "wins": 610
+      },
+      "valid": {
+        "avg_odds": 1.769,
+        "hit": 0.608,
+        "n": 523,
+        "n_priced": 523,
+        "roi": 0.0263,
+        "wilson_lb": 0.5655,
+        "wins": 318
+      },
+      "view": null,
+      "where": null
+    },
+    {
+      "follow_source": null,
+      "holds": [
+        "new_predicate_requires_serving_validation"
+      ],
+      "market": "1x2",
+      "rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=35",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 1.8,
+        "hit": 0.5422,
+        "n": 1125,
+        "n_priced": 1125,
+        "roi": -0.0683,
+        "wilson_lb": 0.513,
+        "wins": 610
+      },
+      "valid": {
+        "avg_odds": 1.769,
+        "hit": 0.608,
+        "n": 523,
+        "n_priced": 523,
+        "roi": 0.0263,
+        "wilson_lb": 0.5655,
+        "wins": 318
+      },
+      "view": null,
+      "where": null
+    },
+    {
+      "follow_source": null,
+      "holds": [
+        "new_predicate_requires_serving_validation"
+      ],
+      "market": "1x2",
+      "rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=40",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.783,
+        "hit": 0.5489,
+        "n": 1093,
+        "n_priced": 1093,
+        "roi": -0.0626,
+        "wilson_lb": 0.5193,
+        "wins": 600
+      },
+      "valid": {
+        "avg_odds": 1.752,
+        "hit": 0.6169,
+        "n": 509,
+        "n_priced": 509,
+        "roi": 0.0356,
+        "wilson_lb": 0.5739,
+        "wins": 314
+      },
+      "view": null,
+      "where": null
+    }
+  ]
+}

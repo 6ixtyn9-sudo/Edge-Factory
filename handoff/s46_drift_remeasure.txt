@@ -1,0 +1,67 @@
+# §4.6 — the drift re-measure on the second reference fixture (2026-10-12, round 6)
+
+Fixture: **JS El Biar vs CR Belouizdad** (`lKAT82nf`, Algeria Ligue 1 — the day's
+`match_over_35` board pick).
+URL: `https://www.betexplorer.com/match-odds/lKAT82nf/1/ou/bestOdds/?lang=en`
+
+Provenance plainly: this sandbox's bash has **no** route to betexplorer.com; both
+reads came through the page-fetch tool, which returns the served response's text
+(raw HTML bytes are not retrievable, so attribute-level facts stay unverified).
+Per-row values are **read-time** values, and this file exists because they moved
+between reads.
+
+## The recorded read (2026-10-12, round 2)
+
+Artifacts: `handoff/live_2026-10-12/ou_lKAT82nf.json` (the served response) and
+`verify_output.txt`, which printed, from the module's own parser
+(`parse_market_response`):
+
+```
+served-json sha256: 74b68191c85c4122aa7c5f7c36a8a32f995e03271eeec0d501955ec234f1cee5
+html sha256:        07f65165c8db911ef08ecfd8ce76873fa7fe10223f004d8ff1b4fccf17947ff8  (40153 chars)
+parse_market_response -> columns=['Over', 'Under'] lines=['0.50','1.50','2.50','3.50','4.50','ou'] rows_count=6 named_rows=6
+bookmakers: ['BetMGM.us']
+average: None  average_by_line: {'0.50': [1.09, 6.75], '1.50': [1.49, 2.45], '2.50': [2.55, 1.44], '3.50': [5.0, 1.14], '4.50': [11.0, 1.04]}
+```
+
+So in that read every OU line carried **one** row, `BetMGM.us`, and the 0.50 line
+read **1.09 / 6.75**.
+
+## The read now (2026-10-12, round 6)
+
+Same URL, same tool, chunk 0–1 of the served response read in this round:
+
+* the market tab strip now carries `1.5 · 2.5 · 3.5 · 4.5 · 5.5 · 6.5` (with `2.5`
+  active) — the recorded read's strip ran `0.50 · 1.50 · 2.50 · 3.50 · 4.50` with
+  the mis-named `ou` table for the 2.50 line; the **5.50 and 6.50 lines are
+  served now and were not in the recorded read**;
+* the 0.50 line's table (`tbody#best-odds-0.50`) now holds **two** best-price rows,
+  both `data-bo="true"`:
+  | bookmaker | Over | Under | `data-created` |
+  | --- | --- | --- | --- |
+  | BetMGM.us (`data-bid="851"`) | `1.09` | `6.75` | `11,10,2026,16,18` |
+  | Stake.com (`data-bid="997"`) | `1.09` | `5.40` | `12,10,2026,14,45` |
+* the page's own count field for the line reads `bcount-0.50 = 2` (the recorded
+  read's set of bookmakers was `['BetMGM.us']` — count 1);
+* the page's own hidden average cells for the 0.50 line read
+  `data-hp-1="1.09"` / `data-hp-2="6.08"` — the recorded read's average for that
+  line was `[1.09, 6.75]`, i.e. BetMGM's own Under price, and the average has
+  moved with the row set.
+
+## What this does and does not establish
+
+* **Does**: the second reference fixture's served rows and counts **drift between
+  reads** — the bookmaker set on the 0.50 line grew from one to two inside the
+  same day, and the page's own average for the line moved. That is why no
+  per-row price in any artifact of this branch is quoted as a fixed fact, and why
+  the parser's contract is "keep what the response served, with the row's own
+  bookmaker and creation stamp" rather than a re-derivable average.
+* **Does not**: re-measure the 1.50 / 2.50 / 3.50 / 4.50 lines. Only the 0.50
+  line and the tab strip were read in this sample; the rest stay **unverified in
+  this round** and are not claimed here either way. The recorded per-line values
+  above remain the record of the round-2 read, not of the current page.
+
+Reprint: fetch the URL again through the page-fetch tool and compare the
+`data-odd` / `data-created` / `bcount-<line>` attributes of
+`tbody#best-odds-0.50`; the recorded side is `handoff/live_2026-10-12/verify_output.txt`
+(module pass: `PYTHONPATH=src .venv/bin/python handoff/live_2026-10-12/verify_live_pages.py`).

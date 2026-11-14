@@ -1,0 +1,60 @@
+=== §3 flag-gate proof, re-run at round-3 HEAD (d6080f6) ===
+commands per handoff/flag_gate_2026-10-12/README.md, scratch root /tmp/gate_r3
+baseline = pre-Stage-1 code (worktree /tmp/base_wt @ d2f235b); off = round-3 code, flag unset; on = round-3 code, flag=1
+
+$ diff -q board.baseline.json board.off.json
+  -> IDENTICAL (byte-for-byte): flag off changes nothing vs pre-Stage-1
+
+$ diff board.off.json board.on.json
+2c2,15
+<  "betexplorer_pairs": [],
+---
+>  "betexplorer_pairs": [
+>   "coventry|newcastle|btts|no|2.36|Stake.com",
+>   "coventry|newcastle|btts|yes|1.57|bet365.us",
+>   "jselbiar|crbelouiz|ou_0.5|over|1.09|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_0.5|under|6.75|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_1.5|over|1.49|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_1.5|under|2.45|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_2.5|over|2.55|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_2.5|under|1.44|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_3.5|over|5.0|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_3.5|under|1.14|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_4.5|over|11.0|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_4.5|under|1.04|BetMGM.us"
+>  ],
+310,313c323,326
+<     "enhancement_price": null,
+<     "enhancement_price_book": null,
+<     "enhancement_price_source": null,
+<     "enhancement_priced": false,
+---
+>     "enhancement_price": 5.0,
+>     "enhancement_price_book": "BetMGM.us",
+>     "enhancement_price_source": "betexplorer",
+>     "enhancement_priced": true,
+321,324c334,337
+<     "enhancement_price": null,
+<     "enhancement_price_book": null,
+<     "enhancement_price_source": null,
+<     "enhancement_priced": false,
+  (delta lines: 67)
+
+$ diff -q attached/picks_today.json.baseline.json attached/picks_today.json.off.json  ->  IDENTICAL
+$ diff -q attached/picks_2026-10-12.json.baseline.json attached/picks_2026-10-12.json.off.json  ->  IDENTICAL
+$ diff -q attached/picks_morning_2026-10-12.json.baseline.json attached/picks_morning_2026-10-12.json.off.json  ->  IDENTICAL
+$ diff -q attached/picks_probe_2026-10-12.json.baseline.json attached/picks_probe_2026-10-12.json.off.json  ->  IDENTICAL
+
+$ diff -q slip.today.off.txt slip.today.on.txt   # committed board's lane card
+  -> IDENTICAL (0 board fixtures in the ledger)
+
+$ diff slip.probe.off.txt slip.probe.on.txt   # labelled probe board's lane card (round-3 acca shape)
+18c18
+< NO BET — only 0 eligible leg(s), need 2 for an acca
+---
+> NO BET — only 1 eligible leg(s), need 2 for an acca
+21,22c21
+<    [NO BET] JS El Biar vs CR Belouizdad              Match Over 3.5 Goals (stated 34%) — no price captured — no bet
+<    [NO BET] Coventry vs Newcastle Utd                Both Teams To Score (stated 34%) — no price captured — no bet
+---
+>    [NO BET] Coventry vs Newcastle Utd                Both Teams To Score @ 1.57 (stated 34%) — below floor 1.85 — no bet

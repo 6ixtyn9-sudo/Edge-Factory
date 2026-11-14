@@ -1,0 +1,4512 @@
+"""Edge Factory replay harness — counterfactual engine replays on LIVE localdata.
+
+Answers "what would the engine have done if X?" using the REAL current ledgers
+and THE LIVE SELECTION CODE ITSELF (`auto_tickets.select_accas`, called with
+overrides). There is no re-implementation of the recipe in this file — the
+2026-09-04 audit found two parity bugs and one no-op A/B caused by exactly
+that duplication. One code path, or the harness lies.
+
+POOL DOCTRINE (2026-10-26): the default universe is LIVE-FAITHFUL — each day's
+pool runs the live execution gate (``execution_safe=True``) and the live kickoff
+guard at the instant that day's card was ACTUALLY built (the freeze marker, or
+09:00 SAST when it never froze), from the MORNING slate the builder consumed
+(``picks_morning_<day>.json``) rather than the end-of-day re-scoring. Before
+this, replays rode quotes no ticket could carry, legs that had already kicked
+off, and re-scored probabilities in re-bucketed purity classes — which is why
+no replay card ever matched the ledger. ``--unfaithful-pool`` restores the old
+superset for reproducing published numbers. ``--parity`` is the harness's own
+integration test: it rebuilds each ledger day and diffs the card.
+
+DOCTRINE (read before trusting any output):
+  - Replays are for RELATIVE comparisons (variant A vs variant B on the same
+    data) and for COUNTERFACTUALS (what would today's card have been).
+    They are NOT predictions. Absolute replay numbers will disagree with the
+    engine's actual history (different guards live at different eras, voids,
+    settlements lag). Trust the actual engine ledger for "what happened";
+    trust replays only for "how do two policies differ on identical inputs."
+  - Every output prints n. Cells with n < 30 are flagged as noise.
+  - The primary metric is MEAN LOG GROWTH PER BET-DAY, not final bank. Daily
+    growth is bank-independent (stake is always STAKE_FRAC of bank split
+    evenly), so final bank = product of daily factors — one lucky treble
+    dominates it. Log growth is the same information without the fireworks.
+  - A/B differences are PAIRED-bootstrapped: the same resampled day indices
+    are scored under both variants. An unpaired bootstrap (the 2026-09-04
+    bug) prints a +-22,000% interval for two IDENTICAL variants.
+  - Before any A/B, the harness diffs the two cards day by day. If the
+    variants pick the same legs, it says NO-OP and refuses to bootstrap.
+
+Variant spec syntax (anywhere a SPEC is accepted):
+  "floor=1.25"                     bare number also works: "1.25" == floor=1.25
+  "gate_mode=acca,volume_min=0.70" comma-separated key=value
+  keys: floor, rank(prob|ev), pairing(consecutive|barbell), max_accas,
+        min_accas, saturated_accas, volume_pool, volume_min,
+        gate_mode(off|pool|acca), fallback(0|1), stake_frac,
+        stake_mode(per_day|per_acca), stake_per_acca, weights (e.g. 3,2,1),
+        min_prob (harness-only always-on prob floor)
+
+Usage (from repo root):
+  PYTHONPATH=src python3 scripts/replay_harness.py                  # status + live baseline
+  PYTHONPATH=src python3 scripts/replay_harness.py --ab 1.15 1.20   # paired A/B + bootstrap
+  PYTHONPATH=src python3 scripts/replay_harness.py --ab live "gate_mode=acca"
+  PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-08-01 --ab live "max_accas=4"
+  PYTHONPATH=src python3 scripts/replay_harness.py --variant "saturated_accas=5"
+  PYTHONPATH=src python3 scripts/replay_harness.py --battery        # the full sweep vs live
+  PYTHONPATH=src python3 scripts/replay_harness.py --slots          # quality by rank slot
+  PYTHONPATH=src python3 scripts/replay_harness.py --kelly          # stake sizing curve
+  PYTHONPATH=src python3 scripts/replay_harness.py --legs           # stated-prob band table
+  PYTHONPATH=src python3 scripts/replay_harness.py --rules          # quality by rule family
+  PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
+  PYTHONPATH=src python3 scripts/replay_harness.py --parity          # replay vs the ledger, per day
+  PYTHONPATH=src python3 scripts/replay_harness.py --enhancements --enh-ml  # + the LIVE ML ordering arm
+  PYTHONPATH=src python3 scripts/replay_harness.py --enh-parity      # ENH card vs the lane's own ledger
+  PYTHONPATH=src python3 scripts/replay_harness.py --slate 2026-10-25  # one slate in build order
+  PYTHONPATH=src python3 scripts/replay_harness.py --unfaithful-pool  # reproduce old superset numbers
+  PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay  # feasibility audit
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import gzip
+import hashlib
+import itertools
+import json
+import math
+import os
+import random
+import re
+import sys
+import time
+import unicodedata
+from collections import Counter, defaultdict
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from edgefactory.util import dated_artifact_files, dated_artifact_path
+from edgefactory.util import ticket_receipt_files, read_ticket_receipt, freeze_timestamp_matches
+
+import auto_tickets as at  # the live engine — guards, floors, constants  # noqa: E402
+
+LOCALDATA = ROOT / "localdata"
+
+# Knobs forwarded to the engine. replay() calls at.plan_day(), not a harness
+# copy of either selection or sizing.
+SELECTION_KEYS = {"floor", "rank", "pairing", "max_accas", "min_accas",
+                  "legs_per_acca", "volume_pool", "volume_min", "gate_mode",
+                  "fallback", "saturated_accas",
+                  # The ladder's rank caps, forwarded as data (`caps=`) so a
+                  # replay can emulate a demoted bucket without the harness
+                  # owning any selection logic of its own.
+                  "rank_caps"}
+SIZING_KEYS = {"stake_frac", "stake_mode", "stake_per_acca", "weights"}
+PLAN_KEYS = {"min_prob", "addon_floor", "addon_ceiling", "addon_min_prob", "addon_rank", "model_min_prob"}
+ENGINE_KEYS = SELECTION_KEYS | SIZING_KEYS | PLAN_KEYS
+FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "stake_per_acca", "min_prob",
+              "addon_floor", "addon_ceiling", "addon_min_prob", "cup_floor"}
+INT_KEYS = {"max_accas", "min_accas", "legs_per_acca", "volume_pool", "saturated_accas"}
+BOOL_KEYS = {"fallback"}
+
+
+# --------------------------------------------------------------------------
+# variant specs
+# --------------------------------------------------------------------------
+def _parse_caps(text):
+    """``caps=CAUTION:0.70|SKIPPED_VETO:0.60`` -> ``{bucket: cap}``.
+
+    The one policy input a replay may carry, because it is a *selection* input:
+    the live engine's ``_rank_capped_probability`` defines the clamp and the
+    ``shrink`` form, so this parses names into exactly the shape it expects and
+    adds nothing. Unknown buckets and out-of-range caps are refused here rather
+    than silently ignored downstream.
+    """
+    out = {}
+    for chunk in str(text).split("|"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        bucket, sep, raw = chunk.partition(":")
+        bucket = bucket.strip().upper()
+        if not sep or not raw.strip():
+            raise SystemExit(f"bad caps fragment {chunk!r} (want BUCKET:0.xx)")
+        if bucket not in at.BUCKETS:
+            raise SystemExit(f"caps: unknown bucket {bucket!r} "
+                             f"(want one of {', '.join(sorted(at.BUCKETS))})")
+        try:
+            cap = float(raw)
+        except ValueError:
+            raise SystemExit(f"caps: {bucket} cap {raw!r} is not a number")
+        if not 0.0 < cap <= 1.0:
+            raise SystemExit(f"caps: {bucket} cap {cap} outside (0, 1]")
+        out[bucket] = cap
+    if not out:
+        raise SystemExit("caps= needs at least one BUCKET:cap pair")
+    return out
+
+
+def parse_spec(text):
+    """"1.25" | "floor=1.25,gate_mode=acca" | "live" -> dict of overrides."""
+    spec = {}
+    text = (text or "").strip()
+    if not text or text == "live":
+        return spec
+    try:
+        return {"floor": float(text)}          # back-compat: --ab 1.10 1.20
+    except ValueError:
+        pass
+    parts = text.split(",")
+    parsed_parts = []
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        # A weight list deliberately uses commas too: weights=3,2,1. Bare
+        # fragments immediately following weights belong to that value until
+        # the next key=value fragment.
+        if "=" not in part and parsed_parts and parsed_parts[-1][0] == "weights":
+            parsed_parts[-1] = ("weights", f"{parsed_parts[-1][1]},{part}")
+            continue
+        if "=" not in part:
+            raise SystemExit(f"bad spec fragment {part!r} (want key=value)")
+        parsed_parts.append(tuple(s.strip() for s in part.split("=", 1)))
+    for k, v in parsed_parts:
+        if k == "caps":
+            spec["rank_caps"] = _parse_caps(v)
+        elif k in BOOL_KEYS:
+            spec[k] = v.lower() not in ("0", "false", "no", "off")
+        elif k in INT_KEYS:
+            spec[k] = int(v)
+        elif k in FLOAT_KEYS:
+            spec[k] = float(v)
+        else:
+            spec[k] = v
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules", "cup_floor"}
+    if unknown:
+        raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
+    # Two no-op pairings, refused rather than reported: caps the chosen rank
+    # never consults, and the capped rank with no caps to consult.
+    rank = str(spec.get("rank", "prob"))
+    if "rank_caps" in spec and rank not in ("prob", "probcap"):
+        raise SystemExit(f"caps= only reaches the selector through "
+                         f"rank=prob/probcap, not rank={rank!r}")
+    if rank == "probcap" and "rank_caps" not in spec:
+        raise SystemExit("rank=probcap without caps= is an identity order — it "
+                         "cannot differ from live. Pass caps=BUCKET:0.70 or "
+                         "drop the rank.")
+    return spec
+
+
+def label_of(spec):
+    return "live settings" if not spec else ",".join(f"{k}={v}" for k, v in sorted(spec.items()))
+
+
+# --------------------------------------------------------------------------
+# universe: every archived day's settled playable legs, floor NOT applied
+# (variants apply their own floor via the live selector)
+# --------------------------------------------------------------------------
+MORNING_RE = re.compile(r"^picks_morning_(\d{4}-\d{2}-\d{2})\.json$")
+
+
+def slate_generation(faithful: bool = True) -> dict:
+    """``{day: rows}`` from the slate generation the build actually consumed.
+
+    ``localdata`` holds TWO slates per day: ``picks_morning_<day>.json`` (the
+    capture the card was built from) and ``picks_<day>.json`` (a later,
+    re-scored capture). ``at.load_archived_picks()`` reads only the latter, so
+    every replay has been rebuilding cards from a post-hoc re-scoring that
+    changed both the ranking and the purity bucket: 2026-10-25 Barcelona reads
+    73.0% / SKIPPED_VETO in the morning slate the builder saw, and 69.4% /
+    CAUTION in the end-of-day file. Replaying the later file silently
+    substitutes a different ranking rule and a different door policy for the
+    one that was live, which is why replay cards never matched the ledger.
+
+    Days with no morning capture fall back to the archive file, so this is a
+    narrowing of the source, never a gap.
+    """
+    by_day: dict[str, list] = {}
+    if not faithful:
+        for r in at.load_archived_picks():
+            day = str(r.get("date") or r.get("_archive_day") or "")[:10]
+            if day:
+                by_day.setdefault(day, []).append(r)
+        return by_day
+    for f in dated_artifact_files(LOCALDATA, "picks_morning_*.json"):
+        m = MORNING_RE.match(f.name)
+        if not m:
+            continue
+        try:
+            rows = json.loads(f.read_text())
+        except (OSError, ValueError):
+            continue
+        if not isinstance(rows, list):
+            continue
+        for r in rows:
+            r.setdefault("_archive_day", m.group(1))
+        by_day.setdefault(m.group(1), []).extend(rows)
+    for r in at.load_archived_picks():
+        day = str(r.get("date") or r.get("_archive_day") or "")[:10]
+        if day and day not in by_day:
+            by_day.setdefault(day, []).append(r)
+    return by_day
+
+
+def _ledger_state() -> dict:
+    """The main lane's state, read WITHOUT the engine's load-time repairs.
+
+    ``at.load_state`` is the wrong reader here: it applies operator receipts
+    (reconciliations, unplaced-card withdrawals) and rewrites the file. A
+    replay must observe the ledger, never repair it.
+    """
+    try:
+        return json.loads(at.state_path().read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def build_instant_for(day: str, state: dict | None = None):
+    """When that day's card was ACTUALLY built — the freeze marker, or 09:00.
+
+    The kickoff guard is a clock: a leg that had already kicked off when the
+    card was built cannot be on it. Replaying every day at the canonical 09:00
+    build therefore invents cards that were never buildable (2026-10-25 froze
+    at 09:56, by which time a 09:00 kickoff was gone). The freeze book records
+    the real instant, so use it and fall back to the canonical build only for
+    days that never froze.
+    """
+    state = _ledger_state() if state is None else state
+    entry = (state.get(at.FROZEN_BOOK_KEY) or {}).get(str(day)) or {}
+    stamp = str(entry.get("frozen_at") or "").strip()
+    if stamp:
+        try:
+            when = datetime.fromisoformat(stamp)
+        except ValueError:
+            when = None
+        if when is not None:
+            return when if when.tzinfo else when.replace(tzinfo=at.TZ)
+    return at.canonical_build_instant(day)
+
+
+def live_pool(rows, settled, day, *, faithful=True, state=None):
+    """The pool that day's card could actually have been built from.
+
+    Two live gates were missing from every historical replay:
+
+    * ``execution_safe=True`` — the live builder refuses a price it could not
+      have executed (sole-source/uncorroborated quotes). Replays used the
+      legacy default, so they rode quotes no ticket could carry.
+    * ``live_kickoff_guard`` at the day's real build instant — a leg that had
+      already kicked off cannot be bet. Without it a replay "improves" every
+      day by claiming legs the build never saw (2026-10-25: FC Tokyo, kickoff
+      09:00 SAST, was gone by the 09:56 freeze).
+
+    ``faithful=False`` restores the pre-2026-10-26 superset pool so older
+    published numbers can still be reproduced.
+    """
+    pool = at.playable_legs(rows, day=day, settled=settled, floor=0.0,
+                            execution_safe=faithful)
+    drops: dict[str, list[str]] = {}
+    if faithful:
+        pool, drops = at.live_kickoff_guard(pool, build_instant_for(day, state))
+    return pool, drops
+
+
+def build_universe(archives, settled, unresolved=None, *, faithful=True, census=None):
+    """Settled playable legs per day.
+
+    ``faithful=True`` (default) builds each day's pool through :func:`live_pool`
+    — the live execution gate plus the kickoff guard at the day's real build
+    instant — so a replay sees what the builder saw. Pass ``faithful=False`` to
+    reproduce the pre-2026-10-26 superset pool.
+
+    Rows come from :func:`slate_generation` — the MORNING capture the builder
+    actually consumed — not from the end-of-day re-scoring in
+    ``at.load_archived_picks()``. With ``faithful=False`` the historical
+    archive union is used instead, and the ``archives`` argument (when given)
+    is honoured verbatim so older callers keep their exact inputs.
+
+    ``census`` (optional dict) collects ``{day: guard_drops}`` for the run log.
+
+    ``unresolved=None`` retains unresolved legs until AFTER selection in
+    faithful mode. Selected unresolved cards are reported pending, never
+    re-paired around a missing outcome. Explicit legacy superset mode keeps
+    its old settled-only pool for reproduction. ``unresolved="loss"`` keeps them and grades them
+    as losses, which is the pessimistic bound on every number in this file.
+    """
+    if archives is not None:
+        # A caller that hands over rows owns the input: use exactly those, and
+        # apply only the pool gates below. Generation choice is for callers
+        # that let the harness load the slates itself (pass archives=None).
+        by_day: dict[str, list] = {}
+        for r in archives:
+            day = str(r.get("date") or r.get("_archive_day") or "")[:10]
+            if day:
+                by_day.setdefault(day, []).append(r)
+    else:
+        by_day = slate_generation(faithful)
+    state = _ledger_state()
+    universe = {}
+    for d in sorted(by_day):
+        pool, drops = live_pool(by_day[d], settled, d, faithful=faithful, state=state)
+        if census is not None and drops:
+            census[d] = drops
+        if unresolved == "loss":
+            pool = [dict(l, result=l["result"] or "loss") for l in pool]
+        elif not faithful:
+            pool = [l for l in pool if l["result"]]  # explicit legacy superset reproduction
+        if len(pool) >= at.LEGS_PER_ACCA:
+            universe[d] = pool
+    return universe
+
+
+def _rule_matcher(tok):
+    """One ``rules=`` token -> (is_exclusion, predicate over legs)."""
+    neg = tok.startswith("!")
+    body = tok[1:].strip() if neg else tok
+
+    if body.startswith("fam:"):
+        fam = body[4:].strip()
+
+        def hit(leg):
+            return rule_family((leg.get("row") or {}).get("rule")) == fam
+    else:
+        def hit(leg):
+            return at._rule_of(leg) == body
+    return neg, hit
+
+
+def rule_roi_table(u, min_legs=0):
+    """Flat-stake ROI per miner rule over the settled legs of one window.
+
+    Same definition as ``audit_recent_picks.summarize_scored`` (sum of pnl on a
+    unit stake / n), so these numbers reconcile with the picks audit's
+    "By rule" table instead of being a second, slightly different ROI.
+    """
+    acc: dict[str, list] = {}
+    for d in sorted(u):
+        for l in u[d]:
+            r = l.get("result")
+            if r not in ("win", "loss"):
+                continue
+            e = acc.setdefault(at._rule_of(l), [0, 0, 0.0])
+            e[0] += 1
+            if r == "win":
+                e[1] += 1
+                e[2] += l["odds"] - 1.0
+            else:
+                e[2] -= 1.0
+    return {r: {"n": v[0], "wins": v[1], "roi": v[2] / v[0]}
+            for r, v in acc.items() if v[0] >= min_legs}
+
+
+def is_cup_match(leg_or_row: dict) -> bool:
+    """Detect cup/knockout/continental tournaments from league string or match text."""
+    row = (leg_or_row.get("row") or {}) if isinstance(leg_or_row, dict) else {}
+    league = str(row.get("league") or leg_or_row.get("league") or "").lower()
+    match = str(leg_or_row.get("match") or "").lower()
+    cup_tokens = (
+        "cup", "copa", "coppa", "coupe", "pokal", "trophy", "shield", "fa cup",
+        "champions league", "europa league", "conference league", "beker", "taça",
+        "kupa", "ko-runde", "play-offs", "playoffs", "tournament", "sudamericana", "libertadores"
+    )
+    return any(tok in league for tok in cup_tokens) or any(tok in match for tok in (" cup", " copa", " pokal"))
+
+
+def _filtered_pool(pool, spec):
+    """Apply the harness-only filters before entering the live engine.
+
+    ``min_prob``, ``cup_floor``, ``leagues`` and ``rules`` never reach the engine: they shrink
+    the pool the LIVE selector then sees, so selection and sizing stay one code
+    path. ``cup_floor`` enforces an elevated price floor on cup/continental fixtures.
+    ``leagues`` is a |-separated list of case-insensitive substrings
+    matched against the archived row's league tag (concentration experiments).
+    ``rules`` is a |-separated list of miner-rule tokens: a bare token matches
+    a rule name exactly ("ml-meta avg_p>=55"), ``fam:`` matches a rule family
+    ("fam:ml-meta"), and a leading ``!`` excludes instead of includes. Include
+    tokens apply first, then excludes. Rule names contain no commas, so the
+    comma-separated spec syntax survives them.
+    """
+    cf = spec.get("cup_floor")
+    if cf is not None:
+        pool = [l for l in pool if not is_cup_match(l) or l["odds"] >= cf]
+    mp = spec.get("min_prob")
+    if mp is not None:
+        pool = [l for l in pool if l["prob"] >= mp]
+    want = spec.get("leagues")
+    if want:
+        toks = [t.strip().lower() for t in str(want).split("|") if t.strip()]
+        pool = [l for l in pool
+                if any(t in str((l.get("row") or {}).get("league") or "").lower() for t in toks)]
+    want = spec.get("rules")
+    if want:
+        inc, exc = [], []
+        for tok in str(want).split("|"):
+            tok = tok.strip()
+            if tok:
+                neg, hit = _rule_matcher(tok)
+                (exc if neg else inc).append(hit)
+        if inc:
+            pool = [l for l in pool if any(h(l) for h in inc)]
+        if exc:
+            pool = [l for l in pool if not any(h(l) for h in exc)]
+    return pool
+
+
+def card_for_day(pool, spec):
+    """The live selector, driven by selection-only variant overrides."""
+    kw = {k: v for k, v in spec.items() if k in SELECTION_KEYS}
+    return at.select_accas(_filtered_pool(pool, spec), **kw)
+
+
+def _graded_acca(acca):
+    results = [l.get("result") for l in acca["legs"]]
+    if "loss" in results:
+        return acca["odds"], False  # same early-loss rule as live settlement
+    if any(r not in ("win", "void") for r in results):
+        raise ValueError("unresolved selected card has no realized growth")
+    odds = (acca["odds"] if "void" not in results else
+            round(math.prod(l["odds"] for l in acca["legs"] if l.get("result") == "win"), 2))
+    return odds, True  # all void: odds 1.0, stake returned
+
+
+def day_growth(plan, bank_pct=100.0):
+    """Bank multiplier derived from plan_day's returned production stakes.
+
+    This intentionally uses the rounded ``stake_pct`` and acca odds that the
+    engine ships. The harness has no separate sizing formula to drift.
+    """
+    staked = sum(a["stake_pct"] for a in plan)
+    returned = 0.0
+    for acca in plan:
+        odds, won = _graded_acca(acca)
+        if won:
+            returned += acca["stake_pct"] * odds
+    return (bank_pct - staked + returned) / bank_pct
+
+
+class ReplayDays(dict):
+    """Graded cards plus explicit ungraded cards; never re-pair around pending."""
+    def __init__(self):
+        super().__init__()
+        self.pending = {}
+
+
+def replay(universe, spec):
+    """Per-day record for a variant, routed through the production planner."""
+    out = ReplayDays()
+    kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
+    for d in sorted(universe):
+        # A 100%-of-capital reference bank keeps growth bank-independent while
+        # exercising plan_day's exact stake rounding and cap logic.
+        bank_pct = 100.0
+        plan = at.plan_day(_filtered_pool(universe[d], spec), bank_pct, **kw)
+        if not plan:
+            continue
+        try:
+            grades = [_graded_acca(a) for a in plan]
+        except ValueError:
+            out.pending[d] = plan
+            continue  # selected first, explicitly ungraded; no replacement card
+        out[d] = {
+            "growth": day_growth(plan, bank_pct),
+            "accas": grades,
+            "void_legs": sum(l.get("result") == "void" for a in plan for l in a["legs"]),
+            "legs": [tuple(l["match"] for l in a["legs"]) for a in plan],
+            "stake_pct": [a["stake_pct"] for a in plan],
+        }
+    return out
+
+
+def summarise(days):
+    g = [days[d]["growth"] for d in sorted(days)]        # date order (drawdown is a path)
+    accas = [a for d in days.values() for a in d["accas"]]
+    wins = sum(1 for _, w in accas if w)
+    ruin = sum(1 for x in g if x <= 0)
+    logs = [math.log(x) for x in g] if not ruin else []
+    if ruin:
+        mean_log = -math.inf
+        final = 0.0
+        maxdd = 1.0
+    else:
+        mean_log = sum(logs) / len(logs) if logs else 0.0
+        final = 100.0 * math.exp(sum(logs))
+        bank = peak = 1.0
+        maxdd = 0.0
+        for x in g:
+            bank *= x
+            peak = max(peak, bank)
+            maxdd = max(maxdd, 1 - bank / peak)
+    realized = dict(realized_mean_log=mean_log, realized_final=final, realized_maxdd=maxdd)
+    if getattr(days, "pending", {}):
+        # Conditional realized growth is available explicitly, never presented
+        # as a completed policy return when selected outcomes are missing.
+        mean_log = final = maxdd = float("nan")
+    return {
+        **realized, "void_legs": sum(d.get("void_legs", 0) for d in days.values()),
+        "days": len(g), "pending_days": len(getattr(days, "pending", {})), "accas": len(accas),
+        "hit": wins / len(accas) if accas else 0.0,
+        "mean_log": mean_log,
+        "final": final,
+        "maxdd": maxdd,
+        "worst": min(g) if g else 1.0,
+        "ruin": ruin,
+        "leg_odds": accas,
+    }
+
+
+def noise_flag(n):
+    return "  ⚠ small-n" if n < 30 else ""
+
+
+def effect_concentration(universe, spec_a, spec_b):
+    """How much of an A/B difference rides on a handful of days?
+
+    A 52-day replay can hand you a 99%-confident bootstrap that is really one
+    treble. For every day, recompute the effect with that day removed; report
+    the most influential day and the leave-one-out effect. If dropping ONE day
+    flips or halves the effect, it is an anecdote, not a policy.
+    """
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+        return None
+    # A day one arm does not bet is a day that arm's bank is FLAT, not a day
+    # that disappears from the comparison. Averaging each arm over its OWN day
+    # set (the old behaviour) is not a paired difference at all: for an arm
+    # that changes which days are bet — every rule filter, min_prob, min_accas
+    # — it can keep the leave-one-day-out sign positive while the paired
+    # difference is negative (measured 2026-09-09 on rules=!ml-meta avg_p>=55:
+    # unpaired +0.0012 "holds", paired on common days -0.0052).
+    days = sorted((set(da) | set(db)) - set(getattr(da, "pending", {}))
+                  - set(getattr(db, "pending", {})))
+    la = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    lb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    if not days:
+        return None
+    full = sum(lb.values()) / len(lb) - sum(la.values()) / len(la)
+    contrib = []
+    for d in sorted(set(la) | set(lb)):
+        ka = {x: v for x, v in la.items() if x != d}
+        kb = {x: v for x, v in lb.items() if x != d}
+        if not ka or not kb:
+            continue
+        without = sum(kb.values()) / len(kb) - sum(ka.values()) / len(ka)
+        contrib.append((full - without, d, without))
+    if not contrib:
+        return None
+    contrib.sort(key=lambda t: -abs(t[0]))
+    top, top_day, top_without = contrib[0]
+    flip_days = [d for _, d, without in contrib
+                 if full != 0 and (full > 0) != (without > 0)]
+    loo = [without for _, _, without in contrib]
+    return {"full": full, "top_day": top_day,
+            "top_share": abs(top) / abs(full) if full else 0.0,
+            "drop_one": top_without, "flips": bool(flip_days),
+            "flip_days": flip_days, "loo_min": min(loo), "loo_max": max(loo),
+            # does the most influential day INFLATE the effect or MASK it?
+            "inflates": (top > 0) == (full > 0)}
+
+
+# --------------------------------------------------------------------------
+# paired bootstrap on mean log growth
+# --------------------------------------------------------------------------
+def card_diff_days(universe, spec_a, spec_b):
+    """Days on which the two variants pick a different card (the no-op guard)."""
+    diff = 0
+    for d, pool in universe.items():
+        ca = [tuple(l["match"] for l in a) for a in card_for_day(pool, spec_a)]
+        cb = [tuple(l["match"] for l in a) for a in card_for_day(pool, spec_b)]
+        if ca != cb:
+            diff += 1
+    return diff
+
+
+def _paired_day_bootstrap(ga, gb, days, n=5000, seed=2026):
+    """The paired resampler: resample DAY indices ONCE per iteration and score
+    both arms on the SAME sampled days. `ga`/`gb` are {day: log growth} with a
+    missing day meaning "no bet that day" (log growth 0, so both arms are
+    averaged over the same denominator).
+
+    Shared by the acca lane and the enhancement lane so the two cannot drift
+    into different statistics under the same name.
+    """
+    if not days:
+        return None
+    random.seed(seed)
+    diffs = []
+    for _ in range(n):
+        sample = random.choices(days, k=len(days))
+        la = [ga[d] for d in sample]
+        lb = [gb[d] for d in sample]
+        diffs.append(sum(lb) / len(lb) - sum(la) / len(la))
+    if not diffs:
+        return None
+    diffs.sort()
+    q = lambda p: diffs[min(len(diffs) - 1, int(len(diffs) * p))]   # noqa: E731
+    horizon = len(days)
+    return {"median": q(0.5), "p10": q(0.1), "p90": q(0.9),
+            "p_b_higher": sum(1 for x in diffs if x > 0) / len(diffs),
+            "horizon": horizon,
+            "median_mult": math.exp(q(0.5) * horizon),
+            "p10_mult": math.exp(q(0.1) * horizon),
+            "p90_mult": math.exp(q(0.9) * horizon)}
+
+
+def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
+    """Resample DAYS once per iteration and score both variants on the SAME
+    days (paired). Returns the distribution of (B - A) mean log growth."""
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    days = sorted((set(da) | set(db)) - set(getattr(da, "pending", {}))
+                  - set(getattr(db, "pending", {})))
+    if not days:
+        return None
+    # A ruined policy is not made healthy by silently deleting its bankruptcy
+    # day. It is ineligible for bootstrap comparison.
+    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+        return None
+    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    return _paired_day_bootstrap(ga, gb, days, n=n, seed=seed)
+
+
+# --------------------------------------------------------------------------
+# enhancement lane replay (2026-10-12)
+#
+# Replays the SETTLED records in localdata/enhancement_registry.json against
+# floor variants, on the harness's own terms: hit rate, and MEAN LOG GROWTH PER
+# BET-DAY as the primary metric, with the n<30 noise flag.
+#
+# Honest limit, stated in every run: this can only backtest history that HAD a
+# price — n=350 (over 2.5), n=33 (over 1.5), n=16 (over 3.5), n=7 (btts) on
+# 2026-10-12. The newly-priced legs exist only going forward, which is why the
+# lane writes its daily artifact from day one. Use these numbers for RELATIVE
+# floor comparisons; never as a prediction of absolute bank growth.
+# --------------------------------------------------------------------------
+def enh_records(root=None):
+    """Flatten the registry's settled records into one row per priced outcome."""
+    root = root or at.ROOT
+    path = root / "localdata" / "enhancement_registry.json"
+    try:
+        reg = json.loads(path.read_text())
+    except Exception:
+        return []
+    rows = []
+    for key, entry in (reg.get("markets") or {}).items():
+        market = key.split("@")[0]
+        for rec in (entry.get("records") or []):
+            price = rec.get("price")
+            if not isinstance(price, (int, float)) or isinstance(price, bool):
+                continue
+            if not math.isfinite(float(price)) or float(price) <= 1.0:
+                continue
+            rows.append({**rec, "market": market, "date": str(rec.get("date") or "")[:10],
+                         "price": float(price), "hit": bool(rec.get("hit")),
+                         "bucket": rec.get("bucket") or "", "rule": rec.get("rule") or "",
+                         "source": rec.get("source") or "",
+                         # The card model below pairs legs per day, so it needs
+                         # the same two facts the live card ranks and de-dupes
+                         # on: the fixture and the stated probability.
+                         "match": str(rec.get("match") or ""),
+                         "stated": rec.get("stated"),
+                         # Floor-slice inputs (round 6, R2): the league the
+                         # settled pick belonged to, when the registry recorded
+                         # it. "" means unattributed — inherit, never guess.
+                         "cohort_rate": rec.get("cohort_rate"),
+                         "league": str(rec.get("league") or "")})
+    return rows
+
+
+def _root_floors(records):
+    """The live rule as a floor table: every market at MIN_LEG_ODDS.
+
+    auto_tickets.enhancement_legs fires any leg priced at or above the shared
+    minimum. There is no per-market table and no team-under gate on the live
+    verdict, so the live arm and the derived root both start here.
+    """
+    return {m: float(at.MIN_LEG_ODDS)
+            for m in sorted({r["market"] for r in records})}
+
+
+def derived_floors_for_records(records, day):
+    """The floors a day's card would be gated against, from records before it.
+
+    The slice-aware arm's resolver: it rebuilds the registry payload from the
+    settled records dated STRICTLY BEFORE ``day`` and runs the shipped
+    ``derive_floors`` on it — no lookahead, no re-implementation, and the same
+    margin and gate the live lane uses. Cached by the caller when a whole
+    replay is needed.
+    """
+    from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN, derive_floors
+    payload = {"version": 2, "markets": {}}
+    for rec in records:
+        if str(rec.get("date") or "") >= str(day):
+            continue
+        entry = payload["markets"].setdefault(f"{rec['market']}@v1", {"records": []})
+        entry["records"].append({"date": rec["date"], "price": rec["price"],
+                                 "hit": rec["hit"], "league": rec.get("league") or ""})
+    return derive_floors(payload, day, parent_floors=_root_floors(records),
+                         margin=ENHANCEMENT_FLOOR_MARGIN)
+
+
+def _firing_by_day(records, floors, *, derived=False):
+    """{day: [floor-cleared records]} under either floor resolver.
+
+    ``derived=False``: ``floors`` is a plain {market: floor} table (the live
+    table, or a uniform arm). ``derived=True``: each day is gated by the floors
+    derived from the records BEFORE it, resolved per slice (league, else the
+    market root). One filter, two resolvers — the same ``clears_floor`` call
+    either way, so an arm cannot be gated differently from the live card.
+    """
+    from edgefactory.enh_registry import floor_for_slice
+    by_day: dict[str, list[dict]] = {}
+    per_day: dict[str, dict] = {}
+    for rec in records:
+        if derived:
+            day = rec["date"]
+            if day not in per_day:
+                per_day[day] = derived_floors_for_records(records, day)
+            floor, _basis = floor_for_slice(per_day[day], rec["market"],
+                                            rec.get("league"),
+                                            parent_floors=_root_floors(records))
+        else:
+            floor = floors.get(rec["market"]) if floors else None
+        if floor is None:
+            continue                                   # no settled floor -> no bet
+        # The arm's own floor is the ONLY gate. The static ENHANCEMENT_PRICE_FLOORS
+        # table is not consulted: a uniform arm must mean what it says.
+        if rec["price"] < float(floor):
+            continue
+        # Carry the floor the leg cleared: the shipped enhancement ranking
+        # (hit rate implied by the floor) needs it, and the live lane has it.
+        by_day.setdefault(rec["date"], []).append({**rec, "floor": float(floor)})
+    return by_day
+
+
+# --------------------------------------------------------------------------
+# ML ENH ordering: the LIVE selector, recomputed from the archived slate
+#
+# The enhancement card is ordered by auto_tickets.select_accas' ML branch, which
+# engages only when a leg carries `ml_rank_probability`. That value is never
+# persisted (registry records carry no ML field at all) and the pre-2026-10-26
+# harness never set it, so every enh replay silently ranked on the realized
+# cohort rate -- the pre-ML basis -- while calling itself "the lane's own code".
+#
+# The machinery to close that already exists: `enhancement_ml_probability` is a
+# pure function of an archived pick row plus a market, and every row from
+# 2026-10-25 on carries the retained compact model
+# (`statistical_profile.ml_model`, schema enh_score_logit_v1, hash-verified
+# model_key). Recomputing it here -- the same call picks_today and
+# auto_tickets.enhancement_legs make -- keeps ONE ordering rule. Nothing is
+# re-implemented and no probability is invented: a row without a model, or a
+# model that fails its own hash/contract/date guards, yields None and the leg
+# ranks in the cohort group, exactly as live.
+# --------------------------------------------------------------------------
+_SLATE_CACHE: dict[tuple[str, str], list] = {}
+
+
+def _slate_rows(root, day):
+    """Archived pick rows for one day: the morning capture first, then the day file."""
+    key = (str(root or at.ROOT), str(day))
+    if key not in _SLATE_CACHE:
+        base = (root or at.ROOT) / "localdata"
+        # Share the archive loader's morning-authority / late-addition rule.
+        # Do NOT splice later ENH models into an earlier parent. This is still
+        # an archive approximation, not proof of the freeze-time generation.
+        from audit_recent_picks import load_archived_picks_with_receipt
+        rows, _ = load_archived_picks_with_receipt(day, day, localdata=base)
+        _SLATE_CACHE[key] = rows
+    return _SLATE_CACHE[key]
+
+
+def archived_parent(root, day, rec):
+    """The archived pick row a settled registry record came from, or None.
+
+    Matched on the registry's own contract id plus the fixture, because the
+    record keeps only the price context, not the parent row.
+    """
+    context = rec.get("price_context") or {}
+    contract = context.get("contract_id")
+    home = _fold_name(str(rec.get("home") or ""))
+    away = _fold_name(str(rec.get("away") or ""))
+    for row in _slate_rows(root, day):
+        if contract and row.get("contract_id") != contract:
+            continue
+        if (_fold_name(str(row.get("home") or "")) == home
+                and _fold_name(str(row.get("away") or "")) == away):
+            return row
+    return None
+
+
+def enh_ml_probability(root, day, rec):
+    """The live ML ordering score for one settled record, or None.
+
+    Delegates to ``edgefactory.enh_registry.enhancement_ml_probability`` -- the
+    function the shipped lane calls -- so the replay cannot drift into a
+    differently-shaped model score.
+    """
+    row = archived_parent(root, day, rec)
+    if row is None:
+        return None
+    from edgefactory.enh_registry import enhancement_ml_probability
+    return enhancement_ml_probability(row, rec.get("market"))
+
+
+def _enh_score_key(rec):
+    context = rec.get("price_context") or {}
+    return (str(rec.get("date") or "")[:10], str(context.get("contract_id") or ""),
+            str(rec.get("market") or ""), _fold_name(str(rec.get("home") or "")),
+            _fold_name(str(rec.get("away") or "")))
+
+
+def enh_ml_coverage(records, root=None, since=None):
+    """``(scores, stats)``: the live ML score per settled record, and its coverage.
+
+    ``scores`` is keyed by ``(day, contract_id, market, home, away)`` -- the identity a
+    registry record and a card leg share. A leg with no model data is simply
+    absent, because the live lane leaves ``ml_rank_probability`` unset in the
+    same case and ranks it in the cohort group.
+    """
+    scores, archive_rows = {}, {}
+    stats = {"legs": 0, "scored": 0, "days": set(), "scored_days": set(),
+             "first_day": None, "last_day": None, "schemas": Counter(), "provenance": [],
+             "decision_time_status": "UNPROVEN_ARCHIVE; use decision receipts for matched evaluation"}
+    for rec in records:
+        day = str(rec.get("date") or "")[:10]
+        if not day or (since and day < since):
+            continue
+        stats["legs"] += 1
+        stats["days"].add(day)
+        score = enh_ml_probability(root, day, rec)
+        if score is None:
+            continue
+        stats["scored"] += 1
+        stats["scored_days"].add(day)
+        row = archived_parent(root, day, rec) or {}
+        model = (row.get("statistical_profile") or {}).get("ml_model") or {}
+        schema = model.get("schema") or "unavailable"
+        stats["schemas"][schema] += 1
+        if day not in archive_rows:
+            from audit_recent_picks import _load_archive_rows
+            base = (root or at.ROOT) / "localdata"
+            archive_rows[day] = [(name, _load_archive_rows(dated_artifact_path(base, name), day)) for name in
+                                (f"picks_morning_{day}.json", f"picks_{day}.json")]
+        source = next((name for name, rows in archive_rows[day] if row in rows), None)
+        stats["provenance"].append(dict(date=day, home=rec.get("home"), away=rec.get("away"),
+            market=rec.get("market"), schema=schema, model_key=model.get("model_key"),
+            source_archive=source, built_at_utc=row.get("built_at_utc"),
+            decision_time_status="UNPROVEN_ARCHIVE"))
+        scores[_enh_score_key(rec)] = score
+    if stats["scored_days"]:
+        stats["first_day"] = min(stats["scored_days"])
+        stats["last_day"] = max(stats["scored_days"])
+    return scores, stats
+
+
+def enh_firing_days(records, floors, *, derived=False) -> set:
+    """The days with at least one floor-cleared leg — the NO BET denominator."""
+    return set(_firing_by_day(records, floors, derived=derived))
+
+
+def enh_day_plans(records, floors, *, stake_frac=None, stake_mode=None,
+                  stake_per_acca=None, weights=None, supported=False, root=None,
+                  derived=False, ml_scores=None):
+    """{day: (plan, pool)} — the ONLY place a replay card is built.
+
+    Both the P&L replay and the parity check call this, so a parity report
+    can never grade a card the arm did not build.
+
+    The lane's own card, modelled by the lane's own code: the day's
+    floor-cleared legs go through THE selection recipe and the shared staking
+    arithmetic (``auto_tickets.plan_day``), so the replay pairs, de-dupes and
+    sizes exactly as the live card does — 2-leg accas, and a day that cannot
+    form one is a NO BET day, never a single. ``bets``/``hits`` count ACCAS.
+    A market with no floor does not fire; a record without a fixture string
+    cannot be de-duplicated, so it is kept as its own identity rather than
+    merged with an unrelated leg.
+
+    ``derived=True`` gates each day by the floors derived from the records
+    before it (slice-aware), instead of a static table.
+
+    This descriptive archive path retains its historical no-model-floor
+    recipe; current policy parity is checked through retained decision
+    contexts, including their captured model_min_prob, not these defaults.
+
+    ``ml_scores`` (from :func:`enh_ml_coverage`) supplies explicit ML ordering
+    input. When a leg has a score it is attached as ``ml_rank_probability`` and
+    ``select_accas``' ML branch orders it ahead of the unscored cohort group --
+    the same rule the shipped card uses. Passing None replays the pre-ML lane
+    (cohort ordering only), which is what every number before 2026-10-26 is.
+    """
+    stake = at.ENHANCEMENT_LANE.stake_frac if stake_frac is None else float(stake_frac)
+    by_day = _firing_by_day(records, floors, derived=derived)
+    out = {}
+    for day, recs in by_day.items():
+        if not day or not recs:
+            continue
+        pool = []
+        for i, rec in enumerate(recs):
+            parts = str(rec.get("match") or "").split(" vs ")
+            home, away = (parts[0], parts[1]) if len(parts) == 2 else (f"leg {i}", "")
+            # Rank on the REALIZED cohort rate, the input the live card uses.
+            # Stated is never a ranking input; an unrated leg ranks last (0.0).
+            rank_prob = rec.get("cohort_rate")
+            if not isinstance(rank_prob, (int, float)) or isinstance(rank_prob, bool):
+                rank_prob = 0.0
+            evidence = None
+            if supported:
+                from edgefactory.enh_registry import enhancement_cohort_evidence
+                context = rec.get("price_context") or {}
+                if not context:
+                    continue
+                # Registry records don't retain an exact-parent cohort recipe;
+                # only archived predecision picks may supply it. No invented n.
+                archive = dated_artifact_path((root or at.ROOT) / "localdata", f"picks_{day}.json")
+                try:
+                    rows = json.loads(archive.read_text())
+                    row = next(r for r in rows if r.get("contract_id") == context.get("contract_id")
+                               and r.get("home") == rec.get("home") and r.get("away") == rec.get("away"))
+                    note = next(n for n in row.get("event_notes", []) if n.get("market") == rec["market"])
+                    row = dict(row, **{k: v for k, v in note.items() if k.startswith("enhancement_price")},
+                               recommended_enhancement=rec["market"], enhancement_probability=None, enhancement_cohort_rate=note["cohort_rate"],
+                               enhancement_cohort_n=note["cohort_n"],
+                               enhancement_cohort_contract_id=note["cohort_contract_id"],
+                               enhancement_cohort_as_of_exclusive=note["cohort_as_of_exclusive"])
+                    evidence = enhancement_cohort_evidence(row, priced=True, root=root or at.ROOT)
+                except (OSError, KeyError, StopIteration, TypeError, ValueError):
+                    pass
+                if evidence is None or evidence["cohort_lower_bound"] * rec["price"] <= 0.8:
+                    continue
+                rank_prob = evidence["rate"]
+            ml_score = None
+            if ml_scores is not None:
+                ml_score = ml_scores.get(_enh_score_key(rec))
+            pool.append({"match": rec.get("match") or f"{home} vs {away}",
+                         "pick": rec["market"], "prob": float(rank_prob),
+                         "odds": rec["price"], "hit": bool(rec["hit"]),
+                         "floor": rec.get("floor"), "cohort_evidence": evidence,
+                         "market": rec["market"], "price_book": (rec.get("price_context") or {}).get("book"),
+                         # The live ordering input, or None exactly as live.
+                         "ml_rank_probability": ml_score,
+                         "row": {"date": day, "home": home, "away": away}})
+        # The live lane ranks by hit rate (auto_tickets.ENHANCEMENT_RANK). The
+        # replay must rank the same way, or it tests a rule that never ships.
+        plan = at.plan_day(pool, 100.0, stake_frac=stake,
+                           stake_mode=stake_mode, stake_per_acca=stake_per_acca,
+                           weights=weights,
+                           max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK,
+                           # select_accas' ML ordering lives behind
+                           # enhancements=True; an ML arm must engage it or the
+                           # arm would be a silent no-op.
+                           enhancements=supported or ml_scores is not None,
+                           ml_enabled=ml_scores is not None)
+        if not plan:
+            continue                                   # MIN_ACCAS: NO BET
+        out[day] = (plan, pool)
+    return out
+
+
+def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
+                   stake_per_acca=None, weights=None, derived=False, supported=False, root=None,
+                   ml_scores=None):
+    """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
+
+    The lane's own card, modelled by the lane's own code: the day's
+    floor-cleared legs go through THE selection recipe (``enh_day_plans``) and
+    the shared staking arithmetic (``auto_tickets.plan_day``), so the replay
+    pairs, de-dupes and sizes exactly as the live card does — 2-leg accas, and
+    a day that cannot form one is a NO BET day, never a single. ``bets``/``hits``
+    count ACCAS. A market with no floor does not fire; a record without a
+    fixture string cannot be de-duplicated, so it is kept as its own identity
+    rather than merged with an unrelated leg.
+
+    ``derived=True`` gates each day by the floors derived from the records
+    before it (slice-aware), instead of a static table.
+
+    ``ml_scores`` (from :func:`enh_ml_coverage`) supplies the LIVE ML ordering
+    input. When a leg has a score it is attached as ``ml_rank_probability`` and
+    ``select_accas``' ML branch orders it ahead of the unscored cohort group --
+    the same rule the shipped card uses. Passing None replays the pre-ML lane
+    (cohort ordering only), which is what every number before 2026-10-26 is.
+    """
+    plans = enh_day_plans(records, floors, stake_frac=stake_frac, stake_mode=stake_mode,
+                          stake_per_acca=stake_per_acca, weights=weights,
+                          supported=supported, root=root, derived=derived,
+                          ml_scores=ml_scores)
+    out = {}
+    for day, (plan, pool) in plans.items():
+        # plan_day copies the four card keys, so the leg's own settled hit is
+        # read back off the pool. (match, pick) identifies a carded leg: the
+        # recipe has already dropped same-fixture duplicates, so no two legs
+        # on the card share one.
+        hit_of = {(str(l["match"]), str(l["pick"])): bool(l["hit"]) for l in pool}
+        net_fraction = 0.0
+        hits = 0
+        for acca in plan:
+            won = all(hit_of[(str(l["match"]), str(l["pick"]))] for l in acca["legs"])
+            hits += 1 if won else 0
+            f = acca["stake_pct"] / 100.0              # the day's per-acca fraction
+            # All tickets are funded from the SAME opening bank. Settlements
+            # add P&L; they cannot reinvest another simultaneous ticket's return.
+            net_fraction += f * (acca["odds"] - 1.0) if won else -f
+        factor = 1.0 + net_fraction
+        out[day] = {"growth": factor, "log_growth": math.log(factor) if factor > 0 else float("-inf"),
+                    "bets": len(plan), "hits": hits}
+    return out
+
+
+def enh_arm(records, floors, *, stake_frac=None, stake_mode=None,
+            stake_per_acca=None, weights=None, derived=False, supported=False,
+            root=None, ml_scores=None):
+    """Summary of one floor variant over the settled history.
+
+    ``mean_log_growth`` is the acceptance metric — the mean over BET-DAYS, so a
+    day the card cannot form (MIN_ACCAS: NO BET) never dilutes it. Those days
+    are reported beside it as ``no_bet_freq``: a floor variant that only wins by
+    refusing to bet must show that in the same row.
+    """
+    days = enh_day_growth(records, floors, stake_frac=stake_frac, stake_mode=stake_mode,
+                          stake_per_acca=stake_per_acca, weights=weights, derived=derived,
+                          supported=supported, root=root, ml_scores=ml_scores)
+    firing = enh_firing_days(records, floors, derived=derived)
+    bets = sum(d["bets"] for d in days.values())
+    hits = sum(d["hits"] for d in days.values())
+    bet_days = {d: v for d, v in days.items() if v["bets"] > 0}
+    log_growths = [d["log_growth"] for d in bet_days.values()
+                   if math.isfinite(d["log_growth"])]
+    no_bet_days = sorted(firing - set(days))
+    return {
+        "days": len(bet_days), "bets": bets, "hits": hits,
+        "rate": (hits / bets) if bets else 0.0,
+        "mean_log_growth": (sum(log_growths) / len(log_growths)) if log_growths else 0.0,
+        "firing_days": len(firing), "no_bet_days": len(no_bet_days),
+        "no_bet_freq": (len(no_bet_days) / len(firing)) if firing else 0.0,
+        "by_day": {d: v["log_growth"] for d, v in days.items()},
+        "_days_detail": days,
+    }
+
+
+def _enh_ledger_cards():
+    """``{day: [frozenset((folded match, market)) per acca]}`` from the ENH lane.
+
+    Read straight from the lane's state file: the ledger is evidence, so this
+    must never run load_state's repairs.
+    """
+    try:
+        st = json.loads(at.ENHANCEMENT_LANE.state_file.read_text())
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for row in st.get("history") or []:
+        accas = []
+        for acca in row.get("accas") or []:
+            legs = acca.get("legs") or []
+            if not legs:
+                continue
+            # Identity is the FIXTURE plus the quoted PRICE, not the market
+            # name: a shipped history leg stores a generic pick ("over") and
+            # its human label, so the price is the only exact identifier the
+            # ledger and a rebuilt card share.
+            accas.append(frozenset(
+                (_fold_name(str(l.get("match"))), round(float(l.get("odds") or 0), 2))
+                for l in legs))
+        if accas:
+            out[str(row.get("date"))] = accas
+    return out
+
+
+def enh_cards_for(records, floors, *, supported=False, ml_scores=None, root=None):
+    """``{day: [frozenset((folded match, market)) per acca]}`` for the replay.
+
+    Built through :func:`enh_day_plans` — the same pool and the same recipe the
+    P&L arm uses — so a parity check can never grade a card the arm did not
+    build.
+    """
+    cards = {}
+    for day, (plan, _pool) in enh_day_plans(records, floors, supported=supported,
+                                            root=root, ml_scores=ml_scores).items():
+        cards[day] = [frozenset((_fold_name(str(l["match"])), round(float(l["odds"]), 2))
+                                for l in acca["legs"]) for acca in plan]
+    return cards
+
+
+def cmd_enh_parity(records, *, since=None, until=None, root=None):
+    """Does the ENH replay rebuild the card the lane actually shipped?
+
+    Two arms are diffed against the ledger: the pre-ML ordering (cohort rate)
+    and the LIVE ML ordering rebuilt from the archived model. A day the ledger
+    bet and the replay will not card at all is reported as NO-CARD (the settled
+    registry cannot reconstruct it: no record, no floor, or a lost price).
+    """
+    ledger = _enh_ledger_cards()
+    scope = [d for d in sorted(ledger) if (not since or d >= since)
+             and (not until or d <= until)]
+    if not scope:
+        print("no enhancement bet-days in the ledger for this window")
+        return 0
+    floors = _root_floors(records)
+    ml_scores, stats = enh_ml_coverage(records, root=root)
+    # Both arms run the LIVE eligibility (supported admission); the only
+    # input change is ordering, but ML also engages capacity rescue. This is
+    # a legacy approximation, not an isolated causal test of model quality.
+    arms = {
+        "cohort order (pre-ML basis)": enh_cards_for(records, floors, supported=True,
+                                                     root=root),
+        "LIVE ML order (recomputed)": enh_cards_for(records, floors, supported=True,
+                                                    root=root, ml_scores=ml_scores),
+    }
+    print("LEGACY APPROXIMATION — settled registry, incomplete decision-time coverage")
+    print("  model schemas: " + json.dumps(dict(stats['schemas']), sort_keys=True))
+    print("  archive provenance: " + json.dumps(stats['provenance'], sort_keys=True))
+    print("  UNPROVEN_ARCHIVE: no deployed-model or causal attribution; use --decision-parity")
+    print("ENH PARITY — replay card vs the lane's own ledger")
+    print(f"  ML model coverage: {stats['scored']}/{stats['legs']} settled records "
+          f"scored, {len(stats['scored_days'])}/{len(stats['days'])} day(s)"
+          + (f" ({stats['first_day']}..{stats['last_day']})" if stats['first_day'] else ""))
+    print(f"  ledger bet-days in scope: {len(scope)}")
+    # The settled registry is a log of GRADED, PRICED candidates -- not a copy
+    # of the slate. A leg that shipped on a frozen card without such a record
+    # can never be rebuilt by any replay, so measure that gap first: it is the
+    # ceiling on card parity, and it is a ledger gap, not a harness bug.
+    have = {}
+    for rec in records:
+        have.setdefault(str(rec.get("date") or "")[:10], set()).add(
+            (_fold_name(str(rec.get("match"))), round(float(rec.get("price") or 0), 2)))
+    total_legs = missing = 0
+    gap_days = []
+    for d in scope:
+        absent = 0
+        for acca in ledger[d]:
+            for match, price in acca:
+                total_legs += 1
+                if not any(m == match and abs(p - price) < 0.02
+                           for m, p in have.get(d, ())):
+                    absent += 1
+        if absent:
+            gap_days.append((d, absent, sum(len(a) for a in ledger[d])))
+        missing += absent
+    if missing:
+        print(f"  ledger legs with NO settled registry record: {missing}/{total_legs} "
+              "— unreconstructable by construction")
+        for d, absent, n in gap_days:
+            print(f"     {d}: {absent}/{n} legs absent from the registry")
+    else:
+        print(f"  every ledger leg ({total_legs}) has a settled registry record")
+    print()
+    for label, cards in arms.items():
+        match = diff = no_card = 0
+        detail = []
+        for d in scope:
+            want = ledger[d]
+            got = cards.get(d) or []
+            if not got:
+                no_card += 1
+                detail.append((d, "NO-CARD", [], want))
+            elif sorted(sorted(x) for x in got) == sorted(sorted(x) for x in want):
+                match += 1
+            else:
+                diff += 1
+                detail.append((d, "DIFF", got, want))
+        total = match + diff
+        pct = f"{match / total:.0%}" if total else "-"
+        print(f"  {label:30s} MATCH {match}  DIFF {diff}  NO-CARD {no_card}  "
+              f"(exact-card {pct} of {total} rebuildable day(s))")
+        for d, status, got, want in detail:
+            print(f"     {d} {status}")
+            print(f"        ledger  {['+'.join(f'{m} @{k:g}' for m, k in sorted(a)) for a in want]}")
+            if got:
+                print(f"        replay  {['+'.join(f'{m} @{k:g}' for m, k in sorted(a)) for a in got]}")
+        print()
+    print("  caveat: a NO-CARD day cannot be judged — the settled registry only")
+    print("  holds priced, graded legs, so a card built from a leg that never")
+    print("  priced or never graded is unreconstructable by construction.")
+    return 0
+
+
+def cmd_enhancements(args):
+    """Report the settled enhancement history under floor AND staking variants."""
+    records = enh_records()
+    supported_days = enh_day_growth(records, _root_floors(records), supported=True)
+    print(f"CURRENT supported policy: {sum(d['bets'] for d in supported_days.values())} accas "
+          f"on {len(supported_days)} days; missing predecision evidence is NO BET.")
+    print("Following floor variants are LEGACY counterfactuals, not current live eligibility.")
+    if not records:
+        print("no settled enhancement records found — nothing to replay")
+        return 0
+    live = _root_floors(records)
+    live_stake = at.ENHANCEMENT_LANE.stake_frac
+    print("=" * 74)
+    print("ENHANCEMENT LANE REPLAY (settled registry records only)")
+    print("=" * 74)
+    print("doctrine: this can only backtest history that HAD a price. On 2026-10-12")
+    print("that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).")
+    print("This is selected, priced registry history, NOT the rejected-candidate")
+    print("universe: it cannot prove uplift from broader cohort eligibility.")
+    print("Daily P&L is additive across tickets from the same opening bank.")
+    print("The newly-priced legs exist only going forward. Use these numbers for")
+    print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
+
+    def _arm_spec(spec_text: str):
+        """(label, floors, derived, sizing) for one --ab spec.
+
+        A spec may set a floor (bare number or floor=) and/or sizing keys
+        (stake_frac, stake_mode, stake_per_acca, weights). A key that is absent
+        keeps the LIVE lane's value, so a stake-only spec moves the stake only.
+        """
+        text = str(spec_text).strip().lower()
+        if text in {"derived", "slice", "slice-aware"}:
+            # Each day gated by the floors derived from the records before it.
+            return ("derived slice floors (day-by-day)", None, True, {})
+        spec = parse_spec(spec_text)
+        sizing = {k: spec[k] for k in SIZING_KEYS if k in spec}
+        if "floor" in spec:
+            uniform = float(spec["floor"])
+            floors = {m: uniform for m in live}
+            label = f"every market at floor={uniform:.2f}"
+        else:
+            floors = dict(live)
+            label = "live (MIN_LEG_ODDS)"
+        if sizing:
+            label += " | " + ", ".join(f"{k}={v}" for k, v in sizing.items())
+        return (label, floors, False, sizing)
+
+    arms = [("live (MIN_LEG_ODDS)", dict(live), False, {}),
+            ("derived slice floors (day-by-day, no lookahead)", None, True, {})]
+    if args.ab:
+        specs = [_arm_spec(t) for t in (args.ab[0], args.ab[1])]
+        arms = [(f"arm {chr(65 + i)}: {lbl}", fl, dv, sz)
+                for i, (lbl, fl, dv, sz) in enumerate(specs)]
+
+    print(f"{'floor variant':<52}{'bet-days':>9}{'bets':>6}{'hits':>6}"
+          f"{'rate':>8}{'mean log growth/bet-day':>25}{'no-bet days':>13}")
+    print("-" * 120)
+    arm_summaries = []
+    for label, floors, derived, sizing in arms:
+        s = enh_arm(records, floors, derived=derived, **sizing)
+        arm_summaries.append((label, s))
+        print(f"{label:<52}{s['days']:>9}{s['bets']:>6}{s['hits']:>6}"
+              f"{s['rate']:>7.1%}{s['mean_log_growth']:>+25.4f}"
+              f"{str(s['no_bet_days']) + '/' + str(s['firing_days']):>13}"
+              f"{noise_flag(s['bets'])}")
+    # ------------------------------------------------------------------
+    # The LIVE ML ordering arm. Only days whose archived slate still carries
+    # the retained model can be scored; anywhere else the leg ranks in the
+    # cohort group exactly as live. Coverage is printed with the number so a
+    # two-day sample can never be read as a policy result.
+    # ------------------------------------------------------------------
+    if getattr(args, "enh_ml", False):
+        ml_scores, ml_stats = enh_ml_coverage(records, root=getattr(args, "root", None))
+        print()
+        span = (f"{ml_stats['first_day']}..{ml_stats['last_day']}"
+                if ml_stats["first_day"] else "none")
+        print("ML ENH ordering (LIVE selector, recomputed from the archived slate)")
+        print(f"  coverage: {ml_stats['scored']}/{ml_stats['legs']} settled records scored, "
+              f"{len(ml_stats['scored_days'])}/{len(ml_stats['days'])} day(s) — {span}")
+        print("  model schemas: " + json.dumps(dict(ml_stats['schemas']), sort_keys=True))
+        print("  archive provenance: " + json.dumps(ml_stats['provenance'], sort_keys=True))
+        print("  UNPROVEN_ARCHIVE: reconstructed scores are not verified deployed scores.")
+        if len(ml_stats["schemas"]) > 1:
+            print("  MIXED SCHEMAS: pooled ML delta suppressed. Use same-receipt --decision-parity.")
+        elif not ml_stats["scored"]:
+            print("  no archived model on any slate in scope: the ML arm cannot be")
+            print("  replayed, and every number above is the pre-ML (cohort) basis.")
+        else:
+            # The live lane only ranks legs that its cohort ADMISSION let
+            # through, so the arm is the supported policy plus ML ordering --
+            # comparing it with the legacy flood replay would measure admission
+            # and ordering in one number and attribute both to the model.
+            base = enh_arm(records, dict(live), supported=True, root=at.ROOT)
+            ml = enh_arm(records, dict(live), supported=True, root=at.ROOT,
+                         ml_scores=ml_scores)
+            arm_summaries.append(("supported policy + ML ordering", ml))
+            print(f"  {'supported + ML ordering':<52}{ml['days']:>9}{ml['bets']:>6}{ml['hits']:>6}"
+                  f"{ml['rate']:>7.1%}{ml['mean_log_growth']:>+25.4f}"
+                  f"{str(ml['no_bet_days']) + '/' + str(ml['firing_days']):>13}")
+            print(f"  {'supported, cohort ordering':<52}{base['days']:>9}{base['bets']:>6}"
+                  f"{base['hits']:>6}{base['rate']:>7.1%}{base['mean_log_growth']:>+25.4f}"
+                  f"{str(base['no_bet_days']) + '/' + str(base['firing_days']):>13}")
+            overlap = sorted(set(base["_days_detail"]) & ml_stats["scored_days"])
+            print(f"  scored bet-days: {len(overlap)}/{len(base['_days_detail'])} "
+                  + (f"({', '.join(overlap)})" if overlap else "")
+                  + " — the ML order can only be judged on these")
+            delta = ml["mean_log_growth"] - base["mean_log_growth"]
+            print(f"  vs supported cohort ordering: {ml['bets'] - base['bets']:+d} accas, "
+                  f"{ml['hits'] - base['hits']:+d} hits, {delta:+.4f} log/day")
+            changed = [d for d, v in ml["_days_detail"].items()
+                       if v["bets"] != (base["_days_detail"].get(d) or {}).get("bets")
+                       or (v["bets"] and v["hits"] != (base["_days_detail"].get(d) or {}).get("hits"))]
+            if changed:
+                print(f"  days whose aggregate bet/hit counts moved: {', '.join(sorted(changed))}")
+            else:
+                print("  aggregate bet/hit counts did not change; that does not establish identical cards.")
+                print("  No structural equivalence or deployed-model uplift is inferred.")
+            if len(ml_stats["scored_days"]) < 20:
+                print(f"  CAVEAT: {len(ml_stats['scored_days'])} scored day(s) is a parity")
+                print("  check, NOT an A/B. The ML arm cannot be judged on this sample:")
+                print("  the retained model only exists on the slates listed above.")
+    print()
+    note = arm_summaries[1][1]
+    print(f"NO BET frequency (MIN_ACCAS/LEGS_PER_ACCA: a day without a {at.LEGS_PER_ACCA}-leg")
+    print(f"card is skipped, never a single) — live {arm_summaries[0][1]['no_bet_freq']:.0%}, "
+          f"derived {note['no_bet_freq']:.0%}; every mean above is per BET-day.")
+    print()
+
+    # Per-market detail on the live rule, so a floor that never binds is visible.
+    print("by market (live rule, MIN_LEG_ODDS):")
+    print(f"  {'market':<18}{'floor':>7}{'n':>6}{'hits':>6}{'rate':>8}{'fires':>7}")
+    for market in sorted(live):
+        rows = [r for r in records if r["market"] == market]
+        fired = [r for r in rows if r["price"] >= live[market]]
+        hits = sum(1 for r in fired if r["hit"])
+        print(f"  {market:<18}{live[market]:>7.2f}{len(rows):>6}"
+              f"{sum(1 for r in rows if r['hit']):>6}"
+              f"{(sum(1 for r in rows if r['hit'])/len(rows) if rows else 0):>7.1%}"
+              f"{len(fired):>7}{noise_flag(len(fired))}")
+    print()
+
+    # Staking axis, on the live floors. Same selection in every row: only the
+    # stake fraction moves (per-acca sizing at f / MAX_ACCAS, the live rule).
+    # Mean log growth is the metric; worst day shows the single-day cost of size.
+    print("stake sweep (live floors, selection unchanged; sizing = live per-acca rule):")
+    print(f"  {'stake_frac':<12}{'bet-days':>9}{'bets':>6}{'rate':>8}"
+          f"{'mean log growth/bet-day':>25}{'worst day':>11}")
+    for f in sorted({0.10, 0.1667, 0.25, 0.33, 0.50, round(live_stake, 4)}):
+        s = enh_arm(records, live, stake_frac=f)
+        worst = min((d["growth"] for d in s["_days_detail"].values() if d["bets"] > 0),
+                    default=1.0)
+        mark = "   <- live" if abs(f - live_stake) < 1e-9 else ""
+        print(f"  {f:<12.4f}{s['days']:>9}{s['bets']:>6}{s['rate']:>7.1%}"
+              f"{s['mean_log_growth']:>+25.4f}{worst:>11.3f}{mark}")
+    print()
+
+    # Bootstrap the two arms the operator actually named with --ab (the last two
+    # rows), not the informational live row above them.
+    if args.ab and len(arm_summaries) >= 2:
+        (_, sa), (_, sb) = arm_summaries[-2], arm_summaries[-1]
+        days = sorted(set(sa["by_day"]) | set(sb["by_day"]))
+        ga = {d: sa["by_day"].get(d, 0.0) for d in days}
+        gb = {d: sb["by_day"].get(d, 0.0) for d in days}
+        bs = _paired_day_bootstrap(ga, gb, days)
+        if bs is None:
+            print("no bootstrap: one arm ruins a bet-day, or there are no days.")
+        else:
+            print("paired bootstrap, B minus A, mean log growth per bet-day "
+                  "(5000 resamples):")
+            print(f"  median {bs['median']:+.4f}  p10 {bs['p10']:+.4f}  "
+                  f"p90 {bs['p90']:+.4f}  P(B>A) {bs['p_b_higher']:.0%}  "
+                  f"horizon {bs['horizon']} bet-days")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# reports
+# --------------------------------------------------------------------------
+def engine_status():
+    try:
+        st = json.loads((LOCALDATA / "auto_tickets_state.json").read_text())
+    except Exception:
+        print("no engine state found\n")
+        return
+    accas = [a for h in st.get("history", []) for a in h["accas"]]
+    w = sum(1 for a in accas if a["won"])
+    rate = f"{w/len(accas):.0%}" if accas else "n/a"
+    print("=" * 74)
+    print("ENGINE ACTUAL (the only source of 'what happened')")
+    print("=" * 74)
+    print(f"bank {st.get('bank', 0):.1f}%  ·  bet-days {len(st.get('history', []))}  ·  "
+          f"accas {w}W/{len(accas)-w}L ({rate})  ·  open slips {len(st.get('open_slips', []))}")
+    for h in st.get("history", [])[-8:]:
+        acc = " ".join(f"@{a['odds']:.2f}{'W' if a['won'] else 'L'}" for a in h["accas"])
+        print(f"  {h['date']}  {acc:34s} bank {h['bank_pct']:7.1f}%")
+    print()
+
+
+def live_settings():
+    print("=" * 74)
+    print("LIVE SETTINGS (imported from scripts/auto_tickets.py — not grepped)")
+    print("=" * 74)
+    for const in ("STAKE_FRAC", "STAKE_MODE", "STAKE_PER_ACCA", "STAKE_WEIGHTS",
+                  "MAX_ACCAS", "MIN_ACCAS", "LEGS_PER_ACCA", "MIN_LEG_ODDS",
+                  "VOLUME_POOL", "VOLUME_MIN_PROB", "GATE_MODE", "FREEZE_HOUR"):
+        print(f"  {const:18s} {getattr(at, const)}")
+    print()
+
+
+def print_variant(universe, spec, label=None, baseline=None):
+    s = summarise(replay(universe, spec))
+    lbl = label or label_of(spec)
+    if s["pending_days"]:
+        print(f"{lbl}: {s['pending_days']} selected card(s) PENDING — excluded from realized growth, not re-paired")
+    if s["ruin"]:
+        print(f"{lbl:42s} RUIN on {s['ruin']} day(s) — final 0%, maxDD 100%; "
+              "SKIPPED (bankruptcy is not an edge)")
+        return s
+    mark = ""
+    if baseline is not None and not baseline["ruin"]:
+        d = s["mean_log"] - baseline["mean_log"]
+        mark = f"  Δlog/day {d:+.4f}"
+    print(f"{lbl:42s} log/day {s['mean_log']:+.4f}  final {s['final']:8.0f}%  "
+          f"days {s['days']:2d}  accas {s['accas']:3d}  hit {s['hit']:5.0%}  "
+          f"maxDD {s['maxdd']:4.0%}  worst-day {s['worst']:.2f}"
+          f"{mark}{noise_flag(s['accas'])}")
+    return s
+
+
+def ab_report(universe, spec_a, spec_b):
+    la, lb = label_of(spec_a), label_of(spec_b)
+    print(f"A/B (paired):  A = {la}   vs   B = {lb}\n")
+    sa = print_variant(universe, spec_a, f"A: {la}")
+    sb = print_variant(universe, spec_b, f"B: {lb}", baseline=sa)
+    if sa["pending_days"] or sb["pending_days"]:
+        print("A/B SKIPPED: selected pending cards prevent a complete realized comparison")
+        return
+    if sa["ruin"] or sb["ruin"]:
+        print("\nA/B SKIPPED: at least one arm ruins the bank on the observed path.")
+        return
+    ndiff = card_diff_days(universe, spec_a, spec_b)
+    print(f"\ncards differ on {ndiff}/{len(universe)} days")
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    same_outcome = (sorted(da) == sorted(db) and
+                    all(abs(da[d]["growth"] - db[d]["growth"]) < 1e-12 for d in da))
+    if same_outcome:
+        print("NO-OP: the two variants produce IDENTICAL cards AND identical daily")
+        print("growth on every day. There is nothing to bootstrap — the knob does")
+        print("not reach the result. (The 2026-09-04 failure mode: bootstrapping")
+        print(" identical arms prints a wide interval and a meaningless ~50%.)")
+        return
+    if ndiff == 0:
+        print("SIZING-ONLY A/B: identical cards, identical legs, identical results —")
+        print("only the fraction of bank deployed differs. This is the CLEANEST")
+        print("comparison the harness can make: no selection noise, no lucky legs.")
+        print("Judge it on RISK, not growth: across 30-50% the growth curve is flat")
+        print("(differences here will read as luck-shaped, correctly), while maxDD")
+        print("moves a lot. See --kelly for the whole curve.")
+    r = paired_bootstrap(universe, spec_a, spec_b)
+    if not r:
+        return
+    print("paired bootstrap, B minus A, mean log growth per bet-day (5000 resamples):")
+    print(f"  median {r['median']:+.4f}   p10 {r['p10']:+.4f}   p90 {r['p90']:+.4f}")
+    print(f"  compounded over {r['horizon']} bet-days: median ×{r['median_mult']:.2f}  "
+          f"(p10 ×{r['p10_mult']:.2f}, p90 ×{r['p90_mult']:.2f})")
+    print(f"  P(B better) = {r['p_b_higher']:.0%}", end="  ")
+    if r["p10"] < 0 < r["p90"]:
+        print("— interval spans zero: luck-shaped, do NOT ship on this alone")
+    else:
+        print("— interval one-sided (still only 52 replay days; confirm live)")
+
+    e = effect_concentration(universe, spec_a, spec_b)
+    if e:
+        print(f"\neffect concentration: worst-case single day {e['top_day']} carries "
+              f"{e['top_share']:.0%} of the difference")
+        print(f"  leave-one-day-out range: {e['loo_min']:+.4f} to {e['loo_max']:+.4f} "
+              f"log/day (top-day removal {e['drop_one']:+.4f}; full {e['full']:+.4f})",
+              end="  ")
+        if e["flips"]:
+            print(f"— SIGN FLIPS on {len(e['flip_days'])} removal(s): not a policy")
+        elif not e["inflates"]:
+            print("— the top day works AGAINST B; the effect is stronger without it")
+        elif e["top_share"] > 0.4:
+            print("— fragile: one day inflates most of it")
+        else:
+            print("— broad-based")
+        if 0 < ndiff < 10:
+            print(f"  ⚠ only {ndiff} days differ at all — any 'confidence' here is "
+                  f"about {ndiff} coin flips")
+
+
+def leg_bands(universe, floor=None, volume_pool=None):
+    """Stated-prob band performance of legs on SATURATED days, with the LIVE
+    floor applied and the LIVE saturation definition (both on the floored
+    pool). The 2026-09-04 version applied neither and mislabelled the table."""
+    floor = at.MIN_LEG_ODDS if floor is None else floor
+    volume_pool = at.VOLUME_POOL if volume_pool is None else volume_pool
+    edges = [(0.55, "<0.55"), (0.60, "0.55-0.60"), (0.65, "0.60-0.65"),
+             (0.70, "0.65-0.70"), (0.75, "0.70-0.75"), (9.9, "0.75+")]
+    bands = {name: [0, 0, 0.0] for _, name in edges}
+    sat_days = 0
+    for pool in universe.values():
+        floored = [l for l in pool if l["odds"] >= floor]
+        if len(floored) < volume_pool:
+            continue
+        sat_days += 1
+        for l in floored:
+            if l.get("result") not in ("win", "loss"):
+                continue  # resolved-leg statistic, after eligibility/saturation
+            name = next(n for hi, n in edges if l["prob"] < hi)
+            bands[name][0] += 1
+            if l["result"] == "win":
+                bands[name][1] += 1
+                bands[name][2] += l["odds"]
+    return bands, sat_days
+
+
+def cmd_today(universe, settled):
+    today = date.today().isoformat()
+    pool = universe.get(today)
+    if pool is None:
+        # Preview of the LIVE slip: apply the live price-integrity gate so a
+        # quarantined (price_push_eligible=False) quote never appears here.
+        pool = at.playable_legs(json.loads((LOCALDATA / "picks_today.json").read_text()),
+                                day=today, settled=settled, floor=0.0,
+                                execution_safe=True)
+    accas = at.select_accas(pool)                    # LIVE settings, live code
+    print(f"today ({today}) at live settings — {len(accas)} accas "
+          f"(pre-freeze this is a PARTIAL pool; the frozen card is the truth):")
+    for i, a in enumerate(accas, 1):
+        prod = math.prod(l["odds"] for l in a)
+        print(f"  ACCA #{i} @{prod:.2f}: " + " x ".join(
+            f"{l['match']} ({l['pick']} @{l['odds']:.2f}, stated {l['prob']:.0%})" for l in a))
+
+
+# --------------------------------------------------------------------------
+# parity: does a faithful replay rebuild the card the ledger actually shipped?
+# --------------------------------------------------------------------------
+def _card_names(accas):
+    """Fixture sets per acca, folded so naming drift is not a false diff."""
+    return [frozenset(at._fixture_fold(m) for m in acca) for acca in accas]
+
+
+def _card_equal(got, want) -> bool:
+    """Same accas, any order. Which acca is printed first is presentation."""
+    return sorted(sorted(a) for a in got) == sorted(sorted(a) for a in want)
+
+
+def _ledger_cards():
+    """``{day: [frozenset(match names) per acca]}`` from the main lane ledger."""
+    st = _ledger_state()
+    out = {}
+    for row in st.get("history") or []:
+        accas = [a for a in (row.get("accas") or []) if a.get("legs")]
+        if not accas:
+            continue
+        out[str(row.get("date"))] = [
+            frozenset(at._fixture_fold(str(l.get("match"))) for l in a["legs"])
+            for a in accas]
+    return out
+
+
+def cmd_parity(archives, settled, *, since=None, until=None, faithful=True):
+    """Replay each ledger day at its REAL build instant and diff against it.
+
+    This is the harness's own integration test. A replay that claims to use the
+    live selector but builds from a pool the live builder never saw is a
+    different engine wearing the same name — and the diff says exactly where.
+
+    Reported per day: MATCH, DIFF (with both cards) or LEDGER-ONLY (a ledger day
+    the replay cannot rebuild at all). Differences are then classified:
+      * ``missing-leg``   — a leg the ledger shipped that today's archive no
+        longer offers (re-bucketed, re-priced or removed since the build);
+      * ``extra-leg``     — a leg the faithful pool ranks above the ledger's
+        weakest selected leg and the replay would have taken instead. These are
+        the days where a live gate the harness does not model (the slice
+        ladder's bench/caps, the P&L tripwire, the price-evidence gate) changed
+        the card.
+    """
+    by_day = slate_generation(faithful)
+    cards = _ledger_cards()
+    scope = [d for d in sorted(cards) if (not since or d >= since)
+             and (not until or d <= until)]
+    match = diff = unbuildable = 0
+    causes: Counter = Counter()
+    rows = []
+    for d in scope:
+        pool, _drops = live_pool(by_day.get(d) or [], settled, d, faithful=faithful)
+        if len(pool) < at.LEGS_PER_ACCA:
+            unbuildable += 1
+            rows.append((d, "LEDGER-ONLY", None, cards[d]))
+            continue
+        plan = at.plan_day(pool, 100.0)
+        got = _card_names([[l["match"] for l in a["legs"]] for a in plan])
+        want = _card_names(list(cards[d]))
+        if _card_equal(got, want):
+            match += 1
+            rows.append((d, "MATCH", got, want))
+            continue
+        diff += 1
+        got_legs = {m for acca in got for m in acca}
+        want_legs = {m for acca in want for m in acca}
+        missing = want_legs - got_legs
+        extra = got_legs - want_legs
+        if missing:
+            causes["days with ledger-only legs"] += 1
+        if extra:
+            causes["days with replay-only legs"] += 1
+        in_pool = {at._fixture_fold(l["match"]) for l in pool}
+        absent = sorted(m for m in want_legs if m not in in_pool)
+        rows.append((d, "DIFF", got, want, sorted(missing), sorted(extra),
+                     absent))
+
+    print("LEGACY APPROXIMATION — fixture-pair comparison, not full execution/stake parity")
+    print(f"PARITY ({'faithful' if faithful else 'SUPERSET'} pool, real build instants)")
+    print(f"  days compared {len(scope)}   MATCH {match}   DIFF {diff}   "
+          f"LEDGER-ONLY {unbuildable}")
+    print("  caveat: the build-time slate is not archived per run; the morning "
+          "capture is the closest generation, so a residual diff can be data "
+          "generation, not policy.")
+    if match + diff:
+        print(f"  exact-card parity {match / (match + diff):.1%} (n={match + diff})")
+    for cause, n in sorted(causes.items()):
+        print(f"  {cause:22s} {n}")
+    print()
+    for row in rows:
+        d, status, got, want = row[:4]
+        if status == "MATCH":
+            continue
+        order_only = (got is not None and got and want
+                      and sorted(sorted(a) for a in got) == sorted(sorted(a) for a in want))
+        print(f"  {d}  {status}{' (pairs identical, printed in another order)' if order_only else ''}")
+        print(f"     ledger  {['+'.join(sorted(a)) for a in want]}")
+        if got:
+            print(f"     replay  {['+'.join(sorted(a)) for a in got]}")
+        if len(row) > 4:
+            if row[4]:
+                print(f"     ledger-only legs: {row[4]}")
+            if row[5]:
+                print(f"     replay-only legs: {row[5]}")
+            if len(row) > 6:
+                print("     cause: " + (
+                    "DATA — the archived slate no longer holds every ledger leg"
+                    f" ({len(row[6])} absent)" if row[6] else
+                    "POLICY — every ledger leg was in the pool; a live gate this "
+                    "replay does not model (ladder bench/caps, P&L tripwire, "
+                    "price-evidence) changed the card"))
+    return 0
+
+
+def cmd_slate(archives, settled, day, *, faithful=True):
+    """Everything that happened to one day's slate, in build order.
+
+    Row funnel -> guard census -> the card the ledger shipped -> the card a
+    faithful replay builds -> the day's excluded winners, with the exact gate
+    that refused each one. This is the "did we miss something" report, and it
+    answers with the gate's own rejection code rather than an opinion.
+    """
+    state = _ledger_state()
+    when = build_instant_for(day, state)
+    rows = list(slate_generation(faithful).get(day) or [])
+    print(f"SLATE {day} — build instant {when.strftime('%Y-%m-%d %H:%M %Z')} "
+          f"({'freeze marker' if (state.get(at.FROZEN_BOOK_KEY) or {}).get(day) else 'canonical 09:00 fallback'})")
+    print(f"  archived candidate rows: {len(rows)}")
+
+    census: dict[str, list[str]] = {}
+    winners: list[tuple] = []
+    for r in rows:
+        code = at.playable_leg_rejection(r, day=day, floor=at.MIN_LEG_ODDS,
+                                         execution_safe=faithful)
+        res = at.pick_result(r, settled) if settled is not None else None
+        name = f"{r.get('home')} vs {r.get('away')}"
+        if code is not None:
+            census.setdefault(code[0], []).append(name)
+            if res == "win":
+                winners.append((name, r.get("pick"), r.get("odds"),
+                                r.get("avg_p"), code[0], r.get("bucket")))
+    pool, drops = live_pool(rows, settled, day, faithful=faithful, state=state)
+    for reason, names in drops.items():
+        census.setdefault("kickoff_guard", []).extend(names)
+        for n in names:
+            leg = next((l for l in pool if l["match"] == n), None)
+            if leg is not None and leg.get("result") == "win":
+                winners.append((n, leg.get("pick"), leg.get("odds"),
+                                leg["prob"] * 100, "kickoff_guard",
+                                (leg.get("row") or {}).get("bucket")))
+    print("  funnel:")
+    for code, names in sorted(census.items(), key=lambda kv: -len(kv[1])):
+        print(f"     {len(names):3d}  {code}")
+    admitted = len([l for l in pool if l["odds"] >= at.MIN_LEG_ODDS])
+    print(f"     {admitted:3d}  admitted to selection "
+          f"(floor {at.MIN_LEG_ODDS}, execution-safe, still open at the build)")
+
+    cards = _ledger_cards().get(day) or []
+    print("  ledger card (what was actually built):")
+    for i, acca in enumerate(cards, 1):
+        print(f"     ACCA #{i}: {(' + '.join(sorted(acca))) or 'empty'}")
+    plan = at.plan_day(pool, 100.0)
+    print("  approximate replay at live settings (selection before grading):")
+    if not plan:
+        print("     NO BET")
+    for i, a in enumerate(plan, 1):
+        prod = math.prod(l["odds"] for l in a["legs"])
+        print(f"     ACCA #{i} @{prod:.2f}: " + " + ".join(
+            f"{l['match']} ({l['pick']} @{l['odds']:.2f}, stated {l['prob']:.0%})"
+            for l in a["legs"]))
+
+    print(f"  excluded legs that WON ({len(winners)}):")
+    for name, pick, odds, prob, code, bucket in sorted(
+            winners, key=lambda w: -(w[3] or 0)):
+        price = "no price" if odds is None else f"@{float(odds):.3f}"
+        print(f"     {str(name)[:42]:42s} {str(pick):5s} {price:9s} "
+              f"p={prob if prob is None else round(float(prob), 1)}  "
+              f"{code:36s} bucket={bucket}")
+    return 0
+
+
+def cmd_kelly(universe, spec=None):
+    """Growth-vs-risk curve over stake fraction, through ``plan_day`` only.
+
+    Sizing changes NOTHING about selection, so its evidence is cleaner than a
+    leg-filter A/B. Every grid cell is still a production-planner replay: this
+    command owns no second stake formula that can drift from shipped tickets.
+    """
+    # BOTH sizing knobs are swept, so neither may be pinned by the caller: a
+    # stake_per_acca left in the spec would hold the real stake constant
+    # across every grid cell and flatten the curve into a straight line.
+    spec = {k: v for k, v in dict(spec or {}).items()
+            if k not in ("stake_frac", "stake_per_acca")}
+    mode = spec.get("stake_mode") or at.STAKE_MODE
+    grid = sorted(set([i / 100 for i in range(5, 101, 5)] + [at.STAKE_FRAC]))
+    # In per_acca mode the swept f is the FULL-CARD risk: each ticket stakes
+    # f/MAX_ACCAS, so a 3-acca day risks f and thinner days risk
+    # proportionally less. Deriving it here keeps the sweep honest even if
+    # the module-level STAKE_PER_ACCA is ever given a value.
+    def _cell(f):
+        if mode == "per_acca":
+            return {**spec, "stake_frac": f, "stake_per_acca": f / at.MAX_ACCAS}
+        return {**spec, "stake_frac": f}
+    curves = {f: replay(universe, _cell(f)) for f in grid}
+    stats = {f: summarise(days) for f, days in curves.items()}
+    reference = curves[at.STAKE_FRAC]
+    if reference.pending:
+        print("Stake curve unavailable: selected cards are PENDING, not zero-return days")
+        return 1
+    if not reference:
+        print("no bet-days")
+        return
+    total_losses = sum(not any(w for _, w in rec["accas"]) for rec in reference.values())
+
+    print(f"stake sizing on {len(reference)} bet-days ({total_losses} total-loss days)")
+    if mode == "per_acca":
+        print(f"mode per_acca: f is the full-card risk; each ticket stakes "
+              f"f/{at.MAX_ACCAS}, so thinner cards risk less than f")
+    else:
+        print("mode per_day: every card risks f in total, however thin")
+    print("cards are IDENTICAL across rows — only the fraction of bank changes\n")
+    print(f"{'stake f':>8s} {'log/day':>9s} {'final%':>9s} {'maxDD':>7s}")
+    valid_grid = [f for f in grid if not stats[f]["ruin"]]
+    if not valid_grid:
+        print("every stake on the grid ruins the bank")
+        return
+    best = max(valid_grid, key=lambda f: stats[f]["mean_log"])
+    for f in grid:
+        s = stats[f]
+        if s["ruin"]:
+            print(f"{f:8.0%} {'RUIN':>9s} {0:9.0f} {1:7.0%}   <- SKIPPED")
+            continue
+        star = "   <- growth-optimal" if f == best else ""
+        if f == at.STAKE_FRAC:
+            star += "   <- LIVE"
+        print(f"{f:8.0%} {s['mean_log']:+9.4f} {s['final']:9.0f} {s['maxdd']:7.0%}{star}")
+
+    # Paired resampling: one day sample scores every globally non-ruin grid
+    # cell. A sample cannot rehabilitate a fraction known to bankrupt the
+    # observed path.
+    days = sorted(reference)
+    logs = {f: {d: math.log(curves[f][d]["growth"]) for d in days}
+            for f in valid_grid}
+    random.seed(2026)
+    opts = []
+    for _ in range(2000):
+        sample = random.choices(days, k=len(days))
+        opts.append(max(valid_grid,
+                        key=lambda f: sum(logs[f][d] for d in sample) / len(sample)))
+    opts.sort()
+    best_s = stats[best]
+    print(f"\ngrowth-optimal f on this path: {best:.0%} "
+          f"(log/day {best_s['mean_log']:+.4f}, maxDD {best_s['maxdd']:.0%})")
+    print(f"bootstrapped f*: median {opts[len(opts)//2]:.0%}  "
+          f"p10 {opts[int(.1*len(opts))]:.0%}  p90 {opts[int(.9*len(opts))]:.0%}")
+    below = sum(1 for o in opts if o < at.STAKE_FRAC) / len(opts)
+    print(f"P(f* < live {at.STAKE_FRAC:.0%}) = {below:.0%}")
+    print("\nKelly doctrine: the growth curve is asymmetric — overbetting past f*")
+    print("loses growth AND multiplies drawdown, underbetting only costs growth")
+    print("slowly. With f* this uncertain, size BELOW the point estimate.")
+
+
+def slot_table(universe, floor=None, max_slots=12, min_pool=None):
+    """Leg quality by RANK SLOT, and acca quality by slot pair.
+
+    Checkpoint ① ("should a 4th/5th acca exist?") asked as a day-level A/B is
+    a 19-day question that one treble can own. Asked as "are the legs ranked
+    7-8 as good as the legs ranked 1-6?" it is a several-hundred-leg question.
+    Same ledger, far more signal: if slots 7-10 hold their ROI, more accas is
+    a structural yes; if they decay, the extra accas are variance, not edge.
+    """
+    floor = at.MIN_LEG_ODDS if floor is None else floor
+    slots = {i: [0, 0, 0.0] for i in range(1, max_slots + 1)}
+    accas = {i: [0, 0, 0.0] for i in range(1, max_slots // 2 + 1)}
+    n_days = 0
+    for pool in universe.values():
+        ranked = at.rank_legs([l for l in pool if l["odds"] >= floor])
+        if min_pool is not None and len(ranked) < min_pool:
+            continue        # like-for-like: every slot drawn from the SAME days
+        n_days += 1
+        ranked = ranked[:max_slots]
+        for i, leg in enumerate(ranked, 1):
+            if leg.get("result") not in ("win", "loss"):
+                continue  # do not promote another leg into this rank slot
+            slots[i][0] += 1
+            if leg["result"] == "win":
+                slots[i][1] += 1
+                slots[i][2] += leg["odds"]
+        for j in range(0, len(ranked) - 1, 2):
+            a, b = ranked[j], ranked[j + 1]
+            idx = j // 2 + 1
+            if any(l.get("result") not in ("win", "loss") for l in (a, b)):
+                continue
+            accas[idx][0] += 1
+            if a["result"] == "win" and b["result"] == "win":
+                accas[idx][1] += 1
+                accas[idx][2] += a["odds"] * b["odds"]
+    return slots, accas, n_days
+
+
+def _print_slots(slots, accas, n_days, header):
+    print(header)
+    print(f"{'slot':>4s} {'n':>4s} {'hit':>7s} {'flatROI':>9s}")
+    for i, (n, w, ret) in slots.items():
+        if n:
+            print(f"{i:4d} {n:4d} {w/n:7.1%} {(ret-n)/n:+9.1%}"
+                  f"{'  << small-n' if n < 30 else ''}")
+    print(f"\n{'acca':>4s} {'legs':>7s} {'n':>4s} {'hit':>7s} {'flatROI':>9s}")
+    for i, (n, w, ret) in accas.items():
+        if n:
+            print(f"{i:4d} {f'{2*i-1}+{2*i}':>7s} {n:4d} {w/n:7.1%} {(ret-n)/n:+9.1%}"
+                  f"{'  << small-n' if n < 30 else ''}")
+
+
+def cmd_slots(universe):
+    slots, accas, n_days = slot_table(universe)
+    _print_slots(slots, accas, n_days,
+                 "=== ALL DAYS — leg/acca quality by rank slot (floor applied) ===\n"
+                 "CONFOUNDED: slot 1 is drawn from every day, slot 8 only from the\n"
+                 "big-pool days. Use it for shape, not for comparisons.\n")
+    slots8, accas8, n8 = slot_table(universe, min_pool=8, max_slots=8)
+    print(f"\n=== LIKE-FOR-LIKE — only the {n8} days that offer 8+ legs ===")
+    print("every slot below is drawn from the SAME days (table stops at slot 8 —")
+    print("beyond it the day counts fall again and the comparison re-confounds).\n")
+    _print_slots(slots8, accas8, n8, "")
+    print("\nread: a 4th acca is worth adding only if the slot-7+8 row pays like")
+    print("the rows above it ON THESE DAYS. Adding accas does NOT reduce risk —")
+    print("total stake is fixed at STAKE_FRAC and merely split further.")
+
+
+def rule_family(rule):
+    """Group a miner rule into the family the ledger reasons about."""
+    r = str(rule or "")
+    if r.startswith("ml-meta"):
+        return "ml-meta"
+    if r.startswith("ml-fade"):
+        return "ml-fade"
+    if r.startswith("2way"):
+        return "2way-unanimous"
+    if r.startswith("3way"):
+        return "3way-unanimous"
+    return "other"
+
+
+def _leg_stats(legs, seed=2026):
+    """n, hit rate, flat ROI and calibration gap with bootstrap deciles."""
+    legs = [l for l in legs if l.get("result") in ("win", "loss")]
+    if not legs:
+        return None
+    rnd = random.Random(seed)
+    ret = [(l["odds"] - 1.0) if l["result"] == "win" else -1.0 for l in legs]
+    gap = [(1.0 if l["result"] == "win" else 0.0) - l["prob"] for l in legs]
+    n = len(legs)
+    roi_bs = sorted(sum(rnd.choices(ret, k=n)) / n for _ in range(5000))
+    gap_bs = sorted(sum(rnd.choices(gap, k=n)) / n for _ in range(5000))
+    return {
+        "n": n,
+        "hit": sum(1 for l in legs if l["result"] == "win") / n,
+        "stated": sum(l["prob"] for l in legs) / n,
+        "roi": sum(ret) / n,
+        "roi_p10": roi_bs[500], "roi_p90": roi_bs[4500],
+        "gap": sum(gap) / n,
+        "gap_p10": gap_bs[500], "gap_p90": gap_bs[4500],
+    }
+
+
+def _ridden_legs(universe):
+    """The legs that actually rode a card, tagged with their rule."""
+    out = []
+    for d in sorted(universe):
+        pool = universe[d]
+        for acca in at.plan_day(pool, 100.0):
+            for leg in acca["legs"]:
+                src = next((x for x in pool if x["match"] == leg["match"]
+                            and x["pick"] == leg["pick"]), None)
+                if src and leg.get("result") in ("win", "loss"):
+                    out.append({**leg, "_day": d, "row": src["row"]})
+    return out
+
+
+def _rule_table(legs, title):
+    print(f"\n{title}  (n={len(legs)})")
+    print(f"  {'family':16s} {'n':>4s} {'stated':>7s} {'realised':>8s} "
+          f"{'gap':>7s} {'gapP10':>7s} {'flatROI':>8s} {'roiP10':>8s} {'roiP90':>8s}")
+    buckets = {}
+    for l in legs:
+        buckets.setdefault(rule_family(l["row"].get("rule")), []).append(l)
+    for fam in ("ml-meta", "ml-fade", "2way-unanimous", "3way-unanimous", "other"):
+        s = _leg_stats(buckets.get(fam) or [])
+        if not s:
+            continue
+        print(f"  {fam:16s} {s['n']:4d} {s['stated']:7.1%} {s['hit']:8.1%} "
+              f"{100*s['gap']:+6.1f}p {100*s['gap_p10']:+6.1f}p {s['roi']:+8.1%} "
+              f"{s['roi_p10']:+8.1%} {s['roi_p90']:+8.1%}{noise_flag(s['n'])}")
+
+
+def cmd_rules(universe):
+    """Checkpoint ⑫: is the ml-meta family carrying its weight, or costing?
+
+    The escalation that prompted this asked whether the leaked-feature model
+    UNDERPERFORMS the honest consensus rules. The table answers that directly,
+    and the paired removal replay prices the only live change that follows.
+    """
+    print("=" * 74)
+    print("RULE-FAMILY QUALITY (checkpoint ⑫)")
+    print("=" * 74)
+    print("'gap' is realised minus stated: POSITIVE means the rule is")
+    print("UNDER-confident (it wins more often than it claims).\n")
+
+    pool = [l for d in sorted(universe) for l in universe[d]
+            if l["result"] in ("win", "loss")]
+    _rule_table(pool, "every settled playable leg")
+    _rule_table(_ridden_legs(universe), "legs the engine actually rode")
+
+    ml_days = sorted({d for d in universe
+                      for l in universe[d]
+                      if rule_family(l["row"].get("rule")) == "ml-meta"})
+    if ml_days:
+        print(f"\nml-meta legs first appear {ml_days[0]} and run to {ml_days[-1]} "
+              f"({len(ml_days)} days).")
+        print("Any comparison against a family that also fired pre-August is")
+        print("confounded by the season boundary — compare in-season only.")
+
+    # The only live change this could justify: stop letting ml-meta legs ride.
+    print("\n" + "-" * 74)
+    print("PAIRED REMOVAL REPLAY — what happens if ml-meta legs cannot ride")
+    print("-" * 74)
+    drop = {d: [l for l in pool_ if rule_family(l["row"].get("rule")) != "ml-meta"]
+            for d, pool_ in universe.items()}
+    live_days = replay(universe, {})
+    drop_days = replay(drop, {})
+    a, b = summarise(live_days), summarise(drop_days)
+    print(f"  live (ml-meta eligible)  log/day {a['mean_log']:+.4f}  "
+          f"final {a['final']:6.0f}%  days {a['days']:3d}  maxDD {a['maxdd']:.0%}")
+    print(f"  ml-meta legs REMOVED     log/day {b['mean_log']:+.4f}  "
+          f"final {b['final']:6.0f}%  days {b['days']:3d}  maxDD {b['maxdd']:.0%}")
+    common = sorted(set(live_days) & set(drop_days))
+    if common:
+        diff = [math.log(drop_days[d]["growth"]) - math.log(live_days[d]["growth"])
+                for d in common]
+        rnd = random.Random(2026)
+        bs = sorted(sum(rnd.choices(diff, k=len(diff))) / len(diff)
+                    for _ in range(5000))
+        changed = sum(1 for d in common if abs(drop_days[d]["growth"]
+                                               - live_days[d]["growth"]) > 1e-9)
+        print(f"  paired Δ(removed − live) {sum(diff)/len(diff):+.4f}/day  "
+              f"p10 {bs[500]:+.4f}  p90 {bs[4500]:+.4f}  "
+              f"cards differ {changed}/{len(common)} days")
+        print("\n  Removing the family also removes the days where it was the only")
+        print("  card. Read the day counts, not just the growth number.")
+    return 0
+
+
+def cmd_battery(universe):
+    base = {}
+    print("--- baseline ---")
+    b = print_variant(universe, base, "live settings")
+    print("\n--- min leg odds floor ---")
+    for f in (1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50):
+        print_variant(universe, {"floor": f}, f"floor {f:.2f}", baseline=b)
+    print("\n--- differential cup floor (protect against rotation/cup variance) ---")
+    for cf in (1.35, 1.40, 1.45, 1.50):
+        print_variant(universe, {"floor": 1.30, "cup_floor": cf}, f"floor 1.30 + cup_floor {cf:.2f}", baseline=b)
+    print("\n--- accas per day (checkpoint ①) ---")
+    for k in (3, 4, 5, 6):
+        print_variant(universe, {"max_accas": k}, f"max {k} accas/day", baseline=b)
+    print("\n--- accas per day, SATURATED days only (checkpoint ① proper) ---")
+    for k in (4, 5, 6):
+        print_variant(universe, {"saturated_accas": k}, f"{k} accas on saturated days", baseline=b)
+    print("\n--- volume gate that actually bites (per-acca conviction) ---")
+    for vm in (0.55, 0.60, 0.65, 0.70):
+        print_variant(universe, {"gate_mode": "acca", "volume_min": vm},
+                      f"acca-gate >= {vm:.0%}", baseline=b)
+    print_variant(universe, {"gate_mode": "acca", "volume_min": 0.65, "fallback": False},
+                  "acca-gate >=65%, no fallback", baseline=b)
+    print_variant(universe, {"gate_mode": "pool", "fallback": False},
+                  "legacy strict pool gate", baseline=b)
+    print_variant(universe, {"gate_mode": "off"}, "gate off (== live, see audit)", baseline=b)
+    print("\n--- ranking / pairing shape ---")
+    print_variant(universe, {"rank": "ev"}, "rank by stated EV", baseline=b)
+    print_variant(universe, {"pairing": "barbell"}, "barbell pairing (1+6,2+5,3+4)", baseline=b)
+    print("\n--- stake fraction (doctrine: 50% cap) ---")
+    for s in (0.25, 0.33, 0.50, 0.75):
+        print_variant(universe, {"stake_frac": s}, f"stake {s:.0%}/day", baseline=b)
+    print("\n--- always-on stated-prob floor (REJECTED 4x — kept as a tripwire) ---")
+    for mp in (0.60, 0.65, 0.70):
+        print_variant(universe, {"min_prob": mp}, f"always-on prob >= {mp:.0%}", baseline=b)
+
+
+def _day_scope(universe, since=None, until=None):
+    return {d: pool for d, pool in sorted(universe.items())
+            if (not since or d >= since) and (not until or d <= until)}
+
+
+def _fold_name(name: str) -> str:
+    """Accent/diacritic-insensitive, case-insensitive name key for exact
+    fixture matching. Deliberately NOT fuzzy: a fixture either matches a
+    recorded name after trivial normalisation or it does not."""
+    out = unicodedata.normalize("NFKD", str(name))
+    out = "".join(ch for ch in out if not unicodedata.combining(ch))
+    return " ".join(out.casefold().split())
+
+
+def _exclusion_set(path: Path) -> set[tuple[str, str]]:
+    """Load [{"date": YYYY-MM-DD, "match": "Home vs Away"}] into
+    (date, folded-match) pairs."""
+    raw = json.loads(Path(path).read_text())
+    out = set()
+    for row in raw:
+        d = str(row.get("date") or "")[:10]
+        m = _fold_name(str(row.get("match") or ""))
+        if d and m:
+            out.add((d, m))
+    return out
+
+
+def _perfect_clock_block(scope, exclude: set[tuple[str, str]]) -> None:
+    """Task A closeout (2026-09-06): re-run the four --kickoff-guard arms
+    with the known-started ridden legs excluded from every pool (a perfect
+    clock would have dropped them at build). Prints which exclusions were
+    actually ridden by each arm and the ex-rows beside the shipped rows.
+
+    MEASUREMENT ONLY — no selection or staking change ships from this.
+    """
+    def rode(day_map):
+        out = set()
+        for d, rec in day_map.items():
+            for acca_legs in rec["legs"]:
+                for m in acca_legs:
+                    if (d, _fold_name(m)) in exclude:
+                        out.add((d, m))
+        return out
+
+    shipped_so, shipped_g, shipped_n = _kickoff_arms(scope)
+    rode_default = rode(replay(scope, {}))
+    rode_so = rode(replay(shipped_so, {}))
+    rode_g = rode(replay(shipped_g, {}))
+    rode_n = rode(replay(shipped_n, {}))
+
+    ex_scope = {d: [leg for leg in pool if (d, _fold_name(leg["match"])) not in exclude]
+                for d, pool in scope.items()}
+    ex_scope = {d: p for d, p in ex_scope.items() if len(p) >= at.LEGS_PER_ACCA}
+    ex_so, ex_g, ex_n = _kickoff_arms(ex_scope)
+
+    print()
+    print("=" * 74)
+    print("PERFECT CLOCK (Task A closeout) — known-started ridden legs excluded")
+    print("=" * 74)
+    print(f"exclusion file: {len(exclude)} (date, match) pairs; present in scope pools: "
+          f"{sum(1 for (d, m) in exclude if any((d, _fold_name(l['match'])) == (d, m) for pool in scope.values() for l in pool))}")
+    for label, bits in (("default", rode_default), ("started-only", rode_so),
+                        ("region guard", rode_g), ("normalised", rode_n)):
+        print(f"  ridden by {label:12s} arm pre-exclusion: {len(bits)} of {len(exclude)}"
+              + (f" — {', '.join(sorted(f'{d} {m}' for d, m in bits))}" if bits else ""))
+
+    for label, days in (("whole archive", scope), ("in-season (>= 2026-08-01)",
+                        _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        sub = {d: days[d] for d in days}
+        sub_x = {d: ex_scope[d] for d in days if d in ex_scope}
+        if not sub_x:
+            continue
+        sx_so = {d: ex_so[d] for d in days if d in ex_so}
+        sx_g = {d: ex_g[d] for d in days if d in ex_g}
+        sx_n = {d: ex_n[d] for d in days if d in ex_n}
+        a, b, c, n = (summarise(x) for x in (replay(sub, {}), replay({d: shipped_so[d] for d in days if d in shipped_so}, {}),
+                       replay({d: shipped_g[d] for d in days if d in shipped_g}, {}),
+                       replay({d: shipped_n[d] for d in days if d in shipped_n}, {})))
+        ax, bx, cx, nx = (summarise(x) for x in (replay(sub_x, {}), replay(sx_so, {}), replay(sx_g, {}), replay(sx_n, {})))
+        print(f"  {label} — shipped→ex  (bet-days, log/day, final, maxDD)")
+        for tag, s, sx in (("default     ", a, ax), ("started-only", b, bx),
+                           ("region guard", c, cx), ("normalised  ", n, nx)):
+            same = s["days"] == sx["days"]
+            print(f"    {tag}  {s['days']:2d} → {sx['days']:2d}  "
+                  f"{s['mean_log']:+.4f} → {sx['mean_log']:+.4f}  "
+                  f"{s['final']:7.0f}% → {sx['final']:7.0f}%  "
+                  f"maxDD {s['maxdd']:4.0%} → {sx['maxdd']:4.0%}"
+                  f"{'' if same else '  (bet-day lost)'}")
+    print("read: this is the contamination check — how much of each shipped")
+    print("in-season growth was earned by legs a perfect clock would have")
+    print("dropped. Measurement only; no arm here ships.")
+
+
+
+def cmd_kickoff_contract(universe, since=None, until=None):
+    """AUDIT INSTRUMENT (off by default): the fail-closed kickoff standard
+    on HISTORY — it sizes the data-side kickoff-proof gap.
+
+    Re-runs the archive with the strict standard — every leg's kickoff must
+    be PROVEN by the row itself (explicit offset/Z, or naive + row-carried
+    zone) and at least KICKOFF_MIN_LEAD_HOURS ahead of the canonical 09:00
+    SAST build instant — so the data-side fix's size is visible. This is NOT
+    the live betting rule (the 2026-09-06 review: proof-or-drop threw away
+    the dated majority that renders UTC+2; live drops only undatable and
+    already-started legs via auto_tickets.live_kickoff_guard). It prints,
+    per regime:
+
+      - legs dropped per day and why (aggregate census),
+      - every day whose card would have changed, with the dropped legs,
+      - bet-days lost (cards that fall below 2 provable legs),
+      - growth / final / maxDD under the strict standard, in-season and
+        whole archive, versus the unguarded replay on the same days.
+    """
+    scope = _day_scope(universe, since, until)
+    print("=" * 74)
+    print("KICKOFF PROOF CONTRACT — AUDIT ONLY (off by default; NOT the live rule)")
+    print("=" * 74)
+    print(f"scope: {len(scope)} settled-playable bet-days "
+          f"({next(iter(scope), '-')} -> {list(scope)[-1] if scope else '-'}); "
+          f"build instant per day: {at.FREEZE_HOUR:02d}:00 SAST (canonical freeze run)")
+    print("(audit standard: a leg rides only if its kickoff is PROVEN by the row and >= "
+          f"{at.KICKOFF_MIN_LEAD_HOURS:g}h ahead of build)\n")
+
+    strict, census, lost = {}, {}, 0
+    changed = []
+    for d, pool in scope.items():
+        build_at = at.canonical_build_instant(d)
+        kept, drops = at.kickoff_contract(pool, build_at=build_at)
+        for reason, names in drops.items():
+            census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
+        default_accas = [tuple(l["match"] for l in a)
+                         for a in at.select_accas(pool)]
+        if len(kept) >= at.LEGS_PER_ACCA:
+            strict[d] = kept
+            strict_accas = [tuple(l["match"] for l in a)
+                            for a in at.select_accas(kept)]
+            if default_accas and strict_accas != default_accas:
+                flat = [n for v in drops.values() for n in v]
+                changed.append((d, default_accas, strict_accas, flat))
+        else:
+            if default_accas:
+                lost += 1
+                flat = [n for v in drops.values() for n in v]
+                changed.append((d, default_accas, [], flat))
+
+    n_drop = sum(len(v) for v in census.values())
+    print(f"aggregate: {n_drop} legs dropped over {len(scope)} bet-days "
+          f"({n_drop / max(len(scope), 1):.2f}/day) — "
+          f"{len(scope) - lost} days still build a card, "
+          f"{lost} bet-days LOST (card falls below {at.LEGS_PER_ACCA} provable legs)")
+    for reason in sorted(census):
+        names = census[reason]
+        print(f"  • {len(names)} {reason.lower()}  "
+              f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
+
+    print("\ndays whose card changes (default -> strict):")
+    for d, ca, cb, drops in changed:
+        if cb:
+            print(f"  {d}: {len(ca)} accas -> {len(cb)} accas  dropped: "
+                  f"{'; '.join(sorted(set(drops))[:4])}")
+        else:
+            print(f"  {d}: {len(ca)} accas -> NO BET  (fewer than "
+                  f"{at.LEGS_PER_ACCA} provable legs)")
+
+    print("\n" + "-" * 74)
+    print("GROWTH UNDER THE CONTRACT (replay, live stake rules)")
+    print("-" * 74)
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        base_rec, strict_rec = replay(days, {}), replay(strict, {})
+        a, b = summarise(base_rec), summarise(strict_rec)
+        print(f"  {label} — default {a['days']:2d} bet-days  "
+              f"log/day {a['mean_log']:+.4f}  final {a['final']:7.0f}%  "
+              f"maxDD {a['maxdd']:4.0%}")
+        if b["days"]:
+            print(f"  {label} — strict  {b['days']:2d} bet-days  "
+                  f"log/day {b['mean_log']:+.4f}  final {b['final']:7.0f}%  "
+                  f"maxDD {b['maxdd']:4.0%}  (days below 2 provable legs are NO BET)")
+        else:
+            print(f"  {label} — strict:  NO BET-DAYS REMAIN (zero provable "
+                  "cards in the archive)")
+        print()
+    print("read: every dropped leg is a bet the engine CANNOT PROVE is still")
+    print("in the future. The trade is volume for certainty — the count above")
+    print("is what the data side must recover before volume returns (carry a")
+    print("timezone in the row, e.g. betexplorer-style +02:00 kickoffs).")
+    return 0
+
+
+def _kickoff_arms(scope):
+    """Compute the started-only / region-guard / normalised arm pools for a
+    scope of days, at each day's canonical 09:00 SAST build instant.
+
+    - started-only: rows whose parseable kickoff is already at/past build
+      time drop (the engine's historical live path approximation);
+    - region guard: auto_tickets.live_kickoff_guard (started + clock-only
+      rows in remote-clock regions + missing/garbage);
+    - normalised: the same guard after archived-witness ingest
+      normalisation (kickoff_utc resolved where an archived witness exists).
+    Returns (started_only, guarded, normalised) day->pool dicts.
+    """
+    started_only: dict = {}
+    guarded: dict = {}
+    normalised: dict = {}
+    for d, pool in scope.items():
+        build_at = at.canonical_build_instant(d)
+        # arm 2: the historical live engine's started check (parseable past)
+        so = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            kt = at.parse_kickoff(pick)
+            if kt is None or kt.astimezone(at.TZ) >= build_at:
+                so.append(leg)
+        started_only[d] = so
+        # arm 3: the full live guard
+        kept, _drops = at.live_kickoff_guard(pool, build_at)
+        guarded[d] = kept
+        # arm 4: normalised ingest (archived-witness lower bound)
+        norm_pool = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            ku, src = at.kickoff_utc_from_archived_row(pick)
+            if ku is None:
+                norm_pool.append(leg)
+                continue
+            leg2 = dict(leg)
+            row2 = dict(pick)
+            row2["kickoff_utc"] = ku
+            row2["kickoff_source"] = src
+            leg2["row"] = row2
+            norm_pool.append(leg2)
+        n_kept, _n_drops = at.live_kickoff_guard(norm_pool, build_at)
+        normalised[d] = n_kept
+    return started_only, guarded, normalised
+
+
+def cmd_kickoff_guard(universe, since=None, until=None, exclude: set | None = None):
+    """MONEY COST of the LIVE kickoff guard (region rule) on HISTORY, plus
+    the Task-A normalisation-recovery estimate (ingest kickoff_utc).
+
+    Applies auto_tickets.live_kickoff_guard at each day's canonical 09:00
+    SAST build instant, then replays four arms through the same planner
+    with the same live stake rules:
+      - default: the raw replay universe (what the harness battery calls
+        "live" — no era guard modeled);
+      - started-only: the engine's historical live path approximated
+        (parseable legs already started at the build instant drop);
+      - region guard: full live_kickoff_guard (started + clock-only rows in
+        remote-clock regions + missing/garbage);
+      - normalised: the same guard AFTER ingest normalisation — every pool
+        row that an archived witness can resolve (own zoned kickoff, or the
+        scoutingstats starting_at preserved as odds_captured_at) carries
+        kickoff_utc, and the guard judges only that instant. Sibling-row
+        witnesses that existed only at fetch time (vitibet "+02:00" rows)
+        are NOT in the archives, so this arm is a LOWER bound on recovery.
+    Prints per regime (whole archive and in-season >= 2026-08-01): log/day,
+    final, maxDD and bet-days. The guard's MARGINAL money cost is the
+    region-guard arm minus the started-only arm; the default arm is shown
+    only for continuity with the battery row.
+
+    CAVEAT (2026-09-06 follow-up review, Task C1): the in-season guard-vs-
+    started gap is ONE bet-day (2026-08-04, which won). The gap is therefore
+    unmeasured, not small: in noise terms it is well under a tenth of a
+    standard deviation of daily log growth, and had that one day lost, the
+    same guard would show a gain. Neither arm has earned a number. Do not
+    quote the in-season -0.0070 (or the whole-archive +0.0080) as a price.
+    """
+    scope = _day_scope(universe, since, until)
+    started_only, guarded, normalised = {}, {}, {}
+    census: dict[str, list[str]] = {}
+    norm_census: dict[str, list[str]] = {}
+    for d, pool in scope.items():
+        build_at = at.canonical_build_instant(d)
+        # arm 2: the historical live engine's started check (parseable past)
+        so = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            kt = at.parse_kickoff(pick)
+            if kt is None or kt.astimezone(at.TZ) >= build_at:
+                so.append(leg)
+        started_only[d] = so
+        # arm 3: the full live guard
+        kept, drops = at.live_kickoff_guard(pool, build_at)
+        for reason, names in drops.items():
+            census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
+        guarded[d] = kept
+        # arm 4: normalised ingest (archived-witness lower bound)
+        norm_pool = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            ku, src = at.kickoff_utc_from_archived_row(pick)
+            if ku is None:
+                norm_pool.append(leg)
+                continue
+            leg2 = dict(leg)
+            row2 = dict(pick)
+            row2["kickoff_utc"] = ku
+            row2["kickoff_source"] = src
+            leg2["row"] = row2
+            norm_pool.append(leg2)
+        n_kept, n_drops = at.live_kickoff_guard(norm_pool, build_at)
+        for reason, names in n_drops.items():
+            norm_census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
+        normalised[d] = n_kept
+
+    n_drop = sum(len(v) for v in census.values())
+    print("=" * 74)
+    print("LIVE KICKOFF GUARD (region rule) — MONEY COST ON HISTORY")
+    print("=" * 74)
+    print(f"scope: {len(scope)} settled-playable bet-days "
+          f"({next(iter(scope), '-')} -> {list(scope)[-1] if scope else '-'}); "
+          f"build instant per day: {at.FREEZE_HOUR:02d}:00 SAST (canonical freeze run)")
+    print(f"guard drops (pool-level): {n_drop} legs total:")
+    for reason in sorted(census):
+        names = census[reason]
+        print(f"  • {len(names)} {reason.lower()}  "
+              f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
+    n_rescued = n_drop - sum(len(v) for v in norm_census.values())
+    print(f"after normalisation (archived-witness lower bound): {n_rescued} of those "
+          f"{n_drop} legs carry a resolvable kickoff_utc; "
+          f"{sum(len(v) for v in norm_census.values())} still dropped:")
+    for reason in sorted(norm_census):
+        names = norm_census[reason]
+        print(f"  • {len(names)} {reason.lower()}  "
+              f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
+
+    print()
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        sub = {d: days[d] for d in days}
+        sub_so = {d: started_only[d] for d in days}
+        sub_g = {d: guarded[d] for d in days}
+        sub_n = {d: normalised[d] for d in days}
+        a = replay(sub, {})
+        b = replay(sub_so, {})
+        c = replay(sub_g, {})
+        n = replay(sub_n, {})
+        sa, sb, sc, sn = (summarise(x) for x in (a, b, c, n))
+        lost_vs_default = sorted(set(a) - set(c))
+        lost_vs_started = sorted(set(b) - set(c))
+        print(f"  {label} — default      {len(a):2d} bet-days  "
+              f"log/day {sa['mean_log']:+.4f}  final {sa['final']:7.0f}%  maxDD {sa['maxdd']:4.0%}")
+        print(f"  {label} — started-only {len(b):2d} bet-days  "
+              f"log/day {sb['mean_log']:+.4f}  final {sb['final']:7.0f}%  maxDD {sb['maxdd']:4.0%}")
+        print(f"  {label} — region guard {len(c):2d} bet-days  "
+              f"log/day {sc['mean_log']:+.4f}  final {sc['final']:7.0f}%  maxDD {sc['maxdd']:4.0%}")
+        print(f"  {label} — normalised   {len(n):2d} bet-days  "
+              f"log/day {sn['mean_log']:+.4f}  final {sn['final']:7.0f}%  maxDD {sn['maxdd']:4.0%}")
+        if b and c:
+            print(f"             marginal Δlog/day (guard − started) "
+                  f"{sc['mean_log'] - sb['mean_log']:+.4f}  "
+                  f"maxDD {sb['maxdd']:4.0%} -> {sc['maxdd']:4.0%}   "
+                  f"(normalised − started: {sn['mean_log'] - sb['mean_log']:+.4f})")
+        print(f"             bet-days lost by the guard (vs started-only arm): "
+              f"{len(lost_vs_started)} — {', '.join(lost_vs_started) or 'none'}")
+        print()
+    print("read: in-sample history does not punish the guard (the region class")
+    print("was disproportionately losing legs) — but that is hindsight, not")
+    print("evidence of edge: the rule exists to stop the incident-#6 family,")
+    print("and its true price shows up on genuinely new days.")
+    print()
+    print("COST CAVEAT (2026-09-06 follow-up review, C1): the in-season")
+    print("guard-vs-started gap is ONE bet-day (2026-08-04), and that day WON.")
+    print("With n=35, sd of daily log growth ~0.21, the gap is ~0.2 standard")
+    print("errors of a single day's noise — indistinguishable from zero, and")
+    print("the same guard would look like a GAIN had that one day lost. The")
+    print("cost of the guard is UNMEASURED, not small; the started-only arm")
+    print("is not 'better than default' either (0.3 s.e.). Do not quote")
+    print("-0.0070 (in-season) or +0.0080 (whole archive) as a price.")
+    print()
+    print("NORMALISATION RECOVERY (Task A; details in the HANDOVER addendum):")
+    print("the 'normalised' arm above is the LOWER bound — it resolves only")
+    print("witnesses preserved in the archives (own zoned kickoff; the")
+    print("scoutingstats starting_at string, which the odds adapter stores as")
+    print("odds_captured_at). Same-fixture vitibet rows ('+02:00' in every")
+    print("archived vitibet-anchored row) existed at fetch time for most of")
+    print("the remaining clock-only legs (sources_used proves presence) but")
+    print("their kickoff strings are not archived, so live recovery is higher.")
+    if exclude:
+        _perfect_clock_block(scope, exclude)
+    return 0
+
+
+def _row_flag(row: dict) -> tuple[bool, str]:
+    """Is an archived row QUARANTINE-FLAGGED, and under which label?
+
+    Flagged = WATCHLIST_* bucket or a price_quarantine_reason. The two
+    coincide by construction for scoutingstats-sole prices
+    (WATCHLIST_UNCORROBORATED_PRICE / scoutingstats_sole_source) and for
+    suspect fuzzy prices (WATCHLIST_SUSPECT_PRICE / alias_fuzzy); they are
+    counted once. The engine bets these legs anyway: playable_legs only
+    excludes alias_fuzzy suspects that were never rescued.
+    """
+    bucket = str(row.get("bucket") or "")
+    reason = str(row.get("price_quarantine_reason") or row.get("quarantine") or "")
+    if bucket.startswith("WATCHLIST") or reason not in ("", "none"):
+        label = reason or bucket
+        return True, label
+    return False, ""
+
+
+def cmd_quarantine(universe, since=None, until=None):
+    """MEASURE ONLY (Task B, 2026-09-06 follow-up): what are the ridden
+    WATCHLIST / quarantine legs worth? No gate changes.
+
+    Ridden = legs on the DEFAULT replay arm's cards (the unguarded engine's
+    live selection on the settled-playable pools). FLAGGED = archived row
+    carries a WATCHLIST_* bucket or a price_quarantine_reason. Always split
+    in-season (>= 2026-08-01) vs off-season — a mixed figure is the ⑩
+    confound.
+
+    Flat ROI = 1 flat unit per leg at the odds the engine bet: win -> odds-1,
+    void -> 0, loss -> -1. Hit rate = wins / non-void legs. Differences are
+    day-block bootstrapped (the same resampled day indices score both
+    populations).
+
+    This is a MEASUREMENT, not a gate: if flagged legs look worse, that is a
+    pre-registered candidate for the October slot under the standing bar
+    (paired-bootstrap p10 > 0 AND every leave-one-day-out keeps the sign AND
+    maxDD <= live, at n >= 60 genuinely new in-season bet-days), never an
+    adoption here.
+    """
+    scope = _day_scope(universe, since, until)
+    print("=" * 74)
+    print("QUARANTINE-GATE CENSUS — RIDDEN LEGS (measure only; no gate change)")
+    print("=" * 74)
+    print(f"scope: {len(scope)} settled-playable bet-days; ridden = default "
+          f"replay arm's cards (live selection, floor {at.MIN_LEG_ODDS});")
+    print("flagged = WATCHLIST_* bucket or price_quarantine_reason on the row.\n")
+
+    # ---- ridden legs per day with per-leg facts ----
+    ridden: dict[str, list[dict]] = {}
+    for d, pool in scope.items():
+        accas = at.select_accas(pool)
+        chosen = [l["match"] for a in accas for l in a]
+        for leg in pool:
+            if leg["match"] in chosen and leg["match"] not in {x["match"] for x in ridden.get(d, [])}:
+                row = leg.get("row") or {}
+                flagged, label = _row_flag(row)
+                ridden.setdefault(d, []).append({
+                    "match": leg["match"], "result": leg["result"],
+                    "odds": float(leg["odds"] or 0.0), "flagged": flagged,
+                    "label": label, "row": row,
+                })
+
+    def _split(days):
+        return ({d: v for d, v in days.items() if d >= "2026-08-01"},
+                {d: v for d, v in days.items() if d < "2026-08-01"})
+
+    regimes = (("whole archive", ridden),
+               ("in-season (>= 2026-08-01)", _split(ridden)[0]),
+               ("off-season (< 2026-08-01)", _split(ridden)[1]))
+
+    for label, days in regimes:
+        legs = [l for d in days for l in days[d]]
+        n_flag = sum(1 for l in legs if l["flagged"])
+        print(f"  {label}: {len(legs)} ridden legs, {n_flag} flagged "
+              f"({n_flag / max(len(legs), 1):.0%}) across "
+              f"{sum(1 for d in days if any(l['flagged'] for l in days[d]))} of "
+              f"{len(days)} bet-days touched by a flagged leg")
+        if n_flag:
+            by_ev: dict[str, list] = {}
+            by_reason: dict[str, list] = {}
+            by_bucket: dict[str, list] = {}
+            for l in legs:
+                if not l["flagged"]:
+                    continue
+                row = l["row"]
+                by_ev.setdefault(str(row.get("price_evidence") or "none"), []).append(l)
+                by_reason.setdefault(str(row.get("price_quarantine_reason") or "none"), []).append(l)
+                by_bucket.setdefault(str(row.get("bucket") or "none"), []).append(l)
+            for name, table in (("price_evidence", by_ev),
+                                ("quarantine_reason", by_reason),
+                                ("bucket", by_bucket)):
+                bits = ", ".join(f"{k} {len(v)}" for k, v in sorted(table.items()))
+                print(f"      by {name}: {bits}")
+
+    def _flat_roi(l):
+        if l["result"] == "win":
+            return float(l["odds"]) - 1.0
+        if l["result"] == "void":
+            return 0.0
+        return -1.0
+
+    def _stats(legs):
+        n = len(legs)
+        non_void = [l for l in legs if l["result"] != "void"]
+        wins = sum(1 for l in legs if l["result"] == "win")
+        roi = sum(_flat_roi(l) for l in legs)
+        return {"n": n, "wins": wins, "nv": len(non_void),
+                "hit": wins / len(non_void) if non_void else float("nan"),
+                "roi": roi / n if n else 0.0}
+
+    print()
+    for label, days in regimes:
+        legs = [l for d in days for l in days[d]]
+        flagged = [l for l in legs if l["flagged"]]
+        unflagged = [l for l in legs if not l["flagged"]]
+        sf, su = _stats(flagged), _stats(unflagged)
+        print(f"  {label} — flagged   n={sf['n']:3d}  hit {sf['hit']:6.1%}  "
+              f"flat ROI {sf['roi']:+7.1%}")
+        print(f"  {label} — unflagged n={su['n']:3d}  hit {su['hit']:6.1%}  "
+              f"flat ROI {su['roi']:+7.1%}")
+
+        # day-block bootstrap of the per-day difference (paired day indices)
+        def _day_mean(days_, flag):
+            out = {}
+            for d, ls in days_.items():
+                sub = [l for l in ls if l["flagged"] == flag]
+                if sub:
+                    out[d] = sum(_flat_roi(l) for l in sub) / len(sub)
+            return out
+
+        mf = _day_mean(days, True)
+        mu = _day_mean(days, False)
+        paired = sorted(set(mf) & set(mu))
+        if paired:
+            rng = __import__("random").Random(20260906)
+            diffs = []
+            for _ in range(4000):
+                idx = [rng.choice(paired) for _ in paired]
+                diffs.append(sum(mf[i] - mu[i] for i in idx) / len(idx))
+            diffs.sort()
+            p10 = diffs[400]
+            lo, hi = diffs[200], diffs[3800]
+            flag = "  ⚠ small-n" if len(paired) < 30 else ""
+            print(f"      paired day-bootstrap ΔROI (flagged−unflagged), "
+                  f"{len(paired)} days with both: "
+                  f"p10 {p10:+.1%}, 90% CI [{lo:+.1%}, {hi:+.1%}]{flag}")
+        print()
+
+    # ---- would-blank days + growth consequence (IN-SAMPLE) ----
+    filtered = {}
+    for d, pool in scope.items():
+        kept = [l for l in pool if not _row_flag(l.get("row") or {})[0]]
+        filtered[d] = kept
+    print("WOULD-BLANK + GROWTH IF FLAGGED LEGS WERE EXCLUDED (IN-SAMPLE;")
+    print("not a policy — measurement only)")
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        sub = {d: days[d] for d in days}
+        fsub = {d: v for d, v in filtered.items() if d in days}
+        ra, rb = replay(sub, {}), replay(fsub, {})
+        rs_a, rs_b = summarise(ra), summarise(rb)
+        lost = sorted(set(ra) - set(rb))
+        print(f"  {label} — default {rs_a['days']:2d} bet-days  "
+              f"log/day {rs_a['mean_log']:+.4f}  final {rs_a['final']:7.0f}%  "
+              f"maxDD {rs_a['maxdd']:4.0%}")
+        print(f"  {label} — exclude-flagged {rs_b['days']:2d} bet-days  "
+              f"log/day {rs_b['mean_log']:+.4f}  final {rs_b['final']:7.0f}%  "
+              f"maxDD {rs_b['maxdd']:4.0%}  "
+              f"(days blanked: {len(lost)} — {', '.join(lost) or 'none'})")
+    print()
+    print("read: these are in-sample descriptions of the flag's history, not")
+    print("evidence. Whatever the flag's legs did, the flag was designed as a")
+    print("PRICING caution, not a betting signal; measuring it does not make it")
+    print("one. If the flagged population is worse, the pre-registered October")
+    print("slot owns that test (standing bar: paired-bootstrap p10 > 0 AND")
+    print("leave-one-day-out sign holds AND maxDD <= live, at n >= 60 genuinely")
+    print("new in-season bet-days). No adoption here, ever.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --warehouse-replay: FEASIBILITY audit (Phase 1). Research only, opt-in.
+# --------------------------------------------------------------------------
+def _pick_rule_name(row: dict) -> str:
+    return str(row.get("edge_rule") or row.get("rule")
+               or row.get("display_rule") or "unknown-rule")
+
+
+def _clv_witnesses(run_date: str, pick_id: str) -> list[dict]:
+    """Same-day second-provider price rows from the CLV snapshot files.
+
+    Returns rows for the pick whose odds_provider is a real second source
+    (bzzoiro/betexplorer) with a true capture timestamp and an exact or
+    alias-time/unique/betexplorer match method — i.e. the same fixture was
+    priced by another provider that day, at a stamped time.
+    """
+    out: list[dict] = []
+    for f in sorted(LOCALDATA.glob("clv_snapshots_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if str(r.get("source_run_date") or "")[:10] != run_date:
+                    continue
+                if str(r.get("pick_id") or "") != pick_id:
+                    continue
+                prov = str(r.get("odds_provider") or "")
+                meth = str(r.get("odds_match_method") or "")
+                if prov in ("scoutingstats_odds", "", "forebet_best", "zulubet"):
+                    continue
+                if meth not in ("exact", "alias_time", "alias_unique", "betexplorer"):
+                    continue
+                try:
+                    o = float(r.get("observed_odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0 or not str(r.get("captured_at_utc") or ""):
+                    continue
+                out.append({"provider": prov, "odds": o,
+                            "captured_at": str(r.get("captured_at_utc") or ""),
+                            "method": meth, "label": str(r.get("snapshot_label") or "")})
+    return out
+
+
+def _theoddsapi_witnesses(day: str, home: str, away: str, sel: str) -> list[dict]:
+    """Same-fixture per-bookmaker prices from theoddsapi monthly files."""
+    import picks_today as pt
+    out: list[dict] = []
+    hk = pt.odds_match_team_key(str(home or ""))
+    ak = pt.odds_match_team_key(str(away or ""))
+    for f in sorted(LOCALDATA.glob("theoddsapi_odds_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if str(r.get("date") or "")[:10] != day:
+                    continue
+                if r.get("market") != "1x2":
+                    continue
+                rhk = pt.odds_match_team_key(str(r.get("home") or ""))
+                rak = pt.odds_match_team_key(str(r.get("away") or ""))
+                if (rhk, rak) not in ((hk, ak), (ak, hk)):
+                    continue
+                if str(r.get("selection") or "").lower() != sel.lower():
+                    continue
+                try:
+                    o = float(r.get("odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0 or not str(r.get("captured_at") or ""):
+                    continue
+                out.append({"provider": "theoddsapi:" + str(r.get("bookmaker") or ""),
+                            "odds": o,
+                            "captured_at": str(r.get("captured_at") or ""),
+                            "method": "exact", "label": "theoddsapi"})
+    return out
+
+
+def _stamped_witnesses(leg) -> list[dict]:
+    row = leg.get("row") or {}
+    from edgefactory.clv import build_pick_id
+    pid = build_pick_id(str(leg.get("_day") or row.get("date") or "")[:10],
+                        row.get("home"), row.get("away"), row.get("market"),
+                        row.get("pick"), _pick_rule_name(row))
+    out = _clv_witnesses(str(leg.get("_day"))[:10], pid)
+    out += _theoddsapi_witnesses(str(leg.get("_day"))[:10], row.get("home"),
+                                 row.get("away"), str(leg.get("pick") or ""))
+    # best price per distinct provider class (avoid double-counting
+    # bookmaker duplicates of one source snapshot)
+    best: dict[str, dict] = {}
+    for w in out:
+        key = w["provider"].split(":")[0] + ":" + (w["captured_at"][:10] if w["captured_at"] else "")
+        if key not in best or w["odds"] > best[key]["odds"]:
+            best[key] = w
+    return sorted(best.values(), key=lambda w: -w["odds"])
+
+
+def _pick_time_engine_price(leg) -> tuple[float | None, str | None]:
+    """The nearest record to ride time: the CLV pick_time snapshot row's own
+    observed odds (its odds_provider is the price the slate carried then).
+    Returns None when no pick_time row exists for the pick."""
+    row = leg.get("row") or {}
+    from edgefactory.clv import build_pick_id
+    pid = build_pick_id(str(leg.get("_day") or "")[:10],
+                        row.get("home"), row.get("away"), row.get("market"),
+                        row.get("pick"), _pick_rule_name(row))
+    for f in sorted(LOCALDATA.glob("clv_snapshots_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if str(r.get("source_run_date") or "")[:10] != str(leg.get("_day"))[:10]:
+                    continue
+                if str(r.get("pick_id") or "") != pid:
+                    continue
+                if str(r.get("snapshot_label") or "") != "pick_time":
+                    continue
+                try:
+                    o = float(r.get("observed_odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0:
+                    return None, None
+                return o, str(r.get("odds_provider") or "")
+    return None, None
+
+
+def cmd_price_obtainability(universe, since=None, until=None):
+    """Task D (2026-09-06) — P0: are the recorded prices obtainable?
+
+    MEASUREMENT ONLY; no gate, no selection or staking change.
+
+    The engine's prices on scoutingstats legs are sole-source by
+    construction (the primary bundle had no row), so nothing in the archive
+    says whether the owner could actually have got them. This command
+    measures the archive-side gap (D2) and the obtainability-constrained
+    replay (D3, labelled in-sample):
+
+    D2 — for ridden scoutingstats legs where a SECOND provider priced the
+    same fixture+selection that day with a true capture timestamp (CLV
+    snapshots' bzzoiro/betexplorer rows, or theoddsapi per-bookmaker rows),
+    how far is the engine's assumed price from the corroborating price?
+    Split in-season / off-season. If the engine price is SYSTEMATICALLY
+    LONGER than corroboration, the recorded ROI is inflated by that much.
+
+    D3 — replay the same settled-playable universe with every scoutingstats
+    leg either (a) repriced to its best stamped corroboration or (b) dropped
+    when none exists. IN-SAMPLE: the corroborated prices come from the same
+    period's archive, so the result is a lower-bound consistency check on
+    the recorded growth, not a forward estimate.
+
+    Caveat printed with the numbers: scoutingstats odds carry no true
+    capture timestamp (captured_at == kickoff by construction), so the
+    engine price's own availability moment is unknown — exactly what the D1
+    owner-actual-price capture (audit_clv) measures going forward.
+    """
+    scope = _day_scope(universe, since, until)
+    ridden = _ridden_legs(scope)
+    ss = [l for l in ridden
+          if str((l.get("row") or {}).get("odds_source")) == "scoutingstats_odds"]
+    in_season = [l for l in ss if l["_day"] >= "2026-08-01"]
+    off_season = [l for l in ss if l["_day"] < "2026-08-01"]
+
+    print("=" * 74)
+    print("PRICE OBTAINABILITY (Task D) — scoutingstats-odds ridden legs")
+    print("=" * 74)
+    print("engine price = the price the in-sample replay assumes (pool odds")
+    print("today); scoutingstats rows have NO true capture stamp (captured_at")
+    print("== kickoff by construction), so their availability moment is")
+    print("unknown — the D1 owner-actual capture (audit_clv) is the forward")
+    print("measure. Corroboration = a SECOND provider's stamped price for the")
+    print("same fixture+selection that day (CLV bzzoiro/betexplorer exact")
+    print("rows, theoddsapi per-bookmaker rows).")
+
+    cens = {}
+    rows_all = []
+    rows_by_leg: dict[str, dict] = {}
+    for l in ss:
+        wits = _stamped_witnesses(l)
+        rows_all.append({
+            "day": l["_day"], "match": l["match"], "pick": l["pick"],
+            "engine": float(l["odds"] or 0.0),
+            "wits": wits,
+        })
+        rows_by_leg[l["_day"] + "|" + l["match"] + "|" + l["pick"]] = l
+    for label, group in (("whole archive", ss), ("in-season", in_season),
+                         ("off-season", off_season)):
+        n = len(group)
+        with_w = sum(1 for l in group if _stamped_witnesses(l))
+        cens[label] = (n, with_w)
+    print()
+    print("D2 — coverage (ridden scoutingstats legs with any stamped same-day")
+    print("     second-provider price):")
+    for label, (n, w) in cens.items():
+        print(f"    {label:12s} {w:3d} of {n:3d} legs corroborated")
+
+    rows_all = [r for r in rows_all if r["wits"]]
+    print()
+    print("D2 — gap, leg by leg. 'engine (pool)' = the price the in-sample")
+    print("     replay assumes today (the ROI basis); 'engine (pick_time)' =")
+    print("     the CLV snapshot at ride time when one exists; corr = best")
+    print("     stamped second-provider price that day (negative delta = the")
+    print("     engine price is SHORTER than what the other provider offered):")
+    for r in sorted(rows_all, key=lambda r: r["day"]):
+        pt_o, pt_p = _pick_time_engine_price(rows_by_leg[r["day"] + "|" + r["match"] + "|" + r["pick"]])
+        best = r["wits"][0]
+        for w in r["wits"]:
+            print(f"    {r['day']} {r['match'][:44]:44s} {r['pick']:4s} "
+                  f"engine(pool) {r['engine']:5.2f}  corr {w['odds']:5.2f} "
+                  f"({w['provider'][:20]:20s} cap {w['captured_at'][:19]})")
+        pt_txt = f"engine(pick_time) {pt_o:.2f} ({pt_p})" if pt_o else "engine(pick_time) n/a"
+        print(f"        delta(pool-corr) {best['odds'] - r['engine']:+.2f}  "
+              f"{pt_txt}")
+    if rows_all:
+        deltas = [r["wits"][0]["odds"] - r["engine"] for r in rows_all]
+        print(f"    n={len(deltas)}  mean delta(pool-corr) "
+              f"{sum(deltas)/len(deltas):+.3f}  min {min(deltas):+.2f}  "
+              f"max {max(deltas):+.2f}  pool-longer-than-best: "
+              f"{sum(1 for d in deltas if d < 0)} of {len(deltas)}")
+    else:
+        print("    (no corroborated legs)")
+    print()
+
+    # D3 — constrained replay (IN-SAMPLE)
+    def constrain(scope_days):
+        out = {}
+        dropped = 0
+        repriced = 0
+        for d, pool in scope_days.items():
+            npool = []
+            for leg in pool:
+                row = leg.get("row") or {}
+                if str(row.get("odds_source")) != "scoutingstats_odds":
+                    npool.append(leg)
+                    continue
+                wits = _stamped_witnesses({**leg, "_day": d})
+                if not wits:
+                    dropped += 1
+                    continue
+                leg2 = dict(leg)
+                row2 = dict(row)
+                new_odds = wits[0]["odds"]
+                row2["odds"] = new_odds
+                row2["_repriced_from"] = float(leg.get("odds") or 0.0)
+                row2["_repriced_to"] = new_odds
+                row2["_repriced_witness"] = wits[0]["provider"]
+                leg2["row"] = row2
+                if leg.get("odds") is not None:
+                    leg2["odds"] = new_odds
+                npool.append(leg2)
+                repriced += 1
+            if len(npool) >= at.LEGS_PER_ACCA:
+                out[d] = npool
+        return out, dropped, repriced
+
+    print("D3 — obtainability-constrained replay (IN-SAMPLE; measurement")
+    print("     only, nothing ships). scoutingstats legs with a stamped")
+    print("     second-provider price ride at that price; legs without one")
+    print("     are dropped:")
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        base_rec = replay(days, {})
+        con, dropped, repriced = constrain(days)
+        s0 = summarise(base_rec)
+        if not con:
+            print(f"  {label}: constrained replay has NO bet-days "
+                  f"(dropped {dropped}, repriced {repriced})")
+            continue
+        s1 = summarise(replay(con, {}))
+        n_base = sum(len(v["legs"]) for v in base_rec.values())
+        n_con = sum(len(v["legs"]) for v in replay(con, {}).values())
+        print(f"  {label} — default      {s0['days']:2d} bet-days  "
+              f"legs/day {n_base/max(s0['days'],1):4.1f}  "
+              f"log/day {s0['mean_log']:+.4f}  final {s0['final']:7.0f}%  "
+              f"maxDD {s0['maxdd']:4.0%}")
+        print(f"  {label} — constrained {s1['days']:2d} bet-days  "
+              f"legs/day {n_con/max(s1['days'],1):4.1f}  "
+              f"log/day {s1['mean_log']:+.4f}  final {s1['final']:7.0f}%  "
+              f"maxDD {s1['maxdd']:4.0%}   (legs dropped {dropped}, "
+              f"repriced {repriced})")
+    print()
+    print("read: D2's n is tiny because scoutingstats legs are sole-source by")
+    print("construction — that is the finding, not an accident of sampling.")
+    print("The D3 constrained arm is the replay's own answer to 'could those")
+    print("prices have been got?': where the archive can check, the engine")
+    print("price was not longer than what other providers offered that day;")
+    print("where the archive cannot check, the leg is dropped because the")
+    print("price is not certifiable. Both halves are IN-SAMPLE.")
+    return 0
+
+
+def _wr_open():
+    """Open the warehouse read-only, preferring the materialised file."""
+    import duckdb
+    db = LOCALDATA / "warehouse.duckdb"
+    if db.exists():
+        return duckdb.connect(str(db), read_only=True), str(db)
+    from edgefactory.warehouse import connect as _connect
+    return _connect(), "in-memory views over localdata/*.csv.gz"
+
+
+def cmd_warehouse_replay(archives, settled, since=None, until=None):
+    """Answer 'can the live engine be reconstructed from the warehouse?'
+
+    Prints, in order: what is on disk, what the live picks depended on,
+    per-rule feasibility, the look-ahead audit, the validation gate, and a
+    PASS/FAIL verdict against a bar stated before the numbers.
+    """
+    from edgefactory import warehouse_replay as wr
+    from edgefactory.util import norm_team
+
+    con, src = _wr_open()
+    days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10]
+                   for p in archives})
+    days = [d for d in days if d and (not since or d >= since)
+            and (not until or d <= until)]
+
+    print("=" * 74)
+    print("WAREHOUSE RECONSTRUCTION — PHASE 1 FEASIBILITY AUDIT")
+    print("=" * 74)
+    print(f"warehouse: {src}")
+    print(f"live archive: {len(days)} days, {days[0]} -> {days[-1]}")
+    print("This command does NOT produce a backtest. It measures whether one")
+    print("could be trusted. A reconstruction that recovers a biased slice of")
+    print("the live picks is a different strategy, not a cheaper engine.\n")
+
+    # ---------------- 1. inventory ----------------
+    print("-" * 74)
+    print("1. WAREHOUSE INVENTORY (what history actually exists on disk)")
+    print("-" * 74)
+    print(f"{'table':24s} {'rows':>10s}  {'first':10s} {'last':10s}")
+    for row in wr.warehouse_inventory(con):
+        if not row["present"]:
+            print(f"{row['table']:24s} {'ABSENT':>10s}  {'-':10s} {'-':10s}")
+            continue
+        print(f"{row['table']:24s} {row['rows']:10,d}  "
+              f"{row['first'] or '-':10s} {row['last'] or '-':10s}")
+    print()
+
+    cov = wr.input_coverage(con, days)
+    print("prediction-source rows landing inside the archive window:")
+    for name, n in cov["per_source"].items():
+        print(f"  {name:10s} {n:3d} / {len(days)} archived days")
+    print(f"  ANY source: {cov['days_with_any_input']} / {len(days)} days "
+          f"({cov['coverage_frac']:.0%})\n")
+
+    # ---------------- 2. dependency census ----------------
+    legs = []
+    for d in days:
+        legs.extend(at.playable_legs(archives, day=d, settled=settled))
+    census = wr.dependency_census(legs)
+
+    print("-" * 74)
+    print("2. WHAT THE LIVE LEGS DEPENDED ON")
+    print("-" * 74)
+    print(f"playable legs across the archive: {census.legs}")
+    print("\nprediction sources cited by those legs:")
+    for s, n in sorted(census.source_hits.items(), key=lambda t: -t[1]):
+        tag = "ON DISK" if s in wr.ON_DISK_PREDICTION_SOURCES else "NO HISTORY FILE"
+        print(f"  {s:14s} {n:4d} legs   [{tag}]")
+    print("\nodds sources used to price those legs:")
+    for s, n in sorted(census.by_odds_source.items(), key=lambda t: -t[1]):
+        if s in wr.ON_DISK_ODDS_SOURCES:
+            tag = "historical, bet-time"
+        elif s in wr.CLOSING_ONLY_ODDS_SOURCES:
+            tag = "historical but CLOSING (wrong price)"
+        else:
+            tag = "NO HISTORY FILE"
+        print(f"  {s:20s} {n:4d} legs   [{tag}]")
+
+    n = max(census.legs, 1)
+    print("\naddressability funnel (each line is a necessary condition):")
+    print(f"  {'all playable legs':52s} {census.legs:4d} {100:5.1f}%")
+    print(f"  {'rule is a source vote (not the ml-meta model)':52s} "
+          f"{census.source_vote:4d} {100*census.source_vote/n:5.1f}%")
+    print(f"  {'every cited source has a history file':52s} "
+          f"{census.on_disk_sources:4d} {100*census.on_disk_sources/n:5.1f}%")
+    print(f"  {'priced from an odds source with history':52s} "
+          f"{census.historical_odds:4d} {100*census.historical_odds/n:5.1f}%")
+    print(f"  {'ALL THREE (the reconstruction ceiling)':52s} "
+          f"{census.ceiling:4d} {100*census.ceiling/n:5.1f}%")
+    print()
+
+    # ---------------- 3. per-rule verdict ----------------
+    print("-" * 74)
+    print("3. PER-RULE FEASIBILITY")
+    print("-" * 74)
+    inv = {r["table"]: r for r in wr.warehouse_inventory(con)}
+    for spec in wr.RULE_SPECS:
+        got = census.by_rule.get(spec.rule, 0)
+        view = inv.get(spec.view or "", {})
+        span = (f"{view.get('first')} -> {view.get('last')}"
+                if view.get("present") else "view ABSENT")
+        missing = [s for s in spec.needs_sources
+                   if s not in wr.ON_DISK_PREDICTION_SOURCES]
+        print(f"\n  {spec.rule}   ({got} playable legs in archive)")
+        print(f"    kind          {spec.kind}")
+        print(f"    view          {spec.view} [{span}]")
+        print(f"    needs         {', '.join(spec.needs_sources)}"
+              + (f"   MISSING: {', '.join(missing)}" if missing else ""))
+        print(f"    caveat        {spec.note}")
+        if spec.kind in ("ml-meta", "ml-fade"):
+            print("    VERDICT       NOT RECONSTRUCTABLE — post-kickoff features "
+                  "(see section 4)")
+        elif view.get("present") and view.get("last", "") >= days[0]:
+            print("    VERDICT       reconstructable in principle over the view's span")
+        else:
+            print("    VERDICT       NOT RECONSTRUCTABLE on archived days — "
+                  "view has no rows there")
+    print()
+
+    # ---------------- 4. look-ahead audit ----------------
+    print("-" * 74)
+    print("4. LOOK-AHEAD AUDIT")
+    print("-" * 74)
+    try:
+        import json as _json
+        edges = _json.loads((LOCALDATA / "edges_consensus.json").read_text())
+        model = edges.get("ml_model") or {}
+        feats = wr.classify_ml_features(model.get("feature_cols", []),
+                                        model.get("coef", []))
+    except Exception:
+        feats = []
+    if feats:
+        bad = [f for f in feats if f["availability"] == "post_kickoff"]
+        print("ml-meta feature vector, by when the value becomes knowable:")
+        for f in feats[:10]:
+            print(f"  {f['feature']:18s} {f['coef']:+8.4f}  {f['availability']}")
+        print("  ...")
+        for f in bad:
+            if f not in feats[:10]:
+                print(f"  {f['feature']:18s} {f['coef']:+8.4f}  {f['availability']}")
+        if bad:
+            swing = wr.leak_logit_swing(feats)
+            print(f"\n  {len(bad)} POST-KICKOFF feature(s): "
+                  f"{', '.join(f['feature'] for f in bad)}")
+            print("  These are the actual half-time scores of the match being")
+            print("  predicted. Live inference has no scores yet and feeds 0.")
+            print("  A warehouse replay reads them from the settled row, so a")
+            print(f"  2-0 half-time lead alone shifts the logit by {swing:+.3f}")
+            print("  — an 'edge' that did not exist at bet time.")
+    else:
+        print("no ml_model payload found in localdata/edges_consensus.json")
+
+    try:
+        stat = con.execute(
+            "SELECT status, count(*) FROM forebet_settled GROUP BY 1 "
+            "ORDER BY 2 DESC LIMIT 6").fetchall()
+        total = sum(c for _, c in stat)
+        print("\nforebet.csv.gz row status census (is any row pre-kickoff?):")
+        for s, c in stat:
+            print(f"  {str(s):12s} {c:8,d}  {100*c/total:5.1f}%")
+        print("  Every row carries a TERMINAL status and a final score, and the")
+        print("  file has no capture timestamp column. There is therefore no")
+        print("  evidence any stored probability or price is the pre-kickoff")
+        print("  one. Treat every forebet-priced replay result as an UPPER BOUND.")
+    except Exception:
+        pass
+    print()
+
+    # ---------------- 5. the gate ----------------
+    print("-" * 74)
+    print("5. VALIDATION GATE — reconstruct the archived days, score the recovery")
+    print("-" * 74)
+    print(f"bar stated before measuring: recall >= {wr.GATE_MIN_LEG_RECALL:.0%}, "
+          f"precision >= {wr.GATE_MIN_LEG_PRECISION:.0%},")
+    print(f"odds mismatch <= {wr.GATE_MAX_ODDS_MISMATCH:.0%} of matched legs, "
+          f"input coverage >= {wr.GATE_MIN_COVERED_DAYS:.0%} of days.\n")
+
+    by_day = {d: at.playable_legs(archives, day=d, settled=settled) for d in days}
+    gate = wr.validation_gate(con, by_day, at.MIN_LEG_ODDS, norm_team)
+    print(f"live legs/day       {gate['live_legs_per_day']:6.2f}")
+    print(f"reconstructed/day   {gate['recon_legs_per_day']:6.2f}")
+    print(f"true positives      {gate['tp']:6d}")
+    print(f"false positives     {gate['fp']:6d}   (reconstruction invented these)")
+    print(f"false negatives     {gate['fn']:6d}   (live legs never recovered)")
+    print(f"leg recall          {gate['recall']:6.1%}")
+    print(f"leg precision       {gate['precision']:6.1%}")
+    if gate["odds_diffs"]:
+        print(f"odds diff median    {gate['odds_diff_median']:+6.2%}")
+        print(f"odds mismatch >1%   {gate['odds_mismatch_frac']:6.1%} of matched legs")
+    else:
+        print("odds diff           n/a — no leg matched, so no price to compare")
+    nonzero = [d for d in gate["per_day"] if d["matched"]]
+    print(f"days with any match {len(nonzero)} / {len(gate['per_day'])}")
+
+    # Distinguish "the reconstruction code is broken" from "the data is absent"
+    # by pointing the SAME function at the last window where inputs do exist.
+    probe_days = con.execute(
+        "SELECT date, count(*) FROM consensus2 GROUP BY 1 ORDER BY 1 DESC LIMIT 60"
+    ).fetchall()
+    if probe_days:
+        pd_list = sorted(str(d)[:10] for d, _ in probe_days)
+        found = [len(wr.reconstruct_legs(con, d, at.MIN_LEG_ODDS)) for d in pd_list]
+        got = sum(found)
+        print(f"\nmechanism check — same reconstructor, last {len(pd_list)} days that")
+        print(f"DO have inputs ({pd_list[0]} -> {pd_list[-1]}):")
+        print(f"  {got} legs over {len(pd_list)} days = "
+              f"{got/len(pd_list):.2f} legs/day")
+        print(f"  live engine sees {gate['live_legs_per_day']:.2f} legs/day across the")
+        print("  archive (~11.5/day in-season). The reconstructor runs; it simply")
+        print("  models a much narrower strategy than the engine does. That gap is")
+        print("  the finding — it is not a tuning problem.")
+    print()
+
+    ok, reasons = wr.gate_verdict(cov, gate)
+    print("=" * 74)
+    print(f"PHASE 1 VERDICT: {'PASS' if ok else 'FAIL'}")
+    print("=" * 74)
+    for r in reasons:
+        print(f"  - {r}")
+    if not ok:
+        print("\nPhase 2 (the 2024-2026 replay) is NOT unlocked. Any growth,")
+        print("drawdown or ruin number produced through this reconstruction")
+        print("would describe a strategy the engine never ran. Do not quote one.")
+        print("\nWhat would unlock it, in order of size:")
+        print("  1. vitibet history — cited by "
+              f"{census.source_hits.get('vitibet', 0)} of {census.legs} playable legs.")
+        print("  2. bet-time odds history for scoutingstats_odds / bzzoiro_odds"
+              " — the two")
+        print("     pricing sources behind the plurality of live legs.")
+        print("  3. Point-in-time, timestamped prediction snapshots (captured")
+        print("     BEFORE kickoff) rather than post-match scrapes.")
+        print("  4. An ml-meta feature set with the half-time score removed,")
+        print("     retrained walk-forward, before any ml-meta leg is replayed.")
+    con.close()
+    return 0 if ok else 1
+
+
+# --------------------------------------------------------------------------
+# --holdout / --search: a knob search that pays for its own selection bias.
+#
+# Picking the best replay number on a single window is free and worthless:
+# with a few hundred variants over ~75 bet-days the winner is largely an
+# artefact of having looked (measured 2026-09-09: the in-sample winner ranked
+# 125/396 out-of-sample, and the reverse split chose a different arm entirely).
+# So the search chooses on one half, scores that choice BLIND on the other, in
+# both directions, and prints the shrinkage, the out-of-sample rank and the
+# hindsight ceiling beside it. Doctrine is unchanged: relative differences on
+# identical inputs, never a forecast.
+# --------------------------------------------------------------------------
+SEARCH_AXES = {
+    "legs_per_acca": (1, 2),
+    "max_accas": (2, 3, 4, 6),
+    "floor": (1.2, 1.35, 1.5, 1.7),
+    "rank": ("prob", "ev"),
+    "pairing": ("consecutive", "barbell"),
+    "stake_frac": (0.3333, 0.1667, 0.10),
+    "min_prob": (None, 0.68, 0.74),
+    "min_accas": (1, 2),
+}
+
+
+def default_grid():
+    """Every combination of SEARCH_AXES (None = leave the live value alone)."""
+    keys = sorted(SEARCH_AXES)
+    return [{k: v for k, v in zip(keys, combo) if v is not None}
+            for combo in itertools.product(*(SEARCH_AXES[k] for k in keys))]
+
+
+def split_universe(universe, cut=None):
+    """(before, after, cut) — the cut defaults to the median bet-day."""
+    days = sorted(universe)
+    if not days:
+        return {}, {}, None
+    cut = cut or days[len(days) // 2]
+    return ({d: universe[d] for d in days if d < cut},
+            {d: universe[d] for d in days if d >= cut}, cut)
+
+
+def arm_stats(sub, spec):
+    """summarise() plus the stake-weighted flat ROI for one arm on one window."""
+    days = replay(sub, spec)
+    s = summarise(days)
+    staked = sum(sum(d["stake_pct"]) for d in days.values())
+    ret = sum(sum(sp * o for (o, w), sp in zip(d["accas"], d["stake_pct"]) if w)
+              for d in days.values())
+    s["roi"] = (ret - staked) / staked if staked else float("nan")
+    return s
+
+
+def holdout_window(is_u, oos_u, specs, min_days=20, min_bets=40, top=10):
+    """Tune on ``is_u``, score blind on ``oos_u``. Returns the accounting as a
+    dict so tests can assert on the numbers instead of on printed text."""
+    viable = []
+    for sp in specs:
+        t = arm_stats(is_u, sp)
+        if not t["pending_days"] and t["days"] >= min_days and t["accas"] >= min_bets:
+            viable.append(sp)
+    if not viable:
+        return {"viable": 0, "chosen": None}
+    ranked = sorted(viable, key=lambda sp: -arm_stats(is_u, sp)["mean_log"])
+    blind = {id(sp): arm_stats(oos_u, sp) for sp in viable}
+    order = sorted((blind[id(sp)]["mean_log"] for sp in viable), reverse=True)
+    chosen = ranked[0]
+    tune, blind_chosen = arm_stats(is_u, chosen), blind[id(chosen)]
+    return {
+        "viable": len(viable), "chosen": chosen,
+        "tune": tune, "blind": blind_chosen,
+        "blind_rank": 1 + sum(1 for v in order if v > blind_chosen["mean_log"]),
+        "blind_n": len(order), "blind_ceiling": order[0],
+        "blind_median": order[len(order) // 2],
+        "shrinkage": (blind_chosen["mean_log"] / tune["mean_log"])
+        if tune["mean_log"] else float("nan"),
+        "top_survive": sum(1 for sp in ranked[:top] if blind[id(sp)]["mean_log"] > 0),
+        "top_n": min(top, len(ranked)),
+    }
+
+
+def cmd_holdout(universe, specs, top=10):
+    specs = list(specs) or default_grid()
+    older, newer, cut = split_universe(universe)
+    if not older or not newer:
+        print("not enough bet-days to split — a holdout needs both halves.")
+        return 1
+    lo, ln = arm_stats(older, {}), arm_stats(newer, {})
+    print("=" * 74)
+    print(f"HOLDOUT: {len(specs)} variants · tuned in-sample, scored BLIND "
+          f"out-of-sample, both directions")
+    print("=" * 74)
+    print(f"universe {len(universe)} bet-days, cut at {cut} · live "
+          f"{lo['mean_log']:+.4f} log/day on the older half, "
+          f"{ln['mean_log']:+.4f} on the newer")
+    print("doctrine: a blind-half number still ranks policies; it does not "
+          "forecast a bank.\n")
+    results = {}
+    for title, is_u, oos_u in (("FORWARD  (tune on the older half)", older, newer),
+                               ("REVERSE  (tune on the newer half)", newer, older)):
+        r = holdout_window(is_u, oos_u, specs, top=top)
+        results[title[:7]] = r
+        if not r["viable"]:
+            print(f"--- {title}: no viable variant met the n floor ---\n")
+            continue
+        t, b = r["tune"], r["blind"]
+        print(f"--- {title} ---")
+        print(f"  chosen while tuning : {label_of(r['chosen'])}")
+        print(f"    tuning half : log/day {t['mean_log']:+.4f}  final {t['final']:6.0f}%  "
+              f"maxDD {t['maxdd'] * 100:3.0f}%  bets {t['accas']}")
+        print(f"    BLIND half  : log/day {b['mean_log']:+.4f}  final {b['final']:6.0f}%  "
+              f"flatROI {b['roi']:+.2%}  maxDD {b['maxdd'] * 100:3.0f}%  "
+              f"days {b['days']}{noise_flag(b['accas'])}")
+        print(f"    {r['shrinkage']:.0%} of the tuning-half number survived · "
+              f"blind rank {r['blind_rank']}/{r['blind_n']} · hindsight ceiling "
+              f"{r['blind_ceiling']:+.4f} · median arm {r['blind_median']:+.4f}")
+        print(f"    top-{r['top_n']} tuning arms still positive blind: "
+              f"{r['top_survive']}/{r['top_n']}\n")
+    fw, rv = results.get("FORWARD"), results.get("REVERSE")
+    if fw and rv and fw["viable"] and rv["viable"]:
+        same = fw["chosen"] == rv["chosen"]
+        print(f"the two directions {'AGREE' if same else 'DISAGREE'} on the winner — "
+              f"{'the choice is stable' if same else 'the search is unstable, so plan on the LOWER blind number'}")
+        print(f"  forward blind {fw['blind']['mean_log']:+.4f} · reverse blind "
+              f"{rv['blind']['mean_log']:+.4f} · plan on "
+              f"{min(fw['blind']['mean_log'], rv['blind']['mean_log']):+.4f} log/day")
+    return 0
+
+
+def cmd_search(universe, top=10):
+    grid = default_grid()
+    print(f"search grid: {len(grid)} variants over {len(SEARCH_AXES)} knobs "
+          f"({', '.join(sorted(SEARCH_AXES))})\n")
+    return cmd_holdout(universe, grid, top=top)
+
+
+# --------------------------------------------------------------------------
+# --clv: attach the closing-line ledger to the legs a variant actually rides.
+#
+# Growth says whether a policy compounded on 75 replayed days. CLV says
+# whether the PRICES were any good, on ~20x the sample, before settlement.
+# When the two disagree, CLV is the one with the sample — so the harness must
+# be able to print them side by side, and split them by the fields that
+# explain a stale first price (provider / bookmaker / league / snapshot).
+# --------------------------------------------------------------------------
+def clv_index():
+    """pick_id -> first/last observed price + the split fields, from the
+    committed snapshot ledger. Uses edgefactory.clv for the comparisons, so
+    the harness cannot drift from the audit's definition of beating a price."""
+    from edgefactory.clv import beat_later_price, implied_prob_delta
+    rows: dict[str, list] = {}
+    for f in sorted(LOCALDATA.glob("clv_snapshots_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                pid = str(r.get("pick_id") or "")
+                if not pid:
+                    continue
+                try:
+                    o = float(r.get("observed_odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0:
+                    continue
+                rows.setdefault(pid, []).append((str(r.get("captured_at_utc") or ""), o, r))
+    out = {}
+    for pid, rs in rows.items():
+        if len(rs) < 2:
+            continue
+        rs.sort(key=lambda t: t[0])
+        first, last, meta = rs[0][1], rs[-1][1], rs[0][2]
+        out[pid] = {
+            "first": first, "last": last, "n_prices": len(rs),
+            "beat": beat_later_price(first, last),
+            "ip_delta": implied_prob_delta(first, last),
+            "raw_delta": last - first,
+            "league": str(meta.get("league") or "?"),
+            "provider": str(meta.get("odds_provider") or "?"),
+            "bookmaker": str(meta.get("bookmaker") or "?"),
+            "label": str(meta.get("snapshot_label") or "?"),
+        }
+    return out
+
+
+def leg_pick_id(day, leg):
+    from edgefactory.clv import build_pick_id
+    row = leg.get("row") or {}
+    return build_pick_id(str(day)[:10], row.get("home"), row.get("away"),
+                         row.get("market"), row.get("pick"), _pick_rule_name(row))
+
+
+def _clv_cells(legs_by_day, idx, split=None):
+    """legs_by_day: {day: [leg, ...]} -> aggregate CLV, optionally per cell."""
+    cells: dict[str, list] = {}
+    for day, legs in legs_by_day.items():
+        for leg in legs:
+            rec = idx.get(leg_pick_id(day, leg))
+            if not rec or rec["beat"] is None:
+                continue
+            key = str(rec.get(split) or "?") if split else "ALL"
+            cells.setdefault(key, []).append(rec)
+    out = {}
+    for key, recs in cells.items():
+        out[key] = {
+            "n": len(recs),
+            "beat_rate": sum(1 for r in recs if r["beat"]) / len(recs),
+            "mean_raw": sum(r["raw_delta"] for r in recs) / len(recs),
+            "mean_ip": sum(r["ip_delta"] for r in recs
+                           if r["ip_delta"] is not None) / max(
+                               1, sum(1 for r in recs if r["ip_delta"] is not None)),
+        }
+    return out
+
+
+def _ridden_legs_by_day(universe, spec):
+    """The legs a variant actually rides, as full leg dicts (replay() keeps
+    only match strings), matched back through the same filtered pool."""
+    out = {}
+    for d in sorted(universe):
+        pool = _filtered_pool(universe[d], spec)
+        by_match = {l["match"]: l for l in pool}
+        kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
+        plan = at.plan_day(pool, 100.0, **kw)
+        legs = [by_match[l["match"]] for a in plan for l in a["legs"]
+                if l["match"] in by_match]
+        if legs:
+            out[d] = legs
+    return out
+
+
+def cmd_clv(universe, spec=None, split=None):
+    spec = dict(spec or {})
+    idx = clv_index()
+    print("=" * 74)
+    print(f"CLOSED-LINE LEDGER vs THE RIDDEN CARD — variant: {label_of(spec)}")
+    print("=" * 74)
+    if not idx:
+        print("no clv_snapshots_*.csv.gz ledger in localdata — nothing to join.")
+        return 1
+    print(f"ledger: {len(idx)} picks with >=2 priced snapshots\n")
+    pool_cells = _clv_cells({d: _filtered_pool(p, spec) for d, p in universe.items()}, idx)
+    ridden = _ridden_legs_by_day(universe, spec)
+    ridden_cells = _clv_cells(ridden, idx)
+    for name, agg in (("every playable leg in the pool", pool_cells),
+                      ("legs this variant actually RIDES", ridden_cells)):
+        a = agg.get("ALL")
+        if not a:
+            print(f"{name}: no priced overlap with the ledger")
+            continue
+        print(f"{name}:")
+        print(f"  n={a['n']}  beat-later-price {a['beat_rate']:.1%}  "
+              f"mean raw drift {a['mean_raw']:+.4f}  mean implied-prob delta "
+              f"{a['mean_ip']:+.6f}")
+    print("  (beat% far below 50% with a positive raw drift = the close beats "
+          "you;\n   no growth number survives that for long, and CLV has the "
+          "bigger sample)")
+    if split:
+        agg = _clv_cells(ridden, idx, split=split)
+        rows = sorted(agg.items(), key=lambda kv: -kv[1]["n"])
+        shown = [(k, a) for k, a in rows if a["n"] >= 15]
+        print(f"\n--- ridden legs split by {split} (cells with n>=15) ---")
+        if not shown:
+            # An empty table is not an answer. Say what the emptiness IS: the
+            # action is spread so thin that no cell can support a conclusion,
+            # which is itself the finding — then show the largest cells anyway.
+            total = sum(a["n"] for _, a in rows)
+            biggest = rows[0][1]["n"] if rows else 0
+            print(f"  NO cell reached n>=15: {len(rows)} distinct {split} values "
+                  f"over {total} priced legs, largest cell n={biggest}.")
+            print("  That dispersion is the finding — at this spread no cell can "
+                  "support a conclusion, in either direction.")
+            print("  Largest cells anyway, all below the noise floor:")
+            shown = rows[:10]
+        print(f"{'cell':30s} {'n':>5s} {'beat%':>7s} {'raw drift':>10s}")
+        for k, a in shown:
+            print(f"{k[:30]:30s} {a['n']:5d} {a['beat_rate']:7.1%} "
+                  f"{a['mean_raw']:+10.4f}{noise_flag(a['n'])}")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --target: what a growth estimate is worth in money, at its own confidence
+# bounds. Prints the p10 plan beside the median so a good month cannot be
+# mistaken for a plan.
+# --------------------------------------------------------------------------
+def cmd_target(universe, spec, capital, target=1_000_000.0):
+    spec = dict(spec or {})
+    live = summarise(replay(universe, {}))
+    arm = summarise(replay(universe, spec))
+    if live["pending_days"] or arm["pending_days"]:
+        print("Projection unavailable: selected cards are PENDING, not zero-return days")
+        return 1
+    bs = paired_bootstrap(universe, {}, spec)
+    print("=" * 74)
+    print(f"CAPITAL PROJECTION — variant: {label_of(spec)}")
+    print("=" * 74)
+    print(f"live log/day {live['mean_log']:+.4f} · this arm {arm['mean_log']:+.4f} "
+          f"· maxDD {arm['maxdd'] * 100:.0f}%")
+    if bs is None:
+        print("\nno bootstrap: an arm that can bankrupt a bet-day is not "
+              "projectable, at any stake.")
+        return 1
+    print(f"paired bootstrap vs live: p10 {bs['p10']:+.4f} · median "
+          f"{bs['median']:+.4f} · p90 {bs['p90']:+.4f} · P(better) "
+          f"{bs['p_b_higher']:.0%} on {bs['horizon']} replay days\n")
+    print(f"{'estimate':26s} {'g/day':>9s} {'-> ' + format(int(target), ','):>14s} {'years':>7s}")
+    for name, delta in (("p10  (plan on this)", bs["p10"]),
+                        ("median", bs["median"]),
+                        ("p90  (do not plan on it)", bs["p90"])):
+        g = live["mean_log"] + delta
+        if g <= 0:
+            print(f"{name:26s} {g:+9.4f} {'never':>14s} {'-':>7s}")
+            continue
+        need = math.log(target / capital) / g
+        print(f"{name:26s} {g:+9.4f} {need:13,.0f}d {need / 365:6.1f}y")
+    print(f"\nassumes: one bet-day/day, no withdrawals, edge constant, and a "
+          f"bank that survives a {arm['maxdd'] * 100:.0f}% drawdown without "
+          f"you resizing it.")
+    print("A replay growth rate is a ranking of policies. It is not a promise "
+          "about money, and the CLV ledger outranks it if they disagree.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --october: the pre-registered adoption bar, automated. The engine source
+# already states the bar ("paired-bootstrap p10 > 0 AND leave-one-day-out sign
+# holds AND maxDD <= live, at n >= 60 genuinely new bet-days"); this judges it
+# instead of leaving it to be argued about after the fact.
+# --------------------------------------------------------------------------
+def cmd_october(universe, specs, since, min_days=60, pes_universe=None):
+    """The pre-registered adoption bar, scored on genuinely new bet-days.
+
+    ``pes_universe`` is the same window with unsettled legs graded as losses.
+    It is required, not optional: every criterion that compares against live
+    can be passed by being LESS BAD than live, and on fresh data live is
+    usually losing. Without an own-growth criterion the bar would adopt an arm
+    that never grows — the exact mistake --sweep's second scoreboard exists to
+    catch (2026-09-09: max_accas=2 scores 3/4 against live and 2/5 on its own).
+    """
+    specs = list(specs) or [{"pairing": "barbell", "max_accas": 2},
+                            {"legs_per_acca": 1}]
+    new = {d: p for d, p in universe.items() if d >= since}
+    new_pes = ({d: p for d, p in pes_universe.items() if d >= since}
+               if pes_universe else {})
+    print("=" * 74)
+    print(f"PRE-REGISTERED BAR — bet-days on/after {since}: {len(new)} "
+          f"(bar needs >= {min_days})")
+    print("=" * 74)
+    if not new:
+        print("no new bet-days yet. Nothing to judge; do not judge early.")
+        return 1
+    live = arm_stats(new, {})
+    print(f"live on the new days: log/day {live['mean_log']:+.4f} · maxDD "
+          f"{live['maxdd'] * 100:.0f}% · bets {live['accas']}\n")
+    enough = len(new) >= min_days
+    if not enough:
+        print(f"NOT YET: {len(new)} new bet-days < {min_days}. Numbers below "
+              f"are provisional and MUST NOT adopt anything.\n")
+    for spec in specs:
+        b = arm_stats(new, spec)
+        bs = paired_bootstrap(new, {}, spec)
+        ec = effect_concentration(new, {}, spec)
+        c_p10 = bool(bs and bs["p10"] > 0)
+        c_lodo = bool(ec and not ec["flips"] and ec["loo_min"] * ec["full"] > 0)
+        c_dd = b["maxdd"] <= live["maxdd"] + 1e-9
+        c_n = enough
+        # The stake-honest pair: does this arm grow on its OWN, with live out
+        # of the picture, on both the settled and the pessimistic grading?
+        c_own = b["mean_log"] > 0
+        # OPTIMISM PENALTY, not an absolute pessimistic threshold. On genuinely
+        # new data most legs are still unsettled, so grading them all as losses
+        # drags EVERY arm down — an absolute "> 0 under pessimistic grading"
+        # test would auto-fail in October and the bar could never adopt
+        # anything. What actually matters is whether THIS arm leans on
+        # unsettled legs harder than live does. That is scale-fair and it is
+        # the thing that turns +0.0215 into +0.0032.
+        pb = arm_stats(new_pes, spec) if new_pes else None
+        lp = arm_stats(new_pes, {}) if new_pes else None
+        pen_arm = b["mean_log"] - pb["mean_log"] if pb else None
+        pen_live = live["mean_log"] - lp["mean_log"] if lp else None
+        c_opt = (pen_arm is not None and pen_live is not None
+                 and pen_arm <= pen_live + 1e-9)
+        verdict = all((c_p10, c_lodo, c_dd, c_n, c_own, c_opt))
+        print(f"{label_of(spec)}")
+        print(f"  log/day {b['mean_log']:+.4f} (live {live['mean_log']:+.4f}) · "
+              f"maxDD {b['maxdd'] * 100:.0f}% · bets {b['accas']}")
+        bs_note = "" if not bs else "  (p10 {:+.4f}, P(better) {:.0%})".format(
+            bs["p10"], bs["p_b_higher"])
+        ec_note = "" if not ec else "  (range {:+.4f}..{:+.4f}, top day {:.0%})".format(
+            ec["loo_min"], ec["loo_max"], ec["top_share"])
+        print(f"  [{'PASS' if c_p10 else 'FAIL'}] bootstrap p10 > 0{bs_note}")
+        print(f"  [{'PASS' if c_lodo else 'FAIL'}] leave-one-day-out sign holds{ec_note}")
+        print(f"  [{'PASS' if c_dd else 'FAIL'}] maxDD <= live ({b['maxdd'] * 100:.0f}% vs {live['maxdd'] * 100:.0f}%)")
+        print(f"  [{'PASS' if c_n else 'FAIL'}] n >= {min_days} new bet-days ({len(new)})")
+        print(f"  [{'PASS' if c_own else 'FAIL'}] grows on its own, live out of the "
+              f"picture ({b['mean_log']:+.4f} log/day)")
+        if pb is None:
+            print("  [????] optimism penalty no worse than live's "
+                  "(no pessimistic universe supplied)")
+        else:
+            print(f"  [{'PASS' if c_opt else 'FAIL'}] optimism penalty <= live's: "
+                  f"settled->pessimistic costs this arm {pen_arm:+.4f} "
+                  f"({b['mean_log']:+.4f}->{pb['mean_log']:+.4f}) vs live "
+                  f"{pen_live:+.4f} ({live['mean_log']:+.4f}->{lp['mean_log']:+.4f})")
+        print(f"  => {'ADOPT-ELIGIBLE' if verdict else 'NOT ADOPTABLE'}\n")
+    print("Adoption is a separate decision from eligibility. Nothing here ships "
+          "itself.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --sweep: one knob family across three universes and both blind halves.
+#
+# A single A/B answers "is B better than A on this data". It cannot answer
+# "is B better in a way that survives the archive changing", which is the only
+# question that should move a live constant. So the sweep scores every arm on
+# the full universe, on the heavy days the repo's own MAX_ACCAS gate counts,
+# and under the pessimistic grading — then checks both blind halves. An arm
+# that does not pass in all of them is not a candidate, however good the A/B.
+# --------------------------------------------------------------------------
+SWEEP_FAMILIES = {
+    "max_accas": [("max_accas=2", {"max_accas": 2}),
+                  ("max_accas=4  <-- pre-registered Q1", {"max_accas": 4}),
+                  ("max_accas=5", {"max_accas": 5}),
+                  ("max_accas=6", {"max_accas": 6})],
+    "pairing": [("barbell, 2 accas", {"pairing": "barbell", "max_accas": 2}),
+                ("barbell, 3 accas", {"pairing": "barbell"}),
+                ("barbell, 4 accas", {"pairing": "barbell", "max_accas": 4})],
+    "legs": [("singles x3", {"legs_per_acca": 1}),
+             ("singles x2", {"legs_per_acca": 1, "max_accas": 2}),
+             ("singles x4", {"legs_per_acca": 1, "max_accas": 4})],
+    "stake": [("stake_frac=0.1667", {"stake_frac": 0.1667}),
+              ("stake_frac=0.10", {"stake_frac": 0.10}),
+              ("stake_frac=0.25", {"stake_frac": 0.25})],
+    # Whole setting tuples, not one knob at a time — what would actually be
+    # shipped. One-knob families answer "is this knob better"; only a combo
+    # answers "is this CONFIG better", and the two can disagree (2026-09-09:
+    # barbell,2 scores 4/4 and stake_frac=0.1667 scores 2/4 on their own).
+    # Miner-rule filters. The picks audit's "By rule" table makes rule-level
+    # selection look like free edge, but its ROI is measured on the same rows
+    # the selection was made from (--rules-split prices that). These arms are
+    # the only rule filters worth scoring on the standing bar: the one rule
+    # positive in BOTH blind halves, and the two biggest negative-ROI rules.
+    "rules": [("2way-unan avg_p>=70 only", {"rules": "2way-unanimous avg_p>=70"}),
+              ("2way-unanimous, all bands", {"rules": "fam:2way-unanimous"}),
+              ("drop ml-meta avg_p>=55", {"rules": "!ml-meta avg_p>=55"}),
+              ("drop ml-meta entirely", {"rules": "!fam:ml-meta"})],
+    "combo": [("barbell x2 @ 1/6 stake", {"pairing": "barbell", "max_accas": 2,
+                                          "stake_frac": 0.1667}),
+              ("barbell x2 @ 1/10 stake", {"pairing": "barbell", "max_accas": 2,
+                                           "stake_frac": 0.10}),
+              ("barbell x3 @ 1/6 stake", {"pairing": "barbell", "stake_frac": 0.1667}),
+              ("singles x3 @ 1/6 stake", {"legs_per_acca": 1, "stake_frac": 0.1667}),
+              ("live @ 1/6 stake", {"stake_frac": 0.1667}),
+              ("max_accas=4 @ 1/6 stake", {"max_accas": 4, "stake_frac": 0.1667})],
+}
+
+
+def _sweep_row(u, spec, label):
+    s = arm_stats(u, spec)
+    bs = paired_bootstrap(u, {}, spec)
+    ec = effect_concentration(u, {}, spec)
+    p10 = bs["p10"] if bs else float("nan")
+    pb = bs["p_b_higher"] if bs else float("nan")
+    lo = f"{ec['loo_min']:+.4f}..{ec['loo_max']:+.4f}" if ec else "n/a"
+    sign = "FLIPS" if (ec and ec["flips"]) else "holds"
+    bar = bool(bs and bs["p10"] > 0) and not (ec and ec["flips"])
+    print(f"{label:34s} {s['mean_log']:+8.4f} {s['final']:7.0f}% {s['maxdd'] * 100:5.0f}% "
+          f"{s['accas']:5d} {p10:+8.4f} {pb:7.0%} {lo:>18s} {sign:>6s} "
+          f"{'PASS' if bar else 'fail'}")
+    return bar, s["mean_log"]
+
+
+def cmd_sweep(archives, settled, families=None):
+    """The standing comparison: full universe, heavy days, pessimistic, blind."""
+    full = build_universe(archives, settled)
+    heavy = {d: p for d, p in full.items() if len(p) >= 8}
+    pes = build_universe(archives, settled, unresolved="loss")
+    names = families or sorted(SWEEP_FAMILIES)
+    arms = [a for n in names for a in SWEEP_FAMILIES.get(n, [])]
+    hdr = (f"{'arm':34s} {'log/day':>8s} {'final':>7s} {'maxDD':>5s} {'bets':>5s} "
+           f"{'p10':>8s} {'P>better':>8s} {'leave-one-day-out':>18s} {'sign':>6s} {'bar':>5s}")
+    tally: dict[str, int] = {label: 0 for label, _ in arms}
+    own: dict[str, int] = {label: 0 for label, _ in arms}
+    for title, u in ((f"FULL UNIVERSE ({len(full)} bet-days)", full),
+                     (f"HEAVY DAYS ({len(heavy)} offering 8+ legs) — the MAX_ACCAS gate", heavy),
+                     ("PESSIMISTIC (unsettled legs graded as losses)", pes)):
+        print("\n" + "=" * 108)
+        print(title)
+        print("=" * 108)
+        print(hdr)
+        ref = arm_stats(u, {})
+        print(f"{'live reference':34s} {ref['mean_log']:+8.4f} {ref['final']:7.0f}% "
+              f"{ref['maxdd'] * 100:5.0f}% {ref['accas']:5d}")
+        for label, spec in arms:
+            bar, log = _sweep_row(u, spec, label)
+            if bar:
+                tally[label] += 1
+            if log > 0:
+                own[label] += 1
+    print("\n" + "=" * 108)
+    print("BLIND HALVES (tune on one half, score on the other)")
+    print("=" * 108)
+    older, newer, _ = split_universe(full)
+    for label, spec in arms:
+        # This arm's OWN growth on each half — not the holdout winner's. A
+        # two-arm holdout reports whichever arm won the tuning half, so using
+        # it here would silently print live's number for arms that lose the
+        # tuning half (found 2026-09-09: every stake_frac arm printed the
+        # identical -0.0178, which was live, not the arm).
+        fb = arm_stats(newer, spec)["mean_log"]
+        rb = arm_stats(older, spec)["mean_log"]
+        both = fb > 0 and rb > 0
+        if both:
+            tally[label] += 1
+        own[label] += (fb > 0) + (rb > 0)
+        print(f"{label:34s} forward-blind {fb:+8.4f}   reverse-blind {rb:+8.4f}"
+              f"   {'both positive' if both else 'inconsistent'}")
+    print("\n" + "=" * 108)
+    print("STANDING BAR: p10>0 AND leave-one-day-out sign holds, in all three")
+    print("universes, AND positive in both blind halves  =  4/4")
+    print("=" * 108)
+    for label, _ in arms:
+        print(f"  {label:34s} {tally[label]}/4")
+    # p10 and P>better are measured AGAINST LIVE, and live is negative — so
+    # shrinking the stake always looks better, and can win that comparison
+    # while still losing money. This section drops the comparison entirely and
+    # asks the stake-honest question: does the arm grow on its own, in every
+    # window? Five windows: full, heavy, pessimistic, forward-blind, reverse.
+    print("\n" + "=" * 108)
+    print("STANDS ON ITS OWN — windows where the arm's OWN log growth is > 0")
+    print("(no comparison to live, so a smaller stake cannot win by being")
+    print(" less bad. A stake arm can score high above and still fail here.)")
+    print("=" * 108)
+    for label, _ in arms:
+        print(f"  {label:34s} {own[label]}/5"
+              f"{'   <-- grows on its own everywhere' if own[label] == 5 else ''}")
+    print("\nA 4/4 arm is a CANDIDATE for the pre-registered slot on genuinely")
+    print("new bet-days. It is not a reason to change a live constant today.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --rules-split: "if we had bet only the positive-ROI rules, how would we be
+# doing?" — answered the only way that means anything.
+#
+# The picks audit's "By rule" table is computed on the SAME settled rows the
+# answer would be scored on, so every rule in it with ROI > 0 was selected
+# AFTER seeing the result. Betting the positive rows of that table is not a
+# policy, it is a description of the past. So this fits the whitelist on one
+# half of the bet-days, scores it BLIND on the other, in both directions, and
+# prints the in-sample number beside the blind one so the shrinkage is visible
+# rather than inferred.
+# --------------------------------------------------------------------------
+def _rules_arm(keep):
+    """The spec that rides only the whitelisted rules (None = nothing survived)."""
+    return {"rules": "|".join(sorted(keep))} if keep else None
+
+
+def cmd_rules_split(archives, settled, min_legs=10):
+    """Fit a positive-ROI rule whitelist blind, both directions.
+
+    Returns the accounting (per-direction whitelist, in-sample and blind
+    figures) so tests can assert on the numbers rather than on printed text.
+    """
+    full = build_universe(archives, settled)
+    older, newer, cut = split_universe(full)
+    print("=" * 108)
+    print(f"RULE WHITELIST — fitted on one half, scored BLIND on the other "
+          f"(min_legs={min_legs}, cut {cut})")
+    print("=" * 108)
+    print("ROI here is flat-stake per leg, the same definition the picks audit's")
+    print('"By rule" table uses. Betting the positive rows of THAT table is not')
+    print("a policy: the rules were chosen after seeing the results.")
+
+    out = {}
+    for name, tune, score in (("forward  (fit older, score newer)", older, newer),
+                              ("reverse  (fit newer, score older)", newer, older)):
+        tbl = rule_roi_table(tune, min_legs)
+        keep = sorted(r for r, v in tbl.items() if v["roi"] > 0)
+        print("\n" + "-" * 108)
+        print(name)
+        print("-" * 108)
+        print(f"  {'rule':44s} {'tune n':>7s} {'tuneROI':>8s} {'blind n':>8s} "
+              f"{'blindROI':>9s}  {'':s}")
+        blind_tbl = rule_roi_table(score)
+        for r in sorted(tbl, key=lambda x: -tbl[x]["roi"]):
+            v, b = tbl[r], blind_tbl.get(r)
+            tag = "KEEP" if v["roi"] > 0 else "drop"
+            if tag == "KEEP":
+                print(f"  {r:44s} {v['n']:7d} {v['roi']:+8.1%} "
+                      f"{(b['n'] if b else 0):8d} {(b['roi'] if b else float('nan')):+9.1%}"
+                      f"  {tag}")
+        print(f"  {len(keep)} of {len(tbl)} rules had tuning ROI > 0")
+
+        arm = _rules_arm(keep)
+        if arm is None:
+            print("  no rule survived — nothing to score blind")
+            out[name.split()[0]] = {"keep": [], "in_sample": None, "blind": None,
+                                    "blind_live": arm_stats(score, {})}
+            continue
+        is_ = arm_stats(tune, arm)
+        bl = arm_stats(score, arm)
+        bl_live = arm_stats(score, {})
+        print(f"\n  IN-SAMPLE on the fitting half : log/day {is_['mean_log']:+.4f}  "
+              f"final {is_['final']:6.0f}%  days {is_['days']:3d}  bets {is_['accas']:4d}")
+        print(f"  BLIND on the other half       : log/day {bl['mean_log']:+.4f}  "
+              f"final {bl['final']:6.0f}%  days {bl['days']:3d}  bets {bl['accas']:4d}")
+        print(f"  live on that same blind half  : log/day {bl_live['mean_log']:+.4f}  "
+              f"final {bl_live['final']:6.0f}%  days {bl_live['days']:3d}  "
+              f"bets {bl_live['accas']:4d}")
+        d = bl["mean_log"] - bl_live["mean_log"]
+        print(f"  => blind edge over live {d:+.4f} log/day"
+              f"{'   (a POSITIVE-ROI whitelist that loses to live blind)' if d < 0 else ''}")
+        out[name.split()[0]] = {"keep": keep, "in_sample": is_, "blind": bl,
+                                "blind_live": bl_live}
+
+    # The number the question actually asks for, labelled for what it is.
+    whole = rule_roi_table(full, min_legs)
+    keep_all = sorted(r for r, v in whole.items() if v["roi"] > 0)
+    arm = _rules_arm(keep_all)
+    print("\n" + "=" * 108)
+    print(f"WHOLE-UNIVERSE FIT ({len(keep_all)} of {len(whole)} rules positive, "
+          f"n>={min_legs}) — THIS ONE IS IN-SAMPLE AND PROVES NOTHING")
+    print("=" * 108)
+    if arm is None:
+        print("  no rule reached the minimum sample with positive ROI")
+        out["in_sample_all"] = None
+    else:
+        a = arm_stats(full, arm)
+        lv = arm_stats(full, {})
+        print(f"  whitelist : {', '.join(keep_all)}")
+        print(f"  whitelist : log/day {a['mean_log']:+.4f}  final {a['final']:6.0f}%  "
+              f"maxDD {a['maxdd']:.0%}  days {a['days']:3d}  bets {a['accas']:4d}")
+        print(f"  live      : log/day {lv['mean_log']:+.4f}  final {lv['final']:6.0f}%  "
+              f"maxDD {lv['maxdd']:.0%}  days {lv['days']:3d}  bets {lv['accas']:4d}")
+        print(f"  => {a['mean_log'] - lv['mean_log']:+.4f} log/day of pure hindsight. "
+              f"Compare it with the blind rows above: the gap is the price of looking.")
+        out["in_sample_all"] = a
+    return out
+
+
+def _ledger_ticket_core(plan, lane):
+    """Compare fields actually retained in financial history; no guessed book."""
+    cards = []
+    for acca in plan:
+        legs = []
+        for leg in acca["legs"]:
+            market = leg.get("market") or (at.selection_market(leg) if lane == "enh" else "1x2")
+            if not market:
+                raise ValueError("ledger market identity unavailable")
+            legs.append((str(leg["match"]), market, str(leg["pick"]).upper(), float(leg["odds"]),
+                         str(leg.get("price_book") or ""), str(leg.get("price_source") or "")))
+        # Settlement legitimately reduces compound odds when a void drops out;
+        # compare the original booked quote via the retained leg prices.
+        original_odds = (round(math.prod(float(l["odds"]) for l in acca["legs"]), 2)
+                         if any(l.get("result") == "void" for l in acca["legs"])
+                         else float(acca["odds"]))
+        cards.append((sorted(legs), original_odds, float(acca["stake_pct"])))
+    return sorted(cards)
+
+
+def _comparison_leg_key(leg):
+    # No fuzzy name/date join: a missing counterfactual result stays missing.
+    return (str(leg.get("match") or ""), leg.get("market") or at.selection_market(leg),
+            str(leg.get("pick") or "").lower())
+
+
+def enh_decision_comparison(context, prepared, *, history=(), allow_outcomes=False, settled=None):
+    """Same captured pool/policy, flipped ordering. Read-only, not a causal trial.
+
+    Retained ledger outcomes stay authoritative. Unselected markets use the
+    existing shared score resolver, when supplied, never a new scoring rule.
+    Missing/conflicting scores stay unavailable; no timer-generated voids.
+    """
+    import copy
+    observations = defaultdict(set)
+    if allow_outcomes:
+        for row in history:
+            if row.get("date") == context["date"]:
+                for acca in row.get("accas", []):
+                    for leg in acca.get("legs", []):
+                        observations[_comparison_leg_key(leg)].add(leg.get("result"))
+    known = {k: next(iter(v)) for k, v in observations.items()
+             if len(v) == 1 and next(iter(v)) in ("win", "loss", "void")}
+    pool = prepared["pool"]
+    scored = [(at.finite_probability(l.get("ml_rank_probability")),
+               at.finite_probability(l.get("prob"))) for l in pool]
+    paired = [(m, c) for m, c in scored if m is not None and c is not None]
+    schemas, models = Counter(), {}
+    for leg in pool:
+        if at.finite_probability(leg.get("ml_rank_probability")) is not None:
+            model = ((leg.get("row") or {}).get("statistical_profile") or {}).get("ml_model") or {}
+            schema = leg.get("ml_model_schema") or model.get("schema") or "unavailable"
+            schemas[schema] += 1
+            key = leg.get("ml_model_key") or model.get("model_key")
+            if key:
+                profile = (leg.get("row") or {}).get("statistical_profile") or {}
+                models[key] = dict(schema=schema, fit_adequacy=profile.get("ml_fit_adequacy"))
+    result = dict(status="UNSETTLED_OR_UNPROVEN — selection comparison only",
+        caveat="Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+        pool_legs=len(pool), scored_legs=sum(m is not None for m, _ in scored),
+        schemas=dict(schemas), models=models, paired_estimates=len(paired),
+        mean_absolute_disagreement=(sum(abs(m-c) for m,c in paired)/len(paired) if paired else None),
+        model_below_cohort=sum(m<c for m,c in paired), arms={})
+    selections = {}
+    for label, enabled in (("ml_on", True), ("ml_off", False)):
+        alternate = copy.deepcopy(context)
+        alternate["options"]["ml_enabled"] = enabled
+        trace = {}
+        plan = at.plan_ticket_decision(alternate, prepared=prepared, fixture_report=trace)
+        legs = [l for a in plan for l in a["legs"]]
+        selections[label] = {tuple(x) for a in at.ticket_card_identity(plan) for x in a[0]}
+        payouts = []
+        details = []
+        for acca in plan:
+            outcomes, sources, reasons = [], [], []
+            for leg in acca["legs"]:
+                key = _comparison_leg_key(leg)
+                outcome = known.get(key)
+                source = "retained_ledger" if outcome is not None else None
+                ledger_conflict = key in observations and observations[key] != {None} and outcome is None
+                reason = "ledger_outcome_conflict" if ledger_conflict else None
+                if (allow_outcomes and outcome is None and not ledger_conflict
+                        and settled is not None):
+                    outcome = at.enhancement_leg_result(
+                        leg, context["date"], settled.scores, settled.entries)
+                    if outcome in ("win", "loss"):
+                        source = "shared_settlement_facts"
+                    else:
+                        reason = "result_identity_conflict" if outcome == "conflict" else "missing_final_score"
+                        outcome = None
+                outcomes.append(outcome)
+                sources.append(source)
+                reasons.append(None if outcome is not None else reason or "no_retained_outcome")
+            graded = copy.deepcopy(acca)
+            for leg, outcome in zip(graded["legs"], outcomes):
+                leg["result"] = outcome
+            try:
+                odds, won = _graded_acca(graded)
+                returned = round(acca["stake_pct"] * odds, 4) if won else 0.
+            except ValueError:
+                returned = None
+            payouts.append(returned)
+            details.append(dict(odds=acca["odds"], stake=acca["stake_pct"],
+                legs=[dict(match=l["match"], market=l.get("market"), pick=l.get("pick"),
+                           odds=l["odds"], cohort=at.finite_probability(l.get("prob")),
+                           model=at.finite_probability(l.get("ml_rank_probability")), result=r,
+                           outcome_source=source, unresolved_reason=reason)
+                      for l,r,source,reason in zip(acca["legs"], outcomes, sources, reasons)], returned=returned))
+        complete = bool(plan) and all(p is not None for p in payouts)
+        result["arms"][label] = dict(accas=details, card_identity=at.ticket_card_identity(plan),
+            total_stake=sum(a["stake_pct"] for a in plan),
+            mean_acca_odds=sum(a["odds"] for a in plan)/len(plan) if plan else None,
+            resolved_legs=sum(l["result"] is not None for a in details for l in a["legs"]), selected_legs=len(legs),
+            returned=sum(payouts) if complete else None,
+            outcome_status="RESOLVED" if complete else "INCOMPLETE_OUTCOMES" if allow_outcomes else "UNSETTLED_OR_UNPROVEN",
+            selector_trace=trace)
+    # Full execution identity includes quotes/books, not merely match names.
+    result["execution_leg_symmetric_difference"] = len(selections["ml_on"] ^ selections["ml_off"])
+    result["removed_from_ml_off"] = len(selections["ml_off"] - selections["ml_on"])
+    result["added_to_ml_on"] = len(selections["ml_on"] - selections["ml_off"])
+    result["card_identical"] = (result["arms"]["ml_on"]["card_identity"]
+                                == result["arms"]["ml_off"]["card_identity"])
+    if allow_outcomes:
+        result["status"] = ("RESOLVED" if all(a["outcome_status"] == "RESOLVED"
+                            for a in result["arms"].values()) else "INCOMPLETE_OUTCOMES")
+    return result
+
+
+def _attributed_ml_scores(history):
+    """Fixture-balanced descriptive scores, split by retained schema.
+
+    No sample-size threshold is a claim of calibration or significance. Missing
+    legacy attribution is counted, never reconstructed from today's models.
+    """
+    groups = defaultdict(lambda: defaultdict(list))
+    eligible = missing = 0
+    for row in history:
+        for acca in row.get("accas", []):
+            for leg in acca.get("legs", []):
+                if leg.get("result") not in ("win", "loss"):
+                    continue
+                eligible += 1
+                m = at.finite_probability(leg.get("ml_rank_probability"))
+                c = at.finite_probability(leg.get("prob"))
+                if m is None or c is None or not leg.get("ml_model_key") or not leg.get("ml_model_schema"):
+                    missing += 1
+                    continue
+                y = int(leg["result"] == "win")
+                values = []
+                for probability in (m, c):
+                    p = min(1-1e-15, max(1e-15, probability))
+                    values.extend(((probability-y)**2, -y*math.log(p)-(1-y)*math.log(1-p)))
+                groups[leg["ml_model_schema"]][(row["date"], str(leg.get("match")))].append(values)
+    summary = {}
+    for schema, fixtures in groups.items():
+        per_fixture = [[sum(v[i] for v in records)/len(records) for i in range(4)]
+                       for records in fixtures.values()]
+        means = [sum(v[i] for v in per_fixture)/len(per_fixture) for i in range(4)]
+        summary[schema] = dict(records=sum(len(v) for v in fixtures.values()), fixtures=len(fixtures),
+            model_brier=means[0], model_log_loss=means[1], cohort_brier=means[2], cohort_log_loss=means[3])
+    return dict(eligible_binary_legs=eligible, missing_attribution=missing, by_schema=summary,
+        caveat="Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.")
+
+
+_RECEIPT_DATE = re.compile(r"_(\d{4}-\d{2}-\d{2})_decision")
+
+
+def _receipt_filename_date(logical_name):
+    """Date encoded in a receipt filename, or None.
+
+    `auto_tickets_2026-11-08_decision.json` -> date(2026, 11, 8). Used to scope
+    a routine audit without reading the (potentially huge) receipt at all.
+    """
+    match = _RECEIPT_DATE.search(logical_name)
+    if not match:
+        return None
+    try:
+        return date.fromisoformat(match.group(1))
+    except ValueError:
+        return None
+
+
+def decision_parity_report(root=None, *, window_days=None, reference=None,
+                           time_budget_seconds=None):
+    """Read-only current-code replay of actual decision receipts, both lanes.
+
+    Admission outputs are observed live facts, not reconstructed from today's
+    registries. Missing legacy receipts remain missing. Shared saved result
+    facts may grade counterfactuals; no state repair, policy refresh, provider
+    call, training or financial settlement runs.
+
+    Cost containment (2026-11-08): a routine run replayed EVERY retained
+    receipt. The ENH receipts are sharded — the logical ``*.json.gz`` is a
+    ~545-byte manifest and the payload lives in up to 21 sibling
+    ``.part-<sha256>`` chunks (200-607 MB per retained day). Manifest size
+    therefore does not bound validation cost: reading one such day costs a
+    full materialise + sha256 + gunzip + JSON parse.
+
+    ``window_days`` bounds that work. Selection happens on the receipt's
+    FILENAME DATE *before* any I/O, so an out-of-window giant is never read.
+    The date is then re-validated against ``context["date"]``/``build_at``
+    during replay, so this is a scoping filter, never an identity relaxation.
+    Receipts whose filename carries no parseable date are always audited and
+    listed in ``scope["undated_receipts"]`` — never silently dropped.
+
+    ``time_budget_seconds`` stops cleanly mid-audit. An exhausted budget is
+    reported as ``INCOMPLETE_TIME_BUDGET`` (CLI exit 3), never as ``PASS``:
+    a partial audit must not look like a parity MATCH. Full history stays the
+    default; nothing here weakens a per-receipt check.
+    """
+    base = (root or at.ROOT) / "localdata"
+    started = time.perf_counter()
+    if reference is None:
+        reference = datetime.now(timezone.utc)
+    elif reference.tzinfo is None:
+        raise ValueError("parity window reference must be timezone-aware")
+    cutoff = (reference - timedelta(days=window_days)).date() if window_days else None
+    scope = dict(mode="window" if window_days else "full_history",
+                 window_days=window_days,
+                 reference=reference.isoformat(),
+                 cutoff=cutoff.isoformat() if cutoff else None,
+                 selection_basis="receipt filename date, before any read; "
+                                 "context date/build_at re-validated during replay",
+                 selected_receipts=0, excluded_receipts=0, undated_receipts=[],
+                 coverage_caveat=("Windowed audit of recent receipts only — NOT a "
+                                  "full-history parity claim." if window_days else
+                                  "Full retained history."))
+    report = dict(schema=1, boundary="execution_safe_admission_to_ticket",
+                  caveat="Replays captured admitted candidates and policy outputs, not provider acquisition or cohort training. Hashes detect corruption, not authenticity.",
+                  ledger_comparison="fixture/market/selection/book/source/price/pairing/stake; unknown legacy identity is not invented",
+                  scope=scope, lanes={})
+    budget = dict(seconds=time_budget_seconds, elapsed=0.0, exhausted=False)
+    report["budget"] = budget
+    settled_facts = None  # lazy, shared across valid frozen ENH receipts
+    for lane, prefix, state_file in (("main", "auto_tickets", "auto_tickets_state.json"),
+                                      ("enh", "autobets_enh_tickets", "enhancement_tickets_state.json")):
+        lane_report = dict(receipts=[], missing_receipt_days=[], state_error=None,
+                           receipt_conflicts=[str(p.relative_to(base)) for p in ticket_receipt_files(base, prefix, conflicts=True)])
+        report["lanes"][lane] = lane_report
+        try:
+            state = json.loads((base / state_file).read_text())
+            if not isinstance(state, dict) or any(
+                not isinstance(state.get(key, []), list)
+                or any(not isinstance(row, dict) for row in state.get(key, []))
+                for key in ("history", "open_slips")):
+                raise ValueError("invalid financial state structure")
+        except (OSError, ValueError) as exc:
+            state = {}
+            lane_report["state_error"] = str(exc)
+        days = {str(r.get("date")) for r in state.get("history", [])}
+        days.update(str(r.get("date")) for r in state.get("open_slips", []))
+        seen, storage_digests = set(), {}
+        lane_report["duplicate_storage_copies"] = []
+        for path in ticket_receipt_files(base, prefix):
+            if budget["exhausted"]:
+                break
+            logical_name = path.name.removesuffix(".gz")
+            filed_day = _receipt_filename_date(logical_name)
+            if cutoff is not None:
+                if filed_day is None:
+                    # No parseable date in the name: audit it and say so.
+                    scope["undated_receipts"].append(str(path.relative_to(base)))
+                elif filed_day < cutoff:
+                    scope["excluded_receipts"] += 1
+                    continue
+            elapsed = time.perf_counter() - started
+            if time_budget_seconds is not None and elapsed > time_budget_seconds:
+                budget.update(exhausted=True, elapsed=round(elapsed, 3))
+                break
+            scope["selected_receipts"] += 1
+            item = dict(file=str(path.relative_to(base)), status="INVALID", ledger="UNAVAILABLE", settlement="UNAVAILABLE")
+            lane_report["receipts"].append(item)
+            try:
+                payload = read_ticket_receipt(path)
+                digest = payload.pop("sha256")
+                if digest != at._decision_digest(payload):
+                    raise ValueError("receipt hash mismatch")
+                context = payload["context"]
+                day = context["date"]
+                if (payload["schema"] != 1 or context["lane"] != lane
+                        or path.name.removesuffix(".gz") != f"{prefix}_{day}_decision.json"
+                        or payload["boundary"] != report["boundary"]
+                        or payload["status"] not in ("frozen", "draft", "no_bet")):
+                    raise ValueError("receipt identity/schema/status mismatch")
+                logical_name = path.name.removesuffix(".gz")
+                if logical_name in storage_digests:
+                    if storage_digests[logical_name] != digest:
+                        raise ValueError("conflicting plain/compressed receipt copies")
+                    lane_report["duplicate_storage_copies"].append(item["file"])
+                    lane_report["receipts"].pop()  # identical evidence, not a second decision
+                    continue
+                storage_digests[logical_name] = digest
+                when = datetime.fromisoformat(context["build_at"])
+                if payload["status"] == "no_bet" and payload["plan"]:
+                    raise ValueError("no-bet receipt contains a ticket")
+                if payload["status"] in ("draft", "frozen") and not payload["plan"]:
+                    raise ValueError("ticket receipt contains no plan")
+                if when.tzinfo is None or not math.isfinite(context["bank_eff"]) or context["bank_eff"] < 0:
+                    raise ValueError("unproven build time or bank")
+                if (context.get("bank_total") is not None and
+                        (not math.isfinite(context["bank_total"]) or context["bank_total"] < context["bank_eff"])):
+                    raise ValueError("invalid total/free bank context")
+                prepared = at.prepare_ticket_pool(context)
+                plan = at.plan_ticket_decision(context, prepared=prepared)
+                actual = at.ticket_card_identity(plan, prepared["pool"])
+                expected = at.ticket_card_identity(payload["plan"], prepared["pool"])
+                # Validate expected plan AND its separately retained complete
+                # execution identity. A changed market/book at equal odds matters.
+                same = (at._decision_digest(actual) == at._decision_digest(expected)
+                        == at._decision_digest(payload["card_identity"]))
+                item.update(date=day, status="MATCH" if same else "DIFF",
+                            decision_status=payload["status"], accas=len(plan),
+                            execution_provenance=payload.get("execution_provenance"),
+                            engine_changed=payload.get("engine_sha256") != hashlib.sha256(Path(at.__file__).read_bytes()).hexdigest(),
+                            bank_total=context.get("bank_total"), free_bank=context["bank_eff"],
+                            committed_excluding_target=(context["bank_total"] - context["bank_eff"]
+                                                       if context.get("bank_total") is not None else None))
+                snapshot = context.get("bank_state")
+                item["bank_reconciliation"] = "UNAVAILABLE"
+                if snapshot is not None:
+                    slip_totals_match = all(abs(float(slip["staked_pct"]) - sum(
+                        float(a["stake_pct"]) for a in slip["accas"])) <= .0002
+                        for slip in snapshot.get("open_slips", []))
+                    item["bank_reconciliation"] = ("MATCH" if slip_totals_match
+                        and snapshot["bank"] == context["bank_total"]
+                        and abs(at.effective_bank(snapshot, exclude_date=day) - context["bank_eff"]) <= .0002
+                        else "DIFF")
+                if lane == "enh":
+                    item["ml_comparison"] = enh_decision_comparison(context, prepared)
+                seen.add(day)
+                if payload["status"] != "frozen":
+                    item["ledger"] = "NOT_COMMITTED"
+                    continue
+                # Only independently retained frozen financial positions count.
+                if day not in (state.get(at.FROZEN_BOOK_KEY) or {}):
+                    item["ledger"] = "MISSING_FREEZE"
+                    continue
+                item["freeze_time"] = ("MATCH" if freeze_timestamp_matches(
+                    state[at.FROZEN_BOOK_KEY][day].get("frozen_at"), context["build_at"])
+                    else "DIFF")
+                history = [h for h in state.get("history", []) if h.get("date") == day]
+                settled = [a for h in history for a in h.get("accas", [])]
+                opened = [a for h in state.get("open_slips", []) if h.get("date") == day
+                          for a in h.get("accas", [])]
+                try:
+                    item["ledger"] = ("MATCH" if _ledger_ticket_core(settled + opened, lane)
+                                      == _ledger_ticket_core(payload["plan"], lane) else "DIFF")
+                except (KeyError, TypeError, ValueError):
+                    item["ledger"] = "INCOMPLETE_IDENTITY"
+                if lane == "enh" and same and item["ledger"] == "MATCH" and item["freeze_time"] == "MATCH":
+                    if settled_facts is None:
+                        settled_facts = at.load_settled(root=root) if root is not None else at.load_settled()
+                    item["ml_comparison"] = enh_decision_comparison(
+                        context, prepared, history=history, allow_outcomes=True,
+                        settled=settled_facts)
+                # Reconcile retained payouts, not a guessed historical equity
+                # chain: settlement ordering and legacy closes remain untouched.
+                item["open_accas"] = len(opened)
+                if settled:
+                    stake = sum(a["stake_pct"] for a in settled)
+                    returned = sum(a["returned_pct"] for a in settled)
+                    totals_stake = sum(h["staked_pct"] for h in history)
+                    totals_returned = sum(h["returned_pct"] for h in history)
+                    try:
+                        grades = [_graded_acca(a) for a in settled]
+                        expected_return = sum(a["stake_pct"] * odds if won else 0.
+                                              for a, (odds, won) in zip(settled, grades))
+                        outcomes_match = all(a.get("won") is won for a, (_, won) in zip(settled, grades))
+                        item["settlement"] = ("MATCH" if outcomes_match
+                                               and abs(stake - totals_stake) <= 0.0002
+                                               and abs(returned - totals_returned) <= 0.0002
+                                               and abs(expected_return - returned) <= 0.0002 else "DIFF")
+                    except ValueError:
+                        item["settlement"] = "INCOMPLETE_OUTCOME"
+                    item["settled_net"] = returned - stake
+                elif opened:
+                    item["settlement"] = "PENDING"
+            except (OSError, EOFError, KeyError, TypeError, ValueError, IndexError, OverflowError, AttributeError, StopIteration) as exc:
+                item.update(status="INVALID", error=f"{type(exc).__name__}: {exc}")
+        if lane == "enh":
+            lane_report["attributed_scores"] = _attributed_ml_scores(state.get("history", []))
+        lane_report["missing_receipt_days"] = sorted(days - seen)
+        lane_report["counts"] = dict(Counter(r["status"] for r in lane_report["receipts"]))
+    bad = any(r["status"] in ("DIFF", "INVALID") or r["ledger"] in ("DIFF", "MISSING_FREEZE")
+              or r["settlement"] == "DIFF" or r.get("bank_reconciliation") == "DIFF"
+              or r.get("freeze_time") == "DIFF"
+              for lane in report["lanes"].values() for r in lane["receipts"])
+    bad = bad or any(lane["receipt_conflicts"] for lane in report["lanes"].values())
+    count = sum(len(lane["receipts"]) for lane in report["lanes"].values())
+    incomplete = any(lane["missing_receipt_days"] or lane["state_error"]
+                     or any(r["ledger"] in ("UNAVAILABLE", "INCOMPLETE_IDENTITY")
+                            or r.get("bank_reconciliation") == "UNAVAILABLE"
+                            or r["settlement"] == "INCOMPLETE_OUTCOME"
+                            for r in lane["receipts"]) for lane in report["lanes"].values())
+    budget["elapsed"] = round(time.perf_counter() - started, 3)
+    if budget["exhausted"] and not bad:
+        # A stopped audit is not a verdict. It must never read as PASS, and it
+        # must not masquerade as a mismatch either.
+        report["status"] = "INCOMPLETE_TIME_BUDGET"
+        scope["coverage_caveat"] += (" Audit stopped on its time budget; remaining "
+                                     "receipts were NOT replayed.")
+        return report
+    report["status"] = ("FAIL" if bad else "INSUFFICIENT_EVIDENCE" if not count
+                        else "PARTIAL" if incomplete else "PASS")
+    return report
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--variant", action="append", metavar="SPEC",
+                    help="replay a variant spec (repeatable)")
+    ap.add_argument("--ab", nargs=2, metavar=("SPEC_A", "SPEC_B"),
+                    help="paired A/B of two specs, with no-op guard + bootstrap")
+    ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
+    ap.add_argument("--enhancements", action="store_true",
+                    help="replay the settled enhancement registry against floor "
+                         "variants (hit rate + mean log growth per bet-day)")
+    ap.add_argument("--enh-ml", action="store_true",
+                    help="with --enhancements: add the LIVE ML ordering arm, "
+                         "recomputed from the archived slate model, and state "
+                         "its coverage (a 2-day sample is not a policy result)")
+    ap.add_argument("--enh-parity", action="store_true",
+                    help="does the ENH replay rebuild the card the lane actually "
+                         "shipped? diffs cohort vs LIVE-ML ordering against the "
+                         "lane's own ledger")
+    ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
+    ap.add_argument("--slots", action="store_true",
+                    help="leg/acca quality by rank slot (checkpoint ① at leg scale)")
+    ap.add_argument("--kelly", action="store_true",
+                    help="stake-fraction growth/drawdown curve + growth-optimal f")
+    ap.add_argument("--today", action="store_true", help="today's card at LIVE settings")
+    ap.add_argument("--rules", action="store_true",
+                    help="leg quality + calibration by rule family, and the "
+                         "paired cost of removing the ml-meta family")
+    ap.add_argument("--parity", action="store_true",
+                    help="does a faithful replay rebuild the card the ledger "
+                         "actually shipped? per-day MATCH/DIFF + causes")
+    ap.add_argument("--slate", metavar="YYYY-MM-DD",
+                    help="one day's slate in build order: funnel, guard census, "
+                         "ledger card vs faithful replay, and every EXCLUDED leg "
+                         "that won with the gate that refused it")
+    ap.add_argument("--unfaithful-pool", action="store_true",
+                    help="reproduce the pre-2026-10-26 SUPERSET replay pool "
+                         "(no execution gate, no kickoff guard at the build "
+                         "instant). Only for reproducing old numbers.")
+    ap.add_argument("--warehouse-replay", action="store_true",
+                    help="Phase-1 feasibility audit: can the live picks be "
+                         "reconstructed from localdata at all? (research only)")
+    ap.add_argument("--kickoff-contract", action="store_true",
+                    help="AUDIT ONLY (off by default, never the live rule): "
+                         "replay history under the fail-closed kickoff-proof "
+                         "standard at each day's 09:00 SAST build, to size "
+                         "the data-side kickoff gap (incident #6)")
+    ap.add_argument("--kickoff-guard", action="store_true",
+                    help="MONEY COST of the LIVE kickoff guard (region rule): "
+                         "replay history with auto_tickets.live_kickoff_guard "
+                         "at each day's 09:00 SAST build; log/day, maxDD and "
+                         "bet-days lost vs the unguarded replay, plus the "
+                         "ingest-normalisation recovery lower bound")
+    ap.add_argument("--quarantine", action="store_true",
+                    help="MEASURE ONLY: ridden WATCHLIST/quarantine legs — "
+                         "census, hit rate + flat ROI (day-block bootstrap), "
+                         "would-blank days and growth consequence, split "
+                         "in-season/off-season. No gate change (Task B).")
+    ap.add_argument("--exclude-started-ridden", metavar="FILE",
+                    help="with --kickoff-guard: PERFECT-CLOCK CHECK (Task A "
+                         "closeout) — drop the known-started ridden legs in "
+                         "FILE ([{\"date\": ..., \"match\": ...}]) from every "
+                         "arm's pools and print ex-rows beside the shipped "
+                         "arms (contamination measurement; nothing ships)")
+    ap.add_argument("--price-obtainability", action="store_true",
+                    help="MEASURE ONLY (Task D): ridden scoutingstats legs — "
+                         "D2 census/gap vs same-day stamped second-provider "
+                         "prices, D3 obtainability-constrained replay "
+                         "(IN-SAMPLE; repriced or dropped, never shipped)")
+    ap.add_argument("--holdout", nargs="*", metavar="SPEC",
+                    help="tune the given specs (or the full grid) on one half "
+                         "of the universe and score the choice BLIND on the "
+                         "other, both directions, with the selection-bias tax")
+    ap.add_argument("--sweep", nargs="*", metavar="FAMILY",
+                    choices=sorted(SWEEP_FAMILIES),
+                    help="score a knob family across the full universe, the "
+                         "heavy days and the pessimistic grading, plus both "
+                         "blind halves; prints how many of the four an arm passes")
+    ap.add_argument("--rules-split", nargs="?", metavar="MIN_LEGS", const=10,
+                    type=int, default=None,
+                    help="fit a positive-ROI miner-rule whitelist on one half "
+                         "of the bet-days and score it BLIND on the other, "
+                         "both directions; also prints the whole-universe fit "
+                         "labelled as hindsight (default min_legs=10)")
+    ap.add_argument("--search", action="store_true",
+                    help="the full SEARCH_AXES grid, through --holdout")
+    ap.add_argument("--clv", action="store_true",
+                    help="join the closed-line ledger to the legs a variant "
+                         "rides (uses --variant[0] when given, else live)")
+    ap.add_argument("--clv-split", choices=("league", "provider", "bookmaker", "label"),
+                    help="with --clv: split the ridden legs' CLV by this field")
+    ap.add_argument("--pessimistic", action="store_true",
+                    help="grade unsettled legs as LOSSES instead of dropping "
+                         "them (the pessimistic bound on every other number)")
+    ap.add_argument("--target", type=float, metavar="CAPITAL",
+                    help="project CAPITAL to the target at the variant's own "
+                         "bootstrap p10/median/p90 (with --variant[0])")
+    ap.add_argument("--goal", type=float, default=1_000_000.0, metavar="AMOUNT",
+                    help="with --target: the amount to reach (default 1000000)")
+    ap.add_argument("--october", nargs="*", metavar="SPEC",
+                    help="judge the pre-registered adoption bar (p10>0, "
+                         "leave-one-day-out sign, maxDD<=live, n>=60 new days) "
+                         "on bet-days since --new-since")
+    ap.add_argument("--new-since", metavar="YYYY-MM-DD", default="2026-09-10",
+                    help="with --october: first day that counts as NEW data")
+    ap.add_argument("--since", metavar="YYYY-MM-DD",
+                    help="restrict replay universe to this date or later")
+    ap.add_argument("--until", metavar="YYYY-MM-DD",
+                    help="restrict replay universe to this date or earlier")
+    # legacy single-knob flags (kept: HANDOVER documents them)
+    ap.add_argument("--floor", type=float)
+    ap.add_argument("--max-accas", type=int)
+    ap.add_argument("--stake", type=float)
+    ap.add_argument("--min-prob", type=float)
+    ap.add_argument("--volume-min", type=float)
+    ap.add_argument("--volume-pool", type=int)
+    ap.add_argument("--gate-mode", choices=("off", "pool", "acca"))
+    ap.add_argument("--no-fallback", action="store_true")
+    ap.add_argument("--decision-parity", action="store_true",
+                    help="read-only full-ticket replay of captured live decisions; JSON report")
+    ap.add_argument("--parity-window-days", type=int, metavar="N",
+                    help="with --decision-parity: audit only receipts filed in the last N "
+                         "days (cost containment; the claim becomes explicitly partial)")
+    ap.add_argument("--parity-reference", metavar="ISO8601",
+                    help="with --parity-window-days: timezone-aware reference instant "
+                         "(default: now UTC)")
+    ap.add_argument("--parity-time-budget", type=float, metavar="SECONDS",
+                    help="with --decision-parity: stop cleanly after this many seconds; "
+                         "an exhausted budget reports INCOMPLETE_TIME_BUDGET (exit 3)")
+    ap.add_argument("--parity-output", metavar="PATH",
+                    help="with --decision-parity: write the report atomically to PATH "
+                         "instead of stdout, so a killed run cannot leave truncated JSON")
+    args = ap.parse_args()
+
+    if args.decision_parity:
+        reference = None
+        if args.parity_reference:
+            reference = datetime.fromisoformat(args.parity_reference)
+            if reference.tzinfo is None:
+                ap.error("--parity-reference must include an offset")
+        report = decision_parity_report(window_days=args.parity_window_days,
+                                        reference=reference,
+                                        time_budget_seconds=args.parity_time_budget)
+        text = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
+        if args.parity_output:
+            # Temp + rename: a SIGKILL leaves the previous report or none.
+            target = Path(args.parity_output)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_name(target.name + ".tmp")
+            with open(tmp, "w", encoding="utf-8") as handle:
+                handle.write(text)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp, target)
+        else:
+            sys.stdout.write(text)
+        if report["status"] == "FAIL":
+            return 1
+        return 3 if report["status"] == "INCOMPLETE_TIME_BUDGET" else 0
+
+    settled = at.load_settled()
+    archives = at.load_archived_picks()
+
+    # The enhancement lane replays the settled registry, not the acca universe,
+    # so it answers before any universe is built.
+    if getattr(args, "enh_parity", False):
+        return cmd_enh_parity(enh_records(), since=args.since, until=args.until,
+                              root=at.ROOT)
+    if args.enhancements:
+        return cmd_enhancements(args)
+
+    faithful = not args.unfaithful_pool
+    if args.parity:
+        cmd_parity(archives, settled, since=args.since, until=args.until,
+                   faithful=faithful)
+        return 0
+    if args.slate:
+        cmd_slate(archives, settled, args.slate, faithful=faithful)
+        return 0
+    if args.warehouse_replay:
+        # Runs against the RAW archive (not the settled-only replay universe):
+        # feasibility is about whether inputs exist, not whether legs graded.
+        return cmd_warehouse_replay(archives, settled,
+                                    since=args.since, until=args.until)
+
+    guard_census: dict = {}
+    universe = build_universe(None, settled,
+                              unresolved="loss" if args.pessimistic else None,
+                              faithful=faithful, census=guard_census)
+    if args.pessimistic:
+        print("PESSIMISTIC MODE: unsettled legs graded as losses "
+              "(the bound, not the estimate)")
+    if args.since:
+        universe = {d: pool for d, pool in universe.items() if d >= args.since}
+    if args.until:
+        universe = {d: pool for d, pool in universe.items() if d <= args.until}
+
+    unresolved_count = sum(l.get("result") not in ("win", "loss", "void")
+                           for pool in universe.values() for l in pool)
+    if unresolved_count:
+        print(f"COVERAGE: {unresolved_count} unresolved admitted candidates retained until selection; "
+              "selected pending cards are excluded from realized growth, never re-paired. "
+              "Leg/rank descriptive tables use resolved outcomes only.")
+
+    if args.kickoff_contract:
+        return cmd_kickoff_contract(universe,
+                                    since=args.since, until=args.until)
+    if args.kickoff_guard:
+        exclude = None
+        if args.exclude_started_ridden:
+            exclude = _exclusion_set(Path(args.exclude_started_ridden))
+        return cmd_kickoff_guard(universe,
+                                 since=args.since, until=args.until,
+                                 exclude=exclude)
+    if args.price_obtainability:
+        return cmd_price_obtainability(universe,
+                                       since=args.since, until=args.until)
+    if args.quarantine:
+        return cmd_quarantine(universe,
+                              since=args.since, until=args.until)
+
+    engine_status()
+    live_settings()
+    print("=" * 74)
+    print(f"REPLAY UNIVERSE: {len(universe)} candidate-days (selection precedes result grading)")
+    if faithful:
+        dropped = sum(len(v) for drops in guard_census.values()
+                      for v in drops.values())
+        print(f"live-faithful pool: execution-safe quotes + kickoff guard at "
+              f"each day's real build instant ({dropped} leg(s) dropped as "
+              f"unbettable; --unfaithful-pool restores the old superset)")
+    else:
+        print("SUPERSET POOL (--unfaithful-pool): no execution gate, no kickoff "
+              "guard. Numbers are NOT what the builder could have bet.")
+    print("=" * 74)
+    print("doctrine: RELATIVE differences + paired bootstrap. Primary metric is")
+    print("mean LOG GROWTH per bet-day; final bank is one lucky path, not evidence.\n")
+
+    if args.sweep is not None:
+        return cmd_sweep(archives, settled, args.sweep or None)
+
+    if args.rules_split is not None:
+        cmd_rules_split(archives, settled, args.rules_split)
+        return 0
+
+    if args.holdout is not None:
+        return cmd_holdout(universe, [parse_spec(x) for x in args.holdout])
+
+    if args.search:
+        return cmd_search(universe)
+
+    if args.october is not None:
+        return cmd_october(universe, [parse_spec(x) for x in args.october],
+                           since=args.new_since,
+                           pes_universe=build_universe(None, settled, unresolved="loss"))
+
+    if args.clv:
+        spec = parse_spec(args.variant[0]) if args.variant else {}
+        return cmd_clv(universe, spec, split=args.clv_split)
+
+    if args.target:
+        spec = parse_spec(args.variant[0]) if args.variant else {}
+        return cmd_target(universe, spec, args.target, target=args.goal)
+
+    if args.today:
+        cmd_today(universe, settled)
+        return 0
+
+    if args.rules:
+        cmd_rules(universe)
+        return 0
+
+    if args.slots:
+        cmd_slots(universe)
+        return 0
+
+    if args.kelly:
+        cmd_kelly(universe)
+        return 0
+
+    if args.legs:
+        bands, sat_days = leg_bands(universe)
+        print(f"=== stated-prob bands: legs on SATURATED days "
+              f"({sat_days} days, floor {at.MIN_LEG_ODDS} APPLIED) ===\n")
+        print(f"{'band':10s} {'n':>4s} {'hit':>6s} {'flatROI':>8s}")
+        for b, (n, w, ret) in bands.items():
+            if n:
+                print(f"{b:10s} {n:4d} {w/n:6.1%} {(ret-n)/n:+8.1%}"
+                      f"{'  << small-n' if n < 30 else ''}")
+        return 0
+
+    if args.ab:
+        ab_report(universe, parse_spec(args.ab[0]), parse_spec(args.ab[1]))
+        return 0
+
+    if args.battery:
+        cmd_battery(universe)
+        return 0
+
+    specs = [parse_spec(s) for s in (args.variant or [])]
+    legacy = {}
+    for key, val in (("floor", args.floor), ("max_accas", args.max_accas),
+                     ("stake_frac", args.stake), ("min_prob", args.min_prob),
+                     ("volume_min", args.volume_min), ("volume_pool", args.volume_pool),
+                     ("gate_mode", args.gate_mode)):
+        if val is not None:
+            legacy[key] = val
+    if args.no_fallback:
+        legacy["fallback"] = False
+    if legacy:
+        specs.append(legacy)
+
+    base = print_variant(universe, {}, "live settings (reference)")
+    for spec in specs:
+        print_variant(universe, spec, baseline=base)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

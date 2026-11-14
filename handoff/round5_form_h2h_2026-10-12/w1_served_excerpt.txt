@@ -1,0 +1,507 @@
+W1 — what the match page serves around the form block (served text, raw spans)
+================================================================================
+
+Provenance
+----------
+URL    : https://www.betexplorer.com/football/england/premier-league/coventry-newcastle-utd/tW4rOkzg/
+Read   : 2026-10-12, page-fetch tool (text render of the same response the
+         capture's own fetch reads), reported totalChunks=4, all four read.
+Sandbox: bash in this sandbox has no route to betexplorer.com (the module's
+         own urllib fetch fails at TLS, exit-equivalent URLError), so the raw
+         HTML bytes are NOT retrievable here; this file keeps the served text
+         exactly as the fetch tool rendered it, and the spans below are copied
+         verbatim from that render. Anything not copied here is stated as read
+         but not quoted, and is marked as such.
+
+Question W1: does the form block ("Last results: <team>") serve the 10/15/all
+rows, or only the 5-row view? And does the H2H cap (_MAX_H2H_ROWS=40) cut the
+list the page itself serves?
+
+Answer (see w1_counts.txt for the counted output): the block serves the
+selector's ACTIVE view only — "5 results" — with exactly five dated rows per
+side; the 10/15/all rows are not in the response. The H2H list the page serves
+is 20 dated meetings (counted below), i.e. inside the 40-row cap.
+
+================================================================================
+SECTION A — the form blocks, verbatim as served (both sides)
+================================================================================
+
+Last results: Coventry
+
+Show:
+
+Premier League 2026/2027all tournaments
+
+- Premier League 2026/2027
+
+5 results10 results15 resultsall results
+
+- 5 results
+
+19.09.202619.09.
+
+[Nottingham\
+
+\
+
+![Nottingham](https://www.betexplorer.com/res/images/team-logo/6uyUuh7n-ImKwLTtA.png)\
+
+\
+
+0 : 1\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+**Coventry**](https://www.betexplorer.com/football/england/premier-league/nottingham-coventry/YqbwSbyR/)
+
+0
+
+1
+
+1.64
+
+3.88
+
+5.49
+
+13.09.202613.09.
+
+[**Coventry**\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+0 : 5\
+
+\
+
+![Brighton](https://www.betexplorer.com/res/images/team-logo/MmmU7K6n-b92lfEJC.png)\
+
+\
+
+Brighton](https://www.betexplorer.com/football/england/premier-league/coventry-brighton/OYvwj5O9/)
+
+0
+
+5
+
+3.85
+
+3.78
+
+1.91
+
+05.09.202605.09.
+
+[Manchester City\
+
+\
+
+![Manchester City](https://www.betexplorer.com/res/images/team-logo/bD5ctWmh-lQuhqN8N.png)\
+
+\
+
+1 : 0\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+**Coventry**](https://www.betexplorer.com/football/england/premier-league/manchester-city-coventry/2sLj8RMt/)
+
+1
+
+0
+
+1.20
+
+7.37
+
+13.33
+
+29.08.202629.08.
+
+[**Coventry**\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+0 : 1\
+
+\
+
+![Hull City](https://www.betexplorer.com/res/images/team-logo/6XK8qThQ-bJFnYpTt.png)\
+
+\
+
+Hull](https://www.betexplorer.com/football/england/premier-league/coventry-hull-city/GUCzYBoR/)
+
+0
+
+1
+
+1.74
+
+3.82
+
+4.81
+
+21.08.202621.08.
+
+[Arsenal\
+
+\
+
+![Arsenal](https://www.betexplorer.com/res/images/team-logo/fwtiqyQt-vcNAdtF9.png)\
+
+\
+
+3 : 0\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+**Coventry**](https://www.betexplorer.com/football/england/premier-league/arsenal-coventry/2q2NhX43/)
+
+3
+
+0
+
+1.20
+
+7.08
+
+13.98
+
+![Newcastle United Football Club](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)
+
+Last results: Newcastle Utd
+
+Show:
+
+Premier League 2026/2027all tournaments
+
+- Premier League 2026/2027
+
+5 results10 results15 resultsall results
+
+- 5 results
+
+19.09.202619.09.
+
+[**Newcastle**\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+2 : 1\
+
+\
+
+![Hull City](https://www.betexplorer.com/res/images/team-logo/6XK8qThQ-bJFnYpTt.png)\
+
+\
+
+Hull](https://www.betexplorer.com/football/england/premier-league/newcastle-utd-hull-city/nTaVTK6E/)
+
+2
+
+1
+
+1.60
+
+4.31
+
+5.15
+
+14.09.202614.09.
+
+[Leeds\
+
+\
+
+![Leeds](https://www.betexplorer.com/res/images/team-logo/nDgKFmPt-MTp25XgE.png)\
+
+\
+
+4 : 1\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+**Newcastle**](https://www.betexplorer.com/football/england/premier-league/leeds-newcastle-utd/Q1TGrNGq/)
+
+4
+
+1
+
+2.35
+
+3.44
+
+2.99
+
+05.09.202605.09.
+
+[**Newcastle**\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+2 : 2\
+
+\
+
+![Bournemouth](https://www.betexplorer.com/res/images/team-logo/Ewktd19K-2XyrBA7b.png)\
+
+\
+
+Bournemouth](https://www.betexplorer.com/football/england/premier-league/newcastle-utd-bournemouth/A7Ob65ig/)
+
+2
+
+2
+
+2.13
+
+3.60
+
+3.31
+
+29.08.202629.08.
+
+[Tottenham\
+
+\
+
+![Tottenham](https://www.betexplorer.com/res/images/team-logo/QwVidgl9-Ig5FKJZ5.png)\
+
+\
+
+0 : 2\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+**Newcastle**](https://www.betexplorer.com/football/england/premier-league/tottenham-newcastle-utd/ry1ouThf/)
+
+0
+
+2
+
+2.17
+
+3.69
+
+3.14
+
+23.08.202623.08.
+
+[**Newcastle**\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+2 : 2\
+
+\
+
+![Liverpool](https://www.betexplorer.com/res/images/team-logo/K00665Rc-KCp4zq5F.png)\
+
+\
+
+Liverpool](https://www.betexplorer.com/football/england/premier-league/newcastle-utd-liverpool/4xKntFxe/)
+
+2
+
+2
+
+3.83
+
+3.90
+
+1.88
+
+================================================================================
+SECTION B — the H2H list and its controls
+================================================================================
+
+Heading and record line (served):
+
+## Head to Head: Last 6
+
+0 wins
+
+1 draw
+
+5 wins
+
+0%
+
+17%
+
+83%
+
+First row, verbatim (the oldest rows follow; the full fetched list runs
+17.02.2010 → 18.08.1993 — 20 dated meetings, counted in w1_counts.txt):
+
+![England](https://cci.betexplorer.com/198.svg)[Championship 2009/2010](https://www.betexplorer.com/football/england/championship-2009-2010/)
+
+1
+
+X
+
+2
+
+17.02.201017.02.
+
+[**Newcastle**\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+4 : 1\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+Coventry](https://www.betexplorer.com/football/england/championship-2009-2010/newcastle-utd-coventry/QcCNuL0j/)
+
+4
+
+1
+
+1.45
+
+3.93
+
+7.17
+
+Last rows and the controls that follow them, verbatim (the served list ends
+here — nothing dated appears after these two controls):
+
+23.02.199423.02.
+
+[**Newcastle**\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+4 : 0\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+Coventry](https://www.betexplorer.com/football/england/premier-league-1993-1994/newcastle-utd-coventry/pQTGJTKc/)
+
+4
+
+0
+
+18.08.199318.08.
+
+[**Coventry**\
+
+\
+
+![Coventry](https://www.betexplorer.com/res/images/team-logo/6whO35WE-SSMx8z8I.png)\
+
+\
+
+2 : 1\
+
+\
+
+![Newcastle Utd](https://www.betexplorer.com/res/images/team-logo/AaOo2Mk9-SdMnF4oL.png)\
+
+\
+
+Newcastle](https://www.betexplorer.com/football/england/premier-league-1993-1994/coventry-newcastle-utd/Ee80Mtq1/)
+
+2
+
+1
+
+Show more matches![](https://www.betexplorer.com/res/styles/img/redesign/showMoreIcon.png)
+
+[Show all![](https://www.betexplorer.com/res/styles/img/redesign/arrowRight.png)](https://www.betexplorer.com/football/england/premier-league/mutual-matches/?home=GOvB22xg&away=p6ahwuwJ&where=0#league-summary-h2h)
+
+The dated rows read in the fetched list (20), oldest-first here:
+18.08.1993, 23.02.1994, 24.08.1994, 17.12.1994, 19.08.1995, 14.01.1996,
+17.12.1996, 15.03.1997, 08.11.1997, 14.03.1998, 19.09.1998, 17.02.1999,
+16.10.1999, 29.04.2000, 06.09.2000, 13.01.2001, 29.01.2005, 26.08.2008,
+09.12.2009, 17.02.2010.
+
+================================================================================
+SECTION C — the standings block and its controls
+================================================================================
+
+Served table header and first/last rows, verbatim:
+
+## Standings
+
+| # | Team |  | MP | W | D | L | G | GD | Pts | Form |
+
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+| 1. | [Manchester City](https://www.betexplorer.com/football/team/manchester-city/Wtn9Stg0/) |  | 6 | 6 | 0 | 0 | 16:5 | 11 | 18 |  |
+
+| 19. | [Coventry](https://www.betexplorer.com/football/team/coventry/GOvB22xg/) |  | 5 | 1 | 0 | 4 | 1:10 | -9 | 3 |  |
+
+| 20. | [Fulham](https://www.betexplorer.com/football/team/fulham/69ZiU2Om/) |  | 6 | 0 | 2 | 4 | 6:10 | -4 | 2 |  |
+
+1791739309.315743
+
+Show full table![](https://www.betexplorer.com/res/styles/img/redesign/showMoreIcon.png)
+
+The standalone table views are server links (all of them "as-ajax=1", none
+fetched by the capture or by this reading). One, verbatim:
+
+- [Form](https://www.betexplorer.com/football/england/premier-league/standings/?table=form&table_sub=&ts=CfoA8Dmm&dcheck=0&as-ajax=1&l=en&event_context=tW4rOkzg)
+
+The served "table" view carries the whole league (ranks 1–20 as read; this
+excerpt quotes the header and three rows, so w1_counts.txt counts the three
+quoted rows and marks the full-table count as reported-by-the-fetch and not
+re-countable here; the 5/5 form rows are counted there).

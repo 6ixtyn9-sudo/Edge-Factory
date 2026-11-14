@@ -1,0 +1,24 @@
+backfill_registry_slices: ref=origin/main mode=apply
+{
+  "already_attributed": 0,
+  "keys_pct": 97.3,
+  "league_pct": 97.3,
+  "matched": 398,
+  "records": 409,
+  "unmatched": 11,
+  "unmatched_sample": [
+    "2026-10-06 England vs Czech Republic",
+    "2026-08-21 Drogheda United vs St. Patricks Athletic",
+    "2026-08-22 West Ham vs Charlton",
+    "2026-08-23 Porto vs FC Arouca",
+    "2026-09-05 FC Schalke 04 vs Bayern M\u00fcnchen",
+    "2026-09-12 Borussia Dortmund vs Paderborn",
+    "2026-09-18 Bayern M\u00fcnchen vs Union Berlin",
+    "2026-09-21 Deportivo Toluca vs Santos Laguna",
+    "2026-09-26 Pe\u00f1arol vs Boston River",
+    "2026-10-04 Castellon vs AD Ceuta"
+  ],
+  "with_keys": 398,
+  "with_league": 398
+}
+unmatched records keep league: null and inherit their parent floor

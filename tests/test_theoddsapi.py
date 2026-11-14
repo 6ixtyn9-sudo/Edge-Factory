@@ -1,0 +1,795 @@
+"""Offline tests for the theoddsapi adapter. No network, no API key."""
+
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from edgefactory.sources import theoddsapi
+
+
+SPORTS = [
+    {"key": "soccer_sweden_allsvenskan", "group": "Soccer", "title": "Allsvenskan", "active": True},
+    {"key": "soccer_norway_eliteserien", "group": "Soccer", "title": "Eliteserien", "active": True},
+    {"key": "soccer_epl", "group": "Soccer", "title": "EPL", "active": True},
+]
+
+PICK = {
+    "home": "Halmstad", "away": "Sirius",
+    "league": "Sweden Allsvenskan", "date": "2026-08-03", "kickoff": "03-08, 18:00",
+}
+
+EVENTS = [
+    {"id": "evt_swapped", "commence_time": "2026-08-03T16:00:00Z",
+     "home_team": "IK Sirius", "away_team": "Halmstads BK"},
+    {"id": "evt_right", "commence_time": "2026-08-03T16:00:00Z",
+     "home_team": "Halmstads BK", "away_team": "IK Sirius"},
+    {"id": "evt_other_day", "commence_time": "2026-08-05T16:00:00Z",
+     "home_team": "Halmstads BK", "away_team": "Djurgarden"},
+]
+
+PAYLOAD = {
+    "id": "evt_right", "sport_key": "soccer_sweden_allsvenskan", "sport_title": "Allsvenskan",
+    "bookmakers": [
+        {"key": "pinnacle", "title": "Pinnacle", "markets": [
+            {"key": "h2h", "outcomes": [
+                {"name": "Halmstads BK", "price": 2.10},
+                {"name": "Draw", "price": 3.40},
+                {"name": "IK Sirius", "price": 3.25}]},
+            {"key": "totals", "outcomes": [
+                {"name": "Over", "price": 1.95, "point": 2.5},
+                {"name": "Under", "price": 1.85, "point": 2.5},
+                {"name": "Over", "price": 9.0, "point": 4.5}]},
+        ]},
+        {"key": "betsson", "title": "Betsson", "markets": [
+            {"key": "h2h", "outcomes": [
+                {"name": "Halmstads BK", "price": 2.05},
+                {"name": "Draw", "price": 3.35},
+                {"name": "IK Sirius", "price": 3.30},
+                {"name": "Halmstads BK", "price": "not-a-price"}]},
+        ]},
+    ],
+}
+
+
+def test_league_resolution():
+    assert theoddsapi.sport_key_for_league("Sweden Allsvenskan", SPORTS) == "soccer_sweden_allsvenskan"
+    assert theoddsapi.sport_key_for_league("Eliteserien", SPORTS) == "soccer_norway_eliteserien"
+    assert theoddsapi.sport_key_for_league("Belarus Vysshaya Liga", SPORTS) is None
+    assert theoddsapi.sport_key_for_league("", SPORTS) is None
+    # regression (2026-08-03 live): "Ie2" -> norm "ie" must NOT containment-hit
+    # anything (false-positive on "...premiership..." keys, wasted a free events call)
+    sports_with_spl = SPORTS + [{"key": "soccer_spl", "group": "Soccer",
+                                 "title": "Scottish Premiership", "active": True}]
+    assert theoddsapi.sport_key_for_league("Ie2", sports_with_spl) is None
+
+
+def test_league_resolution_folds_accents_without_false_tier_hits():
+    sports = SPORTS + [
+        {"key": "soccer_spain_segunda_division", "group": "Soccer",
+         "title": "La Liga 2 - Spain", "active": True},
+        {"key": "soccer_spain_la_liga", "group": "Soccer",
+         "title": "La Liga - Spain", "active": True},
+    ]
+    assert (theoddsapi.sport_key_for_league("Spain Segunda División", sports)
+            == "soccer_spain_segunda_division")
+    # Third-tier RFEF is a distinct competition and must not inherit either
+    # La Liga or Segunda merely because it contains "Primera División".
+    assert theoddsapi.sport_key_for_league("Spain Primera División RFEF - Group 2", sports) is None
+
+
+def test_league_resolution_uefa_nations_variants_only_hit_nations_key():
+    sports = SPORTS + [
+        {"key": "soccer_uefa_nations_league", "group": "Soccer",
+         "title": "UEFA Nations League", "active": True},
+        {"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+         "title": "UEFA Europa Conference League", "active": True},
+    ]
+    assert theoddsapi.sport_key_for_league("UNL", sports) == "soccer_uefa_nations_league"
+    assert (theoddsapi.sport_key_for_league("World UEFA Nations League", sports)
+            == "soccer_uefa_nations_league")
+    assert (theoddsapi.sport_key_for_league("International,Uefa Nations League A Grp. 4", sports)
+            == "soccer_uefa_nations_league")
+    assert theoddsapi.sport_key_for_league("World CONCACAF Nations League", sports) is None
+
+
+def test_womens_labels_do_not_fall_through_to_mens_top_divisions():
+    sports = SPORTS + [
+        {"key": "soccer_spain_la_liga", "group": "Soccer", "title": "La Liga - Spain", "active": True},
+        {"key": "soccer_germany_bundesliga", "group": "Soccer", "title": "Bundesliga - Germany", "active": True},
+        {"key": "soccer_germany_bundesliga_women", "group": "Soccer", "title": "Frauen-Bundesliga", "active": True},
+    ]
+    assert theoddsapi.sport_key_for_league("Spain La Liga Women", sports) is None
+    assert theoddsapi.sport_key_for_league("Spain Liga F", sports) is None
+    assert theoddsapi.sport_key_for_league("USA,Nwsl", sports) is None
+    assert (theoddsapi.sport_key_for_league("Germany Bundesliga Women", sports)
+            == "soccer_germany_bundesliga_women")
+    assert (theoddsapi.sport_key_for_league("Germany Frauen Bundesliga", sports)
+            == "soccer_germany_bundesliga_women")
+
+
+def test_match_event_pair_constrained():
+    ev = theoddsapi.match_event(PICK, EVENTS)
+    assert ev is not None and ev["id"] == "evt_right"
+
+
+def test_match_event_no_result():
+    ghost = dict(PICK, home="No Such", away="Teams FC")
+    assert theoddsapi.match_event(ghost, EVENTS) is None
+
+
+def test_rows_parse_and_filter():
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], PAYLOAD)
+    # Pinnacle: 3x h2h + 3x totals@2.5/4.5 (TOTAL_POINTS default keeps 1.5-4.5)
+    # Betsson:  3x h2h (one malformed price dropped)
+    assert len(rows) == 9
+    prices = {(r["market"], r["selection"], r["bookmaker"]): r["odds"] for r in rows}
+    assert prices[("1x2", "home", "Pinnacle")] == 2.10
+    assert prices[("1x2", "draw", "Pinnacle")] == 3.40
+    assert prices[("ou_2.5", "under", "Pinnacle")] == 1.85
+    assert prices[("ou_4.5", "over", "Pinnacle")] == 9.0
+    assert prices[("1x2", "away", "Betsson")] == 3.30
+    assert all(r["market"] in {"1x2", "ou_2.5", "ou_4.5"} for r in rows)
+    assert all(set(theoddsapi.COLUMNS) == set(r.keys()) for r in rows)
+    assert all(r["source"] == "theoddsapi" and r["source_type"] == "odds" for r in rows)
+
+
+def test_budget_hard_stop(tmp_path, monkeypatch):
+    ledger = tmp_path / "usage.json"
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "MONTHLY_BUDGET", 10)
+    fp = theoddsapi._key_fp("fake-key")
+    assert theoddsapi._budget_ok(4, fp, day="2026-08-03")
+    theoddsapi._record_charge(4, fp, {}, day="2026-08-03")
+    theoddsapi._record_charge(4, fp, {}, day="2026-08-03")
+    assert not theoddsapi._budget_ok(4, fp, day="2026-08-03")  # 8 + 4 > 10 -> stop
+    data = json.loads(ledger.read_text())
+    assert data["keys"][fp]["months"]["2026-08"]["credits"] == 8
+
+
+def test_server_remaining_overrides_local(tmp_path, monkeypatch):
+    ledger = tmp_path / "usage.json"
+    fp = theoddsapi._key_fp("fake-key")
+    ledger.write_text(json.dumps({"version": 2, "keys": {fp: {
+        "months": {}, "last_server_used": 499, "last_server_remaining": 1,
+        "exhausted": False, "exhausted_reason": None, "exhausted_at": None}}}))
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "MONTHLY_BUDGET", 480)
+    assert not theoddsapi._budget_ok(2, fp, day="2026-08-03")
+
+
+def test_key_ring_rotation(tmp_path, monkeypatch):
+    ledger = tmp_path / "usage.json"
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "API_KEYS", ("k1", "k2", "k3"))
+    assert len(theoddsapi._key_ring()) == 3
+    assert set(theoddsapi._key_ring()) == {"k1", "k2", "k3"}
+    # daily offset spreads wear deterministically across the ring
+    assert theoddsapi._key_ring() == theoddsapi._key_ring()
+    fp1 = theoddsapi._key_fp("k1")
+    # every ring key is initially active-eligible
+    assert theoddsapi._active_key(day="2026-08-03") in ("k1", "k2", "k3")
+    # exhaust ring keys one by one; active always picks a live one
+    for k in theoddsapi._key_ring():
+        theoddsapi._mark_exhausted(theoddsapi._key_fp(k), "test")
+    assert theoddsapi._active_key(day="2026-08-03") is None
+    theoddsapi.unmark_exhausted()
+    assert theoddsapi._active_key(day="2026-08-03") in ("k1", "k2", "k3")
+    slot = json.loads(ledger.read_text())["keys"][fp1]
+    assert slot["exhausted"] is False
+
+
+def test_budget_stop_marks_active_key_unusable(tmp_path, monkeypatch):
+    ledger = tmp_path / "usage.json"
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "MONTHLY_BUDGET", 3)
+    monkeypatch.setattr(theoddsapi, "API_KEYS", ("k1", "k2"))
+    spent = theoddsapi._key_ring()[0]
+    theoddsapi._record_charge(3, theoddsapi._key_fp(spent), {}, day="2026-08-03")
+    # spent key is over-budget -> active_key must return the other ring key
+    active = theoddsapi._active_key(day="2026-08-03")
+    assert active is not None and active != spent
+
+
+def test_shortlist_reads_frozen_archive_in_confidence_order(tmp_path, monkeypatch):
+    (tmp_path / "picks_2026-08-03.json").write_text(json.dumps([
+        {"home": "Low", "away": "Confidence", "league": "Sweden Allsvenskan",
+         "date": "2026-08-03", "kickoff": "03-08, 18:00", "avg_p": 55},
+        {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
+         "date": "2026-08-03", "kickoff": "03-08, 18:00", "avg_p": 80},
+        {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
+         "date": "2026-08-03", "kickoff": "03-08, 18:00", "avg_p": 70},
+        {"home": "", "away": "Broken Row"},
+    ]))
+    monkeypatch.setattr(theoddsapi, "LOCALDATA", tmp_path)
+    fixtures = theoddsapi.shortlist("2026-08-03")
+    assert len(fixtures) == 2
+    assert [(f["home"], f["away"]) for f in fixtures] == [
+        ("Halmstad", "Sirius"), ("Low", "Confidence")]
+    assert theoddsapi.shortlist("2026-01-01") == []
+
+
+def test_cost_model(monkeypatch):
+    monkeypatch.setattr(theoddsapi, "MARKETS", ("h2h", "totals"))
+    monkeypatch.setattr(theoddsapi, "REGIONS", ("eu",))
+    assert theoddsapi.cost_per_event() == 2
+    monkeypatch.setattr(theoddsapi, "MARKETS", ("h2h", "totals", "btts"))
+    assert theoddsapi.cost_per_event() == 3
+
+
+# --- red-team 2026-08-03: year-boundary bug fix -----------------------------
+
+
+def test_kickoff_year_comes_from_pick_date_not_wall_clock():
+    from datetime import datetime as _dt, timezone as _tz
+    p = {"kickoff": "01-01, 12:00", "date": "2027-01-01"}
+    assert theoddsapi._pick_kickoff_utc(p) == _dt(2027, 1, 1, 10, 0, tzinfo=_tz.utc)
+    p2 = {"kickoff": "31-12, 23:00", "date": "2026-12-31"}
+    assert theoddsapi._pick_kickoff_utc(p2) == _dt(2026, 12, 31, 21, 0, tzinfo=_tz.utc)
+    # forward slate crossing New Year: run in Dec, fixture in Jan
+    p3 = {"kickoff": "02-01, 19:00", "date": "2027-01-02"}
+    assert theoddsapi._pick_kickoff_utc(p3) == _dt(2027, 1, 2, 17, 0, tzinfo=_tz.utc)
+    # missing date degrades to current year but still parses
+    p4 = {"kickoff": "03-08, 18:00"}
+    assert theoddsapi._pick_kickoff_utc(p4).year == _dt.now(_tz.utc).year
+
+
+# --- red-team 2026-08-03: atomic + serialized ledger writes -----------------
+
+
+def test_ledger_writes_atomic_and_no_tmp_litter(tmp_path, monkeypatch):
+    ledger = tmp_path / "usage.json"
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "USAGE_LOCK_FILE", tmp_path / "usage.lock")
+    fp = theoddsapi._key_fp("k")
+    theoddsapi._record_charge(2, fp, {}, day="2026-08-03")
+    data = json.loads(ledger.read_text())
+    assert data["keys"][fp]["months"]["2026-08"]["credits"] == 2
+    assert not (tmp_path / "usage.json.tmp").exists()
+
+
+def test_ledger_concurrent_writers_never_torn(tmp_path, monkeypatch):
+    import threading
+    ledger = tmp_path / "usage.json"
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "USAGE_LOCK_FILE", tmp_path / "usage.lock")
+    fp = theoddsapi._key_fp("k")
+    errors = []
+
+    def writer():
+        try:
+            for _ in range(15):
+                theoddsapi._record_charge(1, fp, {}, day="2026-08-03")
+        except Exception as exc:  # noqa: BLE001
+            errors.append(exc)
+
+    threads = [threading.Thread(target=writer) for _ in range(3)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert not errors
+    data = json.loads(ledger.read_text())  # parses: no torn writes
+    # advisory lock + atomic replace => all 45 charges survived
+    assert data["keys"][fp]["months"]["2026-08"]["credits"] == 45
+
+
+def test_ledger_recovers_from_corruption(tmp_path, monkeypatch):
+    ledger = tmp_path / "usage.json"
+    ledger.write_text("{broken json,,,")
+    monkeypatch.setattr(theoddsapi, "USAGE_FILE", ledger)
+    monkeypatch.setattr(theoddsapi, "USAGE_LOCK_FILE", tmp_path / "usage.lock")
+    fp = theoddsapi._key_fp("k")
+    theoddsapi._record_charge(2, fp, {}, day="2026-08-03")
+    data = json.loads(ledger.read_text())
+    assert data["keys"][fp]["months"]["2026-08"]["credits"] == 2
+
+
+# --- enhancement pricing wiring (2026-08-05): btts market is captured by default ---
+
+
+def test_btts_rows_parsed_from_payload():
+    payload = {
+        "id": "evt_right", "sport_key": "soccer_sweden_allsvenskan", "sport_title": "Allsvenskan",
+        "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "markets": [
+            {"key": "h2h", "outcomes": [
+                {"name": "Halmstads BK", "price": 2.10},
+                {"name": "Draw", "price": 3.40},
+                {"name": "IK Sirius", "price": 3.25}]},
+            {"key": "btts", "outcomes": [
+                {"name": "Yes", "price": 1.95},
+                {"name": "No", "price": 1.80}]},
+        ]}],
+    }
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    sel = {(r["market"], r["selection"]): r["odds"] for r in rows}
+    assert sel.get(("btts", "yes")) == 1.95
+    assert sel.get(("btts", "no")) == 1.80
+    # h2h still parsed alongside btts
+    assert sel.get(("1x2", "home")) == 2.10
+    # rows carry the unified schema columns
+    assert {"market", "selection", "odds", "bookmaker", "captured_at"} <= set(rows[0].keys())
+
+
+def test_default_markets_include_btts():
+    # Pins the wiring: the capture default now requests btts so the
+    # enhancement overlay can price btts_yes/btts_no from real captured odds.
+    import os
+    env_was = os.environ.get("ODDS_API_MARKETS")
+    try:
+        os.environ.pop("ODDS_API_MARKETS", None)
+        import importlib
+        import edgefactory.sources.theoddsapi as mod
+        importlib.reload(mod)
+        assert "btts" in mod.MARKETS
+    finally:
+        if env_was is not None:
+            os.environ["ODDS_API_MARKETS"] = env_was
+        else:
+            os.environ.pop("ODDS_API_MARKETS", None)
+
+
+def test_shortlist_reads_vetoed_picks_from_forecast_archive(tmp_path, monkeypatch):
+    # Evidence-on-all-buckets (2026-08-05): the capture shortlist must read
+    # ALL buckets from a forecast archive — including SKIPPED_VETO, the
+    # audit's best ROI bucket — so their prices get captured and their
+    # enhancements get scored.
+    from edgefactory.sources import theoddsapi
+    import json as _json
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    monkeypatch.setattr(theoddsapi, "LOCALDATA", localdata)
+
+    archive = localdata / "picks_2026-08-06.json"
+    archive.write_text(_json.dumps([
+        {"date": "2026-08-06", "home": "Paide", "away": "Rapid Vienna",
+         "kickoff": "2026-08-06T17:00:00Z", "bucket": "SKIPPED_VETO",
+         "league": "World UEFA Europa Conference League"},
+        {"date": "2026-08-06", "home": "Ajax", "away": "Shelbourne",
+         "kickoff": "2026-08-06T19:00:00Z", "bucket": "CAUTION",
+         "league": "World UEFA Europa Conference League"},
+    ]))
+    fixtures = theoddsapi.shortlist("2026-08-06")
+    assert len(fixtures) == 2
+    pairs = {(f["home"], f["away"]) for f in fixtures}
+    assert ("Paide", "Rapid Vienna") in pairs   # vetoed pick IS in the shortlist
+    assert ("Ajax", "Shelbourne") in pairs
+
+
+# ------------------------------------------------- league resolution integrity (2026-08-06)
+
+OFFSEASON_SPORTS = [
+    {"key": "soccer_england_league1", "group": "Soccer", "title": "League 1", "active": True},
+    {"key": "soccer_england_league2", "group": "Soccer", "title": "League 2", "active": True},
+    {"key": "soccer_efl_champ", "group": "Soccer", "title": "Championship", "active": True},
+    {"key": "soccer_argentina_primera_division", "group": "Soccer", "title": "Primera División - Argentina", "active": True},
+    {"key": "soccer_korea_kleague1", "group": "Soccer", "title": "K League 1", "active": True},
+    {"key": "soccer_uefa_champs_league_qualification", "group": "Soccer", "title": "UEFA Champions League Qualification", "active": True},
+    {"key": "soccer_spl", "group": "Soccer", "title": "Premiership - Scotland", "active": True},
+    {"key": "soccer_sweden_superettan", "group": "Soccer", "title": "Superettan - Sweden", "active": True},
+]
+
+
+def test_league_resolution_never_wrong_competition():
+    # 2026-08-06 incident: 13 archived labels junk-resolved to soccer_england_league2
+    # via a 6-char "league" token (digit-stripped "League 2"). A wrong competition
+    # must always lose to None — provenance fabrication is worse than unpriced.
+    for label in ("World UEFA Europa Conference League", "World: UEFA Europa Conference League",
+                  "World UEFA Europa League", "World: UEFA Europa League",
+                  "Bulgaria First League", "Belarus: Premier League",
+                  "Kuwait,Premier League Championship Round", "Scotland League Cup",
+                  "Uzbekistan Super League", "Argentina Primera B Metropolitana",
+                  "World Friendlies Clubs"):
+        assert theoddsapi.sport_key_for_league(label, OFFSEASON_SPORTS) is None, label
+
+
+def test_league_resolution_uefa_chains_follow_listing():
+    # off-season: the main UCL key is unlisted; the qualifiers key is live
+    assert (theoddsapi.sport_key_for_league("World UEFA Champions League", OFFSEASON_SPORTS)
+            == "soccer_uefa_champs_league_qualification")
+    assert (theoddsapi.sport_key_for_league("UCL", OFFSEASON_SPORTS)
+            == "soccer_uefa_champs_league_qualification")
+    both = OFFSEASON_SPORTS + [{"key": "soccer_uefa_champs_league", "group": "Soccer",
+                                "title": "UEFA Champions League", "active": True}]
+    assert (theoddsapi.sport_key_for_league("World UEFA Champions League", both)
+            == "soccer_uefa_champs_league")
+    uecl = OFFSEASON_SPORTS + [{"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+                                "title": "UEFA Europa Conference League", "active": True}]
+    assert (theoddsapi.sport_key_for_league("World UEFA Europa Conference League", uecl)
+            == "soccer_uefa_europa_conference_league")
+    # conference key must NOT absorb the Europa League (distinct competitions)
+    assert theoddsapi.sport_key_for_league("World UEFA Europa League", uecl) is None
+
+
+def test_league_short_codes_exact_and_tier_preserving():
+    uecl = [{"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+             "title": "UEFA Europa Conference League", "active": True}]
+    assert theoddsapi.sport_key_for_league("ECL", uecl) == "soccer_uefa_europa_conference_league"
+    fin = OFFSEASON_SPORTS + [{"key": "soccer_finland_veikkausliiga", "group": "Soccer",
+                               "title": "Veikkausliiga - Finland", "active": True}]
+    assert theoddsapi.sport_key_for_league("Fi1", fin) == "soccer_finland_veikkausliiga"
+    assert theoddsapi.sport_key_for_league("Se2", OFFSEASON_SPORTS) == "soccer_sweden_superettan"
+    # digit preserved at code stage: "Se4" (Division 2) must NOT hit Superettan
+    assert theoddsapi.sport_key_for_league("Se4", OFFSEASON_SPORTS) is None
+    assert theoddsapi.sport_key_for_league("Ie2", OFFSEASON_SPORTS) is None
+    # digit-preserving matching: second-tier labels never inherit the top tier
+    assert theoddsapi.sport_key_for_league("Korea K League 2", OFFSEASON_SPORTS) is None
+    j1 = [{"key": "soccer_japan_j_league", "group": "Soccer", "title": "J League", "active": True}]
+    assert theoddsapi.sport_key_for_league("Japan J2 League", j1) is None
+    assert theoddsapi.sport_key_for_league("South Korea K League 1", OFFSEASON_SPORTS) == "soccer_korea_kleague1"
+
+
+def test_containment_fallback_requires_real_overlap():
+    sports = OFFSEASON_SPORTS + [
+        {"key": "soccer_finland_veikkausliiga", "group": "Soccer", "title": "Veikkausliiga - Finland", "active": True},
+        {"key": "soccer_mexico_ligamx", "group": "Soccer", "title": "Liga MX", "active": True},
+    ]
+    # full-token containment still resolves legitimately
+    assert theoddsapi.sport_key_for_league("Finland Veikkausliiga", sports) == "soccer_finland_veikkausliiga"
+    assert theoddsapi.sport_key_for_league("Mexico,Liga Mx Apertura", sports) == "soccer_mexico_ligamx"
+    # a generic "championship"/"league" token never suffices on its own
+    assert theoddsapi.sport_key_for_league("Kuwait Premier League Championship Round", sports) is None
+
+
+def test_fetch_fixtures_refreshes_stale_sports_cache(monkeypatch):
+    # comp availability swaps at season boundaries faster than the 7-day cache
+    # rolls; one free /sports refresh must re-resolve stale misses.
+    stale = [{"key": "soccer_sweden_allsvenskan", "group": "Soccer", "title": "Allsvenskan", "active": True}]
+    fresh = stale + [{"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+                      "title": "UEFA Europa Conference League", "active": True}]
+    calls = {"refresh": 0}
+
+    def fake_load_sports(*, refresh=False):
+        if refresh:
+            calls["refresh"] += 1
+            return fresh
+        return stale
+
+    fixture = {"home": "Halmstad", "away": "Sirius",
+               "league": "World UEFA Europa Conference League",
+               "date": "2026-08-03", "kickoff": "03-08, 18:00"}
+    monkeypatch.setattr(theoddsapi, "API_KEYS", ("test-key",))
+    monkeypatch.setattr(theoddsapi, "load_sports", fake_load_sports)
+    monkeypatch.setattr(theoddsapi, "fetch_events", lambda key: EVENTS)
+    monkeypatch.setattr(theoddsapi, "fetch_event_odds", lambda key, event_id, day=None: PAYLOAD)
+    rows, unmatched, matched = theoddsapi.fetch_fixtures([fixture], day="2026-08-03")
+    assert calls["refresh"] == 1                    # exactly one free refresh
+    assert matched == 1 and not unmatched           # stale-cache miss healed
+    assert rows                                     # real rows out of the payload
+
+
+# --- 2026-10-10 coverage repair (run 38027657811 receipts) ------------------
+#
+# The Oct-10 attempt ledger committed 33 `league not covered` lines. Six of
+# those competitions are in the provider's own catalogue (captured same run
+# into localdata/theoddsapi_sports.json, mirrored here); the rest are genuine
+# provider gaps and must keep resolving to None. The same ledger shows one
+# wrong-competition query: `Scotland,Championship` containment-matched the
+# generic "Championship" title of soccer_efl_champ.
+
+with open("tests/data/theoddsapi_sports_2026-10-10.json") as _fh:
+    CATALOGUE_2026_10_10 = json.load(_fh)["sports"]
+
+
+def test_comma_form_labels_for_catalogued_competitions_resolve():
+    # Labels verbatim from the 2026-10-10 attempt ledger; keys verified
+    # against the provider's catalogue captured the same day.
+    assert (theoddsapi.sport_key_for_league("USA,Major League Soccer", CATALOGUE_2026_10_10)
+            == "soccer_usa_mls")
+    assert (theoddsapi.sport_key_for_league("Portugal,Liga Portugal", CATALOGUE_2026_10_10)
+            == "soccer_portugal_primeira_liga")
+    assert (theoddsapi.sport_key_for_league("Belgium,Belgian Pro League", CATALOGUE_2026_10_10)
+            == "soccer_belgium_first_div")
+    assert (theoddsapi.sport_key_for_league("Belgium: Jupiler Pro League", CATALOGUE_2026_10_10)
+            == "soccer_belgium_first_div")
+    assert (theoddsapi.sport_key_for_league("Chile,Primera Division", CATALOGUE_2026_10_10)
+            == "soccer_chile_campeonato")
+    # The accent-deleted historic alias spelling must not be the only one.
+    assert (theoddsapi.sport_key_for_league("Chile,Primera División", CATALOGUE_2026_10_10)
+            == "soccer_chile_campeonato")
+
+
+def test_second_tier_labels_never_inherit_the_repaired_fragments():
+    # "Liga Portugal 2" contains "Liga Portugal" — without the explicit
+    # dead-end it would price the second tier with top-tier odds.
+    assert theoddsapi.sport_key_for_league("Portugal,Liga Portugal 2", CATALOGUE_2026_10_10) is None
+    # Provider sells neither competition: honest None, not a top-tier key.
+    assert theoddsapi.sport_key_for_league("England,National League", CATALOGUE_2026_10_10) is None
+    assert theoddsapi.sport_key_for_league("Scotland,League One", CATALOGUE_2026_10_10) is None
+    assert theoddsapi.sport_key_for_league("Hungary,Nb I", CATALOGUE_2026_10_10) is None
+    assert theoddsapi.sport_key_for_league("Israel,Ligat Haal", CATALOGUE_2026_10_10) is None
+
+
+def test_scottish_championship_never_queries_the_efl_championship_key():
+    # 2026-10-10: Raith Rovers vs Queens Park (Scotland,Championship) was
+    # queried under soccer_efl_champ because the containment stage matched
+    # the generic "Championship" title. A wrong competition is worse than
+    # unpriced: the label must resolve to None.
+    assert theoddsapi.sport_key_for_league("Scotland,Championship", CATALOGUE_2026_10_10) is None
+    # ...and the guard must not break legitimate comma-form containment.
+    assert (theoddsapi.sport_key_for_league("Mexico,Liga Mx Apertura", CATALOGUE_2026_10_10)
+            == "soccer_mexico_ligamx")
+    assert (theoddsapi.sport_key_for_league("Scotland,Premiership", CATALOGUE_2026_10_10)
+            == "soccer_spl")
+
+
+def test_october_10_league_outcomes_match_the_attempt_ledger():
+    # Every league label the 2026-10-10 capture attempted, and the resolution
+    # the receipts show it got or should have got. Labels the provider
+    # genuinely lacks stay None; nothing may start resolving to a key that is
+    # not in the catalogue.
+    expected = {
+        "Kazakhstan,Premier League": None,
+        "Israel,Ligat Haal": None,
+        "Italy,Serie C Grp. B": None,
+        "Thailand,Thai League": None,
+        "Belgium: Jupiler Pro League": "soccer_belgium_first_div",
+        "Romania,Liga Ii": None,
+        "Portugal,Liga Portugal": "soccer_portugal_primeira_liga",
+        "Belgium,Belgian Pro League": "soccer_belgium_first_div",
+        "England,National League": None,
+        "Portugal,Liga Portugal 2": None,
+        "Germany Regionalliga - Bayern": None,
+        "Kuwait,Premier League": None,
+        "Uruguay,Liga Auf Clausura": None,
+        "Italy,Serie C Grp. C": None,
+        "Sweden,Ettan Sodra": None,
+        "USA,Major League Soccer": "soccer_usa_mls",
+        "Hungary,Nb I": None,
+        "Scotland,League One": None,
+        "Chile,Primera Division": "soccer_chile_campeonato",
+        "Moldova,Super Liga": None,
+        "Romania,Superliga": None,
+        "Slovenia,Prva Liga": None,
+        "Bulgaria,First Professional League": None,
+        "Slovakia,1. Liga": None,
+        "Colombia,Primera A Apertura Finalizacion": None,
+        "Scotland,League Two": None,
+        "Scotland,Championship": None,  # must NOT hit soccer_efl_champ
+        "England,League Two": "soccer_england_league2",
+        "Austria,Bundesliga": "soccer_austria_bundesliga",
+    }
+    for label, want in expected.items():
+        got = theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10)
+        assert got == want, f"{label!r}: got {got!r}, want {want!r}"
+
+
+def test_argentina_top_flight_resolves_and_tiers_stay_unmapped():
+    # Catalogue evidence: soccer_argentina_primera_division is listed active
+    # (tests/data/theoddsapi_sports_2026-10-10.json, fetched 2026-10-10T04:20Z).
+    # The accent-FOLDED fragment "argentinaprimeradivision" is in
+    # LEAGUE_KEY_ALIASES, so the alias stage — not the containment fallback —
+    # resolves the top-flight label deterministically.
+    assert theoddsapi._league_code("Argentina,Primera División") == (
+        "argentinaprimeradivision")
+    assert theoddsapi.sport_key_for_league(
+        "Argentina,Primera División", CATALOGUE_2026_10_10) == (
+        "soccer_argentina_primera_division")
+    assert theoddsapi.sport_key_for_league(
+        "Argentina Primera División", CATALOGUE_2026_10_10) == (
+        "soccer_argentina_primera_division")
+    # Tier guards: lower tiers and reserve football must never inherit the
+    # top-flight key (labels observed in the picks archives).
+    for label in ("Argentina,Primera B Metropolitana",
+                  "Argentina: Primera Nacional",
+                  "Argentina,Primera Nacional Grp. B",
+                  "Argentina: Primera B",
+                  "Argentina: Reserve League"):
+        assert theoddsapi.sport_key_for_league(
+            label, CATALOGUE_2026_10_10) is None, label
+    # Other countries' top flights share the "Primera División" name; none may
+    # land on Argentina's key (wrong competition is worse than unpriced).
+    for country in ("Uruguay", "Peru", "Venezuela", "Bolivia", "Ecuador",
+                    "Paraguay", "Guatemala", "El Salvador", "Nicaragua",
+                    "Honduras", "Costa Rica", "Panama"):
+        label = f"{country},Primera División"
+        assert theoddsapi.sport_key_for_league(
+            label, CATALOGUE_2026_10_10) is None, label
+    # Clausura: no catalogue evidence the provider places it under the
+    # Primera División key — stays unmapped rather than guessed.
+    assert theoddsapi.sport_key_for_league(
+        "Argentina,Clausura", CATALOGUE_2026_10_10) is None
+
+
+def test_team_totals_parse_in_both_outcome_shapes():
+    # v4 shape: name="Over"/"Under", team in description, line in point.
+    # Older shape: team embedded in the name ("Halmstads BK Under 2.5").
+    payload = {
+        "id": "evt_right", "sport_key": "soccer_sweden_allsvenskan", "sport_title": "Allsvenskan",
+        "bookmakers": [
+            {"key": "pinnacle", "title": "Pinnacle", "markets": [
+                {"key": "team_totals", "outcomes": [
+                    {"name": "Over", "description": "Halmstads BK", "price": 1.90, "point": 1.5},
+                    {"name": "Under", "description": "Halmstads BK", "price": 1.95, "point": 1.5},
+                    {"name": "Under", "description": "IK Sirius", "price": 1.80, "point": 2.5}]}]},
+            {"key": "betsson", "title": "Betsson", "markets": [
+                {"key": "team_totals", "outcomes": [
+                    {"name": "Halmstads BK Under 2.5", "price": 1.85, "point": 2.5}]}]},
+        ],
+    }
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    tt = {(r["market"], r["selection"], r["bookmaker"]): r["odds"]
+          for r in rows if r["market"].startswith("tt_")}
+    assert tt[("tt_home_1.5", "over", "Pinnacle")] == 1.90
+    assert tt[("tt_home_1.5", "under", "Pinnacle")] == 1.95
+    assert tt[("tt_away_2.5", "under", "Pinnacle")] == 1.80
+    assert tt[("tt_home_2.5", "under", "Betsson")] == 1.85
+
+
+def test_defaults_request_alternate_ladders_and_account_for_each_market(monkeypatch):
+    import importlib
+    monkeypatch.delenv('ODDS_API_MARKETS', raising=False)
+    monkeypatch.delenv('ODDS_API_TOTAL_POINTS', raising=False)
+    importlib.reload(theoddsapi)
+    assert {'totals', 'alternate_totals', 'btts', 'team_totals', 'alternate_team_totals'} <= set(theoddsapi.MARKETS)
+    assert '0.5' in theoddsapi.TOTAL_POINTS
+    seen = {}
+    def get(path, params, **kwargs):
+        seen.update(params=params, cost=kwargs['cost'])
+        return {}, 'test'
+    monkeypatch.setattr(theoddsapi, '_get_json', get)
+    theoddsapi.fetch_event_odds('soccer_test', 'event')
+    assert set(seen['params']['markets'].split(',')) == set(theoddsapi.MARKETS)
+    assert seen['cost'] == len(theoddsapi.MARKETS) * len(theoddsapi.REGIONS)
+
+
+def test_alternate_team_totals_keep_both_sides_and_half_goal_lines():
+    payload = {'bookmakers': [{'title': 'Book', 'markets': [{
+        'key': 'alternate_team_totals', 'outcomes': [
+            {'name': direction, 'description': team, 'point': line, 'price': 1.6}
+            for team in ['Halmstads BK', 'IK Sirius']
+            for line in [.5, 1.5, 2.5, 3.5]
+            for direction in ['Over', 'Under']]}]}]}
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    assert {(r['market'], r['selection']) for r in rows} == {
+        (f'tt_{side}_{line}', direction) for side in ['home', 'away']
+        for line in ['0.5', '1.5', '2.5', '3.5'] for direction in ['over', 'under']}
+    # An explicit operator line restriction is still honoured.
+    from unittest.mock import patch
+    with patch.object(theoddsapi, 'TOTAL_POINTS', ('1.5',)):
+        restricted = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    assert {r['market'] for r in restricted} == {'tt_home_1.5', 'tt_away_1.5'}
+
+
+def test_market_defaults_and_pending_workflow_changes_are_explicit():
+    from pathlib import Path
+    import re
+    import yaml
+    root = Path(__file__).resolve().parents[1]
+    workflow = yaml.safe_load((root / '.github/workflows/daily.yml').read_text())
+    env = next(job['env'] for job in workflow['jobs'].values() if 'ODDS_API_MARKETS' in job.get('env', {}))
+    defaults = {k: re.search(r"\|\| '([^']+)'", env[k]).group(1)
+                for k in ['ODDS_API_MARKETS', 'ODDS_API_TOTAL_POINTS']}
+    from scripts.audit_env_drift import PENDING_WORKFLOW_APPLY
+    desired = {'ODDS_API_MARKETS': ','.join(theoddsapi.MARKETS),
+               'ODDS_API_TOTAL_POINTS': ','.join(theoddsapi.TOTAL_POINTS)}
+    old = {'ODDS_API_MARKETS': 'h2h,totals,team_totals',
+           'ODDS_API_TOTAL_POINTS': '1.5,2.5,3.5,4.5'}
+    for name, deployed in defaults.items():
+        if deployed != desired[name]:
+            assert name in PENDING_WORKFLOW_APPLY
+            assert deployed == old[name]  # no silent new divergence approved
+        else:
+            assert name not in PENDING_WORKFLOW_APPLY
+    assert 'secrets.ODDS_API_MARKETS' in env['ODDS_API_MARKETS']  # explicit override stays explicit
+    example = dict(line.split('=', 1) for line in (root / '.env.example').read_text().splitlines()
+                   if line.startswith(('ODDS_API_MARKETS=', 'ODDS_API_TOTAL_POINTS=')))
+    assert example == desired
+
+
+@pytest.mark.parametrize('label', [
+    'Bundesliga', ' BUNDESLIGA ', 'Bundesliga 2', '2. Bundesliga',
+    'Superliga', 'Super Liga', 'Super-Liga', 'Super Lig', 'Süper Lig',
+])
+@pytest.mark.parametrize('catalogue_mode', ['full', 'reversed', 'single_wrong', 'empty'])
+def test_november_7_bare_competition_labels_never_invent_country(label, catalogue_mode):
+    # November 7: German fixtures went to Austria and Romanian/Turkish/Serbian
+    # fixtures went to Denmark. A catalogue match cannot supply missing country
+    # evidence, even if only one provider key is currently available.
+    sports = [
+        {'key': 'soccer_austria_bundesliga', 'title': 'Austrian Bundesliga', 'active': True},
+        {'key': 'soccer_germany_bundesliga', 'title': 'Bundesliga - Germany', 'active': True},
+        {'key': 'soccer_germany_bundesliga2', 'title': 'Bundesliga 2 - Germany', 'active': True},
+        {'key': 'soccer_denmark_superliga', 'title': 'Superliga - Denmark', 'active': True},
+        {'key': 'soccer_turkey_super_league', 'title': 'Super Lig', 'active': True},
+    ]
+    if catalogue_mode == 'reversed':
+        sports.reverse()
+    elif catalogue_mode == 'single_wrong':
+        sports = [sports[0] if 'bundesliga' in label.lower() else sports[3]]
+    elif catalogue_mode == 'empty':
+        sports = []
+    assert theoddsapi.sport_key_for_league(label, sports) is None
+
+
+def test_november_7_country_and_code_evidence_still_routes_correctly():
+    expected = {
+        'Germany Bundesliga': 'soccer_germany_bundesliga',
+        'Germany,Bundesliga': 'soccer_germany_bundesliga',
+        'De1': 'soccer_germany_bundesliga',
+        'Germany Bundesliga 2': 'soccer_germany_bundesliga2',
+        'De2': 'soccer_germany_bundesliga2',
+        'Austria Bundesliga': 'soccer_austria_bundesliga',
+        'At1': 'soccer_austria_bundesliga',
+        'Denmark Superliga': 'soccer_denmark_superliga',
+        'Dk1': 'soccer_denmark_superliga',
+        'Turkey Super Lig': 'soccer_turkey_super_league',
+        'Tr1': 'soccer_turkey_super_league',
+        'Romania,Superliga': None,
+        'Serbia,Super Liga': None,
+    }
+    for label, key in expected.items():
+        assert theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10) == key, label
+
+
+@pytest.mark.parametrize('allow_truncated', [True, False])
+@pytest.mark.parametrize('left,right', [
+    ('Paris', 'Paris 13 Atletico'),
+    ('Paris 13 Atletico', 'Paris 14 Atletico'),
+    ('B 1903', 'B 1908'),
+    ('Arsenal', 'Arsenal Women'),
+    ('Arsenal U21', 'Arsenal U23'),
+    ('FC Porto', 'FC Porto II'),
+    ('FC Porto B', 'FC Porto III'),
+    ('Alanyaspor', 'Alanyaspor SRL'),
+    ('Arsenal', 'Arsenal (Bookings)'),
+])
+def test_team_matching_preserves_club_numbers_and_squad_identity(left, right, allow_truncated):
+    assert not theoddsapi._team_names_match(left, right, allow_truncated=allow_truncated)
+    assert not theoddsapi._team_names_match(right, left, allow_truncated=allow_truncated)
+
+
+@pytest.mark.parametrize('allow_truncated', [True, False])
+@pytest.mark.parametrize('left,right', [
+    ('Paris 13 Atletico', 'Paris 13 Atletico'),
+    ('Halmstad', 'Halmstads BK'),
+    ('Sirius', 'IK Sirius'),
+    ('Arsenal Women', 'Arsenal W'),
+    ('FC Porto II', 'FC Porto 2'),
+    ('Iraklis 1908', 'Iraklis FC'),
+    ('1. FC Heidenheim', 'FC Heidenheim'),
+])
+def test_team_identity_guards_preserve_evidenced_variants(left, right, allow_truncated):
+    assert theoddsapi._team_names_match(left, right, allow_truncated=allow_truncated)
+    assert theoddsapi._team_names_match(right, left, allow_truncated=allow_truncated)
+
+
+def test_match_event_cannot_attach_paris13_or_other_squads_price():
+    pick = dict(PICK, home='Paris', away='La Roche')
+    wrong = dict(EVENTS[1], id='paris13', home_team='Paris 13 Atletico', away_team='La Roche')
+    assert theoddsapi.match_event(pick, [wrong]) is None
+    right = dict(wrong, id='paris', home_team='Paris')
+    assert theoddsapi.match_event(pick, [wrong, right]) is right
+    assert theoddsapi.match_event(dict(pick, home='Arsenal'), [dict(wrong, home_team='Arsenal W')]) is None
+
+
+@pytest.mark.parametrize('label', ['Bundes-Liga', 'Bun.desliga', 'SuperLig', 'Super.Liga'])
+def test_redteam_punctuation_cannot_bypass_ambiguous_competition_guard(label):
+    assert theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10) is None
+
+
+@pytest.mark.parametrize('label', ['Germany Bundesliga 3', 'Germany Bundesliga 20',
+                                   'England League 10', 'Spain La Liga 3'])
+def test_redteam_unknown_numeric_tier_cannot_inherit_alias_prefix(label):
+    assert theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10) is None
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_redteam_event_admission_cannot_use_nine_character_club_collision(reverse):
+    pick = dict(PICK, home='Manchester United', away='Rangers')
+    wrong = dict(EVENTS[1], id='city', home_team='Manchester City', away_team='Rangers')
+    right = dict(wrong, id='united', home_team='Manchester United')
+    assert theoddsapi.match_event(pick, [wrong]) is None
+    assert theoddsapi.match_event(pick, [right, wrong] if reverse else [wrong, right]) is right
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_redteam_equally_plausible_event_identities_do_not_depend_on_provider_order(reverse):
+    pick = dict(PICK, home='Manchester', away='Rangers')
+    city = dict(EVENTS[1], id='city', home_team='Manchester City', away_team='Rangers')
+    united = dict(city, id='united', home_team='Manchester United')
+    assert theoddsapi.match_event(pick, [united, city] if reverse else [city, united]) is None
+    # Repeated identical provider rows are not a distinct competing identity.
+    assert theoddsapi.match_event(dict(pick, home='Manchester United'), [united, dict(united)]) is united

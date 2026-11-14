@@ -1,0 +1,12 @@
+name = "edge-factory-source-relay"
+main = "src/index.js"
+compatibility_date = "2026-09-30"
+compatibility_flags = ["nodejs_compat_v2"]
+workers_dev = true
+
+[browser]
+binding = "BROWSER"
+
+[[kv_namespaces]]
+binding = "BROWSER_DIAGNOSTIC_KV"
+id = "74e36c3254554e609988fe25d04237fd"

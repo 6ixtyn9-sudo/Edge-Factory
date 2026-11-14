@@ -1,0 +1,1010 @@
+"""Contract tests for the ROLLING auto-tickets engine — PERCENT-ONLY edition.
+
+Pins: no-filter playable legs, top-6 by stated prob, consecutive 2-leg accas
+(max 3), one-third of bank per day (stakes in % of capital), default-off
+research controls, committed-stake accounting, settlement moves the bank in
+%, and the TAKE-PROFIT NOTIFICATION (performance-based: fires at +100% per
+cycle, moves no amounts, resets the cycle baseline).
+"""
+import sys
+from datetime import datetime
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src"))
+
+import auto_tickets as at  # noqa: E402
+from edgefactory.util import norm_team  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _sandbox_state(tmp_path, monkeypatch):
+    """EVERY test here must write state to a temp file — save_state() is
+    called deep inside settle/backfill, so patch STATE_FILE/LOCALDATA
+    unconditionally (an earlier version leaked a test slip into the real
+    localdata/auto_tickets_state.json)."""
+    monkeypatch.setattr(at, "STATE_FILE", tmp_path / "state.json")
+    monkeypatch.setattr(at, "LOCALDATA", tmp_path)
+    # Bound at import time like STATE_FILE; cmd_today writes it, so it must be
+    # sandboxed too (it used to leak into the real localdata/ and then seed
+    # the live bucket-P&L streak state with test data).
+    monkeypatch.setattr(at, "BUCKET_PNL_FILE", tmp_path / "auto_tickets_bucket_pnl.json")
+
+
+def _leg(tag, prob, odds, result=None):
+    return {"match": f"Team {tag} vs Other {tag}", "pick": "HOME",
+            "prob": prob, "odds": odds, "result": result,
+            "row": {"home": f"Team {tag}", "away": f"Other {tag}", "pick": "home"}}
+
+
+# ---------------- stale-slip settle seam (2026-09-10 Muharraq/PSV) ----------
+
+
+class _FakeDateTime(__import__("datetime").datetime):
+    """Freeze settle-time to 2026-09-23 (13 days after the stale slip)."""
+
+    @classmethod
+    def now(cls, tz=None):
+        from datetime import datetime as _dt
+
+        return _dt(2026, 9, 23, 12, 0, tzinfo=tz or at.TZ)
+
+
+def _stale_0910_state():
+    return {
+        "base_pct": 100.0,
+        "bank": 109.0963,
+        "cycle_base": 100.0,
+        "history": [],
+        "events": [],
+        "open_slips": [{
+            "date": "2026-09-10",
+            "staked_pct": 15.6111,
+            "accas": [{
+                "legs": [
+                    {"match": "Muharraq SC vs Manama Club", "pick": "HOME",
+                     "prob": 0.673, "odds": 1.26, "result": None},
+                    {"match": "PSV Eindhoven vs Shakhtar Donetsk", "pick": "HOME",
+                     "prob": 0.591, "odds": 1.45, "result": None},
+                ],
+                "odds": 1.83, "stake_pct": 15.6111, "results": [None, None],
+                "won": None,
+            }],
+        }],
+    }
+
+
+def _archive_row(date, home, away, pick, kickoff=None):
+    row = {"date": date, "home": home, "away": away, "pick": pick}
+    if kickoff:
+        row["kickoff"] = kickoff
+    return row
+
+
+def test_settle_stale_0910_replay(monkeypatch):
+    """Golden replay of the real 2026-09-10 stuck slip: leg names with
+    'SC'/'Club' suffixes never exact-matched the archive rows, so the row
+    lookup, the kickoff-age void and the whole failsafe never armed for
+    13 days. Post-fix the fold matches, the kickoff-age void fires for
+    the donor-gapped Muharraq leg, and the acca grades a loss (PSV leg
+    was a real loss) — bank keeps the committed stake out."""
+    monkeypatch.setattr(at, "datetime", _FakeDateTime)
+    st = _stale_0910_state()
+    archives = [
+        _archive_row("2026-09-10", "Muharraq", "Manama", "home",
+                     kickoff="10-09, 17:00"),
+        _archive_row("2026-09-10", "PSV Eindhoven", "Shakhtar Donetsk", "home"),
+    ]
+    # Donor gap: settled has only the PSV fixture (away => the leg's loss).
+    settled = {("2026-09-10", norm_team("PSV Eindhoven"),
+                norm_team("Shakhtar Donetsk")): "away"}
+    _frozen(st)
+    lines = at.settle_open_slips(st, settled, archives=archives,
+                                 entries_by_date={})
+    assert st["open_slips"] == []
+    hist = st["history"][-1]["accas"][0]
+    assert hist["won"] is False
+    # book-style: void leg drops out, PSV leg alone decides as loss.
+    assert hist["odds"] == 1.45
+    # leg-level evidence surfaces in the settle event line.
+    assert any("settled 2026-09-10" in line and "legs=['void', 'loss']" in line
+               for line in lines)
+    # bank holds the stake whole until settlement; the loss subtracts it now.
+    assert st["bank"] == pytest.approx(109.0963 - 15.6111)
+
+
+def test_settle_missing_row_voids_on_slip_timer(monkeypatch):
+    """A leg whose archive row is entirely absent (never matched anywhere)
+    voids on the slip-date timer at >= 5 days; before that it stays open."""
+    from datetime import datetime as _dt
+
+    class EarlyFake(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            return _dt(2026, 9, 13, 12, 0, tzinfo=tz or at.TZ)
+
+    st = _stale_0910_state()
+    monkeypatch.setattr(at, "datetime", EarlyFake)
+    _frozen(st)
+    at.settle_open_slips(st, {}, archives=[], entries_by_date={})
+    assert len(st["open_slips"]) == 1  # 3 days old: still open
+
+    st2 = _stale_0910_state()
+    monkeypatch.setattr(at, "datetime", _FakeDateTime)
+    _frozen(st2)
+    lines2 = at.settle_open_slips(st2, {}, archives=[], entries_by_date={})
+    hist = st2["history"][-1]["accas"][0]
+    assert hist["won"] is True and hist["odds"] == 1.0
+    assert any("legs=['void', 'void']" in line for line in lines2)
+    assert st2["open_slips"] == []
+    # all-void at odds 1.0: ret == stake, bank moves by ret-stake == 0.
+    assert st2["bank"] == pytest.approx(109.0963)
+
+
+def test_settle_recent_slip_untouched(monkeypatch):
+    """A fresh slip (kickoff within the horizon) stays open with real
+    row matching intact: no donor result yet -> leg stays null, no void."""
+    from datetime import datetime as _dt
+
+    class NowFake(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            return _dt(2026, 9, 11, 12, 0, tzinfo=tz or at.TZ)
+
+    st = _stale_0910_state()
+    monkeypatch.setattr(at, "datetime", NowFake)
+    archives = [
+        _archive_row("2026-09-10", "Muharraq", "Manama", "home",
+                     kickoff="10-09, 17:00"),
+        _archive_row("2026-09-10", "PSV Eindhoven", "Shakhtar Donetsk", "home"),
+    ]
+    _frozen(st)
+    at.settle_open_slips(st, {}, archives=archives, entries_by_date={})
+    assert len(st["open_slips"]) == 1
+    assert st["open_slips"][0]["accas"][0]["won"] is None
+
+
+def _fixture_leg(match, home, away, date, prob, odds):
+    return {"match": match, "pick": "HOME", "prob": prob, "odds": odds,
+            "result": None,
+            "row": {"home": home, "away": away, "date": date}}
+
+
+def _incident_pool():
+    """The real 2026-09-22 FA Cup split: one match, two spellings, one card.
+    Dag-and: betexplorer @1.27 stated 68% · Dag-&: scoutingstats @1.33 67.1%.
+    EK and Dag-and are lifted to 1.31 (quoted 1.24 / 1.27, under the 1.30 minimum)
+    so both stay in the pool; the dedup shape is unchanged."""
+    return [
+        _fixture_leg("East Kilbride vs Celtic II", "East Kilbride", "Celtic II",
+                     "2026-09-22", 0.75, 1.31),
+        _fixture_leg("Dagenham and Redbridge vs Waltham Abbey",
+                     "Dagenham and Redbridge", "Waltham Abbey",
+                     "2026-09-22", 0.68, 1.31),
+        _fixture_leg("Dagenham & Redbridge vs Waltham Abbey",
+                     "Dagenham & Redbridge", "Waltham Abbey",
+                     "2026-09-22", 0.671, 1.33),
+        _fixture_leg("Juventus W vs SL Benfica W", "Juventus W", "SL Benfica W",
+                     "2026-09-22", 0.63, 1.61),
+    ]
+
+
+def test_fixture_fold_treats_ampersand_as_and():
+    assert at._fixture_fold("Dagenham & Redbridge") == at._fixture_fold(
+        "Dagenham and Redbridge")
+
+
+def test_dedup_fixture_legs_keeps_highest_ranked_twin():
+    kept, dropped = at.dedup_fixture_legs(at.rank_legs(_incident_pool()))
+    assert [l["match"] for l in kept] == [
+        "East Kilbride vs Celtic II",
+        "Dagenham and Redbridge vs Waltham Abbey",
+        "Juventus W vs SL Benfica W",
+    ]
+    assert [l["match"] for l in dropped] == [
+        "Dagenham & Redbridge vs Waltham Abbey"]
+
+
+def test_one_match_never_rides_a_card_twice():
+    """The incident shape: ranked pool [EK .75, Dag-and .68, Dag-& .671, Ju .63]
+    — pre-fix barbell pairing put [EK, Dag-and] and [Dag-&, Ju] on one card.
+    Post-fix: the weaker twin is dropped after ranking and Dag-and rides with
+    EK — one leg per fixture, no correlated exposure."""
+    accas = at.select_accas(_incident_pool())
+    keys = [at._fixture_key(l) for a in accas for l in a]
+    assert len(keys) == len(set(keys))
+    matches = [l["match"] for a in accas for l in a]
+    assert "Dagenham & Redbridge vs Waltham Abbey" not in matches
+    assert accas == [[_incident_pool()[0], _incident_pool()[1]]]
+
+
+def test_dedup_report_names_dropped_matches():
+    report = {}
+    at.select_accas(_incident_pool(), fixture_report=report)
+    assert report["dropped"] == ["Dagenham & Redbridge vs Waltham Abbey"]
+
+
+def test_same_teams_on_different_dates_are_not_dupes():
+    kept, dropped = at.dedup_fixture_legs([
+        _fixture_leg("A vs B", "A", "B", "2026-09-22", 0.70, 1.30),
+        _fixture_leg("A vs B", "A", "B", "2026-09-23", 0.69, 1.31),
+    ])
+    assert dropped == [] and len(kept) == 2
+
+
+# ---------------- planning (percent stakes) ----------------
+
+def test_plan_day_top6_consecutive_pairs_and_stake_pct():
+    pool = [_leg(i, 0.60 + i / 100, 1.31 + i / 10) for i in range(9)]
+    plan = at.plan_day(pool, bank_pct=100.0, pairing="consecutive")
+    assert len(plan) == at.MAX_ACCAS
+    assert all(len(a["legs"]) == at.LEGS_PER_ACCA for a in plan)
+    assert plan[0]["legs"][0]["prob"] >= plan[0]["legs"][1]["prob"] >= plan[1]["legs"][0]["prob"]
+    # STAKE_FRAC of bank split across MAX_ACCAS accas.
+    assert plan[0]["stake_pct"] == pytest.approx(100.0 * at.STAKE_FRAC / at.MAX_ACCAS, abs=1e-3)
+    assert plan[0]["odds"] == pytest.approx(
+        plan[0]["legs"][0]["odds"] * plan[0]["legs"][1]["odds"], abs=0.01)
+    assert "stake" not in plan[0] and "stake_pct" in plan[0]   # percent-only contract
+
+
+def test_new_knob_defaults_pin_the_live_recipe_byte_for_byte():
+    assert at.STAKE_MODE == "per_acca"
+    assert at.STAKE_PER_ACCA is None
+    assert at.MIN_ACCAS == 1
+    assert at.STAKE_WEIGHTS is None
+    pool = [_leg(i, 0.70 - i / 100, 1.30 + i / 10) for i in range(8)]
+    assert at.select_accas(pool) == at.select_accas(pool, min_accas=1)
+    assert at.plan_day(pool, 123.456) == at.plan_day(
+        pool, 123.456, stake_frac=at.STAKE_FRAC, stake_mode="per_acca",
+        stake_per_acca=None, weights=None, min_accas=1,
+    )
+
+
+def test_per_acca_stake_is_fixed_until_the_day_cap_bites():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
+    two = at.plan_day(pool[:4], 100.0, stake_mode="per_acca")
+    assert [a["stake_pct"] for a in two] == pytest.approx(
+        [100.0 * at.STAKE_FRAC / at.MAX_ACCAS] * 2, abs=1e-4)
+    # An oversized ticket fraction is scaled down rather than breaching the
+    # absolute STAKE_FRAC day cap.
+    capped = at.plan_day(pool, 100.0, stake_mode="per_acca", stake_per_acca=0.20)
+    assert sum(a["stake_pct"] for a in capped) == pytest.approx(100.0 * at.STAKE_FRAC, abs=1e-3)
+
+
+def test_min_accas_turns_smaller_cards_into_no_bet():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(4)]
+    assert len(at.select_accas(pool)) == 2
+    assert at.select_accas(pool, min_accas=3) == []
+    assert at.plan_day(pool, 100.0, min_accas=3) == []
+
+
+def test_stake_weights_change_stakes_not_selection():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
+    equal = at.plan_day(pool, 100.0)
+    ws = [at.MAX_ACCAS - i for i in range(at.MAX_ACCAS)]
+    weighted = at.plan_day(pool, 100.0, weights=",".join(map(str, ws)))
+    assert [a["legs"] for a in weighted] == [a["legs"] for a in equal]
+    assert [a["stake_pct"] for a in weighted] == pytest.approx(
+        [100.0 * at.STAKE_FRAC * w / sum(ws) for w in ws], abs=1e-4)
+    assert sum(a["stake_pct"] for a in weighted) <= round(100.0 * at.STAKE_FRAC, 4)
+    assert sum(a["stake_pct"] for a in weighted) == pytest.approx(100.0 * at.STAKE_FRAC, abs=1e-3)
+
+
+def test_invalid_staking_knobs_fail_closed():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
+    with pytest.raises(ValueError, match="stake_mode"):
+        at.plan_day(pool, 100.0, stake_mode="martingale")
+    with pytest.raises(ValueError, match=f"need at least {at.MAX_ACCAS}"):
+        at.plan_day(pool, 100.0, weights=",".join("1" for _ in range(at.MAX_ACCAS - 1)))
+    with pytest.raises(ValueError, match="greater than zero"):
+        at.plan_day(pool, 100.0, weights="3,0,1")
+
+
+def test_legacy_pool_gate_is_a_proven_no_op():
+    """2026-09-04 audit: the pool-prefix volume gate CANNOT change a card.
+
+    The pool is prob-sorted, so a prob filter only ever trims a suffix the
+    top-6 never reached; when it does bite, the completeness fallback puts
+    the pool straight back. The old test for this gate passed with the gate
+    deleted entirely — it asserted a property of the SORT. This test pins the
+    real finding instead, so nobody re-adopts the dead knob believing it works.
+    """
+    pool = [_leg(f"lo{i}", 0.55, 1.9) for i in range(6)] + \
+           [_leg(f"hi{i}", 0.72, 1.3) for i in range(8)]      # 14 legs -> saturated
+    ref = at.select_accas(pool, gate_mode="pool", volume_min=0.65)
+    for vm in (0.0, 0.50, 0.60, 0.70, 0.80, 0.95):
+        assert at.select_accas(pool, gate_mode="pool", volume_min=vm) == ref, \
+            f"pool gate at {vm} changed the card — audit assumption broken, re-run it"
+    assert at.select_accas(pool, gate_mode="off") == ref
+    assert at.GATE_MODE == "off", "live gate mode must stay honest about the no-op"
+
+
+def test_acca_gate_actually_bites_and_is_not_live():
+    """GATE_MODE='acca' is the only shape that can change a card: an acca
+    rides only if BOTH legs clear the threshold. Pre-registered, NOT live."""
+    pool = [_leg("hi0", 0.72, 1.40), _leg("hi1", 0.71, 1.45),
+            _leg("mid0", 0.62, 1.50), _leg("mid1", 0.61, 1.55),
+            _leg("mid2", 0.60, 1.60), _leg("mid3", 0.59, 1.65)] + \
+           [_leg(f"pad{i}", 0.56, 1.70) for i in range(8)]     # 14 legs -> saturated
+    # pairing pinned: this test prices GATE_MODE, not the live pairing
+    ungated = at.select_accas(pool, gate_mode="off", pairing="consecutive")
+    gated = at.select_accas(pool, gate_mode="acca", volume_min=0.65,
+                            pairing="consecutive")
+    assert len(ungated) == at.MAX_ACCAS
+    assert len(gated) == 1, "only the all->=65% acca may ride"
+    assert all(l["prob"] >= 0.65 for a in gated for l in a)
+    # fallback: an empty card is not an opinion -> full card returns
+    assert at.select_accas(pool, gate_mode="acca", volume_min=0.99,
+                           pairing="consecutive") == ungated
+    assert at.select_accas(pool, gate_mode="acca", volume_min=0.99,
+                           pairing="consecutive", fallback=False) == []
+
+
+def test_selection_knobs_are_overridable_for_the_harness():
+    """One code path: the replay harness drives THIS function with overrides
+    (2026-09-04: it used to re-implement the recipe and drifted twice)."""
+    pool = [_leg(i, 0.60 + i / 100, 1.31 + i / 10) for i in range(9)]
+    assert all(l["odds"] >= 1.30 for a in at.select_accas(pool, floor=1.30) for l in a)
+    assert len(at.select_accas(pool, max_accas=4)) == 4
+    ev = at.select_accas(pool, rank="ev")
+    assert ev[0][0]["odds"] * ev[0][0]["prob"] >= ev[-1][-1]["odds"] * ev[-1][-1]["prob"]
+    barbell = at.select_accas(pool, pairing="barbell")
+    assert barbell[0][0]["prob"] > barbell[0][1]["prob"]      # strongest with weakest
+
+
+def test_plan_day_too_few_legs_or_busted_bank():
+    assert at.plan_day([_leg("a", 0.7, 1.2)], 100.0) == []
+    assert at.plan_day([_leg("a", 0.7, 1.2), _leg("b", 0.7, 1.3)], 0.0) == []
+
+
+# ---------------- settlement + take-profit notification ----------------
+
+# Hand-built slips below stand for cards that WERE frozen and therefore
+# placed; only a frozen card is settled (see settle_open_slips' gate).
+_PLACED_AT = datetime(2026, 8, 20, 9, 0, tzinfo=at.TZ)
+
+
+def _frozen(st):
+    """Freeze every slip in ``st`` before it is handed to settlement."""
+    for slip in st.get("open_slips") or []:
+        at.record_freeze(st, str(slip["date"]), _PLACED_AT)
+    return st
+
+
+def _one_acca_slip(date, legs_spec, stake_pct, odds):
+    return {"date": date, "staked_pct": stake_pct,
+            "accas": [{"odds": odds, "stake_pct": stake_pct,
+                       "legs": [_leg(t, 0.75, o, r) for t, o, r in legs_spec]}]}
+
+
+def _archives_for(date, legs_spec):
+    return [{"date": date, "home": f"Team {t}", "away": f"Other {t}", "pick": "home",
+             "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": o,
+             "avg_p": 75.0, "edge_rule": "r"} for t, o, r in legs_spec]
+
+
+def _settled_for(date, legs_spec):
+    return {(date, norm_team(f"Team {t}"), norm_team(f"Other {t}")):
+            ("home" if r == "win" else "away") for t, o, r in legs_spec}
+
+
+def test_settle_losing_day_moves_bank_no_notification():
+    st = at.fresh_state()   # bank 100%
+    # Use non-squad placeholder suffixes; "Team B" is now intentionally
+    # parsed as a reserve-team marker by settlement identity.
+    spec = [("alpha", 1.4, "win"), ("delta", 1.43, "loss")]
+    st["open_slips"].append(_one_acca_slip("2026-08-20", spec, 50.0, 2.0))
+    _frozen(st)
+    at.settle_open_slips(st, _settled_for("2026-08-20", spec),
+                         archives=_archives_for("2026-08-20", spec))
+    assert st["bank"] == pytest.approx(50.0)
+    assert st["events"] == []
+    assert st["open_slips"] == []
+
+
+def test_settle_winning_day_below_target_no_notification():
+    st = at.fresh_state()
+    spec = [("w1", 1.5, "win"), ("w2", 1.67, "win")]
+    st["open_slips"].append(_one_acca_slip("2026-08-21", spec, 50.0, 2.5))
+    _frozen(st)
+    at.settle_open_slips(st, _settled_for("2026-08-21", spec),
+                         archives=_archives_for("2026-08-21", spec))
+    # 100 - 50 + 125 = 175% — below the 200% target: bank moves, NO notification
+    assert st["bank"] == pytest.approx(175.0)
+    assert st["events"] == []
+    assert st["cycle_base"] == pytest.approx(100.0)
+
+
+def test_take_profit_notification_fires_moves_no_amounts_and_resets_cycle():
+    st = at.fresh_state()
+    st["bank"] = 260.0   # performance arrived via wins
+    st["cycle_base"] = 100.0
+    events = at._apply_settlement(st, ret_pct=100.0, staked_pct=0.0, when="2026-08-22")
+    # bank 360 >= target 200 -> NOTIFICATION; bank unchanged; baseline resets
+    assert st["bank"] == pytest.approx(360.0)
+    assert st["cycle_base"] == pytest.approx(360.0)
+    assert at.take_profit_target(st) == pytest.approx(720.0)
+    assert st["events"] and st["events"][0]["action"] == "TAKE_PROFIT_NOTIFICATION"
+    assert st["events"][0]["gain_pct"] == pytest.approx(260.0)
+    assert any("TAKE-PROFIT" in e for e in events)
+    # marker file written (the notification artifact)
+    assert (at.LOCALDATA / "auto_tickets_takeprofit_2026-08-22.json").exists()
+
+
+def test_settle_keeps_unresolved_slips_open_and_stakes_committed(monkeypatch):
+    # clock pinned INSIDE the 5-day void horizon (doctrine upgrade
+    # 2026-09-23: donorgap legs auto-void on the slip-date timer at >=5d).
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+
+            return _dt(2026, 8, 24, 12, 0, tzinfo=tz or at.TZ)
+
+    monkeypatch.setattr(at, "datetime", _InHorizon)
+    st = at.fresh_state()
+    spec = [("p", 1.4, None), ("q", 1.43, None)]
+    st["open_slips"].append(_one_acca_slip("2026-08-22", spec, 50.0, 2.0))
+    _frozen(st)
+    done = at.settle_open_slips(st, {}, archives=_archives_for("2026-08-22", spec))
+    assert done == []
+    assert len(st["open_slips"]) == 1
+    assert st["bank"] == pytest.approx(100.0)          # stakes leave only at settlement
+    assert at.effective_bank(st) == pytest.approx(50.0)  # but are committed
+
+
+# ---------------- playable-leg filter ----------------
+
+def test_playable_legs_bucket_and_quarantine_and_price_filters():
+    rows = [
+        {"date": "2026-08-20", "home": "A", "away": "B", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.3, "avg_p": 75.0},
+        {"date": "2026-08-20", "home": "C", "away": "D", "pick": "home",
+         "bucket": "CAUTION", "quarantine": "none", "odds": 1.3, "avg_p": 75.0},
+        {"date": "2026-08-20", "home": "E", "away": "F", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "alias_fuzzy", "odds": 1.3, "avg_p": 75.0},
+        {"date": "2026-08-20", "home": "G", "away": "H", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": None, "avg_p": 75.0},
+    ]
+    legs = at.playable_legs(rows, day="2026-08-20")
+    # CAUTION was admitted 2026-09-08 (operator decision), so C vs D now
+    # rides. The quarantined leg and the price-less leg must still be
+    # dropped: those are DATA faults, not merely weak edges.
+    assert [l["match"] for l in legs] == ["A vs B", "C vs D"]
+    assert "CAUTION" in at.BUCKETS
+    for excluded in ("WATCHLIST_SUSPECT_PRICE", "WATCHLIST_NO_ODDS"):
+        assert excluded not in at.BUCKETS, (
+            f"{excluded} flags bad data, not a weak edge; it must stay out")
+
+
+def test_playable_legs_excludes_unverified_secondary_price():
+    row = {
+        "date": "2026-09-25", "home": "FC Dordrecht", "away": "Almere City",
+        "pick": "away", "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+        "odds": 2.00, "avg_p": 74.0, "market": "1x2",
+        "odds_source": "scoutingstats_odds",
+        "price_evidence": "SCOUTINGSTATS_SOLE",
+        "price_push_eligible": False,
+    }
+    # Historical replay keeps its frozen parity pool; only live ticket
+    # construction turns the explicit quarantine into a hard stop.
+    assert len(at.playable_legs([row], day="2026-09-25")) == 1
+    assert at.playable_legs([row], day="2026-09-25", execution_safe=True) == []
+
+    # A corroborated primary quote is still eligible at the same odds/family.
+    row["odds_source"] = "bzzoiro_odds"
+    row["price_evidence"] = "BZZOIRO_PRIMARY"
+    row["price_push_eligible"] = True
+    assert len(at.playable_legs([row], day="2026-09-25", execution_safe=True)) == 1
+
+
+# ---------------- backfill end-to-end (percent arithmetic) ----------------
+
+def test_backfill_end_to_end(tmp_path, monkeypatch):
+    days = {"2026-08-01": [("Ah", "Bh", 1.31, 80.0, "home"), ("Ch", "Dh", 1.6, 75.0, "home")],
+            "2026-08-02": [("Eh", "Fh", 1.3, 78.0, "home"), ("Gh", "Hh", 1.4, 72.0, "away")]}
+    archives, settled = [], {}
+    for d, rows in days.items():
+        for h, a, o1, ap, outcome in rows:
+            archives.append({"date": d, "home": h, "away": a, "pick": "home",
+                             "bucket": "SKIPPED_VETO", "quarantine": "none",
+                             "odds": o1, "avg_p": ap, "edge_rule": "r"})
+            settled[(d, norm_team(h), norm_team(a))] = outcome
+    monkeypatch.setattr(at, "load_archived_picks", lambda: archives)
+    monkeypatch.setattr(at, "load_settled", lambda: settled)
+    args = SimpleNamespace(from_=None, to="2026-08-03", reset=True)
+    at.cmd_backfill(args, at.load_state())
+    st = at.load_state()
+    assert len(st["history"]) == 2
+    # day1: one acca @2.10 (1.31*1.6 = 2.096, rounded to the card's 2dp), it wins. Under STAKE_MODE="per_acca" a
+    # single-acca card stakes STAKE_FRAC/MAX_ACCAS, not the whole day fraction.
+    f = at.STAKE_FRAC / at.MAX_ACCAS
+    day1 = 100.0 * (1 + f * 1.10)                   # 100 - 100f + 100f*2.10
+    assert st["history"][0]["bank_pct"] == pytest.approx(day1, abs=0.01)
+    assert st["events"] == []                       # < 200% target
+    # day2: stake = the same per-acca fraction of day1 bank, acca loses
+    assert st["history"][1]["bank_pct"] == pytest.approx(day1 * (1 - f), abs=0.05)
+    assert st["cycle_base"] == pytest.approx(100.0)  # unchanged — no notification fired
+
+
+# ---------------- settlement unification + rescheduled fallback + per-acca ----------------
+
+def test_load_settled_reads_warehouse_and_overlay_fills_gaps(tmp_path):
+    """auto-ticket grading must see the same result facts as the audit:
+    warehouse donors (incl. BetExplorer) first, overlay fills gaps, and the
+    warehouse wins on conflict."""
+    import duckdb
+    import json
+
+    wh = at.LOCALDATA / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-29','Viking','Aalesund',2,1,'home')")
+    con.execute("CREATE TABLE betexplorer_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO betexplorer_settled VALUES ('2026-08-27','MC Alger','MC Oran',2,1,'home')")
+    con.close()
+
+    (at.LOCALDATA / "settled_results.json").write_text(json.dumps({"rows": [
+        {"date": "2026-07-11", "home": "South Hobart", "away": "Ulverstone",
+         "hs": 2, "gs": 0, "outcome": "home", "src": "forebet_settled"},
+        {"date": "2026-08-29", "home": "Viking", "away": "Aalesund",
+         "hs": 9, "gs": 9, "outcome": "draw", "src": "zulubet_settled"},
+    ]}))
+
+    settled = at.load_settled()
+    # BetExplorer donor now grades the Algerian fixture
+    assert settled[("2026-08-27", norm_team("MC Alger"), norm_team("MC Oran"))] == "home"
+    # overlay fills a fixture the warehouse never saw
+    assert settled[("2026-07-11", norm_team("South Hobart"), norm_team("Ulverstone"))] == "home"
+    # warehouse wins on conflict (2-1 home, not the overlay's 9-9 draw)
+    assert settled[("2026-08-29", norm_team("Viking"), norm_team("Aalesund"))] == "home"
+
+
+def test_lookup_fallback_reaches_two_day_reschedule_but_not_four():
+    """The ±3-day rescheduled window grades a fixture moved +2 days
+    (Hønefoss W 08-29 -> 08-31) but refuses a +4-day look-alike."""
+    home, away = norm_team("Viking"), norm_team("Aalesund")
+    settled = {("2026-08-31", home, away): "away"}
+    assert at._lookup_fallback(settled, "2026-08-29", home, away) == "away"
+
+    far = {("2026-09-02", home, away): "home"}   # +4 days: outside the window
+    assert at._lookup_fallback(far, "2026-08-29", home, away) is None
+
+
+def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg(monkeypatch):
+    """One unresolved leg no longer freezes the whole day's stake: a resolved
+    acca moves the bank, the stuck acca stays open with its own stake."""
+    # clock pinned inside the void horizon (see doctrine note above).
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+
+            return _dt(2026, 8, 31, 12, 0, tzinfo=tz or at.TZ)
+
+    monkeypatch.setattr(at, "datetime", _InHorizon)
+    st = at.fresh_state()  # bank 100%
+    slip = {"date": "2026-08-29", "staked_pct": 50.0, "accas": [
+        {"odds": 1.69, "stake_pct": 25.0, "legs": [
+            {"match": "Viking vs Aalesund", "pick": "HOME", "odds": 1.3, "prob": 0.76},
+            {"match": "Celtic vs Falkirk", "pick": "HOME", "odds": 1.3, "prob": 0.75},
+        ]},
+        {"odds": 1.70, "stake_pct": 25.0, "legs": [
+            {"match": "Pafos vs Tirana", "pick": "HOME", "odds": 1.3, "prob": 0.74},
+            {"match": "Minsk vs Baranovichi", "pick": "HOME", "odds": 1.3, "prob": 0.73},
+        ]},
+    ]}
+    st["open_slips"].append(slip)
+    settled = {
+        ("2026-08-29", norm_team("Viking"), norm_team("Aalesund")): "home",
+        ("2026-08-29", norm_team("Celtic"), norm_team("Falkirk")): "home",
+        ("2026-08-29", norm_team("Pafos"), norm_team("Tirana")): "home",
+        # Minsk vs Baranovichi intentionally unresolved
+    }
+    archives = [
+        {"date": "2026-08-29", "home": h, "away": a, "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.3, "avg_p": 74.0}
+        for h, a in [("Viking", "Aalesund"), ("Celtic", "Falkirk"),
+                     ("Pafos", "Tirana"), ("Minsk", "Baranovichi")]
+    ]
+    _frozen(st)
+    lines = at.settle_open_slips(st, settled, archives=archives)
+
+    # acca 1 wins @1.69 -> bank 100 - 25 + 25*1.69 = 117.25
+    assert st["bank"] == pytest.approx(100.0 - 25.0 + 25.0 * 1.69, abs=1e-6)
+    # acca 2 remains open, holding only its own 25% stake
+    assert len(st["open_slips"]) == 1
+    assert st["open_slips"][0]["date"] == "2026-08-29"
+    assert len(st["open_slips"][0]["accas"]) == 1
+    assert st["open_slips"][0]["staked_pct"] == pytest.approx(25.0)
+    assert at.effective_bank(st) == pytest.approx(st["bank"] - 25.0)
+    assert len(lines) == 1
+    assert [{"odds": a["odds"], "won": a["won"]} for h in st["history"] for a in h["accas"]] == [{"odds": 1.69, "won": True}]
+
+
+def test_alias_outcome_conflict_true_false_and_womens_collision():
+    entries = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "outcome": "home"},
+    ]}
+    pick = {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana"}
+    assert at.alias_outcome_conflict(pick, entries) is True
+
+    # single spelling -> no conflict
+    clean = {"2026-08-27": [{"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"}]}
+    assert at.alias_outcome_conflict(pick, clean) is False
+
+    # women's key collision is not a conflict
+    women = {"2026-08-23": [
+        {"home": "Universitatea Craiova", "away": "Voluntari", "outcome": "home"},
+        {"home": "Universitatea Craiova W", "away": "Ol. Cluj W", "outcome": "away"},
+    ]}
+    assert at.alias_outcome_conflict(
+        {"date": "2026-08-23", "home": "Universitatea Craiova", "away": "FC Voluntari"},
+        women,
+    ) is False
+
+
+def test_settle_holds_acca_on_alias_conflict():
+    """A leg whose fixture is filed under conflicting spellings holds the acca
+    open instead of silently first-winning the exact-key outcome."""
+    st = at.fresh_state()
+    st["open_slips"].append({"date": "2026-08-27", "staked_pct": 50.0, "accas": [
+        {"odds": 1.87, "stake_pct": 50.0, "legs": [
+            {"match": "Pafos vs Dinamo Tirana", "pick": "HOME", "odds": 1.30, "prob": 0.62},
+            {"match": "MC Alger vs MC Oran", "pick": "HOME", "odds": 1.44, "prob": 0.62},
+        ]},
+    ]})
+    settled = {("2026-08-27", norm_team("Pafos"), norm_team("Dinamo Tirana")): "draw"}
+    entries = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "outcome": "home"},
+    ]}
+    archives = [
+        {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.30, "avg_p": 62.0},
+        {"date": "2026-08-27", "home": "MC Alger", "away": "MC Oran", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.44, "avg_p": 62.0},
+    ]
+    _frozen(st)
+    lines = at.settle_open_slips(st, settled, archives=archives, entries_by_date=entries)
+    assert st["bank"] == pytest.approx(100.0)          # no settlement happened
+    assert len(st["open_slips"]) == 1
+    assert any("conflict" in ln for ln in lines)
+    assert st["open_slips"][0]["accas"][0]["results"][0] == "conflict"
+
+
+def test_verified_results_override_conflicting_donors(tmp_path, monkeypatch):
+    """A verified 4-2 overrides a wrong forebet 2-2 in the auto-ticket grader:
+    the leg grades win and the alias conflict disappears."""
+    import duckdb
+
+    import edgefactory.settlement as settlement_mod
+
+    wh = at.LOCALDATA / "warehouse.duckdb"   # autouse fixture points LOCALDATA at tmp_path
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-27','Pafos','Dinamo Tirana',2,2,'draw')")
+    con.execute("CREATE TABLE bettingclosed_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-27','Pafos','KS Dinamo Tirana',4,2,'home')")
+    con.close()
+
+    verified = [{"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana",
+                 "hs": 4, "gs": 2, "outcome": "home", "src": "operator_verified"}]
+    monkeypatch.setattr(settlement_mod, "load_verified_results", lambda: verified)
+
+    settled = at.load_settled()
+    assert settled[("2026-08-27", norm_team("Pafos"), norm_team("Dinamo Tirana"))] == "home"
+
+    entries = at.load_settled_entries()
+    pick = {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana"}
+    assert at.alias_outcome_conflict(pick, entries) is False
+
+
+def test_verified_results_purge_alternate_spelling(tmp_path, monkeypatch):
+    """Verified outcomes must replace alias-written exact keys and purge
+    alternate donor entries, including a stale result the grader finds before
+    it reaches the alias-conflict scan (the Samgurali C-row incident). The
+    Fenerbahçe pair also retains the diacritic-variant regression case."""
+    import duckdb
+
+    import edgefactory.settlement as settlement_mod
+
+    wh = at.LOCALDATA / "warehouse.duckdb"   # autouse fixture points LOCALDATA at tmp_path
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-22','Fenerbahce','Konyaspor',2,1,'home')")
+    con.execute("CREATE TABLE bettingclosed_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-22','Fenerbahçe','Konyaspor',4,2,'home')")
+    # Reproduce the live C-row defect: alias-matched entries are purged, but
+    # the exact key written only by the alternate donor spelling used to keep
+    # its stale `home` outcome in key_to.
+    con.execute("CREATE TABLE statarea_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO statarea_settled VALUES "
+                "('2026-08-01','Samgurali Tskhaltubo','FC Meshakhte Tkibuli',1,0,'home')")
+    con.close()
+
+    verified = [
+        {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor",
+         "hs": 4, "gs": 2, "outcome": "home", "src": "source_verified"},
+        {"date": "2026-08-01", "home": "Samgurali", "away": "Meshakhte Tkibuli",
+         "hs": 0, "gs": 0, "outcome": "draw", "src": "source_verified"},
+    ]
+    monkeypatch.setattr(settlement_mod, "load_verified_results", lambda: verified)
+
+    settled = at.load_settled()
+    assert settled[("2026-08-22", norm_team("Fenerbahçe"), norm_team("Konyaspor"))] == "home"
+    for hkey, akey in at._result_write_keys("Samgurali Tskhaltubo", "FC Meshakhte Tkibuli"):
+        assert settled[("2026-08-01", hkey, akey)] == "draw"
+    # A home selection on the donor's alternate spelling must settle as a
+    # loss: a draw is the operator fact, not the donor's stale home win.
+    assert at.pick_result({"date": "2026-08-01", "home": "Samgurali Tskhaltubo",
+                           "away": "FC Meshakhte Tkibuli", "pick": "home"}, settled) == "loss"
+
+    entries = at.load_settled_entries()
+    pick = {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor"}
+    assert at.alias_outcome_conflict(pick, entries) is False
+    samgurali_pick = {"date": "2026-08-01", "home": "Samgurali Tskhaltubo",
+                      "away": "FC Meshakhte Tkibuli"}
+    assert at.alias_outcome_conflict(samgurali_pick, entries) is False
+
+def test_card_completeness_on_starved_saturated_days():
+    """2026-09-04: floor + volume gate compound -- 4 of 7 saturated days starve
+    the card below 6 legs, silently switching to an untested 2-acca x 25% risk
+    shape. The completeness rule falls back to top-6 of the floored pool so the
+    validated 3-acca structure survives. Floor still applies. (2026-09-04
+    audit: with GATE_MODE='off' this is now unconditional — the property is
+    still pinned so a future gate cannot silently reintroduce starved cards.)"""
+    # 13-leg pool (saturated), only 2 legs >= 65%, all odds >= 1.20 (floor-safe)
+    pool = []
+    for i in range(2):
+        pool.append({"match": f"Hi{i} vs X", "pick": "HOME", "prob": 0.72,
+                     "odds": 1.40 + i * 0.1, "result": None})
+    for i in range(11):
+        pool.append({"match": f"Mid{i} vs Y", "pick": "HOME", "prob": 0.60,
+                     "odds": 1.45 + i * 0.05, "result": None})
+    plan = at.plan_day(pool, bank_pct=100.0)
+    assert len(plan) == at.MAX_ACCAS, (
+        f"starved card must still build {at.MAX_ACCAS} accas, got {len(plan)}")
+    assert all(len(a["legs"]) == 2 for a in plan)
+    # stakes: STAKE_FRAC split across MAX_ACCAS whatever the card shape
+    assert abs(plan[0]["stake_pct"] - 100.0 * at.STAKE_FRAC / at.MAX_ACCAS) < 0.01
+
+    # control: a saturated pool WITH >=6 gated legs still applies the gate
+    pool2 = []
+    for i in range(8):
+        pool2.append({"match": f"G{i} vs Z", "pick": "HOME", "prob": 0.70,
+                      "odds": 1.35 + i * 0.05, "result": None})
+    for i in range(6):
+        pool2.append({"match": f"M{i} vs W", "pick": "HOME", "prob": 0.58,
+                      "odds": 1.50 + i * 0.05, "result": None})
+    plan2 = at.plan_day(pool2, bank_pct=100.0)
+    # top-6 by prob are the eight 0.70 legs' best six — with or without a gate
+    assert all(l["prob"] == 0.70 for a in plan2 for l in a["legs"])
+
+    # control 2: sub-floor legs never ride regardless of starvation
+    pool3 = [
+        {"match": "Short vs A", "pick": "HOME", "prob": 0.80, "odds": 1.11, "result": None},
+        {"match": "Ok1 vs B", "pick": "HOME", "prob": 0.60, "odds": 1.45, "result": None},
+    ]
+    legs = at.playable_legs([dict(r, bucket="SKIPPED_VETO", quarantine="none",
+                                  date="2026-09-05") for r in pool3],
+                            day="2026-09-05")
+    assert all(l["odds"] >= 1.20 for l in legs), "floor must still exclude sub-1.20 legs"
+
+
+# ---------------- Task E (2026-09-06): force-repick sizing ----------------
+# The 09-06 incident: on a force-repick the engine counted its own morning
+# draft as committed capital (effective_bank ran before upsert_slip deleted
+# it) and sized to bank/4 instead of bank/3; successive force-runs converge
+# to bank/4. A first run of the day can never expose this — the regression
+# must exercise the repick path with an existing same-day slip in state.
+
+class _RepickClock(at.datetime):
+    """Noon SAST — past the freeze hour, so the 09:00 build gates are open."""
+    @classmethod
+    def now(cls, tz=None):
+        return at.datetime(2026, 9, 6, 12, 0, tzinfo=tz or at.TZ)
+
+
+def _six_leg_slate_rows():
+    rows = []
+    for i, (home, away, ko) in enumerate([
+            ("Sporting CP", "Portimonense", "2026-09-06T20:30:00+02:00"),
+            ("Benfica", "Gil Vicente", "2026-09-06T20:45:00+02:00"),
+            ("Porto", "Estoril Praia", "2026-09-06T21:00:00+02:00"),
+            ("Braga", "Rio Ave", "2026-09-06T21:15:00+02:00"),
+            ("Vitoria SC", "Moreirense", "2026-09-06T21:30:00+02:00"),
+            ("Arouca", "Boavista", "2026-09-06T21:45:00+02:00"),
+    ]):
+        rows.append({"date": "2026-09-06", "home": home, "away": away,
+                     "kickoff": ko, "league": "Portugal,Primeira Liga",
+                     "bucket": "CERTIFIED_CLEAN", "market": "1x2", "pick": "home",
+                     "avg_p": 70.0 - i, "odds": 1.30 + i * 0.02,
+                     "quarantine": "none", "edge_rule": "ml-consensus",
+                     "odds_source": "bzzoiro_odds"})
+    return rows
+
+
+def _slip(date, staked, stakes):
+    return {"date": date, "staked_pct": staked,
+            "accas": [{"odds": 2.0, "stake_pct": s, "legs": []} for s in stakes]}
+
+
+def test_force_repick_sizes_on_bank_net_of_other_dates_not_own_draft(tmp_path, monkeypatch):
+    """The repick path: an existing same-day slip must NOT count as committed
+    capital (it is about to be replaced), while other open dates stay
+    committed. bank 100, own draft 21.6, other-day slip 10 ->
+    free bank 90 -> 3 x 10.0, NOT (100-21.6-10)/3 = 7.6 (pre-fix)."""
+    import json
+    monkeypatch.setattr(at, "datetime", _RepickClock)
+    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(_six_leg_slate_rows()))
+    st = at.fresh_state()
+    st["bank"] = 100.0
+    st["open_slips"] = [_slip("2026-09-06", 21.6, [7.2, 7.2, 7.2]),   # own morning draft
+                        _slip("2026-09-05", 10.0, [10.0])]           # genuinely live
+    args = SimpleNamespace(date="2026-09-06", force=True)
+    assert at.cmd_today(args, st) == 0
+    slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
+    want = 90.0 * at.STAKE_FRAC
+    assert slip["staked_pct"] == pytest.approx(want, abs=0.02)
+    assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx(
+        [want / at.MAX_ACCAS] * at.MAX_ACCAS, abs=0.02)
+    assert len(st["open_slips"]) == 2          # other-date slip untouched, own replaced
+    txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
+    # 2026-09-09: the slip no longer carries the REPICK/RESIZED diff block —
+    # it prints the clean card only. The sizing contract above still pins
+    # that the replaced draft was excluded from committed capital.
+    assert "REPICK" not in txt and "RESIZED" not in txt
+    assert "free bank 90.0%" in txt
+
+
+def test_first_run_of_day_sizes_on_bank_net_of_other_dates_and_prints_no_warning(tmp_path, monkeypatch):
+    """A first run of the day cannot expose the bug: no same-day slip exists,
+    so nothing is excluded by the date rule — other dates still count."""
+    import json
+    monkeypatch.setattr(at, "datetime", _RepickClock)
+    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(_six_leg_slate_rows()))
+    st = at.fresh_state()
+    st["bank"] = 100.0
+    st["open_slips"] = [_slip("2026-09-05", 10.0, [10.0])]
+    args = SimpleNamespace(date="2026-09-06", force=True)
+    assert at.cmd_today(args, st) == 0
+    slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
+    assert slip["staked_pct"] == pytest.approx(90.0 * at.STAKE_FRAC, abs=0.02)
+    txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
+    assert "REPICK" not in txt
+
+
+def _pacca(match, pick, odds, stake):
+    return {"odds": odds, "stake_pct": stake,
+            "legs": [{"match": match, "pick": pick, "odds": odds}]}
+
+
+def test_replacement_lines_name_changed_unchanged_and_dropped_accas():
+    """A silent repick prints nothing; only real changes are announced."""
+    def acca(stake, *legs):
+        return {"stake_pct": stake,
+                "legs": [{"match": m, "pick": pk, "odds": o} for m, pk, o in legs]}
+    A = ("A vs B", "HOME", 1.30)
+    B = ("C vs D", "AWAY", 1.50)
+    C = ("E vs F", "HOME", 1.70)
+
+    same = [acca(10.0, A, B)]
+    prior = {"staked_pct": 10.0, "accas": [acca(10.0, A, B)]}
+    assert at._replacement_lines(prior, same) == []
+
+    out = "\n".join(at._replacement_lines(prior, [acca(10.0, A, C)]))
+    assert "DROPPED (1)" in out and "C vs D" in out
+    assert "ADDED (1)" in out and "E vs F" in out
+    assert "MOVED" not in out
+
+    two_old = {"staked_pct": 20.0, "accas": [acca(10.0, A, B), acca(10.0, C, A)]}
+    out = "\n".join(at._replacement_lines(two_old, [acca(10.0, C, A), acca(10.0, A, B)]))
+    assert "MOVED" in out and "acca 1 \u2192 2" in out
+    assert "DROPPED" not in out and "ADDED" not in out
+
+    out = "\n".join(at._replacement_lines(prior, [acca(12.0, A, B)]))
+    assert "total stake 10.0000% \u2192 12.0000% of capital" in out
+
+
+
+
+def test_settle_loss_leg_decides_acca_without_waiting_for_void(monkeypatch):
+    """The 2026-09-27 ghost class: one leg a settled LOSS, the other
+    unresolved inside the 5-day void horizon. The acca is dead in reality —
+    it settles now, the bank drops, and the committed stake is released
+    instead of sitting "open" for days behind the void horizon."""
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+            return _dt(2026, 9, 30, 12, 0, tzinfo=tz or at.TZ)
+    monkeypatch.setattr(at, "datetime", _InHorizon)
+    st = at.fresh_state()
+    st["bank"] = 184.5
+    st["open_slips"].append({"date": "2026-09-27", "staked_pct": 15.5, "accas": [
+        {"odds": 2.22, "stake_pct": 15.5, "legs": [
+            {"match": "Kano Pillars vs Enyimba", "pick": "HOME", "odds": 1.50, "prob": 0.72},
+            {"match": "Polanka nad Odrou vs Frydek-Mistek", "pick": "AWAY",
+             "odds": 1.48, "prob": 0.68},
+        ]}]})
+    settled = {
+        ("2026-09-27", norm_team("Kano Pillars"), norm_team("Enyimba")): "draw",
+        # Polanka intentionally unresolved (inside the void horizon)
+    }
+    archives = [
+        {"date": "2026-09-27", "home": "Kano Pillars", "away": "Enyimba", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.50, "avg_p": 72.0},
+        {"date": "2026-09-27", "home": "Polanka nad Odrou", "away": "Frydek-Mistek",
+         "pick": "away", "bucket": "SKIPPED_VETO", "quarantine": "none",
+         "odds": 1.48, "avg_p": 68.0},
+    ]
+    _frozen(st)
+    lines = at.settle_open_slips(st, settled, archives=archives)
+
+    assert st["open_slips"] == []
+    assert st["bank"] == pytest.approx(184.5 - 15.5, abs=1e-6)
+    h = st["history"][-1]
+    assert h["date"] == "2026-09-27"
+    # original combined odds kept in the record (no void-style recompute)
+    assert [{"odds": a["odds"], "won": a["won"]} for a in h["accas"]] == [{"odds": 2.22, "won": False}]
+    assert h["returned_pct"] == 0.0
+    assert at.effective_bank(st) == pytest.approx(st["bank"])
+    assert any("settled 2026-09-27" in ln and "decided by settled loss leg" in ln
+               for ln in lines)
+
+
+def test_settle_loss_leg_decides_even_with_conflicted_sibling(monkeypatch):
+    """A conflicted fixture holds an UNdecided acca fail-closed — but it must
+    not delay one that is already dead: certain loss + conflict settles lost
+    immediately, with the conflict still noted for the operator."""
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+            return _dt(2026, 8, 29, 12, 0, tzinfo=tz or at.TZ)
+    monkeypatch.setattr(at, "datetime", _InHorizon)
+    st = at.fresh_state()
+    st["open_slips"].append({"date": "2026-08-27", "staked_pct": 50.0, "accas": [
+        {"odds": 1.87, "stake_pct": 50.0, "legs": [
+            {"match": "Pafos vs Dinamo Tirana", "pick": "HOME", "odds": 1.30, "prob": 0.62},
+            {"match": "MC Alger vs MC Oran", "pick": "HOME", "odds": 1.44, "prob": 0.62},
+        ]}]})
+    settled = {
+        ("2026-08-27", norm_team("Pafos"), norm_team("Dinamo Tirana")): "draw",
+        ("2026-08-27", norm_team("MC Alger"), norm_team("MC Oran")): "away",
+    }
+    entries = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "outcome": "home"},
+    ]}
+    archives = [
+        {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.30, "avg_p": 62.0},
+        {"date": "2026-08-27", "home": "MC Alger", "away": "MC Oran", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.44, "avg_p": 62.0},
+    ]
+    _frozen(st)
+    lines = at.settle_open_slips(st, settled, archives=archives,
+                                 entries_by_date=entries)
+
+    assert st["open_slips"] == []
+    assert st["bank"] == pytest.approx(100.0 - 50.0, abs=1e-6)
+    h = st["history"][-1]
+    assert [{"odds": a["odds"], "won": a["won"]} for a in h["accas"]] == [{"odds": 1.87, "won": False}]
+    assert h["returned_pct"] == 0.0
+    # decided by the certain loss; the conflict is surfaced, not silent
+    assert any("decided by settled loss leg" in ln and "conflict" in ln and
+               "Dinamo Tirana" in ln for ln in lines)

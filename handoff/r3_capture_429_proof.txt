@@ -1,0 +1,82 @@
+== R3: the capture's 429 handlers record what they catch ==
+
+source under test: scripts/capture_oddspapi.py  sha256 93a0757e0695c91b…
+the added calls, as they appear in the working tree:
+  500: _record_rate_limit(exc)
+  548: _record_rate_limit(exc)
+
+-- arm 1: the 429 comes through the transport (production path) --
+  with the handler call:    status='quota' http_status=429 attempted=0 fixtures=0 rows=0 matched=0  dials=1
+  without it (pre-fix):     status='quota' http_status=429 attempted=0 fixtures=0 rows=0 matched=0  dials=1
+  rate_limit (with):    {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}
+  rate_limit (without): {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}
+  persisted bytes: with=582 without=582 (clock frozen so byte-identity is meaningful)
+  [PASS] arm 1: the receipt is BYTE-IDENTICAL with and without the added call — 582 bytes each
+  [PASS] arm 1: the transport's evidence is what the receipt carries
+
+-- arm 2: the 429 is raised at the seam (transport bypassed) --
+  with the handler call:    status='quota' http_status=429 attempted=0 fixtures=0 rows=0 matched=0  dials=0
+  without it (pre-fix):     status='quota' http_status=429 attempted=0 fixtures=0 rows=0 matched=0  dials=0
+  rate_limit (with):    {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}
+  rate_limit (without): {}
+  persisted receipt WITH the call, whole:
+    {
+      "added": 0,
+      "attempted": 0,
+      "attempted_fixtures": [],
+      "captured_at": "2026-10-10T12:00:00+00:00",
+      "date": "2026-10-10",
+      "errors": [
+        "fetch_fixtures: HTTP 429 (quota); capture stopped"
+      ],
+      "fixtures": 0,
+      "http_status": 429,
+      "keys": 1,
+      "markets": {},
+      "matched": 0,
+      "quoted_fixtures": [],
+      "rate_limit": {
+        "http_status": 429,
+        "rate_limit_limit": "500",
+        "rate_limit_remaining": "0",
+        "rate_limit_reset": "2026-10-11T00:00:00Z",
+        "retry_after_s": "3600"
+      },
+      "rows": 0,
+      "schema": 1,
+      "source": "oddspapi_odds",
+      "status": "quota"
+    }
+  [PASS] arm 2: with the call the receipt carries the provider's retry_after
+  [PASS] arm 2: without it the receipt has no quota evidence (the incident)
+
+-- arm 3: no path double-counts --
+  [PASS] arm 3: transport dials identical with/without the call (transport path) — 1 vs 1
+  [PASS] arm 3: transport dials identical with/without the call (bypass path) — 0 vs 0
+  [PASS] arm 3: every receipt counter identical (transport path, ignoring rate_limit)
+  [PASS] arm 3: the bypass receipts differ ONLY in rate_limit — with={"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}
+  recorder idempotence (the double-count question directly):
+    once:  {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}
+    twice: {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}
+  [PASS] arm 3: recording the same exception twice yields the same dict
+    then a different 429: {"http_status": 429, "rate_limit_limit": null, "rate_limit_remaining": null, "rate_limit_reset": null, "retry_after_s": "60"}
+  [PASS] arm 3: a different 429 REPLACES the dict (no accumulation)
+  the per-fixture handler (the second site), where the run also
+  dials the catalogue first (`/markets`, its own 429 with Retry-After 60):
+    call ON,  transport recorder ON : {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}  dials=1
+    call OFF, transport recorder ON : {"http_status": 429, "rate_limit_limit": null, "rate_limit_remaining": null, "rate_limit_reset": null, "retry_after_s": "60"}  dials=1
+    call ON,  transport recorder OFF: {"http_status": 429, "rate_limit_limit": "500", "rate_limit_remaining": "0", "rate_limit_reset": "2026-10-11T00:00:00Z", "retry_after_s": "3600"}  dials=1
+    call OFF, transport recorder OFF: {}  dials=1
+  [PASS] arm 3: parity — a stale 429 loses to the one this handler caught — with=3600 (the caught exception) / without=60 (an earlier, unrelated 429)
+  [PASS] arm 3: the call alone is sufficient (transport recorder silenced)
+  [PASS] arm 3: all four variants agree on every counter and on the dial count — dials=1
+
+-- control: the same arms on a real clock, captured_at dropped --
+  [PASS] control: with the real clock the receipts still match field for field
+
+-- the file's own tests, at this tree --
+  .....                                                                    [100%]
+  5 passed in 0.08s
+  [PASS] the quota-honesty file passes at this tree
+
+== verdict: ALL ARMS PASS ==

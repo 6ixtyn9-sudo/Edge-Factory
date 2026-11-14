@@ -1,0 +1,365 @@
+EDGE FACTORY
+Scrape → Assay → Discover → Validate → Monitor decay → Emit picks → Push to phone.
+CSV + DuckDB-first. Supabase as read model. Wilson LB only. Walk-forward only.
+
+Born from Ma Golide – industrialized.
+
+Quickstart
+
+Bash
+
+pip install -r requirements.txt
+cp .env.example .env          # fill in real values; .env is gitignored, NEVER commit
+PYTHONPATH=src python -m pytest tests/ -q
+
+# Backfill a source
+python scripts/local_backfill.py forebet 2024-01-01 2026-06-12 --max-seconds 1500
+
+# Daily capture (all sources)
+python scripts/capture_daily.py
+
+# Build warehouse
+python scripts/build_warehouse.py
+
+# Mine consensus edges
+python scripts/mine_consensus.py --split 2025-06-01
+
+# Today's picks
+PYTHONPATH=src python3 scripts/picks_today.py
+
+# Full daily run (capture → warehouse → mine → picks → CLV → sync → WhatsApp)
+PYTHONPATH=src python3 scripts/daily.py
+
+# Force a full repick  
+PYTHONPATH=src python3 scripts/daily.py --force-repick
+
+A local .env IS auto-loaded. config.py, db.py, and notify.py all call load_dotenv() at import, so set -a; source .env; set +a is no longer required (it stays harmless).
+
+Autonomous 3-Hour Service
+
+Bash
+
+# Local background loop (every 3h)
+PYTHONPATH=src python3 scripts/daily.py --auto-run
+
+# One smart iteration and exit (used by GitHub Actions)
+PYTHONPATH=src python3 scripts/daily.py --auto-once
+Smart schedule:
+
+If today's official frozen archive (localdata/picks_YYYY-MM-DD.json) does not exist → full heavy morning run (build DuckDB, lock picks, sync, push).
+If it already exists → lightweight intraday late-slate scan: append only brand-new certified bets, keep morning picks pristine, capture time-of-day CLV snapshots, and push late-slate alerts only when new picks appear.
+100% free on GitHub Actions — enabled by default in .github/workflows/daily.yml:
+
+Wakes every 3h (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
+actions/cache persists the localdata/ DuckDB warehouse, pick ledgers, CLV snapshots, and the WhatsApp sent ledger across runs
+
+`localdata/` retention: every `scripts/daily.py` run starts with `scripts/clean_localdata.py --keep-days 30`, before it writes anything and so before the workflow's `git add -A localdata/` persist step. That keeps the directory under GitHub's 1,000-entry listing limit. Only known dated telemetry older than 30 days is pruned: CLV reports/unmatched, notification ledgers (sent/shadow/discovery/delivery failures), TheOddsAPI attempt logs, Supabase sync manifests, official-run markers, `picks_DATE.txt`, and `picks_audit_DATE.md`. A `picks_morning_DATE.json` is pruned only when the rolling audit's loader gives byte-identical output without it. Where the regular ledger was later overwritten, the morning file is the audit's only faithful baseline and is kept. Always retained: `picks_DATE.json` (replay/audit archive), printed `auto_tickets_DATE.txt` slips (slice-ledger seed), rolling ledgers/state, monthly source archives, and any unrecognised file. Because daily pick archives and slips are kept, the directory still grows by roughly two entries per day. Compacting them would require updating the replay/audit loaders first. `--dry-run` lists what would be removed.
+Uploads pick reports (.txt) and ledgers as downloadable artifacts
+Runs sync_supabase then notify as the final steps
+Git workflow (collision-safe)
+
+localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer allowed to commit those files. Local pipeline runs rewrite localdata constantly; leaving those files dirty/uncommitted in your working tree is expected and correct. Humans and agents commit code + docs only, with explicit paths. NEVER git add -A, git add ., or VS Code "Commit All" — sweeping pipeline state into a manual commit collides with the bot's persist commits and produces the "divergent branches / Need to specify how to reconcile" fatal. This has happened three times (latest: 2026-08-03, merge 65d062c).
+
+Bash
+
+# 1. Bot pushed state, machine has nothing local
+Bash
+
+cd ~/Edge-Factory
+git pull --no-rebase
+git status -sb
+
+# Your full daily loop, complete
+Bash
+
+cd ~/Edge-Factory
+git checkout -- localdata/ && git pull --no-rebase
+cat localdata/auto_tickets_$(date +%F).txt        
+cat localdata/auto_tickets_performance.txt           
+
+# 2. Bot pushed, machine has local outputs you don't want
+Bash
+
+cd ~/Edge-Factory
+git checkout -- localdata/
+git pull --no-rebase
+git status -sb
+
+# 3. Bot pushed, machine has local outputs you want to keep
+Bash
+
+cd ~/Edge-Factory
+git status --porcelain
+git add localdata/
+git commit -m "state: keep local run outputs"
+git pull --no-rebase
+git status -sb
+git add localdata/ stages everything under localdata that's tracked or un-ignored — the big CSVs stay out automatically via .gitignore, so this is safe and generic. For code changes specifically:
+
+Bash
+
+cd ~/Edge-Factory
+git add scripts/
+git commit -m "change: describe what and why"
+git pull --no-rebase
+git push origin main
+git status -sb
+
+# 4. Conflict during any pull (localdata file)
+Bash
+
+cd ~/Edge-Factory
+git checkout --ours localdata/
+git add localdata/
+git commit -m "state: resolve localdata conflict, take cloud version"
+git pull --no-rebase
+git status -sb
+
+# 5. If you accidentally hit the VS Code sync button
+Bash
+
+cd ~/Edge-Factory
+git fetch origin
+git status -sb
+git checkout -- localdata/
+git pull --no-rebase
+git push origin main
+
+# 6. Your one standard daily routine (covers 90% of days)
+Bash
+
+cd ~/Edge-Factory
+git status --porcelain
+git checkout -- localdata/
+git pull --no-rebase
+git status -sb
+cat localdata/auto_tickets_$(date +%F).txt
+The last line shows today's frozen bet slip. If cat says no such file, it means the bot hasn't generated it yet (before 12:00 SAST or no qualifying edge) — no bet today.
+
+The one rule that makes all of this work
+Never git add -A or git add . — only localdata/ or scripts/ by name
+Never use the VS Code sync button
+git checkout -- localdata/ is always safe — that folder regenerates every run
+
+# commit workflow — edit ONLY the FILES line to name your change's files, then paste the whole block as-is:
+FILES=("scripts/picks_today.py" "scripts/audit_recent_picks.py" "HANDOVER.md")
+git status --porcelain
+git restore --staged localdata/ 2>/dev/null
+git add "${FILES[@]}"
+git commit -m "change: what and why"
+git pull --no-rebase
+git push origin main
+
+# push rejected / "divergent branches" (bot persisted while you worked) — paste as-is:
+
+git pull --no-rebase -X ours
+git push origin main
+
+Never git reset --hard origin/main or discard local commits to "fix" divergence — that is how payload code gets orphaned. Merge, don't erase.
+Every repo change is appended to HANDOVER.md with date + rationale (anti-drift protocol).
+Sources (12)
+
+source	markets	odds	history
+forebet	1x2, ou, btts, ht	✅	2024-01+, high-volume
+zulubet	1x2	✅	2023-12+
+statarea	1x2, ou_1.5/2.5/3.5	—	2015+ (2024+ scraped)
+vitibet	1x2	—	2018+ (thin in c4)
+scoutingstats	1x2, btts, ou	✅	capture-forward
+predictz	1x2 pick	✅	capture-forward (shadow)
+windrawwin	1x2 pick	—	capture-forward (shadow)
+afootballreport	ou, btts	—	capture-forward
+betclan	1x2	—	capture-forward
+freesupertips	expert tips	✅	capture-forward (not ready)
+bettingclosed	1x2, ou, btts	✅	archive
+bzzoiro	1x2, ou, btts, xG	—	API, ~7 weeks ahead, needs BZZOIRO_TOKEN
+Odds / market-data adapters:
+
+bzzoiro_odds — operational primary live odds enrichment for picks_today
+scoutingstats embedded odds — operational secondary fallback
+BetExplorer — research only, not production
+All adapters: fetch_day(date) -> list[dict], COLUMNS = [...], no classes, no normalize() methods.
+
+Status notes:
+
+Core certified levers: forebet, zulubet, statarea, bettingclosed
+vitibet active but thin; scoutingstats, betclan partial
+predictz, windrawwin are shadow-only (Phase A): n=0 train under the current split. Do not certify yet.
+BetExplorer investigated and concluded negative for alpha — kept research-only.
+Layout
+
+text
+
+src/edgefactory/
+  assay.py             # Wilson LB/UB, grade, decay_verdict, roi – TESTED
+  config.py            # GATES (min_n_train=350, split=2025-06-01); load_dotenv()
+  util.py              # norm_team / norm_team_sql – miner-critical join keys, do not drift
+  entities.py          # canonical_league / canonical_team – context & reporting only
+  market_registry.py   # market + odds-tier classification
+  clv.py               # pure CLV helpers, pick ids, implied prob, movement summaries
+  db.py                # Supabase client (SUPABASE_URL + SUPABASE_SERVICE_KEY); load_dotenv()
+  whatsapp.py          # WhatsApp providers: Meta Cloud, Twilio, CallMeBot
+  warehouse.py         # DuckDB views for all sources, sport='soccer'
+  sources/             # prediction + odds adapters
+
+scripts/
+  capture_daily.py        # D30 capture, all sources; --skip-build
+  local_backfill.py       # CSV backfill, resumable; writes *_YYYY-MM.csv.gz
+  backfill_results.py     # D30 result repair; idempotent
+  build_warehouse.py      # CSV → warehouse.duckdb
+  build_entity_registry.py# learns aliases → entity_registry.json
+  mine_consensus.py       # walk-forward miner; Phase A shadow scans
+  decay_monitor.py        # 60-day health audit, auto-bench circuit breaker
+  assay_purity.py         # context purity registry (--window 36500)
+  picks_today.py          # certified picks engine, purity-aware buckets
+  audit_clv.py            # CLV capture + report (audit-only in v1)
+  audit_recent_picks.py   # scores archived picks vs settled results
+  export_settled_results.py # settled-score facts overlay shared across machines (Addendum 21)
+  daily.py                # SINGLE orchestrator: --auto-run / --auto-once / --forecast-refresh / --promote-forecast / --clv-only
+  sync_supabase.py        # promotes edges + picks to Supabase read model
+  notify.py      # WhatsApp push dispatch (CERTIFIED_CLEAN + CAUTION only)
+
+tests/                    # assay, picks_today_operational, daily_orchestration
+config/entity_overrides.json  # manual safety layer for aliases
+supabase/migrations/      # 0001-0006
+HANDOVER.md               # single source of truth – update in place
+Environment
+
+cp .env.example .env and fill in. Required variables (verified against the code):
+
+variable	used by	notes
+BZZOIRO_TOKEN	bzzoiro odds/model adapter	needed for live odds enrichment
+SUPABASE_URL	db.py	project URL
+SUPABASE_SERVICE_KEY	db.py	service_role key, server-side only. (Not SUPABASE_KEY — that is unused.)
+CALLMEBOT_APIKEY	notify.py	returned by CallMeBot after authorization
+CALLMEBOT_PHONE	notify.py	full intl number, no + / spaces (e.g. 27821234567)
+WhatsApp push (Meta Cloud / Twilio) is optional:
+
+Meta: WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_RECIPIENT (+ optional WHATSAPP_TEMPLATE_NAME)
+Twilio: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_NUMBER (+ WHATSAPP_RECIPIENT)
+For GitHub Actions, secrets (not .env) are the source of truth. Verify under Settings → Secrets and variables → Actions: SUPABASE_URL, SUPABASE_SERVICE_KEY, BZZOIRO_TOKEN, CALLMEBOT_APIKEY, CALLMEBOT_PHONE.
+
+WhatsApp setup (CallMeBot, free path):
+
+From your own WhatsApp, add the CallMeBot number and send exactly:
+I allow callmebot to send me messages
+You'll receive API Activated for your phone number. Your APIKEY is ...
+Use that key as CALLMEBOT_APIKEY. The active implementation uses `whatsapp.php`, structurally validates the returned CallMeBot acknowledgement, and logs only a sanitized acknowledgement category. Provider acceptance is still not handset delivery; confirm important slates from the phone.
+
+Only CERTIFIED_CLEAN and CAUTION buckets are pushed **as bets** (main slate). Dedup ledger localdata/whatsapp_sent_ledger_YYYY-MM-DD.json means ~one morning message/day plus late-slate alerts only when new fixtures appear.
+
+Price evidence is independently gated from model/context quality (Addendum 26): a Bzzoiro primary price may remain push-eligible; a ScoutingStats-only fallback price is quarantined to WATCHLIST_UNCORROBORATED_PRICE; an `alias_fuzzy` candidate is saved as `suspect_price` and never replaces operational best odds, landing in WATCHLIST_SUSPECT_PRICE. Both remain archived and scored in the rolling audit. The automatic ticket builder now consumes only rows with `price_push_eligible=true`; quarantined prices stay visible for audit/shadow review but can never be printed as executable legs. Historical replay/audit keeps the legacy pool, so the frozen parity baseline is unchanged. 1X2 prices are strictly side-keyed (`odd1`→home, `oddx`→draw, `odd2`→away). The archived `price_board` holds the complete home/draw/away book. A matched row labelled for another side or market is rejected, and marking the chosen board row requires selection identity. A fuzzy fixture join must agree on home/away orientation, so a reversed listing cannot hand one team's price to the other.
+
+The daily price lane is explicitly two-pass: a non-ticketable candidate shortlist is captured first, then provider snapshots are taken, then a final priced card is built. Source preference is based on observed end-to-end execution contribution, not adapter count: the archived record through 2026-10-03 ranks BetExplorer first (497 push-eligible matches / 84 source-days), then Bzzoiro (85 / 53). The final card uses a bounded pre-build BetExplorer cache; live BetExplorer rescue is disabled by default so no post-cutoff quote can silently enter a ticket.
+
+Shadow slate (Addenda 24–26, default ON — kill with EDGE_FACTORY_NOTIFY_SHADOW=0): a SECOND daily message carries all non-pushed streams — SKIPPED_VETO, WATCHLIST_NO_ODDS, WATCHLIST_UNKNOWN_CTX, WATCHLIST_UNCORROBORATED_PRICE, and WATCHLIST_SUSPECT_PRICE — each labeled with that stream's rolling 30d audit record (from localdata/picks_audit_rolling.json). Independent dedup ledger localdata/whatsapp_shadow_sent_ledger_YYYY-MM-DD.json means main and shadow sends never suppress each other. Shown for transparency, not pushed as bets; weight the streams by their records.
+
+Golden rules
+
+Wilson lower bound, never raw hit rate
+Walk-forward only, no mini-backtests
+ROI alongside hit rate, always
+Edge decay: HEALTHY / WATCH / DECAYING / DEAD – auto-bench (DECAYING → BENCHED is the system working; do not manually unbench)
+Best odds inflate ROI ~2x – caveat always
+Away-only edges: negative ROI in validation – do not certify
+OU 2.5 unanimous edges: negative ROI across thresholds – not certified
+Do not change norm_team() / norm_team_sql() join keys without full revalidation
+New sources must be mined standalone before being added as levers
+Repo clean – stale files deleted immediately. ONE handover file: HANDOVER.md
+Every repo change ships via the anti-drift protocol (payloads + SHA-256 + pinned base commit + independent verification). No code travels through chat.
+A green Actions run does NOT prove WhatsApps were delivered or Supabase was written – run_soft swallows non-critical failures. A ledger records provider acceptance, not handset delivery; confirm from the phone / logs.
+Certified edges (split 2025-06-01)
+
+Operational thresholds (base canonical only):
+
+2-way unanimous avg_p>=70
+3-way unanimous avg_p>=65
+Qualified rules (min_p, home-only, odds-, *-confirms, …) are analysis/purity variants and must not displace base thresholds.
+
+Latest stable accounting:
+
+consensus2 ≈ 27,450 · consensus3 ≈ 15,807 · consensus4 ≈ 383
+certified audited: 9 · benched by decay: 1 · active certified: 8
+Disagreement → historically poor hit rate → VETO, never bet.
+See HANDOVER.md for full edge-level detail, buckets, and the purity logic.
+Operators start at [`docs/operator/README.md`](docs/operator/README.md) — daily
+card ops (incl. the FROZEN footer), source-health legend, experiments archive,
+source program and the OPERATOR ACTIONS checklist.
+
+Supabase
+
+Migrations supabase/migrations/ (0001–0006) register all sources and the edge/pick schema.
+sync_supabase.py promotes certified edges → edges and bucketed daily picks → edge_picks.
+Live ingest is CSV/DuckDB first; Supabase is the read model for dashboards/apps.
+CLV & audits
+
+audit_clv.py captures pick_time and end_of_run snapshots from daily.py automatically. Report stays audit-only in v1; CLV/steam/drift never gate picks.
+audit_recent_picks.py scores archived 1x2 picks against settled warehouse results. It uses the immutable morning baseline plus official late-slate additions only when the accumulated daily ledger preserves every morning row exactly; forecast-overwritten ledgers are rejected from settlement history. Confirmed postponed/cancelled/abandoned fixtures are retained as void event dispositions, excluded from win/loss/ROI denominators, and never mislabeled as missing results.
+refresh_result_sources.py refreshes only yesterday's existing result-capable source adapters during autonomous intraday runs, preserving pick-time prediction fields while upserting final scores or positive terminal event statuses before warehouse/overlay/audit refresh.
+Config/verified_event_dispositions.json is a narrow reviewed audit-only fact ledger for an exact confirmed terminal event status that existing sources omit or leave stale. It cannot affect source voting, picks, prices, certification, or WhatsApp; a final score always wins over a disposition.
+decay_monitor.py runs the 60-day health audit and auto-benches decayed edges.
+Status
+
+Stable daily pipeline since 2026-06-17 (day 0/1 of the current machine-auditable regime).
+2026-06-18 determinism fix: one run-level EDGE_FACTORY_RUN_AS_OF, pre-match guard (default 30 min lead), archive-first same-date reruns, post-bucket duplicate collapse.
+BetExplorer investigation concluded negative — research-only.
+WhatsApp push wired in; pending the whatsapp.php endpoint fix and CallMeBot authorization.
+Updated – 2026-06-18
+OddsPapi market-coverage probe and bounded price board
+
+The repository includes a read-only market-coverage probe and an **opt-in**
+bounded capture for OddsPapi. It is never a consensus vote. When
+`EDGE_FACTORY_ODDSPAPI_PRICES=1`, the official daily run captures at most
+a monthly request budget (250 requests per key, shared evenly over the days left
+in the month, slate fixtures first) after a non-ticketable candidate shortlist
+is built. Board, `/markets` and `/odds` calls all count against it. No secret
+sets the cap. The final priced pass may use only
+persisted, timestamp-qualified canonical named-book rows; a ticketed card is
+never rewritten. Missing keys, a disabled flag, absent rows, unknown markets, or a
+post-cutoff timestamp all fail closed.
+
+Keep real keys only in `.env`:
+
+```text
+ODDSPAPI_API_KEYS=key1,key2,key3,key4
+EDGE_FACTORY_ODDSPAPI_PRICES=off
+```
+
+The comma-separated ring is tried only on auth/quota rejection; values are never
+printed or written to probe output. The legacy singular `ODDSPAPI_API_KEY` stays
+accepted for compatibility.
+
+```bash
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --date 2026-08-05
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --date 2026-08-05 --bookmaker betano,betway
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --self-test
+```
+
+The default report lands in `/tmp`, not `localdata/`. Treat coverage as evidence,
+not a new bet recommendation: only a verified fixture/market/selection map and
+later calibration can promote any new market into the pipeline.
+
+### Dated localdata storage
+
+Recent daily outputs remain in `localdata/`; older supported daily evidence is
+preserved byte-for-byte under `localdata/archive/<family>/<year>/<month>/`.
+Rollover runs through the existing cleanup and persistence scripts. See
+[archive layout, compatible readers and cache safeguards](docs/operator/localdata-archives.md).
+
+### ML paper ticket reports
+
+The normal `autobets_ML_DATE.txt` card and the ML card beside ENH grading show
+one daily view: tickets, current paper capital, immutable publication references,
+and a single summary of scans that added no tickets. An empty scan does not
+cancel an earlier ticket. Publication numbers are audit references, not extra bets.
+
+Full hashes, decision-time capital/budgets, source probabilities, quote ages and
+per-scan rejection checks remain in the frozen JSON receipts and the separate
+`localdata/phase5_reconciliation/ml_paper_receipts/reports/autobets_ML_DATE_audit.txt`
+view. The existing publisher writes that derived audit view; no extra capture or
+workflow is required. Rejection counts count checks, not unique fixtures, and can
+repeat across scans.
+
+Pending fixtures can be reused only within the approved combined 5% of total
+paper bank gross-stake budget. Previously booked stakes count first; exhausted
+and settled fixtures do not reopen. Quarter-Kelly and the aggregate exposure
+limit remain unchanged. Existing stakes and receipts are never resized.

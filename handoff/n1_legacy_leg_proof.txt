@@ -1,0 +1,99 @@
+== N-1(c) acca lifecycle proof across the Utd fold ==
+   (+ A1(a) guard lines, A1(b) adversarial collision, A1(d) audit trail)
+fixture: 2026-07-14 Tonbridge Angels vs Sutton Utd (a settled archive row)
+  current seam keys      : 'tonbridgeangels' / 'suttonunited'
+  pre-fold seam keys     : 'tonbridgeangels' / 'suttonutd'
+  migrate_folded_key     : 'suttonunited'
+  (the pre-fold key differs, so the two arms really are two identities;
+   a spelling with no folded token produces the same key both ways)
+
+archive index keys the settlement builds: [('2026-07-14', 'tonbridgeangels', 'suttonunited', 'AWAY')]
+
+== A1(a) the compatibility candidate's guards (source of the symbols) ==
+-- auto_tickets.leg_lookup_keys():
+   def leg_lookup_keys(slip_date, leg) -> list[tuple]:
+       """Every index key a frozen leg may be filed under, best first.
+   
+       ``leg_lookup_key`` answers with the identity the CURRENT fold computes.
+       A leg frozen before a fold change carries the key the OLD fold computed,
+       and re-folding cannot recover the new one when the change was a WORD
+   ... (30 line(s) total; cited by symbol, never by line number)
+-- auto_tickets._compat_refusal():
+   def _compat_refusal(leg, row):
+       """Why a compatibility hit must NOT be taken, or None when it may.
+   
+       The migrated key is the only lever that finds a leg frozen before a WORD
+       fold, and by construction that same key also names a DIFFERENT club that
+       folds onto it - a same-day ``Sutton Utd`` against a ``Sutton United``,
+   ... (27 line(s) total; cited by symbol, never by line number)
+
+arm 1 -- a slip frozen before the fold (enhancement-lane shape)
+  stored fixture_key : ['2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY']
+  primary key        : ('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY')
+  lookup keys        : [('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY'), ('2026-07-14', 'tonbridgeangels', 'suttonunited', 'AWAY')]
+  candidate scoping  : same stored day and pick as the primary; only the team tokens differ
+  primary alone in the index? MISS (this is the pre-fix path)
+  settled: open_slips=[] history={'date': '2026-07-14', 'staked_pct': 10.0, 'returned_pct': 19.0, 'accas': [{'odds': 1.9, 'won': True}], 'bank_pct': 109.0}
+  graded, not voided  : the acca's odds are the leg's own (1.9 = the leg), not the all-void 1.0 stake-back
+  A1(d) audit trail (LEGACY_KEY_HITS, one record per answered leg):
+             slip_date: 2026-07-14
+               primary: ('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY')
+               matched: ('2026-07-14', 'tonbridgeangels', 'suttonunited', 'AWAY')
+                stored: ('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY')
+               fixture: ['2026-07-14', 'Tonbridge Angels', 'Sutton Utd']
+                  pick: AWAY
+                 match: Tonbridge Angels vs Sutton Utd
+  A1(d) the same trail in the settlement's own lines:
+      compat key matched: slip 2026-07-14 stored ('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY') missed primary ('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY'); candidate ('2026-07-14', 'tonbridgeangels', 'suttonunited', 'AWAY') -> fixture 2026-07-14 Tonbridge Angels vs Sutton Utd [AWAY]
+
+arm 2 -- the same leg if only the primary key were consulted
+  index.get(('2026-07-14', 'tonbridgeangels', 'suttonutd', 'AWAY')) -> None
+  a 1x2 leg has no market fallback, so settlement would hold it and
+  the void timer (5 days past the slip date) would close it as void:
+  the leg is orphaned exactly as the Türkiye rename orphaned its acca,
+  except the cause here is a word-boundary fold, not a rename.
+
+arm 3 -- a slip frozen with RAW spellings (the main lane's shape)
+  stored fixture_key : ['2026-07-14', 'Tonbridge Angels', 'Sutton Utd', 'AWAY']
+  lookup keys        : [('2026-07-14', 'tonbridgeangels', 'suttonunited', 'AWAY')]
+  keys == [primary] (no compatibility key needed): True
+  settled: open_slips=[] history_booked=True compat_hits=[]
+
+arm 4 -- A1(b) the collision: a DIFFERENT club folds onto the same key
+  the frozen leg     : ['2026-07-14', 'coventry', 'newcastleutd', 'AWAY']
+  the other club's row: Coventry vs Newcastle United (home -> the leg's pick AWAY would LOSE)
+  that row's own key  : ('2026-07-14', 'coventry', 'newcastleunited', 'AWAY')
+  (i) refusal inside the void window (slip day = today): the leg is HELD
+      guard ON  -> hits=0 refused=1 open_slips=1 history=False
+      refused_because: matched row's own pre-fold key 'coventry'/'newcastleunited' does not reproduce the stored 'coventry'/'newcastleutd'
+      compat key REFUSED: slip 2026-10-12 stored ('2026-07-14', 'coventry', 'newcastleutd', 'AWAY') missed primary ('2026-07-14', 'coventry', 'newcastleutd', 'AWAY'); candidate ('2026-07-14', 'coventry', 'newcastleunited', 'AWAY') -> fixture 2026-07-14 Coventry vs Newcastle United [AWAY] - matched row's own pre-fold key 'coventry'/'newcastleunited' does not reproduce the stored 'coventry'/'newcastleutd'; held, never re-attributed
+  (ii) the same refusal on the old slip day (outside the window): VOID
+      guard ON  -> open_slips=0 history_accа={'odds': 1.0, 'won': True}  (stake back, never the other score)
+      against the archive row grading 'home' -> the leg's AWAY pick
+      would LOSE (grading available)
+  (iii) guard OFF (monkeypatched): the same slip is decided by the OTHER club
+      guard OFF -> hits=1 open_slips=0 history=True booked_won=False odds=1.9
+  => the guard is load-bearing: without it, the other club's score
+     grades this leg as a loss the book pays, and the void timer never
+     runs. With it the leg holds inside the window and voids outside,
+     which is the same outcome a missing row gets.
+
+arm 5 -- A1(a) primary-first: the candidate is only CONSULTED on a miss
+  the settle loop, as source (symbol-cited, not line-cited):
+      for leg_key in keys:
+                          p = index.get(leg_key)
+                          if p is None:
+                              continue
+                          if leg_key != keys[0]:
+                              # A compatibility candidate.
+  index holds         : ['coventry/newcastleunited', 'tonbridgeangels/suttonunited']
+  the loop's own order, replayed against that index:
+      [0] primary tonbridgeangels/suttonutd -> miss
+      [1] candidate tonbridgeangels/suttonunited -> HIT
+  a leg with no folded token: keys=1 (the primary only) -> primary(tonbridgeangels/suttonunited) HIT
+  the folded leg      : compat hits=1, graded from its own fixture: True
+
+both slip shapes resolve; the compatibility tier is exercised only by a
+stored folded key, it is consulted only after the primary key misses, it
+is refused unless the matched row corroborates the stored identity, and
+every use is journaled with both keys and the resolved fixture.

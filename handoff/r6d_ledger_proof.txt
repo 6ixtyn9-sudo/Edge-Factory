@@ -1,0 +1,90 @@
+== 6D: the measurement ledger and the certification ledger (tip bee1062) ==
+
+window: 2026-08-01 → 2026-10-12 (the registry's own coverage starts 2026-08-01)
+
+-- the scratch checkout --
+  git worktree add --detach /tmp/r6d_wt bee1062  → a checkout at this tip
+  warehouse absent in the worktree (not a tracked file): building it from the
+  tracked captures — the audit's results index needs it.
+  build_warehouse.py exit=0; ['warehouse built in 72.8s -> /tmp/r6d_wt/localdata/warehouse.duckdb (57 MB)']
+  [PASS] the warehouse builds offline in the scratch checkout
+
+-- run 1: the real audit, both ledgers fed --
+  scripts/audit_recent_picks.py --start 2026-08-01 --end 2026-10-12  (in the scratch checkout)
+  exit=0; full output: handoff/r6d_audit_run1.out.txt
+  [PASS] the audit run completes
+
+-- run 2: idempotence --
+  exit=0
+  [PASS] a second identical run changes the registry not at all (byte-identical) — 215700 bytes
+
+-- certification is untouched; processed grows by the unpriced keys --
+  market                 cert fields  processed before   after  added  lost
+  away_over_05@v1        new(SHADOW/0)               0      47     47     0
+  away_under_25@v1       identical                   1      25     24     0
+  away_under_35@v1       identical                   1     249    248     0
+  btts_yes@v1            identical                   7      13      6     0
+  goal_range_2_3@v1      new(SHADOW/0)               0       9      9     0
+  goal_range_4_6@v1      new(SHADOW/0)               0       1      1     0
+  home_over_05@v1        new(SHADOW/0)               0     181    181     0
+  home_under_25@v1       new(SHADOW/0)               0      36     36     0
+  home_under_35@v1       new(SHADOW/0)               0      55     55     0
+  match_over_15@v1       identical                  33      54     21     0
+  match_over_25@v1       identical                 350     565    215     0
+  match_over_35@v1       identical                  16      25      9     0
+  match_over_45@v1       identical                   1       1      0     0
+  [PASS] every certification field is byte-identical per market (n/hits/records/profit/inv_price_sum/multi_n/status*)
+  [PASS] no processed key was lost (the trim never reached inside the window)
+  added keys: 852; of those, keys with no matching recommendation row in the window: 0
+  [PASS] every added key corresponds to a recommendation row in this window
+
+-- trim safety: keys a rescan window can present vs the cap --
+  MAX_PROCESSED_KEYS = 1600
+  market              worst 30d window  whole archive   safe?
+  away_over_05                      42             64   yes
+  away_under_15                      1              1   yes
+  away_under_25                     50             50   yes
+  away_under_35                    291            373   yes
+  away_under_45                      3              3   yes
+  btts_yes                          15             15   yes
+  goal_range_2_3                    10             10   yes
+  goal_range_4_6                     1              1   yes
+  home_over_05                     221            246   yes
+  home_under_25                     35             38   yes
+  home_under_35                     72            111   yes
+  match_over_15                     54             69   yes
+  match_over_25                    436            710   yes
+  match_over_35                     22             45   yes
+  match_over_45                      2              2   yes
+  [PASS] every market's rescan window stays under the cap (so the trim can never force a re-record) — worst = 436
+
+-- the per-label reconciliation the audit report now carries --
+  label              recommended  settled priced_n processed  class
+  away_over_05                47       47        0        47  no_price_observed
+  away_under_25               25       25        0        25  no_price_observed
+  away_under_35              249      249        0       249  no_price_observed
+  btts_yes                    13       13        0        13  no_price_observed
+  goal_range_2_3               9        9        0         9  no_price_source
+  goal_range_4_6               1        1        0         1  no_price_source
+  home_over_05               181      181        0       181  no_price_observed
+  home_under_25               36       36        0        36  no_price_observed
+  home_under_35               56       56        0        55  no_price_observed
+  match_over_15               57       57        0        54  no_price_observed
+  match_over_25              570      570       68       565  priced
+  match_over_35               25       25        0        25  no_price_observed
+  match_over_45                1        1        0         1  no_price_observed
+  [PASS] every label carries a price-source class
+  [PASS] the never-priceable class is labelled, not silent — goal_range_* = no captured feed quotes it
+
+-- apply: the one state file this round changes --
+  wrote localdata/enhancement_registry.json (215700 bytes)
+  processed: 409 → 1261 (+852); priced records: 409 (was 409)
+  [PASS] applied file: certification still byte-identical
+  [PASS] applied file: priced records unchanged
+  [PASS] applied file: the working tree's registry equals the audit's output
+
+-- scratch checkout removed; the repository's localdata holds only the applied file --
+  git status --porcelain -- localdata/ →
+    M localdata/enhancement_registry.json
+
+== verdict: ALL CHECKS PASS ==
