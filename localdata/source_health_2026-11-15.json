@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 2,
@@ -29,7 +29,7 @@
         "selection_unmapped": 3
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-15' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -178,11 +178,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 18357
+        "out_of_window": 19652
       },
       "pa_matched": 0,
-      "pa_raw": 1014,
-      "pa_scored": 18357,
+      "pa_raw": 1090,
+      "pa_scored": 19652,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,41 +232,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 2,
+        "board_fixtures": 3,
         "board_league_count": 1,
         "board_leagues": {
           "world_-_international_friendlies": 200
         },
-        "board_non_prematch_rows": 156,
+        "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 4,
+        "board_team_count": 6,
         "board_team_names": {
-          "Argentina": 87,
-          "Chile": 113,
-          "Colombia": 113,
-          "Uruguay": 87
+          "Bolivia": 6,
+          "Chile": 90,
+          "Colombia": 90,
+          "Costa Rica": 104,
+          "Ecuador": 104,
+          "Peru": 6
         },
         "board_truncated": false,
-        "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_asian_handicap_corners": 2,
-          "unknown_market:1st_half_asian_total_goals": 6,
-          "unknown_market:1st_half_moneyline": 3,
-          "unknown_market:1st_half_total_corners": 10,
-          "unknown_market:1st_half_total_goals": 2,
-          "unknown_market:2nd_half_asian_handicap_corners": 2,
-          "unknown_market:2nd_half_asian_total_goals": 6,
-          "unknown_market:2nd_half_moneyline": 3,
-          "unknown_market:2nd_half_total_corners": 10
-        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 87,
-          "player_prop": 69
+          "live_price": 200
         },
         "requested_limit": 1000
       },
@@ -275,7 +265,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_unmappable",
+      "reason": "all_rows_live_or_stale",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,

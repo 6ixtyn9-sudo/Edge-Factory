@@ -2,15 +2,15 @@ autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
 BANK     60.4%   x0.604 of the initial base · 60.415 paper units
-CAPITAL  60.4% free / 0.0% reserved · 60.415 free / 0.000 reserved paper units
+CAPITAL  60.4% free / 0.1% reserved · 60.354 free / 0.060 reserved paper units
 
-RECORD   7W / 43L   (14.0% hit)   over 7 bet-days
-OPEN     0 held accas · 1 unresolved leg results
+RECORD   7W / 43L   (14.0% hit)   over 8 bet-days
+OPEN     3 held accas · 7 unresolved leg results
 PROFIT   -39.6% of capital · -39.585 paper units · ROI -60.5%
 DRAWDOWN 39.611 paper units / 39.6% (ticket-date marks; pending at cost)
-DAYS     7 bet / 5 no-bet · 0 missed freeze
+DAYS     8 bet / 5 no-bet · 0 missed freeze
 
-BET-DAYS, oldest first (7 of 7)
+BET-DAYS, oldest first (8 of 8)
   Staked/returned/net cover settled accas only; pending stakes are separate.
   2026-11-02   0W/1L   staked    8.2%   returned    0.0%   net   -8.2%   pending    0.0%   bank*   91.8%
   2026-11-03   3W/5L   staked   15.2%   returned   12.9%   net   -2.3%   pending    0.0%   bank*   89.5%
@@ -19,9 +19,33 @@ BET-DAYS, oldest first (7 of 7)
   2026-11-06   1W/6L   staked    8.4%   returned   12.8%   net   +4.4%   pending    0.0%   bank*   67.1%
   2026-11-07   0W/9L   staked    6.7%   returned    0.0%   net   -6.7%   pending    0.0%   bank*   60.4%
   2026-11-13   3W/2L   staked    0.2%   returned    0.2%   net   +0.0%   pending    0.0%   bank*   60.4%
+  2026-11-14   0W/0L   staked    0.0%   returned       —   net       —   pending    0.1%   bank*   60.4%
 
 HELD (not yet settled; stake counted as committed)
-  None.
+  2026-11-14   ACCA #1 @1.573   stake 0.0% (0.020138 paper units)   HELD (not settled)
+      Receipt 20261114T013908319562Z / publication-local ticket 1
+   Chance-first · estimated hit 56.6% · estimated miss 43.4%
+   Model product: independence assumed; not calibrated or guaranteed.
+      Norway vs Wales · 2026-11-14 19:00 SAST
+         Home Win (1X2) @1.220
+      Fujieda MYFC vs Ventforet Kofu · 2026-11-14 07:00 SAST
+         Match Over 1.5 Goals @1.289
+  2026-11-14   ACCA #2 @2.341   stake 0.0% (0.020138 paper units)   HELD (not settled)
+      Receipt 20261114T013908319562Z / publication-local ticket 2
+   Chance-first · estimated hit 40.4% · estimated miss 59.6%
+   Model product: independence assumed; not calibrated or guaranteed.
+      Northern Ireland vs Ukraine · 2026-11-14 21:45 SAST
+         Match Under 2.5 Goals @1.540
+      Portugal vs Denmark · 2026-11-14 21:45 SAST
+         Home Win (1X2) @1.520
+  2026-11-14   ACCA #3 @2.948   stake 0.0% (0.020138 paper units)   HELD (not settled)
+      Receipt 20261114T013908319562Z / publication-local ticket 3
+   Chance-first · estimated hit 32.7% · estimated miss 67.3%
+   Model product: independence assumed; not calibrated or guaranteed.
+      Kosovo vs Israel · 2026-11-14 16:00 SAST
+         Home Win (1X2) @1.890
+      Georgia vs Hungary · 2026-11-14 19:00 SAST
+         Match Under 2.5 Goals @1.560
 
 SUPERSEDED BEFORE KICKOFF — released, not wins or losses
   2026-11-13 @35.775 · released 0.097512 paper units · 2026-11-13T09:15:47.208439+00:00
@@ -36,7 +60,7 @@ NOTES
 
 LEARNING & EVIDENCE
 EVIDENCE 69 resolved selected observations / 49 fixtures · pool 109 resolved fixtures
-LEARNING last decision: 97 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+LEARNING last decision: 109 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
 FORWARD POOL: Brier 0.2054 → 0.2080 · log loss 0.5945 → 0.6006 (base → adjusted)

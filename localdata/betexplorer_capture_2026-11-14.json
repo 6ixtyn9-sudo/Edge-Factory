@@ -1,5 +1,5 @@
 {
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
     {
       "avg_p": 73.0,
@@ -7,6 +7,16 @@
       "date": "2026-11-14",
       "home": "Cucuta",
       "league": "Colombia Primera A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 71.0,
+      "away": "Malaysia",
+      "date": "2026-11-14",
+      "home": "China",
+      "league": "World Friendlies",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
@@ -18,30 +28,30 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 0,
-  "candidate_fixtures": 47,
-  "captured_at": "2026-11-13T22:45:52.889683+00:00",
+  "candidate_fixtures": 45,
+  "captured_at": "2026-11-14T01:28:47.592653+00:00",
   "date": "2026-11-14",
-  "deferred_fixtures": 46,
+  "deferred_fixtures": 43,
   "errors": [],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 3,
+    "bookmakers": 6,
     "challenge_pages": 0,
     "fixtures": 1,
-    "market_rows": 9,
-    "markets": 3,
-    "named_rows": 9,
+    "market_rows": 12,
+    "markets": 6,
+    "named_rows": 12,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
-  "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "ml_precutoff_active": true,
+  "ml_refresh_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 73.0,
@@ -54,7 +64,7 @@
       "w_score": 0.6134
     }
   ],
-  "requests": 8,
+  "requests": 12,
   "rows": 3,
   "schema": 1,
   "status": "ok"
