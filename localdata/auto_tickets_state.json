@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 246.093273,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-14",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Sweden vs Bosnia and Herzegovina",
+              "pick": "HOME",
+              "prob": 0.603239992482616,
+              "odds": 1.5495,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Sweden",
+                "Bosnia and Herzegovina"
+              ]
+            },
+            {
+              "match": "Gateshead vs Barrow",
+              "pick": "AWAY",
+              "prob": 0.5879762989972652,
+              "odds": 1.5376,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Gateshead",
+                "Barrow"
+              ]
+            }
+          ],
+          "odds": 2.38,
+          "stake_pct": 30.7617
+        },
+        {
+          "legs": [
+            {
+              "match": "Salford City vs Northampton Town",
+              "pick": "HOME",
+              "prob": 0.5974577063276942,
+              "odds": 1.578,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Salford City",
+                "Northampton Town"
+              ]
+            },
+            {
+              "match": "Portugal vs Denmark",
+              "pick": "HOME",
+              "prob": 0.5971439444391591,
+              "odds": 1.55,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-14",
+                "Portugal",
+                "Denmark"
+              ]
+            }
+          ],
+          "odds": 2.45,
+          "stake_pct": 30.7616
+        }
+      ],
+      "staked_pct": 61.5233
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

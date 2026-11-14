@@ -1,5 +1,5 @@
 {
-  "attempted": 2,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 73.0,
@@ -20,29 +20,49 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 61.0,
+      "away": "Deportes Tolima",
+      "date": "2026-11-14",
+      "home": "Deportivo Cali",
+      "league": "Colombia Primera A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 80.6327474560592,
+      "away": "South Sudan",
+      "date": "2026-11-14",
+      "home": "Angola",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 2,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 45,
-  "captured_at": "2026-11-14T01:28:47.592653+00:00",
+  "cache_only": 2,
+  "candidate_fixtures": 44,
+  "captured_at": "2026-11-14T04:33:35.161189+00:00",
   "date": "2026-11-14",
-  "deferred_fixtures": 43,
+  "deferred_fixtures": 40,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 3,
   "match_detail": {
-    "bookmakers": 6,
+    "bookmakers": 12,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 12,
-    "markets": 6,
-    "named_rows": 12,
+    "fixtures": 2,
+    "market_rows": 29,
+    "markets": 9,
+    "named_rows": 29,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -50,7 +70,7 @@
   },
   "max_fixtures": 12,
   "ml_precutoff_active": true,
-  "ml_refresh_attempted": 1,
+  "ml_refresh_attempted": 0,
   "network_attempted": 2,
   "quoted_fixtures": [
     {
@@ -62,10 +82,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 80.6327474560592,
+      "away": "South Sudan",
+      "date": "2026-11-14",
+      "home": "Angola",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
     }
   ],
-  "requests": 12,
-  "rows": 3,
+  "requests": 9,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }

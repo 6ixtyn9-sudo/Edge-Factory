@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 19652
       },
       "pa_matched": 0,
-      "pa_raw": 1090,
+      "pa_raw": 19652,
       "pa_scored": 19652,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -232,22 +227,24 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 3,
+        "board_fixtures": 4,
         "board_league_count": 1,
         "board_leagues": {
-          "world_-_international_friendlies": 200
+          "australia_-_a-league_women": 200
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 6,
+        "board_team_count": 8,
         "board_team_names": {
-          "Bolivia": 6,
-          "Chile": 90,
-          "Colombia": 90,
-          "Costa Rica": 104,
-          "Ecuador": 104,
-          "Peru": 6
+          "Adelaide United (W)": 127,
+          "Adelaide United [W]": 31,
+          "Melbourne City (W)": 32,
+          "Melbourne City FC [W]": 10,
+          "Melbourne Victory (W)": 127,
+          "Melbourne Victory [W]": 31,
+          "Newcastle Jets (W)": 32,
+          "Newcastle Jets [W]": 10
         },
         "board_truncated": false,
         "card_fixture_count": 0,
