@@ -1,5 +1,5 @@
 {
-  "attempted": 4,
+  "attempted": 7,
   "attempted_fixtures": [
     {
       "avg_p": 73.0,
@@ -32,56 +32,34 @@
       "w_score": 0.6134
     },
     {
-      "avg_p": 80.6327474560592,
-      "away": "South Sudan",
+      "avg_p": 79.20724438331041,
+      "away": "Togo",
       "date": "2026-11-14",
-      "home": "Angola",
+      "home": "Algeria",
       "league": "Africa Cup of Nations Qualifications",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7259
-    }
-  ],
-  "be_429": 2,
-  "be_cached": 2,
-  "be_cooling_down": true,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "cache_only": 2,
-  "candidate_fixtures": 44,
-  "captured_at": "2026-11-14T04:33:35.161189+00:00",
-  "date": "2026-11-14",
-  "deferred_fixtures": 40,
-  "errors": [],
-  "fixtures_with_rows": 2,
-  "market_budget_stop": false,
-  "market_requests": 3,
-  "match_detail": {
-    "bookmakers": 12,
-    "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 29,
-    "markets": 9,
-    "named_rows": 29,
-    "standings_rows": 0,
-    "with_h2h": 0,
-    "with_last_results": 0,
-    "with_standings": 0
-  },
-  "max_fixtures": 12,
-  "ml_precutoff_active": true,
-  "ml_refresh_attempted": 0,
-  "network_attempted": 2,
-  "quoted_fixtures": [
+    },
     {
-      "avg_p": 73.0,
-      "away": "Jaguares",
+      "avg_p": 72.42731122088921,
+      "away": "Almere City II",
       "date": "2026-11-14",
-      "home": "Cucuta",
-      "league": "Colombia Primera A",
+      "home": "Quick Boys",
+      "league": "Tweede Divisie",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.6134
+      "w_score": 0.7259
+    },
+    {
+      "avg_p": 63.42808379313569,
+      "away": "Everton W",
+      "date": "2026-11-14",
+      "home": "Tottenham W",
+      "league": "Women's Super League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     },
     {
       "avg_p": 80.6327474560592,
@@ -94,8 +72,70 @@
       "w_score": 0.7259
     }
   ],
-  "requests": 9,
-  "rows": 6,
+  "be_429": 2,
+  "be_cached": 4,
+  "be_cooling_down": true,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "cache_only": 4,
+  "candidate_fixtures": 41,
+  "captured_at": "2026-11-14T07:31:29.264151+00:00",
+  "date": "2026-11-14",
+  "deferred_fixtures": 34,
+  "errors": [],
+  "fixtures_with_rows": 3,
+  "market_budget_stop": false,
+  "market_requests": 5,
+  "match_detail": {
+    "bookmakers": 24,
+    "challenge_pages": 0,
+    "fixtures": 3,
+    "market_rows": 50,
+    "markets": 15,
+    "named_rows": 50,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
+  "max_fixtures": 12,
+  "ml_precutoff_active": false,
+  "ml_refresh_attempted": 0,
+  "network_attempted": 3,
+  "quoted_fixtures": [
+    {
+      "avg_p": 73.0,
+      "away": "Jaguares",
+      "date": "2026-11-14",
+      "home": "Cucuta",
+      "league": "Colombia Primera A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 79.20724438331041,
+      "away": "Togo",
+      "date": "2026-11-14",
+      "home": "Algeria",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    },
+    {
+      "avg_p": 80.6327474560592,
+      "away": "South Sudan",
+      "date": "2026-11-14",
+      "home": "Angola",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    }
+  ],
+  "requests": 12,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }

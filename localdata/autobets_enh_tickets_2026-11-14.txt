@@ -3,6 +3,6 @@ ENHANCEMENT TICKETS (ROLLING) — 2026-11-14
 PERFORMANCE: total bank 23.5% of capital (x0.23) = free bank 23.5% + committed 0.0% · next take-profit notification at 200.0%
 NO BET — only 1 eligible fixture (3 priced quotes), need 2 for an acca
 (bank stays unbet; a lone leg is never a single)
-Quote/payout evidence: {"below_min_odds": 489, "fire": 3, "invalid_execution_quote_context": 10, "kickoff_guard": 883, "payout_not_supported": 87}
+Quote/payout evidence: {"below_min_odds": 489, "below_model_probability_floor": 2, "fire": 3, "invalid_execution_quote_context": 10, "kickoff_guard": 883, "payout_not_supported": 87}
 
 All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
