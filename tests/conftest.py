@@ -98,6 +98,11 @@ for _knob in _ENV_KNOBS:
 _ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "src"))
 sys.path.insert(0, str(_ROOT))
+# Durability/audit tests import sibling pipeline modules bare (e.g.
+# `import auto_tickets`), matching how scripts/phase5_persistence.py inserts
+# the scripts dir at runtime. Inserting it HERE once makes those imports
+# deterministic instead of dependent on which test ran first (2026-11-14).
+sys.path.insert(0, str(_ROOT / "scripts"))
 try:
     from edgefactory import entities as _entities  # noqa: E402
 except Exception:  # pragma: no cover - src not importable at all: nothing to pin

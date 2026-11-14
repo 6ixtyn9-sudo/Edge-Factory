@@ -248,7 +248,7 @@ def test_persistence_rolls_over_and_stages_archives_without_workflow_changes(tmp
     base = tmp_path / "localdata"
     name = f"picks_{OLD}.json"
     original = put(base, name, b"[]").read_bytes()
-    _git(tmp_path, "add", "localdata/" + name)
+    _git(tmp_path, "add", "-f", "localdata/" + name)  # root dumps ignored since 2026-11 baseline; simulated pre-baseline HEAD needs -f
     _git(tmp_path, "commit", "-qm", "original evidence")
     run = module._run
     network_commands = []
@@ -276,7 +276,7 @@ def test_stale_pre_upgrade_head_and_archived_cache_conflict_fails_before_restore
     base = tmp_path / "localdata"
     name = f"picks_{OLD}.json"
     put(base, name, b"[]")
-    _git(tmp_path, "add", "localdata/" + name)
+    _git(tmp_path, "add", "-f", "localdata/" + name)  # root dumps ignored since 2026-11 baseline; simulated pre-baseline HEAD needs -f
     _git(tmp_path, "commit", "-qm", "pre-archive head")
     archived = dated_archive_path(base, name)
     archived.parent.mkdir(parents=True)

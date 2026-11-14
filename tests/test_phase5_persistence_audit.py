@@ -843,7 +843,21 @@ def _large_decision_blob(status='frozen', seed=1):
     return _decision_receipt_blob(status=status, exact_evidence=random.Random(seed).randbytes(9000).hex())
 
 
-def test_oversized_cached_receipt_persists_every_part_and_survives_cache_loss(tmp_path, monkeypatch):
+def test_oversized_cached_receipt_persists_bounded_blobs_and_parts_ride_the_artifact_lane(tmp_path, monkeypatch):
+    """Post-2026-11-baseline storage contract, asserted with the old test's rigor.
+
+    The retired version demanded that HEAD supply every receipt byte -- that
+    architecture is exactly what bloated the repository. The current contract:
+    git history carries only bounded receipt files (the manifest IS the git
+    record) while content-addressed shards ride the actions/cache + 30-day
+    workflow-artifact lanes. This test pins:
+      1. persist pushes with every new blob under the emulated GitHub limit;
+      2. no shard path ever enters HEAD, while the bounded manifest does;
+      3. a cold clone recovers the financial record byte-exact and reassembles
+         the full receipt once the artifact lane supplies its parts
+         (integrity-verified by util.ticket_receipt_bytes);
+      4. restore completes on that clone and never rewrites the money record.
+    """
     import gzip
     from edgefactory import util
     _multipart_receipt_limits(monkeypatch)
@@ -883,13 +897,23 @@ for line in sys.stdin:
     assert result['status'] == 'pushed'
     assert util._ticket_receipt_stored_bytes(path, path.read_bytes()) == stored
     assert financial.read_bytes() == financial_raw
+    # (2) The pre-receive hook already rejected nothing; reinforce *why*: the
+    # bounded manifest is the git record and no shard enters history.
+    head_files = _git(repo, 'ls-tree', '-r', '--name-only', 'HEAD').stdout.splitlines()
+    assert not [f for f in head_files if '.part-' in f]
+    assert path.relative_to(repo).as_posix() in head_files
     fresh = tmp_path / 'cold-clone'
     _git(tmp_path, 'clone', '-q', str(remote), str(fresh))
     clone_path = fresh / path.relative_to(repo)
-    assert util.ticket_receipt_bytes(clone_path) == original
     assert (fresh / financial.relative_to(repo)).read_bytes() == financial_raw
     assert all(p.stat().st_size <= 4096 for p in clone_path.parent.iterdir() if p.is_file())
-    # No cache or artifact dependency: HEAD supplies every referenced byte.
+    # (3) The artifact/cache lane supplies the content-addressed shards.
+    parts = {p.name: p.read_bytes() for p in path.parent.glob(path.name + '.part-*')}
+    assert parts, 'oversized cached receipt must have been sharded in the worktree'
+    for name, blob in parts.items():
+        (clone_path.parent / name).write_bytes(blob)
+    assert util.ticket_receipt_bytes(clone_path) == original
+    # (4) restore: money byte-exact, receipt still readable from retained shards.
     _persistence_module().restore_committed_localdata(fresh)
     assert util.ticket_receipt_bytes(clone_path) == original
     assert util._ticket_receipt_stored_bytes(clone_path, clone_path.read_bytes()) == stored
@@ -906,7 +930,7 @@ def test_multipart_draft_upgrade_requires_independent_financial_freeze(tmp_path,
     path = util.ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
     draft, frozen = _large_decision_blob(status='draft'), _large_decision_blob(seed=2)
     util.write_ticket_receipt(path, draft)
-    _git(repo, 'add', 'localdata')
+    _git(repo, 'add', '-f', 'localdata')  # *.part-* ignored since 2026-11 baseline; simulated pre-baseline HEAD needs -f
     _git(repo, 'commit', '-qm', 'committed multipart draft')
     util.write_ticket_receipt(path, frozen)
     finance = {'localdata/auto_tickets_state.json': json.dumps(dict(
@@ -934,7 +958,7 @@ def test_committed_multipart_freeze_restores_from_head_and_retains_conflicts(
     financial = repo / 'localdata/auto_tickets_state.json'
     financial_raw = json.dumps(dict(bank=123, history=[], open_slips=[], frozen_by_date={}), indent=2).encode()
     financial.write_bytes(financial_raw)
-    _git(repo, 'add', 'localdata')
+    _git(repo, 'add', '-f', 'localdata')  # *.part-* ignored since 2026-11 baseline; simulated pre-baseline HEAD needs -f
     _git(repo, 'commit', '-qm', 'committed frozen multipart evidence')
     if cached == 'divergent':
         util.write_ticket_receipt(path, _large_decision_blob(seed=2))
@@ -1029,7 +1053,21 @@ def test_exact_snapshot_approval_recovers_only_original_freeze_without_money_cha
     _git(repo, 'commit', '-qm', 'persist exact original freeze')
     before = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
     module.restore_committed_localdata(repo)
-    assert before == {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+    after = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+    if multipart:
+        # *.part-* shards are out of history since the 2026-11 baseline, so a
+        # second restore may surface out-of-HEAD shards as a retained, visible
+        # conflict set instead of silently re-deriving them. What must not
+        # move: every TRACKED byte, the readable frozen receipt, and the money
+        # fields asserted above.
+        tracked = set(_git(repo, 'ls-files', 'localdata').stdout.splitlines())
+        in_lane = lambda m: {p: b for p, b in m.items()              # noqa: E731
+                             if p.relative_to(repo).as_posix() in tracked}
+        assert in_lane(before) == in_lane(after)
+        assert util.ticket_receipt_bytes(canonical) == original
+        assert json.loads((repo / relative).read_bytes())['frozen_by_date'] == cache['frozen_by_date']
+    else:
+        assert before == after
 
 
 @pytest.mark.parametrize('damage', ['unbound', 'before', 'after', 'bad_hash', 'missing_before',
@@ -1138,7 +1176,7 @@ def test_identical_multipart_bundle_decodes_once_but_still_checks_signed_payload
     util.write_ticket_receipt(path, original)
     stored = {p: p.read_bytes() for p in path.parent.iterdir()}
     assert len(stored) > 2
-    _git(repo, 'add', 'localdata')
+    _git(repo, 'add', '-f', 'localdata')  # *.part-* ignored since 2026-11 baseline; simulated pre-baseline HEAD needs -f
     _git(repo, 'commit', '-qm', 'identical signed multipart evidence')
     decode = util.ticket_receipt_bytes
     calls = []
@@ -1230,7 +1268,9 @@ def test_validate_staged_blob_sizes_unstages_excess_parts(tmp_path):
     for i in range(5):
         p = part_dir / f"test_decision.json.gz.part-{'a' * 63}{i}"
         p.write_bytes(b"chunk")
-        _git(repo, "add", str(p))
+        # *.part-* is ignored since the 2026-11 lean baseline, so shards can
+        # only reach the index by force -- -f mirrors that reality here.
+        _git(repo, "add", "-f", str(p))
         parts.append(p)
     assert len([p for p in _git(repo, "diff", "--cached", "--name-only").stdout.splitlines() if ".part-" in p]) == 5
 
@@ -1238,6 +1278,45 @@ def test_validate_staged_blob_sizes_unstages_excess_parts(tmp_path):
     module._validate_staged_blob_sizes(repo, max_parts=2)
     cached_parts = [p for p in _git(repo, "diff", "--cached", "--name-only").stdout.splitlines() if ".part-" in p]
     assert len(cached_parts) == 2
+
+
+def test_validate_staged_blob_sizes_unstages_force_added_ignored_paths(tmp_path):
+    """2026-11 lean-baseline tripwire: ``git add -f`` cannot smuggle the dump
+    and dated-cache families (which .gitignore blocks) into a bot commit, while
+    a path tracked before its family was ignored keeps updating normally."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _seed_repo(repo)
+    module = _persistence_module()
+
+    # Legacy file committed before its family was ignored (stands in for the
+    # real repo's picks_audit_rolling.json): staged modifications survive.
+    rolling = repo / "localdata" / "picks_audit_rolling.json"
+    rolling.write_text("{}")
+    _git(repo, "add", "-f", "localdata/picks_audit_rolling.json")
+    _git(repo, "commit", "-qm", "track legacy rolling ledger")
+    rolling.write_text('{"updated": 1}')
+
+    dump = repo / "localdata" / "picks_2026-11-14.json"  # raw pick dump family
+    dump.write_text("[]")
+    shard = repo / "localdata" / "bundle.json.part-00"
+    shard.write_bytes(b"chunk")
+    _git(repo, "add", "-f", "localdata/picks_2026-11-14.json",
+         "localdata/picks_audit_rolling.json", "localdata/bundle.json.part-00")
+    staged_before = _git(repo, "diff", "--cached", "--name-only").stdout.splitlines()
+    assert set(staged_before) == {
+        "localdata/picks_2026-11-14.json",
+        "localdata/picks_audit_rolling.json",
+        "localdata/bundle.json.part-00",
+    }
+
+    module._validate_staged_blob_sizes(repo)
+
+    staged_after = _git(repo, "diff", "--cached", "--name-only").stdout.splitlines()
+    # Dump and shard are unstaged (the shard trips both the max_parts lane and
+    # the ignore lane; either protects history). The legacy path survives.
+    assert staged_after == ["localdata/picks_audit_rolling.json"]
+    assert dump.exists() and shard.exists()  # preserved on disk for cache/artifacts
 
 
 def test_ticket_receipt_storage_rejects_excess_parts(tmp_path, monkeypatch):

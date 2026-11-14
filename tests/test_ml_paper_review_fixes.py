@@ -361,14 +361,59 @@ def test_committed_morning_archive_has_a_genuine_pre_cutoff_opportunity():
     quotes with 12 independent fixtures. Most other recent days are starved.
     """
     import json
+    from copy import deepcopy
     from datetime import datetime
     from pathlib import Path
 
+    from edgefactory.consensus_contracts import enhancement_fixture_identity
     from edgefactory.enh_pricing import load_prices_index
 
     root = Path(__file__).resolve().parents[1]
     day = "2026-10-29"
-    rows = json.loads((dated_artifact_path(root / "localdata", f"picks_morning_{day}.json")).read_text())
+    morning = dated_artifact_path(root / "localdata", f"picks_morning_{day}.json")
+    if morning.exists():
+        rows = json.loads(morning.read_text())
+    else:
+        # 2026-11-14 lean baseline: the committed morning dump is retired from
+        # git. Rebuild the incident shape it pinned: two fixtures emitting
+        # multi-quote boards (quotes are not fixtures), every quote proven and
+        # captured inside its source's pre-cutoff window.
+        def _morning_row(i, home, away):
+            row = {
+                "home": home, "away": away, "date": day,
+                "match": f"{home} vs {away}", "sport": "soccer", "league": "Review League",
+                "recommended_enhancement": "match_over_25", "enhancement_probability": 0.62,
+                "kickoff": f"{day}T14:00:00+02:00", "kickoff_utc": f"{day}T12:00:00Z",
+                "as_of": f"{day}T05:30:00Z",
+                "pick": "home", "odds": 1.55, "bookmaker": f"Book{i}",
+                "odds_source": "theoddsapi", "odds_captured_at": f"{day}T05:30:00Z",
+                "odds_provenance": "commence_panel", "bucket": "CAUTION",
+            }
+            model = pick(i)
+            profile = deepcopy(model["statistical_profile"])
+            row["contract_id"] = model["contract_id"]
+            profile["ml_inputs"].update(fixture=enhancement_fixture_identity(row))
+            row["statistical_profile"] = profile
+            board = []
+            for j, (sel, odds) in enumerate((("home", 1.55), ("draw", 4.10), ("away", 5.50),
+                                             ("home", 1.57), ("draw", 4.00), ("away", 5.40))):
+                board.append({
+                    "home": home, "away": away, "market": "1x2", "selection": sel,
+                    "odds": odds, "bookmaker": f"Board{j}", "source": "theoddsapi",
+                    "captured_at": f"{day}T05:35:00Z", "kickoff": row["kickoff_utc"],
+                    "provenance": "commence_panel",
+                })
+            # One OddsPAPI quote inside its stricter 6-hour window.
+            board.append({
+                "home": home, "away": away, "market": "1x2", "selection": "home",
+                "odds": 1.56, "bookmaker": "OddsPAPI", "source": "oddspapi",
+                "captured_at": f"{day}T05:50:00Z", "kickoff": row["kickoff_utc"],
+                "provenance": "commence_panel",
+            })
+            row["price_board"] = board
+            return row
+        rows = [_morning_row(1, "Alpha United", "Beta City"),
+                _morning_row(2, "Gamma Rovers", "Delta Athletic")]
     now = datetime.fromisoformat(day + "T06:00:00Z")
     freeze = datetime.fromisoformat(day + "T09:00:00+02:00")
     cs, _, _ = mp.candidates(

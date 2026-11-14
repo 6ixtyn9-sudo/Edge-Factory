@@ -1025,7 +1025,18 @@ def _validate_cached_dated_archives(repo):
         archived = repo / relative
         legacy_relative = "localdata/" + archived.name
         legacy = repo / legacy_relative
-        # Also checks byte-different duplicates already present in the cache.
+        # Byte-different root/archive duplicates must fail with the audit-domain
+        # error even when an ignored root duplicate survived `git clean -fd`
+        # (post-2026-11-baseline, root dumps are ignored so clean keeps them).
+        # dated_artifact_path() raises the same conflict as a bare ValueError,
+        # so detect it here first and then keep its symlink protection below.
+        if (
+            legacy.exists() and archived.exists()
+            and not legacy.is_symlink() and not archived.is_symlink()
+            and legacy.read_bytes() != archived.read_bytes()
+        ):
+            raise EvidenceMergeError(
+                f"conflicting root/archive dated evidence: {archived.name}")
         dated_artifact_path(base, archived.name)
         committed = _head_blob(repo, relative) if relative in tracked else None
         old_committed = _head_blob(repo, legacy_relative) if legacy_relative in tracked else None
@@ -1292,6 +1303,31 @@ def _validate_staged_blob_sizes(
                     _run(repo, "reset", "HEAD", "--", relative)
             except OSError:
                 continue
+
+    # Ignore-contract lane (2026-11 lean-baseline lesson): a staged path that
+    # matches an .gitignore rule reached the index only by force-add or a
+    # rename slip, and unstaging it here keeps raw dumps, dated caches and
+    # *.part-* shards out of history no matter which bot step staged them.
+    # Paths already tracked in HEAD (e.g. localdata/picks_audit_rolling.json)
+    # keep updating normally -- their presence predates the rule.
+    tracked = _run(repo, "ls-tree", "-r", "--name-only", "-z", "HEAD")
+    if tracked.returncode == 0:
+        tracked_in_head = {p for p in tracked.stdout.split(b"\0") if p}
+        # *.part-* shards are governed by the dedicated max_parts lane above
+        # (production default 0: no shard ever re-enters history), so they are
+        # not double-counted by the ignore lane.
+        non_shard = [p for p in paths if b".part-" not in p]
+        payload = b"".join(p + b"\0" for p in non_shard)
+        ignored = _run(repo, "check-ignore", "--no-index", "--stdin", "-z", input_data=payload)
+        if ignored.returncode == 0:
+            for raw_hit in ignored.stdout.split(b"\0"):
+                if raw_hit and raw_hit not in tracked_in_head:
+                    hit = raw_hit.decode("utf-8", "surrogateescape")
+                    print(
+                        f"::warning::Staged path {hit} matches an .gitignore rule; "
+                        "unstaging to protect repository history"
+                    )
+                    _run(repo, "reset", "HEAD", "--", hit)
 
 
 def _report_localdata_root_entries(repo: Path) -> dict[str, int | None]:

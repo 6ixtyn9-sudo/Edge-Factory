@@ -266,9 +266,10 @@ localdata/archive/**
 !localdata/archive/source_health/????/??/source_health_????-??-??.json
 !localdata/archive/theoddsapi_capture/????/??/theoddsapi_capture_????-??-??.json
 
-# Multipart receipt shards (retained in cache & workflow artifacts, not Git history)
+# Multipart receipt shards (retained in cache & workflow artifacts, not Git history).
+# The receipt JSONs themselves stay git-persistable under phase5_reconciliation
+# (see tests/test_ml_paper_receipt_storage.py).
 *.part-*
-localdata/phase5_reconciliation/ml_paper_receipts/*.json
 
 # Ephemeral daily probe caches and audits
 localdata/betexplorer_match_detail_*.json
