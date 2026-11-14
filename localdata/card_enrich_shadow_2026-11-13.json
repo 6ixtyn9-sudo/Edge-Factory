@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 53,
+    "ledger_entries": 54,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -26,13 +26,6 @@
     "unresolved": [
       {
         "fixture": "glentoran|bangor",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "gabon|lesotho",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -65,18 +58,23 @@
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "slovenia|switzerland",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
       }
     ],
     "usable_snapshots": 0
   },
   "preflight": {
-    "allowance_by_key": {
-      "5b6ed40a": 3
-    },
+    "allowance_by_key": {},
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=3 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=0 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> unattributed_quota",
     "month": "2026-11",
     "month_spend_by_key": {
       "5b6ed40a": 5
@@ -90,8 +88,8 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 3,
-    "verdict": "approved"
+    "spendable": 0,
+    "verdict": "unattributed_quota"
   },
   "provenance": {
     "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",

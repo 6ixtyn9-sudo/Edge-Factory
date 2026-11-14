@@ -1,0 +1,31 @@
+{
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-05T19:17:17+00:00",
+  "date": "2026-10-05",
+  "due_reasons": {},
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_already_passed": 5,
+    "kickoff_mismatch": 3
+  },
+  "skipped": [
+    "WARN kickoff-mismatch Montenegro|Armenia: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "Montenegro|Armenia (kickoff already passed)",
+    "Italy|T\u00fcrkiye (kickoff already passed)",
+    "Moss|Kongsvinger (kickoff already passed)",
+    "WARN kickoff-mismatch Cyprus|Latvia: pick lists 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from the earlier)",
+    "Cyprus|Latvia (kickoff already passed)",
+    "WARN kickoff-mismatch France|Belgium: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "France|Belgium (kickoff already passed)"
+  ],
+  "source": "theoddsapi",
+  "status": "not_due",
+  "unmatched_reasons": {}
+}
