@@ -94,8 +94,54 @@ def test_validate_quote_row_adversarial_including_non_dict():
     assert ok is False and reason == "odds_le_1"
 
 
-def test_audit_detail_files_authoritative_vs_diagnostic():
-    rep = audit_detail_files(corroborate_schedules=False)
+def test_audit_detail_files_authoritative_vs_diagnostic(tmp_path, monkeypatch):
+    """Fail-closed eligibility, provenance tracking and quote-row hygiene.
+
+    The committed 2026-10 detail corpus that originally fed this audit was
+    retired from git by the 2026-11-14 lean-baseline cleanup. A runner whose
+    cache still holds it replays the production corpus verbatim; a clean clone
+    synthesizes a 12-file / 120-fixture corpus with the same shapes and
+    deliberately planted defects, so every guardrail below still executes.
+    """
+    import json
+
+    from tools import audit_market_depth_replay as amdr
+
+    if len(sorted(amdr.LOCALDATA.glob("betexplorer_match_detail_*.json"))) < 10:
+        # Hermetic corpus. The decision cutoff is 09:00 SAST = 07:00 UTC;
+        # buckets: captured/kickoff pairs per fixture, 60/10/45/5 over 120.
+        localdata = tmp_path / "localdata"
+        localdata.mkdir()
+        plan = ["up"] * 60 + ["started"] * 10 + ["pc"] * 45 + ["pk"] * 5
+        bucket_fields = {
+            "up": ("T05:00:00Z", "18:00"),      # captured < cutoff < kickoff
+            "started": ("T05:00:00Z", "06:00"),  # captured < cutoff, kickoff <= cutoff
+            "pc": ("T08:00:00Z", "18:00"),       # cutoff <= captured < kickoff
+            "pk": ("T19:00:00Z", "18:00"),       # captured >= kickoff
+        }
+        ordinal = 0
+        for file_index in range(12):
+            day = f"2026-10-{10 + file_index:02d}"
+            fixtures = {}
+            for _ in range(10):
+                ordinal += 1
+                captured_suffix, kickoff = bucket_fields[plan[ordinal - 1]]
+                key = f"Synthetic Home {ordinal} vs Synthetic Away {ordinal}"
+                rows = [{"bookmaker": f"Book {j}", "odds": [1.5, 3.2, 5.0]}
+                        for j in range(45)]
+                rows.append({"bookmaker": "Bad Book", "odds": [1.5, float("nan"), 5.0]})
+                fixtures[key] = {
+                    "home": f"Synthetic Home {ordinal}",
+                    "away": f"Synthetic Away {ordinal}",
+                    "kickoff": kickoff,
+                    "captured_at": f"{day}{captured_suffix}",
+                    "markets": {"1x2": {"rows": rows}},
+                }
+            (localdata / f"betexplorer_match_detail_{day}.json").write_text(json.dumps(
+                {"date": day, "captured_at": f"{day}T05:00:00Z", "fixtures": fixtures}))
+        monkeypatch.setattr(amdr, "LOCALDATA", localdata)
+
+    rep = amdr.audit_detail_files(corroborate_schedules=False)
     assert rep["files_count"] == len(rep["detail_files"]) >= 10
     assert rep["total_fixtures"] == rep["unique_fixture_keys"] >= 116
     tot = rep["total_fixtures"]

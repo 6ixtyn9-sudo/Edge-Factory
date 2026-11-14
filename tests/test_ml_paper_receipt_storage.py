@@ -255,6 +255,31 @@ def test_internal_receipts_are_git_persistable_and_daily_json_is_ignored():
     assert result.stdout.splitlines() == [legacy]
 
 
+# Tracked paths that already matched an .gitignore rule at the 2026-11-14 lean
+# baseline (ac66c942): each was committed before its family was ignored. The
+# set may only ever SHRINK. Adding a fourth entry fails this suite, which is
+# the permanent tripwire against re-bloating the tracked tree. Remove an entry
+# here only together with the file's removal from git.
+GRANDFATHERED_IGNORED_TRACKED = {
+    "docs/operator/ML-CALIBRATION-THRESHOLD-MOVERS-2026-10-07.csv",
+    "docs/operator/ML-R2-2-SHADOW-MOVERS-2026-10-07.csv",
+    "localdata/picks_audit_rolling.json",
+}
+
+
+def test_tracked_tree_holds_the_ignore_contract():
+    tracked = subprocess.run(
+        ["git", "ls-files"], text=True, capture_output=True, check=True,
+    ).stdout.splitlines()
+    ignored = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--stdin"],
+        input="\n".join(tracked) + "\n", text=True, capture_output=True, check=False,
+    ).stdout.splitlines()
+    assert set(ignored) == GRANDFATHERED_IGNORED_TRACKED
+    # Multipart receipt shards live in cache/artifact lanes, never in history.
+    assert not [p for p in tracked if ".part-" in p.rsplit("/", 1)[-1]]
+
+
 @pytest.mark.parametrize("layout", ["legacy", "internal"])
 def test_cli_frozen_guard_does_not_reload_slate_in_either_layout(tmp_path, monkeypatch, layout):
     row = capture(tmp_path)

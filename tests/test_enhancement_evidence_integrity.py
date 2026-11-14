@@ -224,8 +224,21 @@ def test_real_production_quote_has_no_matching_kickoff_witness(monkeypatch):
     root = Path(__file__).resolve().parents[1]
     if not (root / 'localdata/oddspapi_odds_2026-10.csv.gz').exists():
         pytest.skip('production price audit fixture not present')
-    row = next(p for p in json.loads((dated_artifact_path(root / 'localdata', 'picks_2026-10-20.json')).read_text())
-               if p.get('home') == 'AS Roma')
+    day_archive = dated_artifact_path(root / 'localdata', 'picks_2026-10-20.json')
+    if day_archive.exists():
+        row = next(p for p in json.loads(day_archive.read_text())
+                   if p.get('home') == 'AS Roma')
+    else:
+        # 2026-11-14 lean baseline: the day's pick dump is retired from git.
+        # The incident row keeps its production shape, reconstructed against
+        # the retained October price index: AS Roma vs SK Slovan Bratislava
+        # (18:45 SAST) carried an over_2.5 quote with no kickoff/capture
+        # witness, so the price must be refused here exactly as on the day.
+        row = {"date": "2026-10-20", "home": "AS Roma", "away": "ŠK Slovan Bratislava",
+               "match": "AS Roma vs ŠK Slovan Bratislava",
+               "kickoff": "2026-10-20T18:45:00+02:00",
+               "kickoff_utc": "2026-10-20T16:45:00+00:00",
+               "recommended_enhancement": "match_over_25", "probability": 0.62}
     row = deepcopy(row)
     monkeypatch.setenv('EDGE_FACTORY_ODDSPAPI_PRICES', '1')
     index = load_prices_index(root, '2026-10-20')

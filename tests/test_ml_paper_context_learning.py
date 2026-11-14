@@ -212,10 +212,18 @@ def test_chronological_refit_does_not_read_future_labels_or_future_record_featur
     assert seen and all(d == DAY for d in seen)
 
 
-def test_all_retained_frozen_receipts_replay_without_rewriting_history():
+def test_all_retained_frozen_receipts_replay_without_rewriting_history(tmp_path):
     from pathlib import Path
     root = Path(__file__).resolve().parents[1] / 'localdata'
     paths = mp.receipt_files(root)
+    if not paths:
+        # Lean-baseline clean clone: no production receipts are
+        # tracked, so run the same byte-stability property over a hermetic
+        # frozen corpus produced by the real draft->freeze capture pipeline.
+        capture(tmp_path, [contextual(i) for i in range(4)])
+        root = tmp_path
+        paths = mp.receipt_files(root)
+    assert paths, "neither production receipts nor the hermetic corpus are on disk"
     import hashlib
     before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     history = mp.receipts(root)
