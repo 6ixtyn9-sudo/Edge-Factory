@@ -558,3 +558,18 @@ in engine code.** (Superset caveats noted: unbettable quotes dilute the A arm to
 - STANDING RULE: no admission change without out-of-sample evidence (shadow ledger
   remains optional but deprioritised — prior for S1 success now low across three
   samples). Engine admission/selection unchanged going forward from main c0d912e.
+
+## 19. Regime boundary: post-Forebet (user correction 2026-11-15)
+
+The replay windows so far pooled TWO model regimes. Registry facts
+(localdata/edges_consensus.json): current `post_forebet_v1` contracts mined from
+**2026-06-13 → 2026-11-15**, split 2026-10-18; committed probability CSVs end
+2026-06-12; production recovery ran 2026-10-20 (run 39350936425). Therefore:
+
+- post-Forebet DATA era starts **2026-06-13** (live-capture era);
+- post-Forebet PRODUCTION era (current ensemble driving tickets) starts **2026-10-21**.
+- ALL prior A/B windows (08-27, 09-17) pool pre-recovery captures with post-recovery
+  ones. Both carrier days sit pre-recovery: 09-20 (92% of S1-wide) and 10-15
+  (41–316% of the other probes). §16–§18 verdicts are regime-pooled; re-judge on
+  --since 2026-10-21 (in-regime, carriers out by construction) and the full-era
+  ladder --since 2026-06-13 (maximal n, quote-coverage permitting).
