@@ -406,5 +406,35 @@ under-pricing has a known market-microstructure rationale (retail books shade aw
 Probe before pinning: harness `teams=` exists now; venue probes need a `side=` filter —
 added alongside in the same PR if this cut survives codespace replay.
 
+## 13. Three-way calibration (60d): actual hit vs market-implied vs model-stated
+
+| venue×depth | n | hit | mkt | model | hit−mkt | hit−mdl | ROI |
+|---|---|---|---|---|---|---|---|
+| H <1.40 | 65 | 81.5% | 77.0% | 72.3% | +4.5pp | +9.2pp | +5.6% |
+| H 1.40–1.60 | 42 | 73.8% | 68.0% | 66.1% | +5.8pp | +7.7pp | +7.7% |
+| H ≥1.60 | 22 | 72.7% | 55.2% | 60.5% | **+17.5pp** | +12.3pp | **+40.0%** |
+| A <1.40 | 29 | 86.2% | 76.1% | 71.5% | +10.1pp | +14.7pp | +13.6% |
+| A 1.40–1.60 | 15 | 60.0% | 67.7% | 64.5% | −7.7pp | −4.5pp | **−11.3%** |
+| A ≥1.60 | 15 | 46.7% | 54.0% | 58.2% | −7.3pp | **−11.5pp** | **−14.2%** |
+
+- **The model is systematically under-confident on this slate**: conf<60 legs actually hit
+  65% (+13pp over stated); conf≥70 legs hit 84% (+10pp). Printed legs are price-selected
+  favourites — the market knows more than the shrunk model on them.
+- **Away mid/long prices: the model is WORSE than the market, in the staking direction.**
+  A ≥1.60: model 58%, market-implied 54%, reality 47%. Trusting model confidence there is
+  strictly worse than trusting price.
+- **Model-vs-market disagreement is the real edge signature** (small n, sign-coherent):
+  model−market ≥+5pp → n=24, +32% ROI (home +41.9%); model−market ≤−5pp → +0.9% overall,
+  split: home +8.6% (market right) / away −11.4% (both wrong, −EV under either belief).
+- **Venue×conf:** H conf<60 +41.6% (home discount swallows low stated conf); A conf<60 −24.8%,
+  A conf 60–69 −11.5%, A conf≥70 +20.9%.
+
+**Consolidated gate rule consistent with every independent cut in this document:**
+an away leg must be DEEP (odd<1.40) OR CONFIDENT (≥70 stated). Away legs failing both are
+−11%…−25% ROI whether cut by conf band, depth band, disagreement band, or acca
+containment (−26.2% ROI inside accas vs +26.0% without). This subsumes and sharpens S1's
+blunt odd>1.5&conf<60 cell — which only fires because it accidentally correlates with
+away mid/long prices.
+
 *Repro note: throwaway harness in /tmp (not committed); all inputs are committed
 localdata snapshots, so any future run reproduces these numbers until the next 30d window shifts.*
