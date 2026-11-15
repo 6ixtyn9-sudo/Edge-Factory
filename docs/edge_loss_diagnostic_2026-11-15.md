@@ -476,3 +476,30 @@ PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --ab live "a
 PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --battery-fixes                              # S1 rows now read true
 PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-08-27 --ab live "acca_veto=2.6:1.5:0.60"          # widen n on the only positive gate
 ```
+
+## 15. Wide-window verdict on the day-skip gate (43 candidate-days, --since 2026-08-27) + blowup-day anatomy
+
+Codespace ran the rerun list on the PRE-merge tree (git pull refused: no upstream) —
+so zero-cap specs there re-show the kill-all artifact. One spec was unaffected:
+`acca_veto=2.6:1.5:0.60` (cap 2.6 never hit the parse bug), giving the first
+wide-window reading:
+
+| window | A live | B veto | Δ log/day | P(B>A) |
+|---|---|---|---|---|
+| 25 candidate-days / 21 bet-days | +0.0311 (192%) | +0.0353 (164%) | +0.0043 | 45% |
+| 43 candidate-days / 38 bet-days | +0.0222 (232%) | −0.0113 (74%) | **−0.0335** | **12%** |
+
+`cards differ on 0/43 days` — the gate is 100% day-skip (vetoes convert bet-days to
+no-bet days; selection untouched). The short-window gain was one-day luck, as the
+leave-one-day-out concentrations warned. **S1+S4 dead at n=38.**
+
+**Why day-targeting fails (the "days that brought us here" question):** worst-day is
+0.75 = both 12.5% accas lose. Legs are disjoint across accas (barbell pairing consumes
+distinct legs; fixture-dedup since 2026-09-22) — two-loss days are four independent
+legs failing in the same SLATE REGIME (thin slates, away mid-prices), not one shared
+leg. And the blowup days are inseparable from the building days ex ante: skipping
+price-tagged days also skips the @2–@4 wins that drove 74→455%. The viable attack is
+dilution, not avoidance: `saturated_accas` is a live spec key, so the volume lever
+gets a paired bootstrap directly (`--ab live "saturated_accas=5"`). The only
+risk-shaped lever that touches blowup days is stake/day (worst-day scales linearly);
+the stake battery row shows growth flat 25→33% then decaying ≥50%.
