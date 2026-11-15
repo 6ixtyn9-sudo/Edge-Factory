@@ -531,3 +531,30 @@ on --unfaithful-pool superset; (b) S1 SHADOW telemetry in live engine (log would
 accas, settle separately) for out-of-sample evidence — the only evidence class that can
 certify a drop-rule, since replay is quote-history-capped. No admission change on
 retrospective luck-shaped deltas.
+
+## 18. S1 closed — three-sample ledger + final program statement
+
+S1 (`acca_veto=0:1.5:0.60`) across all three universes, largest last:
+
+| universe | cd / bd | Δ log/day | P(B>A) | carrier |
+|---|---|---|---|---|
+| faithful, 09-17→ | 25 / 21 | +0.0580 | 98% | 09-20 30% |
+| faithful, 08-27→ | 43 / 38 | +0.0163 | 67% | 09-20 92% |
+| superset (--unfaithful-pool), 08-27→ | 50 / 50 | **−0.0060** (median −0.0056, p90 +0.0015) | **16%** | 09-28 58% |
+
+Verdict: the 98% was 09-20 luck; both larger samples deflate it, and the superset
+is outright negative at the median. **S1 drop-rule is dead. Do not install it live or
+in engine code.** (Superset caveats noted: unbettable quotes dilute the A arm to
++0.0035/day; relative diff remains the doctrine metric.)
+
+**Final program statement (2026-11-15 slump diagnostic, complete):**
+- SHIPPED: DC-DNB settlement fix (semantics bug); harness instrumentation
+  (--battery-fixes, acca_veto with corrected cap<=0 semantics, teams=, side=).
+- NULL RESULTS (tested, luck-shaped or coverage-dead at all attainable n): suspect-leg
+  veto S1/S1+S4/S2, price cap S4, team filters, venue restriction/gate, volume dilution
+  (12 & 8 saturation), prob floors remain 4x-rejected tripwire.
+- MECHANISM: slump = variance concentrating in the odd>1.5 × conf<60 cell within the
+  same slate regime as the winning days; no ex-ante separator exists in 50 days of data.
+- STANDING RULE: no admission change without out-of-sample evidence (shadow ledger
+  remains optional but deprioritised — prior for S1 success now low across three
+  samples). Engine admission/selection unchanged going forward from main c0d912e.
