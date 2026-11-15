@@ -503,6 +503,11 @@ def _combined_veto(spec_text: str):
     ``prob_floor``) or its combined price is at/above ``combined_cap``. Numbers
     parsed, not evaluated; every token is validated here so a malformed spec
     fails at parse time instead of mid-replay.
+
+    Semantics: ``combined_cap`` <= 0 disables the price-cap test (else a
+    literal 0 would kill every acca); ``odd_floor`` 0 makes the suspect-leg
+    test a pure prob floor (any leg below ``prob_floor`` vetoes). Fields are
+    positionally split on ':' so empties collapse — use 0 to mean "off".
     """
     raw = str(spec_text).strip()
     toks = [t for t in raw.split(":") if t != ""]
@@ -512,6 +517,11 @@ def _combined_veto(spec_text: str):
         cap = float(toks[0]) if toks[0] else None
     except ValueError:
         raise SystemExit(f"acca_veto {raw!r}: combined cap {toks[0]!r} is not a number")
+    if cap is not None and cap <= 0:
+        # Explicit 0 (or negative) means NO combined-price cap — every acca is
+        # priced >= 0.0, so a literal zero cap would silently veto everything
+        # (seen 2026-11-15: "0:1.4:0.70" zeroed all 25 candidate-days).
+        cap = None
     try:
         odd = float(toks[1]) if len(toks) > 1 else None
     except ValueError:

@@ -325,6 +325,24 @@ def test_side_filter_keeps_only_named_backed_sides():
         rh._filtered_pool(pool, {"side": "UP"})
 
 
+def test_acca_veto_zero_cap_means_no_combined_cap_not_kill_everything():
+    # 2026-11-15: a literal "0:odd:prob" spec zeroed all 25 candidate-days
+    # because every acca is priced >= 0.0. cap<=0 must DISABLE the cap test.
+    veto = rh._combined_veto("0:1.5:0.60")
+    suspect = {"odds": 2.66, "legs": [{"odds": 1.90, "prob": 0.50},
+                                     {"odds": 1.40, "prob": 0.80}]}
+    clean_hi_price = {"odds": 4.50, "legs": [{"odds": 1.50, "prob": 0.70},
+                                             {"odds": 3.00, "prob": 0.65}]}
+    assert veto(suspect) is True            # suspect leg (1.90 > 1.5, 0.50 < 0.60)
+    assert veto(clean_hi_price) is False    # price 4.50 must NOT trip a disabled cap
+    # odd_floor 0 = pure prob-floor probe; cap alone unaffected by the change.
+    prob_only = rh._combined_veto("0:0:0.60")
+    assert prob_only({"odds": 1.80, "legs": [{"odds": 1.30, "prob": 0.55}]}) is True
+    assert prob_only({"odds": 1.80, "legs": [{"odds": 1.30, "prob": 0.65}]}) is False
+    assert rh._combined_veto("2.6")({"odds": 2.70, "legs": []}) is True
+    assert rh._combined_veto("2.6")({"odds": 2.50, "legs": []}) is False
+
+
 def test_teams_filter_includes_and_excludes_on_match_and_row_names():
     def leg(tag, home, away):
         return {"match": f"{home} vs {away}", "pick": "HOME", "prob": 0.75,

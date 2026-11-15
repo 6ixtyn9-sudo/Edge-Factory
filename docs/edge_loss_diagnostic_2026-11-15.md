@@ -406,5 +406,73 @@ under-pricing has a known market-microstructure rationale (retail books shade aw
 Probe before pinning: harness `teams=` exists now; venue probes need a `side=` filter —
 added alongside in the same PR if this cut survives codespace replay.
 
+## 13. Three-way calibration (60d): actual hit vs market-implied vs model-stated
+
+| venue×depth | n | hit | mkt | model | hit−mkt | hit−mdl | ROI |
+|---|---|---|---|---|---|---|---|
+| H <1.40 | 65 | 81.5% | 77.0% | 72.3% | +4.5pp | +9.2pp | +5.6% |
+| H 1.40–1.60 | 42 | 73.8% | 68.0% | 66.1% | +5.8pp | +7.7pp | +7.7% |
+| H ≥1.60 | 22 | 72.7% | 55.2% | 60.5% | **+17.5pp** | +12.3pp | **+40.0%** |
+| A <1.40 | 29 | 86.2% | 76.1% | 71.5% | +10.1pp | +14.7pp | +13.6% |
+| A 1.40–1.60 | 15 | 60.0% | 67.7% | 64.5% | −7.7pp | −4.5pp | **−11.3%** |
+| A ≥1.60 | 15 | 46.7% | 54.0% | 58.2% | −7.3pp | **−11.5pp** | **−14.2%** |
+
+- **The model is systematically under-confident on this slate**: conf<60 legs actually hit
+  65% (+13pp over stated); conf≥70 legs hit 84% (+10pp). Printed legs are price-selected
+  favourites — the market knows more than the shrunk model on them.
+- **Away mid/long prices: the model is WORSE than the market, in the staking direction.**
+  A ≥1.60: model 58%, market-implied 54%, reality 47%. Trusting model confidence there is
+  strictly worse than trusting price.
+- **Model-vs-market disagreement is the real edge signature** (small n, sign-coherent):
+  model−market ≥+5pp → n=24, +32% ROI (home +41.9%); model−market ≤−5pp → +0.9% overall,
+  split: home +8.6% (market right) / away −11.4% (both wrong, −EV under either belief).
+- **Venue×conf:** H conf<60 +41.6% (home discount swallows low stated conf); A conf<60 −24.8%,
+  A conf 60–69 −11.5%, A conf≥70 +20.9%.
+
+**Consolidated gate rule consistent with every independent cut in this document:**
+an away leg must be DEEP (odd<1.40) OR CONFIDENT (≥70 stated). Away legs failing both are
+−11%…−25% ROI whether cut by conf band, depth band, disagreement band, or acca
+containment (−26.2% ROI inside accas vs +26.0% without). This subsumes and sharpens S1's
+blunt odd>1.5&conf<60 cell — which only fires because it accidentally correlates with
+away mid/long prices.
+
 *Repro note: throwaway harness in /tmp (not committed); all inputs are committed
 localdata snapshots, so any future run reproduces these numbers until the next 30d window shifts.*
+
+## 14. Codespace paired A/B verdicts (main @ de922226, live-faithful pool, 25 candidate-days / 21 bet-days, --since 2026-09-17)
+
+ENGINE ACTUAL extended: bank 257.8% · 74 bet-days · 85W/64L · 1 open.
+New rows: 11-13 @1.86L @1.69W → 246.1%; 11-14 @2.38W @2.45L → 257.8%. Still far below the 455% peak — slump regime intact within the window.
+
+Replay baseline (window): log/day +0.0311, final 192%, 35 accas, hit 49%, maxDD 58%.
+
+| probe | Δ log/day | P(B>A) | verdict |
+|---|---|---|---|
+| acca_veto=2.6:1.5:0.60 (S1+S4 combined) | +0.0043 | 45% | **NO SHIP** — luck-shaped; acts 100% as DAY-SKIP (cards differ 0/25 days: vetoes turn 7 bet-days into no-bet days); 2026-10-15 carries 316% of the diff; sign flips on 5 of 21 leave-one-day-outs. maxDD 58→25% is real but the growth is not separable from luck at this n. |
+| side=HOME (home-only pool) | −0.0501 | 16% | **DEAD** — venue-as-pool-restriction HURTS (final 70%, hit 41%). The §12 leg-level home edge does NOT survive acca selection/pairing: restricting the pool changes which legs/pairs rank on top. Venue story remains descriptive, not admission-actionable as a blunt restriction. |
+| acca_veto=0:1.4:0.70,side=AWAY (venue-aware away gate) | — | — | **INVALID RUN** — parser artifact, see below; rerun required. |
+| battery: S1 veto / S1+min_prob rows showing 0 days 0 accas | — | — | **Same artifact**, not evidence of universal toxic-leg exposure. |
+
+**Parser artifact found & fixed (harness commit on this branch):** `_combined_veto` parsed
+`acca_veto=0:odd:prob` as combined-cap = 0.0, and every acca is priced ≥ 0.0 → veto-all.
+Semantics now: cap ≤ 0 ⇒ cap disabled; odd_floor 0 ⇒ pure prob floor. Pinned by
+`test_acca_veto_zero_cap_means_no_combined_cap_not_kill_everything`.
+
+**Battery rows that DID read true:** S4 cap ≥2.6 alone −0.0394 (hurts — price cap alone kills
+winners). Strongest in-window levers, all awaiting paired bootstrap judgement:
+5 accas on saturated days +0.0320 (final 376%, maxDD 44%), floor 1.25 +0.0204,
+legacy strict pool gate +0.0191, always-on prob ≥65 +0.0907 (8 days only, still the
+4x-rejected tripwire — §13 shows stated-conf under-reads reality).
+
+**Universe caveat:** main replays 25 candidate-days vs the stale codespace branch's 49 —
+merged live-faithful pool + rebuilt settlement facts (94,980 keys, 93 dates, pending
+candidates 26→1) are stricter. All n here is small; treat every number as exploratory and
+prefer wider windows (--since 2026-08-27 now that archive tickets are tracked on main).
+
+**Rerun list (post-fix):**
+```
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --ab live "acca_veto=0:1.4:0.70,side=AWAY"   # real away gate, no cap
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --ab live "acca_veto=0:1.5:0.60"            # clean S1-solo (suspect leg at any price)
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --battery-fixes                              # S1 rows now read true
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-08-27 --ab live "acca_veto=2.6:1.5:0.60"          # widen n on the only positive gate
+```
