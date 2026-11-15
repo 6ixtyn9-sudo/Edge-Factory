@@ -320,15 +320,20 @@ jobs:
         # as history grows. timeout-minutes + --parity-time-budget bound it;
         # together they still do NOT establish parity, and a green step
         # proves nothing about MATCH (continue-on-error stays true).
+        # 2026-11-15: the audit repeatedly spent its whole 5-minute wall clock
+        # (receipt scan + one slow shard read is un-budgeted between-receipt
+        # work). The graceful budget now expires well inside the wall so the
+        # usual exit is the harness's own budget-exhausted report instead of
+        # a killed step, and the wall costs 3 minutes, not 5.
         if: always() && inputs.mode != 'remine_only'
-        timeout-minutes: 5
+        timeout-minutes: 3
         continue-on-error: true
         run: |
           set +e
           mkdir -p localdata
           PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
             --parity-window-days 7 \
-            --parity-time-budget 210 \
+            --parity-time-budget 120 \
             --parity-output localdata/replay_parity.json
           result=$?
           echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
