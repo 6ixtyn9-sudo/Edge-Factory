@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-15T21:34:43",
+  "generated_at": "2026-11-16T00:47:59",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 257.782819,
-  "multiple": 2.57782819,
+  "bank_pct": 193.337119,
+  "multiple": 1.93337119,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 74,
+  "bet_days": 75,
   "accas": {
     "wins": 85,
-    "losses": 64
+    "losses": 66
   },
-  "open_slips": [
-    {
-      "date": "2026-11-15",
-      "staked_pct": 64.4457
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -2568,6 +2563,87 @@
       ],
       "bank_pct": 257.7828,
       "close_pct": 257.7827
+    },
+    {
+      "date": "2026-11-15",
+      "staked_pct": 64.4457,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 4.62,
+          "won": false,
+          "stake_pct": 32.2229,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "GODOY CRUZ vs TRISTAN SUAREZ",
+              "pick": "HOME",
+              "odds": 2.1,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-15",
+                "GODOY CRUZ",
+                "TRISTAN SUAREZ"
+              ]
+            },
+            {
+              "match": "PORTIMONENSE vs ACADEMICA",
+              "pick": "HOME",
+              "odds": 2.2,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-15",
+                "PORTIMONENSE",
+                "ACADEMICA"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.64,
+          "won": false,
+          "stake_pct": 32.2228,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "SOCHI vs SHINNIK YAROSLAVL",
+              "pick": "HOME",
+              "odds": 1.6494,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-15",
+                "SOCHI",
+                "SHINNIK YAROSLAVL"
+              ]
+            },
+            {
+              "match": "CROATIA vs CZECH REPUBLIC",
+              "pick": "HOME",
+              "odds": 1.6,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-15",
+                "CROATIA",
+                "CZECH REPUBLIC"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 193.3371,
+      "close_pct": 193.337
     }
   ]
 }

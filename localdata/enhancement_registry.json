@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-15",
+ "generated_at": "2026-11-16",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 17,
-   "inv_price_sum": 15.247348016206287,
+   "hits": 18,
+   "inv_price_sum": 15.883885253634677,
    "multi_n": 0,
-   "n": 24,
+   "n": 25,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -84,9 +84,10 @@
     "2026-11-09|CS Herediano vs Inter San Carlos|away_over_05@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|away_over_05@v1",
     "2026-11-13|Curacao vs Panama|away_over_05@v1",
-    "2026-11-14|Ecuador vs Costa Rica|away_over_05@v1"
+    "2026-11-14|Ecuador vs Costa Rica|away_over_05@v1",
+    "2026-11-15|UD Ibiza vs FC Cartagena|away_over_05@v1"
    ],
-   "profit": 1.417,
+   "profit": 1.988,
    "records": [
     {
      "away": "Mixco",
@@ -768,6 +769,35 @@
       "source": "oddspapi"
      },
      "recorded_at": "2026-11-15T05:21:38.144736+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "FC Cartagena",
+     "away_key": "cartagena",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6561,
+     "date": "2026-11-15",
+     "hit": true,
+     "home": "UD Ibiza",
+     "home_key": "udibiza",
+     "league": "Primera Division RFEF: Group 2",
+     "match": "UD Ibiza vs FC Cartagena",
+     "multi_source": false,
+     "price": 1.571,
+     "price_context": {
+      "book": "betway",
+      "captured_at": "2026-11-15T05:02:00.685803+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-15T07:03:30+02:00",
+      "kickoff": "2026-11-15T11:00:00+00:00",
+      "league": "Primera Division RFEF: Group 2",
+      "price": 1.571,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-15T22:44:04.049133+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
@@ -5955,9 +5985,9 @@
   },
   "match_over_15@v1": {
    "hits": 45,
-   "inv_price_sum": 48.360451628169415,
-   "multi_n": 9,
-   "n": 60,
+   "inv_price_sum": 48.722770468749125,
+   "multi_n": 10,
+   "n": 61,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -6042,9 +6072,10 @@
     "2026-11-09|CS Herediano vs Inter San Carlos|match_over_15@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|match_over_15@v1",
     "2026-11-13|Llaneros vs Chico|match_over_15@v1",
-    "2026-11-14|Ecuador vs Costa Rica|match_over_15@v1"
+    "2026-11-14|Ecuador vs Costa Rica|match_over_15@v1",
+    "2026-11-15|UD Ibiza vs FC Cartagena|match_over_15@v1"
    ],
-   "profit": -0.205,
+   "profit": -1.205,
    "records": [
     {
      "away": "Aston Villa",
@@ -6993,6 +7024,25 @@
      "price": 2.54,
      "price_context": {},
      "recorded_at": "2026-11-15T05:21:38.160662+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "FC Cartagena",
+     "away_key": "cartagena",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7725,
+     "date": "2026-11-15",
+     "hit": false,
+     "home": "UD Ibiza",
+     "home_key": "udibiza",
+     "league": "Primera Division RFEF: Group 2",
+     "match": "UD Ibiza vs FC Cartagena",
+     "multi_source": true,
+     "price": 2.76,
+     "price_context": {},
+     "recorded_at": "2026-11-15T22:44:04.057677+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
@@ -17494,10 +17544,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 10,
-   "inv_price_sum": 13.317818829911236,
+   "hits": 11,
+   "inv_price_sum": 14.058011279948245,
    "multi_n": 0,
-   "n": 23,
+   "n": 24,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -17521,9 +17571,10 @@
     "2026-11-08|Charleston Battery vs Hartford Athletic|match_under_35@v1",
     "2026-11-08|Austin vs Portland Timbers|match_under_35@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|match_under_35@v1",
-    "2026-11-14|Guatemala vs Canada|match_under_35@v1"
+    "2026-11-14|Guatemala vs Canada|match_under_35@v1",
+    "2026-11-15|UD Ibiza vs FC Cartagena|match_under_35@v1"
    ],
-   "profit": -2.991,
+   "profit": -2.64,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -18189,6 +18240,35 @@
      },
      "recorded_at": "2026-11-15T05:21:38.122268+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "FC Cartagena",
+     "away_key": "cartagena",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6685,
+     "date": "2026-11-15",
+     "hit": true,
+     "home": "UD Ibiza",
+     "home_key": "udibiza",
+     "league": "Primera Division RFEF: Group 2",
+     "match": "UD Ibiza vs FC Cartagena",
+     "multi_source": false,
+     "price": 1.351,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-15T05:02:00.685803+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-15T07:03:30+02:00",
+      "kickoff": "2026-11-15T11:00:00+00:00",
+      "league": "Primera Division RFEF: Group 2",
+      "price": 1.351,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-15T22:44:04.040442+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }
