@@ -554,13 +554,13 @@ def test_operator_applied_decision_report_step_reuses_existing_artifacts_and_per
     # without limit as retained receipts accumulated. The step stays non-gating.
     for fragment in ('scripts/replay_harness.py --decision-parity',
                      '--parity-window-days 7',
-                     '--parity-time-budget 210',
+                     '--parity-time-budget 120',
                      '--parity-output localdata/replay_parity.json'):
         assert fragment in step['run'], f'HANDOVER step lost {fragment}'
         assert fragment in WORKFLOW.read_text(), f'daily.yml lost {fragment}'
     assert step['continue-on-error'] is True
-    assert step['timeout-minutes'] == 5
-    assert 'timeout-minutes: 5' in WORKFLOW.read_text()
+    assert step['timeout-minutes'] == 3
+    assert 'timeout-minutes: 3' in WORKFLOW.read_text()
     assert 'exit "$result"' in step['run']
     # An incomplete audit must never be presented as a MATCH.
     assert 'INCOMPLETE_TIME_BUDGET' in WORKFLOW.read_text()

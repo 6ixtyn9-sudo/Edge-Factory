@@ -73,14 +73,14 @@ Manual replay step for the existing daily workflow (after ticket generation):
   # down. This bound stops the step ranaway-ing again. It does NOT establish
   # parity, and a green step still proves nothing about MATCH.
   if: always() && inputs.mode != 'remine_only'
-  timeout-minutes: 5
+  timeout-minutes: 3
   continue-on-error: true
   run: |
     set +e
     mkdir -p localdata
     PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
       --parity-window-days 7 \
-      --parity-time-budget 210 \
+      --parity-time-budget 120 \
       --parity-output localdata/replay_parity.json
     result=$?
     echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
