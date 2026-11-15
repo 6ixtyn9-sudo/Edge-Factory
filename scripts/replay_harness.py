@@ -584,6 +584,25 @@ class ReplayDays(dict):
         self.pending = {}
 
 
+_DROP_PENDING_DAYS = False  # armed by --drop-pending-days in main()
+
+
+def _graded_only(days):
+    """The paired-complete subset: pending days removed, never re-paired.
+
+    The paired bootstrap ALREADY drops pending days from both arms (see
+    ``paired_bootstrap``); --drop-pending-days makes the growth summary match
+    that treatment instead of nan-ing the whole run. Default stays strict:
+    selected ungraded cards refuse a realized comparison. (Found 2026-11-15:
+    the 2026-06-13→2026-10-20 era universe carries ~10 unsettled selected
+    cards from thin early-era settlement coverage, which blocked the entire
+    64-candidate-day ladder.)
+    """
+    out = ReplayDays()
+    out.update(days)
+    return out
+
+
 def replay(universe, spec):
     """Per-day record for a variant, routed through the production planner."""
     out = ReplayDays()
@@ -1527,8 +1546,14 @@ def live_settings():
 
 
 def print_variant(universe, spec, label=None, baseline=None):
-    s = summarise(replay(universe, spec))
+    days = replay(universe, spec)
     lbl = label or label_of(spec)
+    if days.pending and _DROP_PENDING_DAYS:
+        print(f"{lbl}: {len(days.pending)} pending day(s) EXCLUDED from realized "
+              f"growth (--drop-pending-days; bootstrap excludes them pair-wise "
+              f"regardless): {', '.join(sorted(days.pending))}")
+        days = _graded_only(days)
+    s = summarise(days)
     if s["pending_days"]:
         print(f"{lbl}: {s['pending_days']} selected card(s) PENDING — excluded from realized growth, not re-paired")
     if s["ruin"]:
@@ -4335,6 +4360,12 @@ def main():
                     help="reproduce the pre-2026-10-26 SUPERSET replay pool "
                          "(no execution gate, no kickoff guard at the build "
                          "instant). Only for reproducing old numbers.")
+    ap.add_argument("--drop-pending-days", action="store_true",
+                    help="when a SELECTED card is unsettled (pending), exclude that "
+                         "day from both arms' realized growth instead of refusing the "
+                         "whole comparison. The paired bootstrap already excludes "
+                         "pending days pair-wise; this makes the summary match. "
+                         "Excluded days are printed, never silenced.")
     ap.add_argument("--warehouse-replay", action="store_true",
                     help="Phase-1 feasibility audit: can the live picks be "
                          "reconstructed from localdata at all? (research only)")
@@ -4429,6 +4460,8 @@ def main():
                     help="with --decision-parity: write the report atomically to PATH "
                          "instead of stdout, so a killed run cannot leave truncated JSON")
     args = ap.parse_args()
+    if args.drop_pending_days:
+        globals()["_DROP_PENDING_DAYS"] = True
 
     if args.decision_parity:
         reference = None

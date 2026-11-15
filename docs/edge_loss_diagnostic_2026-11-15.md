@@ -476,3 +476,128 @@ PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --ab live "a
 PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --battery-fixes                              # S1 rows now read true
 PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-08-27 --ab live "acca_veto=2.6:1.5:0.60"          # widen n on the only positive gate
 ```
+
+## 15. Wide-window verdict on the day-skip gate (43 candidate-days, --since 2026-08-27) + blowup-day anatomy
+
+Codespace ran the rerun list on the PRE-merge tree (git pull refused: no upstream) —
+so zero-cap specs there re-show the kill-all artifact. One spec was unaffected:
+`acca_veto=2.6:1.5:0.60` (cap 2.6 never hit the parse bug), giving the first
+wide-window reading:
+
+| window | A live | B veto | Δ log/day | P(B>A) |
+|---|---|---|---|---|
+| 25 candidate-days / 21 bet-days | +0.0311 (192%) | +0.0353 (164%) | +0.0043 | 45% |
+| 43 candidate-days / 38 bet-days | +0.0222 (232%) | −0.0113 (74%) | **−0.0335** | **12%** |
+
+`cards differ on 0/43 days` — the gate is 100% day-skip (vetoes convert bet-days to
+no-bet days; selection untouched). The short-window gain was one-day luck, as the
+leave-one-day-out concentrations warned. **S1+S4 dead at n=38.**
+
+**Why day-targeting fails (the "days that brought us here" question):** worst-day is
+0.75 = both 12.5% accas lose. Legs are disjoint across accas (barbell pairing consumes
+distinct legs; fixture-dedup since 2026-09-22) — two-loss days are four independent
+legs failing in the same SLATE REGIME (thin slates, away mid-prices), not one shared
+leg. And the blowup days are inseparable from the building days ex ante: skipping
+price-tagged days also skips the @2–@4 wins that drove 74→455%. The viable attack is
+dilution, not avoidance: `saturated_accas` is a live spec key, so the volume lever
+gets a paired bootstrap directly (`--ab live "saturated_accas=5"`). The only
+risk-shaped lever that touches blowup days is stake/day (worst-day scales linearly);
+the stake battery row shows growth flat 25→33% then decaying ≥50%.
+
+## 16. Post-fix codespace reads (main @ c0d912e) — the first real signal
+
+| probe | window | Δ log/day | P(B>A) | verdict |
+|---|---|---|---|---|
+| acca_veto=0:1.5:0.60 (clean S1: suspect leg at ANY price) | 25 cd / 21 bd | **+0.0580** (final 454% vs 192%, hit 49→62%, maxDD 58→25%) | **98%** | **CANDIDATE** — paired bootstrap one-sided, p10 +0.0129 p90 +0.0713; LODO +0.0287..+0.0523 = broad-based (no day >30%); cards differ 0/25 → still acts as drop (9 accas / 4 full days removed of 35/21), i.e. day-skip + partial-day skip of suspect accas. REQUIRES wide-window confirm (next run). |
+| acca_veto=0:1.4:0.70,side=AWAY (venue-aware away gate) | 25 cd | +0.0665 | 30% | **DEAD by coverage**: 1 bet-day / 1 acca in the whole window — away legs passing (odd<1.40 OR conf≥70) almost never pair up. Venue chapter CLOSED: §12's away toxicity loads entirely through the odd&conf cell that S1 already targets; blunt home restriction hurt (§14), away-gated pool can't field a card. |
+| saturated_accas=5 (volume dilution) | 43 cd / 38 bd | +0.0177 | 87% | NOT SHIP-GRADE YET — fires on only 2/43 days (pool rarely reaches 12 legs after faithful-pool pruning); 09-19 carries 67%; "2 coin flips". Probe softer trigger: volume_pool=8,saturated_accas=4. |
+| battery cross-checks | 25 cd | — | — | S1 row now reads +0.0580 (matches A/B); S1+min_prob60 ≡ always-on prob≥60 (+0.0168) strictly dominated by S1; S4 cap solo −0.0394 dead; UEFA-only S9 2 days, noise. |
+
+Pending confirmations before any engine admission change: (a) S1 on 43 cd window;
+(b) note semantic: veto = drop suspect accas, day goes no-bet if all dropped —
+live engine change would match (skip card), coverage cost 21→17 days.
+
+## 17. Wide-window confirmations — program conclusion (43 candidate-days / 38 bet-days)
+
+| lever | Δ log/day | P(B>A) | verdict |
+|---|---|---|---|
+| acca_veto=0:1.5:0.60 (S1 solo) | +0.0163 (318% vs 232%, hit 49→53%, maxDD 58→47%) | **67%** | LUCK-SHAPED — short-window P=98% was 2026-09-20-shaped (that day carries 92% of the wide-window diff; LODO low end +0.0007). Directionally positive on growth AND risk, uncertifiable at n=38. DO NOT SHIP. |
+| volume_pool=8,saturated_accas=4 | −0.0009 | 43% | DEAD — softer trigger adds 14 accas, hit FALLS 49→45%; 2026-10-11 carries 571%; sign flips on 4 LODO. Volume dilution needs a saturated-pool prerequisite the data rarely offers (2/43 days at 12, 7/43 at 8), and when it fires it doesn't pay. |
+
+**Program conclusion:** at the live-faithful replay ceiling (43 cd) NO admission, price-cap,
+venue, team, or volume lever separates from luck. Shipped from the diagnostic: only the
+DC-DNB settlement fix (a semantics bug, not a knob). Open items: (a) S1 consistency probe
+on --unfaithful-pool superset; (b) S1 SHADOW telemetry in live engine (log would-be-vetoed
+accas, settle separately) for out-of-sample evidence — the only evidence class that can
+certify a drop-rule, since replay is quote-history-capped. No admission change on
+retrospective luck-shaped deltas.
+
+## 18. S1 closed — three-sample ledger + final program statement
+
+S1 (`acca_veto=0:1.5:0.60`) across all three universes, largest last:
+
+| universe | cd / bd | Δ log/day | P(B>A) | carrier |
+|---|---|---|---|---|
+| faithful, 09-17→ | 25 / 21 | +0.0580 | 98% | 09-20 30% |
+| faithful, 08-27→ | 43 / 38 | +0.0163 | 67% | 09-20 92% |
+| superset (--unfaithful-pool), 08-27→ | 50 / 50 | **−0.0060** (median −0.0056, p90 +0.0015) | **16%** | 09-28 58% |
+
+Verdict: the 98% was 09-20 luck; both larger samples deflate it, and the superset
+is outright negative at the median. **S1 drop-rule is dead. Do not install it live or
+in engine code.** (Superset caveats noted: unbettable quotes dilute the A arm to
++0.0035/day; relative diff remains the doctrine metric.)
+
+**Final program statement (2026-11-15 slump diagnostic, complete):**
+- SHIPPED: DC-DNB settlement fix (semantics bug); harness instrumentation
+  (--battery-fixes, acca_veto with corrected cap<=0 semantics, teams=, side=).
+- NULL RESULTS (tested, luck-shaped or coverage-dead at all attainable n): suspect-leg
+  veto S1/S1+S4/S2, price cap S4, team filters, venue restriction/gate, volume dilution
+  (12 & 8 saturation), prob floors remain 4x-rejected tripwire.
+- MECHANISM: slump = variance concentrating in the odd>1.5 × conf<60 cell within the
+  same slate regime as the winning days; no ex-ante separator exists in 50 days of data.
+- STANDING RULE: no admission change without out-of-sample evidence (shadow ledger
+  remains optional but deprioritised — prior for S1 success now low across three
+  samples). Engine admission/selection unchanged going forward from main c0d912e.
+
+## 19. Regime boundary: post-Forebet (user correction 2026-11-15)
+
+The replay windows so far pooled TWO model regimes. Registry facts
+(localdata/edges_consensus.json): current `post_forebet_v1` contracts mined from
+**2026-06-13 → 2026-11-15**, split 2026-10-18; committed probability CSVs end
+2026-06-12; production recovery ran 2026-10-20 (run 39350936425). Therefore:
+
+- post-Forebet DATA era starts **2026-06-13** (live-capture era);
+- post-Forebet PRODUCTION era (current ensemble driving tickets) starts **2026-10-21**.
+- ALL prior A/B windows (08-27, 09-17) pool pre-recovery captures with post-recovery
+  ones. Both carrier days sit pre-recovery: 09-20 (92% of S1-wide) and 10-15
+  (41–316% of the other probes). §16–§18 verdicts are regime-pooled; re-judge on
+  --since 2026-10-21 (in-regime, carriers out by construction) and the full-era
+  ladder --since 2026-06-13 (maximal n, quote-coverage permitting).
+
+## 20. The replay is blind over the post-Forebet production era — and the era ladder needed a flag
+
+Codespace reads, main @ c0d912e:
+
+- **--since 2026-10-21 → 0 candidate-days.** The replay universe is built from
+  pick-pool captures (`picks_morning_*.json` / archived `picks_*.json`); committed
+  archives end mid-October (last ~2026-10-16; `localdata/archive/picks/2026/` holds
+  months 06–10 only). Post-recovery days keep `picks_*.txt` only, which the pool
+  reader deliberately ignores. **The slump regime (11-09→11-14) has ENGINE ACTUAL
+  coverage only — no counterfactual replay is possible for it from current data.**
+  All A/B verdicts in §14–§18 are pre-recovery-regime statements (strengthens the
+  nulls: no lever survived even the regime that built 455%).
+- **--since 2026-06-13 → 64 candidate-days** (June–Aug pools DO exist), but growth
+  nan'd: ~10 selected cards pending settlement in thin early-era coverage poisoned
+  the whole comparison ("A/B SKIPPED").
+- Harness fix (this branch): `--drop-pending-days` — opt-in; excludes pending-SELECTED
+  days from both arms' realized growth (the bootstrap already excluded them
+  pair-wise; default strict refusal unchanged; excluded days printed). Pinned by test.
+- Rerun list:
+  ```
+  PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-06-13 --drop-pending-days --ab live "acca_veto=0:1.5:0.60"
+  PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-06-13 --drop-pending-days --battery-fixes
+  ```
+- Structural gap for the forward regime: resume committing replayable pick-pool JSON
+  (morning capture) for post-10-21 days, or the only post-Forebet evidence will ever
+  be the descriptive ledger. If any gate is ever proposed again, shadow telemetry +
+  forward collection is the evidence path; retro replay cannot reach this regime.
