@@ -1673,6 +1673,21 @@ def _validate_admission(row, *, required=False):
     if any(digest(a.get("admission")) != digest(b.get("admission")) for a, b in zip(copied, row["candidates"])):
         raise ValueError("candidate admission differs from frozen evidence")
     for a in row["accas"]:
+        if a.get("probability_basis") == "product_assumes_cross_fixture_independence_not_validated":
+            # Legacy negative-EV prefix-search tickets: the joint basis is the
+            # model product and per-leg admission is recorded evidence, not a
+            # gate, so abstaining legs are valid here. The arithmetic still
+            # replays exactly; tampering raises like anywhere else.
+            p = math.prod(c["probability"] for c in a["legs"])
+            decision = _kelly(p, a["odds"])
+            kelly_fraction, log_growth = decision if decision is not None else (None, None)
+            if (a.get("probability_estimate") != p
+                    or a.get("model_probability_estimate") != p
+                    or a.get("estimated_ev") != p * a["odds"] - 1
+                    or a.get("model_kelly_fraction") != kelly_fraction
+                    or a.get("estimated_log_growth") != log_growth):
+                raise ValueError("ticket admission/joint risk arithmetic invalid")
+            continue
         if any(c["admission"]["status"] != "eligible" for c in a["legs"]):
             raise ValueError("unadmitted leg in new paper ticket")
         if a.get("probability_basis") == ADMISSION_JOINT_BASIS:

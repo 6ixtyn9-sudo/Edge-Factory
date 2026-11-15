@@ -71,6 +71,23 @@ def _decode_output(value: bytes) -> str:
     return value.decode("utf-8", errors="replace").strip()
 
 
+def _committed_localdata_files(repo: Path) -> frozenset:
+    """localdata paths tracked by the current commit (not the index)."""
+    result = _run(repo, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--", "localdata")
+    if result.returncode != 0:
+        return frozenset()
+    return frozenset(p for p in _decode_output(result.stdout).split("\0") if p)
+
+
+def _compact_receipts(repo: Path):
+    """Compaction tolerant of committed manifests whose shards are historical."""
+    tracked = _committed_localdata_files(repo)
+    return compact_ticket_receipts(
+        repo / "localdata",
+        committed=lambda p: p.relative_to(repo).as_posix() in tracked,
+    )
+
+
 def _parse_jsonl(payload: bytes, *, path: str) -> list[tuple[str, dict[str, Any], bytes]]:
     records: list[tuple[str, dict[str, Any], bytes]] = []
     for line_number, raw_line in enumerate(payload.splitlines(), start=1):
@@ -1136,7 +1153,7 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     except (OSError, ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
         print(f"::warning::autobets_ML receipt migration deferred; live lanes unchanged: {exc}")
     print(f"restore: compacting ticket receipts ({time.monotonic() - started:.2f}s)", flush=True)
-    compacted = compact_ticket_receipts(repo / "localdata")
+    compacted = _compact_receipts(repo)
     print(f"restore: complete ({time.monotonic() - started:.2f}s)", flush=True)
     return {
         "compacted_ticket_receipts": compacted,
@@ -1372,7 +1389,7 @@ def persist_localdata(
     # BEFORE staging, not merely be omitted from the state commit. The same
     # audit directory already survives cache restore and artifact upload.
     try:
-        compact_ticket_receipts(repo / "localdata")
+        _compact_receipts(repo)
         archived = archive_dated_artifacts(repo / "localdata")
         print(f"DATED_ARCHIVE rolled_over={len(archived)}", flush=True)
         _validate_dated_claims(repo)

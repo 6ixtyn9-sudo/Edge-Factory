@@ -1055,12 +1055,18 @@ def write_ticket_receipt(path, raw):
     _write_ticket_receipt_stored(path, encode_ticket_receipt(path, raw))
 
 
-def compact_ticket_receipts(localdata):
+def compact_ticket_receipts(localdata, *, committed=None):
     """Relocate legacy receipts without editing their payloads or hashes.
 
     Canonical evidence wins on layout collisions. Different legacy evidence
     is retained separately, not silently overwritten. Frozen/invalid collisions
     are visible to parity as conflicts; disposable draft collisions are archived.
+
+    committed: optional predicate path->bool identifying manifests already in
+    the current commit. A committed manifest whose shards are unavailable is
+    historical conflict evidence and is retained with a warning; a manifest
+    written by THIS run must stay fatal, so a damaged fresh write still blocks
+    the state commit that would entrench it.
     """
     import hashlib
     import json
@@ -1109,7 +1115,19 @@ def compact_ticket_receipts(localdata):
             with source.open("rb") as handle:
                 prefix = handle.read(len(_TICKET_RECEIPT_PARTS_MAGIC))
             if prefix == _TICKET_RECEIPT_PARTS_MAGIC:
-                _ticket_receipt_stored_bytes(source, source.read_bytes())
+                try:
+                    _ticket_receipt_stored_bytes(source, source.read_bytes())
+                except ValueError as exc:
+                    historical = (committed is not None and committed(source)
+                                  and isinstance(exc.__cause__, FileNotFoundError))
+                    if not historical:
+                        raise
+                    # A committed manifest whose shards predate the lean
+                    # baseline can never be repaired by this run; re-raising
+                    # would block every state commit forever. Retain the
+                    # manifest as visible conflict evidence, keep going.
+                    print(f"::warning::Ticket decision receipt retained as conflict; "
+                          f"committed shards unavailable: {source.name}")
     return moved
 
 

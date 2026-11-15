@@ -226,8 +226,21 @@ def test_all_retained_frozen_receipts_replay_without_rewriting_history(tmp_path)
     assert paths, "neither production receipts nor the hermetic corpus are on disk"
     import hashlib
     before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
-    history = mp.receipts(root)
-    assert history and all(hashlib.sha256(p.read_bytes()).hexdigest() == value for p, value in before.items())
+    block = Path(root) / f"{mp.PREFIX}_integrity_block.json"
+    if block.exists():
+        # A retained evidence conflict blocks the PAPER lane by design; the
+        # marker is the mitigation of record, not a replay failure. Every
+        # record must still validate on its own, and nothing may be rewritten.
+        with pytest.raises(ValueError, match="evidence conflict"):
+            mp.receipts(root)
+        import json
+        for p in paths:
+            row = json.loads(p.read_bytes())
+            mp.validate_record(row, row["date"])
+    else:
+        history = mp.receipts(root)
+        assert history
+    assert all(hashlib.sha256(p.read_bytes()).hexdigest() == value for p, value in before.items())
 
 
 def test_joint_context_solver_failure_is_closed_not_a_temperature_fallback(monkeypatch):

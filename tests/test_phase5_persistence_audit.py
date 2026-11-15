@@ -1328,3 +1328,36 @@ def test_ticket_receipt_storage_rejects_excess_parts(tmp_path, monkeypatch):
     # 150 bytes requires 3 parts (> max of 2)
     with pytest.raises(ValueError, match="exceeds maximum storage limit of 2 parts"):
         util._ticket_receipt_storage(path, b"x" * 150)
+
+
+def test_persist_retains_committed_manifest_whose_shards_predate_the_baseline(tmp_path, monkeypatch):
+    """A manifest already in git with unavailable shards is retained conflict
+    evidence; it must not block the state commit, and it never becomes whole."""
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    remote = tmp_path / 'origin.git'
+    _git(tmp_path, 'init', '--bare', '-q', '--initial-branch=main', str(remote))
+    _git(repo, 'remote', 'add', 'origin', str(remote))
+    _git(repo, 'push', '-qu', 'origin', 'main')
+    path = ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    util.write_ticket_receipt(path, _large_decision_blob())
+    manifest = path.read_bytes()
+    shards = sorted(path.parent.glob(path.name + '.part-*'))
+    assert shards
+    _git(repo, 'add', path.relative_to(repo).as_posix())  # manifest tracked; shards stay out
+    _git(repo, 'commit', '-qm', 'tracked manifest without shards')
+    _git(repo, 'push', '-q', 'origin', 'main')
+    for shard in shards:
+        shard.unlink()
+    (repo / 'localdata/auto_tickets_state.json').write_text(
+        json.dumps({'bank': 123, 'history': [], 'open_slips': [], 'frozen_by_date': {}}))
+    result = _persistence_module().persist_localdata(repo, run_id='historical-conflict')
+    assert result['status'] == 'pushed', result
+    assert path.read_bytes() == manifest
+    assert not [f for f in _git(repo, 'ls-tree', '-r', '--name-only', 'HEAD').stdout.splitlines()
+                if '.part-' in f]
+    with pytest.raises(ValueError, match='invalid multipart ticket receipt'):
+        ticket_receipt_bytes(path)  # conflicted evidence, never silently whole

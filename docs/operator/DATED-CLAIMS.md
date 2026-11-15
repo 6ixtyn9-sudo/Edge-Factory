@@ -91,3 +91,4 @@ It also says nothing about the **scope** of a measurement, which is a
 separate failure: a scan reporting "clean" from inside a six-commit slice
 of a 1,528-commit history is accurate, reproducible, and wrong in the way
 that matters. Provenance is this file's job; scope is ticket (k).
+| `tests/test_ml_paper_admission.py` | retained 2026-11-13/14 autobets_ML receipts ship legacy product-basis accas whose legs carry abstaining informational admission | `localdata/phase5_reconciliation/ml_paper_receipts/autobets_ML_2026-11-13_20261113T132934698154Z.json` |
