@@ -84,6 +84,12 @@ _be_cached = 0
 # 2026-11-15 that was two instant 429s -> cooldown -> zero rows).
 _be_relay_fetches = 0
 _be_relay_mode = False
+# Configured relays that returned nothing for a refused URL. ``public_relay``
+# deliberately skips per-relay failures without reporting causes, so without a
+# counter here a rescue that engaged-but-got-nothing looks exactly like a
+# rescue that never ran - the 2026-11-15 intraday log showed both 429 lines
+# and no relay line, and there was no field to tell the two situations apart.
+_be_relay_misses = 0
 # Row-level identity refusals for the current run, keyed by reason. Reset by
 # reset_fetch_count() and surfaced through run_stats() so a refused row is
 # visible in the run receipt (silently dropped prices are the failure mode the
@@ -137,6 +143,8 @@ def run_stats() -> dict[str, int | bool]:
         "be_cooling_down": _be_cooling_down,
         "be_cached": _be_cached,
         "be_relay_fetches": _be_relay_fetches,
+        "be_relay_misses": _be_relay_misses,
+        "be_relay_configured": public_relay.configured(),
         "be_relay_mode": _be_relay_mode,
         "be_rows_rejected": sum(_be_rows_rejected.values()),
         "be_rows_rejected_reasons": dict(_be_rows_rejected),
@@ -152,6 +160,7 @@ def request_stats() -> dict[str, int | bool]:
     """
     return {"requests": _request_count,
             "relay_fetches": _be_relay_fetches,
+            "relay_misses": _be_relay_misses,
             "relay_mode": _be_relay_mode,
             "market_requests": _market_requests,
             "market_budget_stop": _market_budget_stop}
@@ -198,7 +207,7 @@ def _relay_rescue(url: str, min_interval: float | None = None) -> str | None:
     site, not to one transport. Returns ``None`` when no relay is configured
     or every relay failed; the caller then keeps its original behavior.
     """
-    global _be_relay_fetches, _be_relay_mode, _LAST_RESPONSE_META, _LAST_RESPONSE_BYTES
+    global _be_relay_fetches, _be_relay_misses, _be_relay_mode, _LAST_RESPONSE_META, _LAST_RESPONSE_BYTES
     if not public_relay.configured():
         return None
     for relay_name, raw in public_relay.fetches(url):
@@ -221,6 +230,17 @@ def _relay_rescue(url: str, min_interval: float | None = None) -> str | None:
             file=sys.stderr,
         )
         return raw.decode("utf-8", "replace")
+    # The loop ended without serving the page.
+    _be_relay_misses += 1
+    if _be_relay_misses == 1:
+        # One note per run: the relay was configured and asked, yet no relay
+        # returned the page (relay-side errors, upstream refusal, or
+        # provenance mismatch are all swallowed by public_relay).
+        print(
+            f"  betexplorer_odds: relay configured but no relay served {url}; "
+            "keeping the direct-egress refusal policy",
+            file=sys.stderr,
+        )
     return None
 
 
@@ -1668,7 +1688,7 @@ def betexplorer_odds_rows_for_pick(
 def reset_fetch_count():
     """Reset all run-scoped state before one enrichment run."""
     global _fetch_count, _last_request_time, _be_429, _be_cooling_down, _be_cached, _LAST_RESPONSE_BYTES, LAST_MATCH_DETAIL
-    global _request_count, _market_requests, _market_budget_stop, _be_relay_fetches, _be_relay_mode
+    global _request_count, _market_requests, _market_budget_stop, _be_relay_fetches, _be_relay_mode, _be_relay_misses
     _fetch_count = 0
     _detail_attempted.clear()
     _last_request_time = 0.0
@@ -1677,6 +1697,7 @@ def reset_fetch_count():
     _be_cached = 0
     _be_relay_fetches = 0
     _be_relay_mode = False
+    _be_relay_misses = 0
     _be_rows_rejected.clear()
     _request_count = 0
     _market_requests = 0
