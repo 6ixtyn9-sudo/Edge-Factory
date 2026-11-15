@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 48,
-  "captured_at": "2026-11-15T07:42:38+00:00",
+  "captured_at": "2026-11-15T10:28:52+00:00",
   "date": "2026-11-15",
   "due_reasons": {},
   "errors": [],
@@ -22,8 +22,9 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "priced": 5,
-    "retry_cooldown": 43
+    "retry_cooldown": 42
   },
   "skipped": [
     "SURINAM|ESWATINI (retry cooldown (6h after failed attempt))",
@@ -49,7 +50,7 @@
     "SPORTIST SVOGE|SPARTAK PLEVEN (retry cooldown (6h after failed attempt))",
     "Ravenna|Forl\u00ec (retry cooldown (6h after failed attempt))",
     "Cittadella|Folgore Caratese (retry cooldown (6h after failed attempt))",
-    "Bohemians 1905 II|Kr\u00e1l\u016fv Dv\u016fr (retry cooldown (6h after failed attempt))",
+    "Bohemians 1905 II|Kr\u00e1l\u016fv Dv\u016fr (kickoff already passed)",
     "Pescara|Sambenedettese (retry cooldown (6h after failed attempt))",
     "UD Ibiza|FC Cartagena (retry cooldown (6h after failed attempt))",
     "Defensor Sporting|Pe\u00f1arol (retry cooldown (6h after failed attempt))",

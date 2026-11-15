@@ -1,5 +1,5 @@
 {
-  "attempted": 14,
+  "attempted": 18,
   "attempted_fixtures": [
     {
       "avg_p": 87.0,
@@ -63,16 +63,6 @@
     },
     {
       "avg_p": 75.0,
-      "away": "ETAR VEL. TARNOBO",
-      "date": "2026-11-15",
-      "home": "DOBRUDZHA 1919",
-      "league": "BG2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 75.0,
       "away": "SABADELL",
       "date": "2026-11-15",
       "home": "ELDENSE",
@@ -122,6 +112,56 @@
       "w_score": 0.574
     },
     {
+      "avg_p": 72.0,
+      "away": "ACADEMICA",
+      "date": "2026-11-15",
+      "home": "PORTIMONENSE",
+      "league": "PT2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 71.0,
+      "away": "IKORODU UNITED",
+      "date": "2026-11-15",
+      "home": "ENYIMBA INTERNATIO",
+      "league": "NG1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 71.0,
+      "away": "NASARAWA",
+      "date": "2026-11-15",
+      "home": "KATSINA",
+      "league": "NG1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 71.0,
+      "away": "ENUGU RANGERS INTE",
+      "date": "2026-11-15",
+      "home": "NIGER TORNADOES",
+      "league": "NG1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 70.50036000360002,
+      "away": "Vado",
+      "date": "2026-11-15",
+      "home": "Spezia",
+      "league": "Serie C: Girone B",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
       "avg_p": 58.68590534003604,
       "away": "Czech Republic",
       "date": "2026-11-15",
@@ -142,27 +182,27 @@
       "w_score": 0.5405
     }
   ],
-  "be_429": 0,
-  "be_cached": 2,
-  "be_cooling_down": false,
+  "be_429": 2,
+  "be_cached": 13,
+  "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 2,
-  "candidate_fixtures": 48,
-  "captured_at": "2026-11-15T07:29:13.522497+00:00",
+  "cache_only": 13,
+  "candidate_fixtures": 45,
+  "captured_at": "2026-11-15T10:19:53.381604+00:00",
   "date": "2026-11-15",
-  "deferred_fixtures": 34,
+  "deferred_fixtures": 27,
   "errors": [],
-  "fixtures_with_rows": 9,
+  "fixtures_with_rows": 12,
   "market_budget_stop": false,
-  "market_requests": 35,
+  "market_requests": 12,
   "match_detail": {
-    "bookmakers": 116,
+    "bookmakers": 141,
     "challenge_pages": 0,
-    "fixtures": 7,
-    "market_rows": 303,
-    "markets": 42,
-    "named_rows": 303,
+    "fixtures": 10,
+    "market_rows": 358,
+    "markets": 56,
+    "named_rows": 358,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -171,7 +211,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 12,
+  "network_attempted": 5,
   "quoted_fixtures": [
     {
       "avg_p": 87.0,
@@ -244,6 +284,36 @@
       "w_score": 0.574
     },
     {
+      "avg_p": 72.0,
+      "away": "ACADEMICA",
+      "date": "2026-11-15",
+      "home": "PORTIMONENSE",
+      "league": "PT2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 71.0,
+      "away": "NASARAWA",
+      "date": "2026-11-15",
+      "home": "KATSINA",
+      "league": "NG1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 70.50036000360002,
+      "away": "Vado",
+      "date": "2026-11-15",
+      "home": "Spezia",
+      "league": "Serie C: Girone B",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
       "avg_p": 58.68590534003604,
       "away": "Czech Republic",
       "date": "2026-11-15",
@@ -264,8 +334,8 @@
       "w_score": 0.5405
     }
   ],
-  "requests": 58,
-  "rows": 27,
+  "requests": 22,
+  "rows": 36,
   "schema": 1,
   "status": "ok"
 }
