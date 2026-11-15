@@ -45,6 +45,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 from edgefactory.identity import club_initial_words_for_comparison, squad_marker_mismatch
+from edgefactory.sources import public_relay
 from edgefactory.util import strip_squad_markers
 
 BASE = "https://www.betexplorer.com"
@@ -75,6 +76,14 @@ CACHE_FRESHNESS_H = float(os.environ.get("EDGE_FACTORY_BE_CACHE_FRESHNESS_H", "2
 _be_429 = 0
 _be_cooling_down = False
 _be_cached = 0
+# Operator-relay rescue state. _be_relay_fetches counts pages obtained via
+# EDGE_FACTORY_RELAY_URLS after the direct egress IP was refused (429/403);
+# _be_relay_mode flips on the first successful rescue so the rest of the run
+# asks the relay FIRST instead of burning another refused direct attempt on
+# every URL (a shared CI runner IP stays throttled for the whole run, and on
+# 2026-11-15 that was two instant 429s -> cooldown -> zero rows).
+_be_relay_fetches = 0
+_be_relay_mode = False
 # Row-level identity refusals for the current run, keyed by reason. Reset by
 # reset_fetch_count() and surfaced through run_stats() so a refused row is
 # visible in the run receipt (silently dropped prices are the failure mode the
@@ -127,14 +136,23 @@ def run_stats() -> dict[str, int | bool]:
         "be_429": _be_429,
         "be_cooling_down": _be_cooling_down,
         "be_cached": _be_cached,
+        "be_relay_fetches": _be_relay_fetches,
+        "be_relay_mode": _be_relay_mode,
         "be_rows_rejected": sum(_be_rows_rejected.values()),
         "be_rows_rejected_reasons": dict(_be_rows_rejected),
     }
 
 
 def request_stats() -> dict[str, int | bool]:
-    """Network-attempt counters for the run (priced lane + tab requests)."""
+    """Network-attempt counters for the run (priced lane + tab requests).
+
+    ``requests`` counts direct-egress attempts only; ``relay_fetches`` counts
+    pages the operator relay fetched on our behalf, so the receipt keeps the
+    two egress paths distinguishable.
+    """
     return {"requests": _request_count,
+            "relay_fetches": _be_relay_fetches,
+            "relay_mode": _be_relay_mode,
             "market_requests": _market_requests,
             "market_budget_stop": _market_budget_stop}
 
@@ -165,6 +183,47 @@ def _throttle(min_interval: float | None = None):
     _last_request_time = time.monotonic()
 
 
+def _relay_rescue(url: str, min_interval: float | None = None) -> str | None:
+    """Fetch one page through the operator relays after direct egress failed.
+
+    A 429/403 on a shared CI runner IP is a statement about the ADDRESS, not
+    the request: the site's edge refused that IP. The operator relays egress
+    from independent addresses, so the same URL is tried once per configured
+    relay. Must be called holding ``_request_lock`` (from ``_fetch``).
+
+    Semantics preserved from the direct path: only a provenance-exact HTTP 200
+    body is returned (``public_relay.fetches`` rejects anything else), body
+    bytes land in ``_LAST_RESPONSE_BYTES`` like any other page, and the relay
+    attempt is throttled the same way — the politeness budget is owed to the
+    site, not to one transport. Returns ``None`` when no relay is configured
+    or every relay failed; the caller then keeps its original behavior.
+    """
+    global _be_relay_fetches, _be_relay_mode, _LAST_RESPONSE_META, _LAST_RESPONSE_BYTES
+    if not public_relay.configured():
+        return None
+    for relay_name, raw in public_relay.fetches(url):
+        if not raw:
+            continue
+        _throttle(min_interval)
+        _be_relay_fetches += 1
+        _be_relay_mode = True
+        _LAST_RESPONSE_BYTES = raw
+        _LAST_RESPONSE_META = {
+            "url": url,
+            "http_status": 200,
+            "response_bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "via": f"relay:{relay_name}",
+        }
+        print(
+            f"  betexplorer_odds: direct egress refused this run; "
+            f"relay {relay_name} served {len(raw)} bytes for {url}",
+            file=sys.stderr,
+        )
+        return raw.decode("utf-8", "replace")
+    return None
+
+
 def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int = 20,
            *, min_interval: float | None = None) -> str:
     """Fetch one URL, single-flight, with respectful 429 handling.
@@ -173,6 +232,13 @@ def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int 
     for 60 seconds. An explicit Retry-After header wins (including values over
     60 seconds). The second 429 trips run-scoped cooling and raises before any
     third request can be attempted.
+
+    Refusal-aware egress: an HTTP 429 or 403 means the site edge refused this
+    egress address. When the operator relays are configured the URL is tried
+    through them once before the refusal is treated as authoritative; after
+    the first successful rescue the relay is tried FIRST for the rest of the
+    run, so a poisoned runner IP no longer adds a refused direct attempt
+    (and its 30-60s penalty) in front of every remaining page.
     """
     global _be_429, _be_cooling_down, _LAST_RESPONSE_META, _LAST_RESPONSE_BYTES, _request_count
     headers = {"User-Agent": UA}
@@ -184,6 +250,13 @@ def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int 
         for attempt in range(retries):
             if _be_cooling_down:
                 raise BetExplorerCoolingDown("betexplorer_odds: run cooling down after 2 HTTP 429 responses")
+            if _be_relay_mode:
+                # The direct egress address already failed this run; ask the
+                # relay first. A relay miss falls through to direct handling,
+                # which keeps the 404 -> "" contract and the refusal ladder.
+                rescued = _relay_rescue(url, min_interval)
+                if rescued is not None:
+                    return rescued
             _throttle(min_interval)
             _request_count += 1
             try:
@@ -206,9 +279,18 @@ def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int 
                     "sha256": None,
                 }
                 if exc.code == 403:
+                    rescued = _relay_rescue(url, min_interval)
+                    if rescued is not None:
+                        return rescued
                     raise BetExplorerChallenge("betexplorer_odds: HTTP 403") from exc
                 if exc.code == 429:
                     _be_429 += 1
+                    # A 429 refuses this egress address, not this page; relay
+                    # rescue MAY serve it. Rescue does not reset the refusal
+                    # count: be_429 still describes what the site showed us.
+                    rescued = _relay_rescue(url, min_interval)
+                    if rescued is not None:
+                        return rescued
                     if _be_429 >= 2:
                         _be_cooling_down = True
                         print(
@@ -1586,13 +1668,15 @@ def betexplorer_odds_rows_for_pick(
 def reset_fetch_count():
     """Reset all run-scoped state before one enrichment run."""
     global _fetch_count, _last_request_time, _be_429, _be_cooling_down, _be_cached, _LAST_RESPONSE_BYTES, LAST_MATCH_DETAIL
-    global _request_count, _market_requests, _market_budget_stop
+    global _request_count, _market_requests, _market_budget_stop, _be_relay_fetches, _be_relay_mode
     _fetch_count = 0
     _detail_attempted.clear()
     _last_request_time = 0.0
     _be_429 = 0
     _be_cooling_down = False
     _be_cached = 0
+    _be_relay_fetches = 0
+    _be_relay_mode = False
     _be_rows_rejected.clear()
     _request_count = 0
     _market_requests = 0

@@ -92,3 +92,5 @@ separate failure: a scan reporting "clean" from inside a six-commit slice
 of a 1,528-commit history is accurate, reproducible, and wrong in the way
 that matters. Provenance is this file's job; scope is ticket (k).
 | `tests/test_ml_paper_admission.py` | retained 2026-11-13/14 autobets_ML receipts ship legacy product-basis accas whose legs carry abstaining informational admission | `localdata/phase5_reconciliation/ml_paper_receipts/autobets_ML_2026-11-13_20261113T132934698154Z.json` |
+| `src/edgefactory/sources/betminer.py` | the RapidAPI gateway de-routed `/matches/{date}` on 2026-11-09 - eight consecutive routing-404 probe receipts ending 2026-11-16 - so the dated board moved to the published `/value-bets/{date}` (+range form); comment cites the receipt streak and the 2026-11-14 contract verification | `localdata/betminer_probe_2026-11-15.json` |
+| `tests/test_betminer.py` | the capture probe order changed on 2026-11-14 because the gateway de-routed `/matches/{date}` (2026-11-09 receipt streak) in favour of the published `/value-bets/{date}` board | `localdata/betminer_probe_2026-11-15.json` |
