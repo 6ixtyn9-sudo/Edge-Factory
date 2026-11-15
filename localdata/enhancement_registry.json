@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-14",
+ "generated_at": "2026-11-15",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
    "hits": 17,
-   "inv_price_sum": 14.827179948979396,
+   "inv_price_sum": 15.247348016206287,
    "multi_n": 0,
-   "n": 23,
+   "n": 24,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -83,9 +83,10 @@
     "2026-11-08|Dallas vs Colorado Rapids|away_over_05@v1",
     "2026-11-09|CS Herediano vs Inter San Carlos|away_over_05@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|away_over_05@v1",
-    "2026-11-13|Curacao vs Panama|away_over_05@v1"
+    "2026-11-13|Curacao vs Panama|away_over_05@v1",
+    "2026-11-14|Ecuador vs Costa Rica|away_over_05@v1"
    ],
-   "profit": 2.417,
+   "profit": 1.417,
    "records": [
     {
      "away": "Mixco",
@@ -739,6 +740,35 @@
      },
      "recorded_at": "2026-11-13T23:34:52.064769+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Costa Rica",
+     "away_key": "costarica",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6576,
+     "date": "2026-11-14",
+     "hit": false,
+     "home": "Ecuador",
+     "home_key": "ecuador",
+     "league": "Friendly International",
+     "match": "Ecuador vs Costa Rica",
+     "multi_source": false,
+     "price": 2.38,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-11-13T22:45:34.257496+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-14T00:46:48+02:00",
+      "kickoff": "2026-11-14T00:00:00+00:00",
+      "league": "Friendly International",
+      "price": 2.38,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-15T05:21:38.144736+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }
@@ -1723,9 +1753,9 @@
   },
   "away_under_25@v1": {
    "hits": 12,
-   "inv_price_sum": 8.96544465137646,
+   "inv_price_sum": 9.632111318043126,
    "multi_n": 0,
-   "n": 15,
+   "n": 16,
    "processed": [
     "2026-10-04|Portugal vs Norway|away_under_25@v1",
     "2026-09-14|Inter vs Udinese|away_under_25@v1",
@@ -1773,9 +1803,10 @@
     "2026-10-25|Colorado Rapids vs Vancouver Whitecaps|away_under_25@v1",
     "2026-10-25|Sydney FC vs Adelaide United|away_under_25@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|away_under_25@v1",
-    "2026-11-08|Austin vs Portland Timbers|away_under_25@v1"
+    "2026-11-08|Austin vs Portland Timbers|away_under_25@v1",
+    "2026-11-14|Guatemala vs Canada|away_under_25@v1"
    ],
-   "profit": 5.45,
+   "profit": 4.45,
    "records": [
     {
      "away": "Norway",
@@ -2159,6 +2190,35 @@
      },
      "recorded_at": "2026-11-08T22:51:26.676304+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Canada",
+     "away_key": "canada",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6608,
+     "date": "2026-11-14",
+     "hit": false,
+     "home": "Guatemala",
+     "home_key": "guatemala",
+     "league": "CONCACAF Nations League",
+     "match": "Guatemala vs Canada",
+     "multi_source": false,
+     "price": 1.5,
+     "price_context": {
+      "book": "pokerstars",
+      "captured_at": "2026-11-13T22:45:44.040127+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-14T00:46:48+02:00",
+      "kickoff": "2026-11-14T02:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.5,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-15T05:21:38.113555+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
     }
@@ -4692,10 +4752,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 20,
-   "inv_price_sum": 20.040480491441244,
+   "hits": 21,
+   "inv_price_sum": 20.632196467772605,
    "multi_n": 0,
-   "n": 31,
+   "n": 32,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -4767,9 +4827,10 @@
     "2026-11-08|Charleston Battery vs Hartford Athletic|home_under_25@v1",
     "2026-11-08|Dallas vs Colorado Rapids|home_under_25@v1",
     "2026-11-09|CS Herediano vs Inter San Carlos|home_under_25@v1",
-    "2026-11-09|Quer\u00e9taro vs Puebla|home_under_25@v1"
+    "2026-11-09|Quer\u00e9taro vs Puebla|home_under_25@v1",
+    "2026-11-14|Ecuador vs Costa Rica|home_under_25@v1"
    ],
-   "profit": -0.956,
+   "profit": -0.266,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -5657,6 +5718,35 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Costa Rica",
+     "away_key": "costarica",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7265,
+     "date": "2026-11-14",
+     "hit": true,
+     "home": "Ecuador",
+     "home_key": "ecuador",
+     "league": "Friendly International",
+     "match": "Ecuador vs Costa Rica",
+     "multi_source": false,
+     "price": 1.69,
+     "price_context": {
+      "book": "pointsbet.com.au",
+      "captured_at": "2026-11-13T22:45:34.257496+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-14T00:46:48+02:00",
+      "kickoff": "2026-11-14T00:00:00+00:00",
+      "league": "Friendly International",
+      "price": 1.69,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-15T05:21:38.152682+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -5864,10 +5954,10 @@
    "status_since": "2026-10-24"
   },
   "match_over_15@v1": {
-   "hits": 44,
-   "inv_price_sum": 47.96675084076784,
-   "multi_n": 8,
-   "n": 59,
+   "hits": 45,
+   "inv_price_sum": 48.360451628169415,
+   "multi_n": 9,
+   "n": 60,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -5951,9 +6041,10 @@
     "2026-11-09|Antigua GFC vs Malacateco|match_over_15@v1",
     "2026-11-09|CS Herediano vs Inter San Carlos|match_over_15@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|match_over_15@v1",
-    "2026-11-13|Llaneros vs Chico|match_over_15@v1"
+    "2026-11-13|Llaneros vs Chico|match_over_15@v1",
+    "2026-11-14|Ecuador vs Costa Rica|match_over_15@v1"
    ],
-   "profit": -1.745,
+   "profit": -0.205,
    "records": [
     {
      "away": "Aston Villa",
@@ -6886,6 +6977,25 @@
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Costa Rica",
+     "away_key": "costarica",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7738,
+     "date": "2026-11-14",
+     "hit": true,
+     "home": "Ecuador",
+     "home_key": "ecuador",
+     "league": "Friendly International",
+     "match": "Ecuador vs Costa Rica",
+     "multi_source": true,
+     "price": 2.54,
+     "price_context": {},
+     "recorded_at": "2026-11-15T05:21:38.160662+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -6894,11 +7004,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 354,
+   "hits": 355,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 350.8327553401765,
+   "inv_price_sum": 351.5470410544622,
    "multi_n": 103,
-   "n": 539,
+   "n": 540,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -7682,9 +7792,10 @@
     "2026-11-12|Czech Republic vs Spain|match_over_25@v1",
     "2026-11-12|San Marino vs Belarus|match_over_25@v1",
     "2026-11-12|England vs Croatia|match_over_25@v1",
-    "2026-11-13|Llaneros vs Chico|match_over_25@v1"
+    "2026-11-13|Llaneros vs Chico|match_over_25@v1",
+    "2026-11-14|Norway vs Wales|match_over_25@v1"
    ],
-   "profit": 6.267,
+   "profit": 6.667,
    "records": [
     {
      "away": "Spartak Varna",
@@ -16284,6 +16395,35 @@
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Wales",
+     "away_key": "wales",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.68,
+     "date": "2026-11-14",
+     "hit": true,
+     "home": "Norway",
+     "home_key": "norway",
+     "league": "UEFA Nations League",
+     "match": "Norway vs Wales",
+     "multi_source": false,
+     "price": 1.4,
+     "price_context": {
+      "book": "William Hill",
+      "captured_at": "2026-11-13T22:45:29.192121+00:00",
+      "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+      "decision_at": "2026-11-14T00:46:48+02:00",
+      "kickoff": "2026-11-14T17:00:00+00:00",
+      "league": "UEFA Nations League",
+      "price": 1.4,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-15T05:21:38.133562+00:00",
+     "rule": "pfc_4a3e5fbac72b2ebef11632f0",
+     "source": "theoddsapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -17355,9 +17495,9 @@
   },
   "match_under_35@v1": {
    "hits": 10,
-   "inv_price_sum": 12.627687704997502,
+   "inv_price_sum": 13.317818829911236,
    "multi_n": 0,
-   "n": 22,
+   "n": 23,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -17380,9 +17520,10 @@
     "2026-11-08|Sacramento Republic vs El Paso Locomotive|match_under_35@v1",
     "2026-11-08|Charleston Battery vs Hartford Athletic|match_under_35@v1",
     "2026-11-08|Austin vs Portland Timbers|match_under_35@v1",
-    "2026-11-09|Quer\u00e9taro vs Puebla|match_under_35@v1"
+    "2026-11-09|Quer\u00e9taro vs Puebla|match_under_35@v1",
+    "2026-11-14|Guatemala vs Canada|match_under_35@v1"
    ],
-   "profit": -1.991,
+   "profit": -2.991,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -18019,6 +18160,35 @@
      },
      "recorded_at": "2026-11-09T23:07:17.528287+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Canada",
+     "away_key": "canada",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6193,
+     "date": "2026-11-14",
+     "hit": false,
+     "home": "Guatemala",
+     "home_key": "guatemala",
+     "league": "CONCACAF Nations League",
+     "match": "Guatemala vs Canada",
+     "multi_source": false,
+     "price": 1.449,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-13T22:45:44.040127+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-14T00:46:48+02:00",
+      "kickoff": "2026-11-14T02:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.449,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-15T05:21:38.122268+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
     }

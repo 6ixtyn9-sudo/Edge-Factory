@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-14T10:08:58",
+  "generated_at": "2026-11-15T07:26:19",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 246.093273,
-  "multiple": 2.46093273,
+  "bank_pct": 257.782819,
+  "multiple": 2.57782819,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 73,
+  "bet_days": 74,
   "accas": {
-    "wins": 84,
-    "losses": 63
+    "wins": 85,
+    "losses": 64
   },
   "open_slips": [
     {
-      "date": "2026-11-14",
-      "staked_pct": 61.5233
+      "date": "2026-11-15",
+      "staked_pct": 64.4457
     }
   ],
   "events": [
@@ -2487,6 +2487,87 @@
       ],
       "bank_pct": 246.0933,
       "close_pct": 246.0932
+    },
+    {
+      "date": "2026-11-14",
+      "staked_pct": 61.5233,
+      "returned_pct": 73.2128,
+      "accas": [
+        {
+          "odds": 2.38,
+          "won": true,
+          "stake_pct": 30.7617,
+          "returned_pct": 73.2128,
+          "legs": [
+            {
+              "match": "Sweden vs Bosnia and Herzegovina",
+              "pick": "HOME",
+              "odds": 1.5495,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Sweden",
+                "Bosnia and Herzegovina"
+              ]
+            },
+            {
+              "match": "Gateshead vs Barrow",
+              "pick": "AWAY",
+              "odds": 1.5376,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Gateshead",
+                "Barrow"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.45,
+          "won": false,
+          "stake_pct": 30.7616,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Salford City vs Northampton Town",
+              "pick": "HOME",
+              "odds": 1.578,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Salford City",
+                "Northampton Town"
+              ]
+            },
+            {
+              "match": "Portugal vs Denmark",
+              "pick": "HOME",
+              "odds": 1.55,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-14",
+                "Portugal",
+                "Denmark"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 257.7828,
+      "close_pct": 257.7827
     }
   ]
 }

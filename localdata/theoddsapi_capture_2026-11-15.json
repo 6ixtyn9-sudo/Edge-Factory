@@ -1,0 +1,118 @@
+{
+  "added": 50,
+  "attempted": 3,
+  "attempted_fixtures": [
+    {
+      "away": "San Marino",
+      "date": "2026-11-15",
+      "home": "Finland",
+      "kickoff": "2026-11-15T17:00:00Z",
+      "league": "UEFA Nations League"
+    },
+    {
+      "away": "CZECH REPUBLIC",
+      "date": "2026-11-15",
+      "home": "CROATIA",
+      "kickoff": "19:45",
+      "league": "EUN"
+    },
+    {
+      "away": "Sabadell",
+      "date": "2026-11-15",
+      "home": "Eldense",
+      "kickoff": "2026-11-15T17:30:00Z",
+      "league": "La Liga 2"
+    }
+  ],
+  "candidate_fixtures": 48,
+  "captured_at": "2026-11-15T05:14:23+00:00",
+  "date": "2026-11-15",
+  "due_reasons": {
+    "first_at": 1,
+    "scope_at": 2
+  },
+  "errors": [],
+  "fixtures_with_rows": 1,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [
+    {
+      "away": "San Marino",
+      "date": "2026-11-15",
+      "home": "Finland",
+      "kickoff": "2026-11-15T17:00:00Z",
+      "league": "UEFA Nations League"
+    }
+  ],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 50,
+  "schema": 1,
+  "skip_reasons": {
+    "priced": 5,
+    "retry_cooldown": 40
+  },
+  "skipped": [
+    "SURINAM|ESWATINI (retry cooldown (6h after failed attempt))",
+    "FRANCE|TURKEY (retry cooldown (6h after failed attempt))",
+    "DUNFERMLINE|ARBROATH (retry cooldown (6h after failed attempt))",
+    "GODOY CRUZ|TRISTAN SUAREZ (retry cooldown (6h after failed attempt))",
+    "DOBRUDZHA 1919|ETAR VEL. TARNOBO (retry cooldown (6h after failed attempt))",
+    "PANAMA|CURACAO (retry cooldown (6h after failed attempt))",
+    "SOCHI|SHINNIK YAROSLAVL (retry cooldown (6h after failed attempt))",
+    "BEROE|VIHREN (retry cooldown (6h after failed attempt))",
+    "PORTO B|TORREENSE (retry cooldown (6h after failed attempt))",
+    "PORTIMONENSE|ACADEMICA (retry cooldown (6h after failed attempt))",
+    "ENYIMBA INTERNATIO|IKORODU UNITED (retry cooldown (6h after failed attempt))",
+    "KATSINA|NASARAWA (retry cooldown (6h after failed attempt))",
+    "NIGER TORNADOES|ENUGU RANGERS INTE (retry cooldown (6h after failed attempt))",
+    "Spezia|Vado (retry cooldown (6h after failed attempt))",
+    "KWARA|RIVERS UNITED (retry cooldown (6h after failed attempt))",
+    "WARRI WOLVES|SPORTING LAGOS (retry cooldown (6h after failed attempt))",
+    "YANTRA GABROVO|LUDOGOREST II (retry cooldown (6h after failed attempt))",
+    "FERRO CARRIL OESTE|GIMNASIA Y TIRO (retry cooldown (6h after failed attempt))",
+    "SPORTIST SVOGE|SPARTAK PLEVEN (retry cooldown (6h after failed attempt))",
+    "Ravenna|Forl\u00ec (retry cooldown (6h after failed attempt))",
+    "Cittadella|Folgore Caratese (retry cooldown (6h after failed attempt))",
+    "Bohemians 1905 II|Kr\u00e1l\u016fv Dv\u016fr (retry cooldown (6h after failed attempt))",
+    "Pescara|Sambenedettese (retry cooldown (6h after failed attempt))",
+    "UD Ibiza|FC Cartagena (retry cooldown (6h after failed attempt))",
+    "Defensor Sporting|Pe\u00f1arol (retry cooldown (6h after failed attempt))",
+    "Spain|England (priced)",
+    "Leix\u00f5es|Chaves (retry cooldown (6h after failed attempt))",
+    "Arsenal W|London City Lionesses W (retry cooldown (6h after failed attempt))",
+    "Comerciantes Unidos|Sport Boys (retry cooldown (6h after failed attempt))",
+    "Barletta|Team Altamura (retry cooldown (6h after failed attempt))",
+    "Ry\u016bky\u016b|Kochi United (retry cooldown (6h after failed attempt))",
+    "Algeciras|Antequera (retry cooldown (6h after failed attempt))",
+    "Belarus|Albania (priced)",
+    "Tondela|Farense (retry cooldown (6h after failed attempt))",
+    "Pergolettese|Pro Vercelli (retry cooldown (6h after failed attempt))",
+    "Cavese|Crotone (retry cooldown (6h after failed attempt))",
+    "Granada|Las Palmas (retry cooldown (6h after failed attempt))",
+    "Lugo|Mirand\u00e9s (retry cooldown (6h after failed attempt))",
+    "Penafiel|Lusitania FC Lourosa (retry cooldown (6h after failed attempt))",
+    "Cyprus|Montenegro (priced)",
+    "Belgium|Italy (priced)",
+    "Salernitana|Catania (retry cooldown (6h after failed attempt))",
+    "Novara|Lecco (retry cooldown (6h after failed attempt))",
+    "Cosenza|Casertana (retry cooldown (6h after failed attempt))",
+    "Latvia|Armenia (priced)"
+  ],
+  "source": "theoddsapi",
+  "status": "ok",
+  "unmatched": [
+    "CROATIA vs CZECH REPUBLIC (league not covered: EUN)",
+    "Eldense vs Sabadell (league not covered: La Liga 2)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: EUN": 1,
+    "league not covered: La Liga 2": 1
+  }
+}

@@ -1,95 +1,85 @@
 {
   "base_pct": 100.0,
-  "bank": 246.093273,
+  "bank": 257.782819,
   "cycle_base": 456.154568,
   "open_slips": [
     {
-      "date": "2026-11-14",
+      "date": "2026-11-15",
       "accas": [
         {
           "legs": [
             {
-              "match": "Sweden vs Bosnia and Herzegovina",
+              "match": "GODOY CRUZ vs TRISTAN SUAREZ",
               "pick": "HOME",
-              "prob": 0.603239992482616,
-              "odds": 1.5495,
+              "prob": 0.76,
+              "odds": 2.16,
               "result": null,
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
               "fixture_key": [
-                "2026-11-14",
-                "Sweden",
-                "Bosnia and Herzegovina"
+                "2026-11-15",
+                "GODOY CRUZ",
+                "TRISTAN SUAREZ"
               ]
             },
             {
-              "match": "Gateshead vs Barrow",
-              "pick": "AWAY",
-              "prob": 0.5879762989972652,
-              "odds": 1.5376,
+              "match": "PORTIMONENSE vs ACADEMICA",
+              "pick": "HOME",
+              "prob": 0.72,
+              "odds": 2.2,
               "result": null,
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
               "fixture_key": [
-                "2026-11-14",
-                "Gateshead",
-                "Barrow"
+                "2026-11-15",
+                "PORTIMONENSE",
+                "ACADEMICA"
               ]
             }
           ],
-          "odds": 2.38,
-          "stake_pct": 30.7617,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          "odds": 4.75,
+          "stake_pct": 32.2229
         },
         {
           "legs": [
             {
-              "match": "Salford City vs Northampton Town",
+              "match": "SOCHI vs SHINNIK YAROSLAVL",
               "pick": "HOME",
-              "prob": 0.5974577063276942,
-              "odds": 1.578,
+              "prob": 0.75,
+              "odds": 1.6494,
               "result": null,
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
               "fixture_key": [
-                "2026-11-14",
-                "Salford City",
-                "Northampton Town"
+                "2026-11-15",
+                "SOCHI",
+                "SHINNIK YAROSLAVL"
               ]
             },
             {
-              "match": "Portugal vs Denmark",
+              "match": "CROATIA vs CZECH REPUBLIC",
               "pick": "HOME",
-              "prob": 0.5971439444391591,
-              "odds": 1.55,
+              "prob": 0.75,
+              "odds": 1.61,
               "result": null,
               "market": "1x2",
               "price_book": "Betfair",
               "price_source": "theoddsapi",
               "fixture_key": [
-                "2026-11-14",
-                "Portugal",
-                "Denmark"
+                "2026-11-15",
+                "CROATIA",
+                "CZECH REPUBLIC"
               ]
             }
           ],
-          "odds": 2.45,
-          "stake_pct": 30.7616,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          "odds": 2.66,
+          "stake_pct": 32.2228
         }
       ],
-      "staked_pct": 61.5233
+      "staked_pct": 64.4457
     }
   ],
   "history": [
@@ -2545,6 +2535,87 @@
       ],
       "bank_pct": 246.0933,
       "close_pct": 246.0932
+    },
+    {
+      "date": "2026-11-14",
+      "staked_pct": 61.5233,
+      "returned_pct": 73.2128,
+      "accas": [
+        {
+          "odds": 2.38,
+          "won": true,
+          "stake_pct": 30.7617,
+          "returned_pct": 73.2128,
+          "legs": [
+            {
+              "match": "Sweden vs Bosnia and Herzegovina",
+              "pick": "HOME",
+              "odds": 1.5495,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Sweden",
+                "Bosnia and Herzegovina"
+              ]
+            },
+            {
+              "match": "Gateshead vs Barrow",
+              "pick": "AWAY",
+              "odds": 1.5376,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Gateshead",
+                "Barrow"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.45,
+          "won": false,
+          "stake_pct": 30.7616,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Salford City vs Northampton Town",
+              "pick": "HOME",
+              "odds": 1.578,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-14",
+                "Salford City",
+                "Northampton Town"
+              ]
+            },
+            {
+              "match": "Portugal vs Denmark",
+              "pick": "HOME",
+              "odds": 1.55,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-14",
+                "Portugal",
+                "Denmark"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 257.7828,
+      "close_pct": 257.7827
     }
   ],
   "events": [
