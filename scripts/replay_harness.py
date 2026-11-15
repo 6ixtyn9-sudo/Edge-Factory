@@ -183,9 +183,11 @@ def parse_spec(text):
             spec[k] = float(v)
         else:
             spec[k] = v
-    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules", "cup_floor"}
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules", "cup_floor", "acca_veto"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
+    if spec.get("acca_veto") is not None:
+        _combined_veto(str(spec["acca_veto"]))  # parse-check the vocab here, not mid-replay
     # Two no-op pairings, refused rather than reported: caps the chosen rank
     # never consults, and the capped rank with no caps to consult.
     rank = str(spec.get("rank", "prob"))
@@ -454,6 +456,47 @@ def _filtered_pool(pool, spec):
     return pool
 
 
+def _combined_veto(spec_text: str):
+    """Parse ``acca_veto=<combined_cap>:<odd_floor>:<prob_floor>`` -> predicate.
+
+    Harness-only admission probe (hypothesis H1/S1/S4 from the 2026-11-15 loss
+    diagnostic): returns True when an acca should be vetoed because it carries a
+    suspect leg (leg odds above ``odd_floor`` AND implied prob below
+    ``prob_floor``) or its combined price is at/above ``combined_cap``. Numbers
+    parsed, not evaluated; every token is validated here so a malformed spec
+    fails at parse time instead of mid-replay.
+    """
+    raw = str(spec_text).strip()
+    toks = [t for t in raw.split(":") if t != ""]
+    if not (1 <= len(toks) <= 3):
+        raise SystemExit(f"acca_veto {raw!r}: want combined[:odd:prob], got {len(toks)} fields")
+    try:
+        cap = float(toks[0]) if toks[0] else None
+    except ValueError:
+        raise SystemExit(f"acca_veto {raw!r}: combined cap {toks[0]!r} is not a number")
+    try:
+        odd = float(toks[1]) if len(toks) > 1 else None
+    except ValueError:
+        raise SystemExit(f"acca_veto {raw!r}: odd floor {toks[1]!r} is not a number")
+    try:
+        prob = float(toks[2]) if len(toks) > 2 else None
+    except ValueError:
+        raise SystemExit(f"acca_veto {raw!r}: prob floor {toks[2]!r} is not a number")
+    if cap is None and odd is None:
+        raise SystemExit("acca_veto: give at least one of combined cap / suspect-leg odd floor")
+
+    def veto(acca) -> bool:
+        if cap is not None and acca.get("odds", 0.0) >= cap:
+            return True
+        if odd is not None:
+            for leg in acca.get("legs") or []:
+                if leg.get("odds", 0.0) > odd and leg.get("prob", 1.0) < prob:
+                    return True
+        return False
+
+    return veto
+
+
 def card_for_day(pool, spec):
     """The live selector, driven by selection-only variant overrides."""
     kw = {k: v for k, v in spec.items() if k in SELECTION_KEYS}
@@ -497,11 +540,14 @@ def replay(universe, spec):
     """Per-day record for a variant, routed through the production planner."""
     out = ReplayDays()
     kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
+    veto = _combined_veto(spec["acca_veto"]) if spec.get("acca_veto") is not None else None
     for d in sorted(universe):
         # A 100%-of-capital reference bank keeps growth bank-independent while
         # exercising plan_day's exact stake rounding and cap logic.
         bank_pct = 100.0
         plan = at.plan_day(_filtered_pool(universe[d], spec), bank_pct, **kw)
+        if veto is not None:
+            plan = [a for a in plan if not veto(a)]
         if not plan:
             continue
         try:
@@ -2012,7 +2058,7 @@ def cmd_rules(universe):
     return 0
 
 
-def cmd_battery(universe):
+def cmd_battery(universe, fixes=False):
     base = {}
     print("--- baseline ---")
     b = print_variant(universe, base, "live settings")
@@ -2037,6 +2083,15 @@ def cmd_battery(universe):
     print_variant(universe, {"gate_mode": "pool", "fallback": False},
                   "legacy strict pool gate", baseline=b)
     print_variant(universe, {"gate_mode": "off"}, "gate off (== live, see audit)", baseline=b)
+    if fixes:
+        print("\n--- 2026-11-15 diagnostic fix battery (H1 suspect-leg / combined cap) ---")
+        print_variant(universe, {"acca_veto": "0:1.5:0.60"}, "S1 veto (leg odd>1.5 & prob<60%)", baseline=b)
+        print_variant(universe, {"acca_veto": "2.6"}, "S4 combined cap >=2.6", baseline=b)
+        print_variant(universe, {"acca_veto": "2.6:1.5:0.60"}, "S1+S4", baseline=b)
+        print_variant(universe, {"min_prob": 0.60, "acca_veto": "0:1.5:0.60"},
+                      "S1 + min_prob 60% (S2 leg-filter probe)", baseline=b)
+        print_variant(universe, {"leagues": "champions league|europa league|conference league"},
+                      "UEFA-club-only slates (S9 purity control)", baseline=b)
     print("\n--- ranking / pairing shape ---")
     print_variant(universe, {"rank": "ev"}, "rank by stated EV", baseline=b)
     print_variant(universe, {"pairing": "barbell"}, "barbell pairing (1+6,2+5,3+4)", baseline=b)
@@ -4198,6 +4253,9 @@ def main():
     ap.add_argument("--ab", nargs=2, metavar=("SPEC_A", "SPEC_B"),
                     help="paired A/B of two specs, with no-op guard + bootstrap")
     ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
+    ap.add_argument("--battery-fixes", action="store_true",
+                    help="battery + the 2026-11-15 diagnostic fix variants (acca_veto bundles, "
+                         "min_prob, UEFA-purity control) vs the same live baseline")
     ap.add_argument("--enhancements", action="store_true",
                     help="replay the settled enhancement registry against floor "
                          "variants (hit rate + mean log growth per bet-day)")
@@ -4486,7 +4544,10 @@ def main():
         return 0
 
     if args.battery:
-        cmd_battery(universe)
+        cmd_battery(universe, fixes=getattr(args, "battery_fixes", False))
+        return 0
+    if args.battery_fixes:
+        cmd_battery(universe, fixes=True)
         return 0
 
     specs = [parse_spec(s) for s in (args.variant or [])]

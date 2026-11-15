@@ -35,8 +35,13 @@ def test_parse_picks_maps_rows_and_stores_attribution():
     assert len(rows) == 2
     first = rows[0]
     assert (first["home"], first["away"]) == ("Bragantino-SP", "Cruzeiro")
-    assert first["market"] == "Draw No Bet"
-    assert first["selection"] == "Cruzeiro"
+    # 2026-11-15: full-time draw-no-bet is canonical vocabulary now, so the
+    # pick row carries the mapped market/selection instead of the passthrough
+    # provider token. The raw provider spelling survives on raw_market.
+    assert first["market"] == "dnb"
+    assert first["selection"] == "away"  # Cruzeiro mapped via shared normalization
+    assert first["raw_market"] == "Draw No Bet"
+    assert first["raw_selection"] == "Cruzeiro"
     assert first["probability"] == 52.9
     assert first["fair_odds"] == 2.64
     assert first["kickoff"] == "2026-10-13T00:00:00.0000000Z"

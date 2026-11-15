@@ -263,9 +263,22 @@ def _unpriced_family(label: str) -> str | None:
     if "handicap" in tokens or "spread" in tokens or "asian" in tokens:
         return "unsupported_handicap"
     if {"draw", "bet"} <= tokens or "dnb" in tokens:
-        return "unsupported_draw_no_bet"
+        # Draw no bet (full-time): priced as ("dnb", home/away). Same fulltime
+        # gate ordering as double_chance: the period check above already
+        # refused p1/p2 variants before this label is reached. ml_paper has no
+        # dnb consumer yet; row capture is priced-vocabulary capture, not a
+        # pick market.
+        return "draw_no_bet"
     if "double" in tokens and "chance" in tokens:
-        return "unsupported_double_chance"
+        # 2026-11-15: full-time double chance is now PRICED vocabulary — the
+        # parser resolves ("dc", 1x/x2/12) downstream and ml_paper/enh_pricing
+        # already consume dc rows. The classifier used to short-circuit these
+        # with the unpriced marker, discarding market 101902's real price
+        # supply before the DC-capable parser ever saw it (census 2026-11:
+        # 116 sightings). Half-time/second-half DC variants are rejected before
+        # this by the period gate (period != fulltime), so a full-time label
+        # reaching here is the priced case.
+        return "double_chance"
     if ("correct" in tokens and "score" in tokens) or "exact" in tokens:
         return "unsupported_correct_score"
     if "odd" in tokens or "even" in tokens:
@@ -465,10 +478,12 @@ def _catalog_entry(market_id: str, catalog: dict[str, dict] | None) -> dict:
     if catalog is not None:
         return catalog.get(market_id, {})  # explicit scope never inherits stale global entries
     return _MARKET_CATALOG_ENTRIES.get(market_id, {})
-# double-chance outcome-name -> selection
+# double-chance outcome-name -> selection (order-insensitive: different
+# books spell "Home or Draw" / "Draw or Home"; the sides are the same set)
 _DC_SELECTION = {
-    "homeordraw": "1x", "awayordraw": "x2", "homeoraway": "12",
-    "1x": "1x", "x2": "x2", "12": "12",
+    "homeordraw": "1x", "draworhome": "1x", "1x": "1x", "x1": "1x",
+    "awayordraw": "x2", "draworaway": "x2", "x2": "x2", "2x": "x2",
+    "homeoraway": "12", "awayorhome": "12", "12": "12", "21": "12",
 }
 
 # The provider documents market 101 (Full Time Result) as carrying outcome
@@ -478,6 +493,23 @@ _DC_SELECTION = {
 # the catalog-independent fallback used ONLY inside market 101 when the
 # catalog did not supply outcome names.
 _1X2_OUTCOME_KEY_SELECTION = {"101": "home", "102": "draw", "103": "away"}
+# Draw-no-bet outcome-name -> selection (market 10214 full-time; halves are
+# rejected at the period gate before this).
+_DNB_SELECTION = {"home": "home", "away": "away", "1": "home", "2": "away"}
+
+
+def _team_name_side(label: object, home: object, away: object) -> str | None:
+    """Resolve a draw-no-bet outcome name ("Croatia") to a side."""
+    n = str(label or "").strip().lower()
+    if not n:
+        return None
+    home_name = str(home or "").strip().lower()
+    away_name = str(away or "").strip().lower()
+    if home_name and n == home_name:
+        return "home"
+    if away_name and n == away_name:
+        return "away"
+    return None
 # Catalog outcomeNames for a 1x2 market, as documented ("1", "X", "2").
 _1X2_OUTCOME_NAME_SELECTION = {
     "1": "home", "home": "home", "h": "home", "w1": "home",
@@ -920,6 +952,19 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
             return None, None, "ambiguous"
         sel = resolved[0] if resolved else None
         return ("dc", sel, None) if sel else (None, None, "unresolved")
+    if mtype == "draw_no_bet":
+        candidates = [
+            _DNB_SELECTION.get(str(name or "").strip().lower().replace(" ", "")),
+            _DNB_SELECTION.get(str((entry.get("outcomes") or {}).get(outcome_key) or "")
+                               .strip().lower().replace(" ", "")),
+            _team_name_side(name, home, away),
+            _team_name_side((entry.get("outcomes") or {}).get(outcome_key), home, away),
+        ]
+        resolved = [c for c in candidates if c]
+        if len(set(resolved)) > 1:
+            return None, None, "ambiguous"
+        sel = resolved[0] if resolved else None
+        return ("dnb", sel, None) if sel else (None, None, "unresolved")
     if mtype in ("totals", "team_totals", "team_totals_home", "team_totals_away"):
         # Line evidence: the outcome name ("Over 2.5"), a line field on the
         # outcome/player, or the catalog's documented handicap for this

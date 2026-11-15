@@ -233,13 +233,17 @@ _OU_TOKENS = {
     "ou", "totals", "total", "total_goals", "over_under", "overunder",
     "goals_over_under", "goals", "match_total_goals", "total_goals_over_under",
 }
+# 2026-11-15: full-time double chance / draw-no-bet are now PRICED vocabulary
+# (oddspapi 101902 / 10214 capture rewired in oddspapi_odds). They map to
+# canonical "dc" / "dnb" so priced boards stop recounting them as unsupported.
+_DC_TOKENS = {"dc", "double_chance", "doublechance"}
+_DNB_TOKENS = {"dnb", "draw_no_bet", "drawnobet"}
 
 # Recognised provider vocabulary this pipeline deliberately does not price.
 # Keeping it explicit is the difference between "we know what this is and we
 # do not bet it" and "we have never seen this token".  Both stay counted
 # misses; only the bucket differs.
 _UNSUPPORTED_MARKET_TOKENS = {
-    "draw_no_bet", "dnb", "double_chance", "dc",
     # "12" is a 2-way market (home or away, no draw) in APIs like Pinnacle.
     # It is NOT the 3-way "1x2" market.  Previously mis-mapped to 1x2, which
     # contaminated price boards with non-1x2 prices (e.g. Vidar vs Brattvag
@@ -322,6 +326,14 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
     if raw in _OU_TOKENS or raw.startswith("ou_") or "overunder" in compact:
         normalized_line = _line_from(line) or _line_from(market)
         return (f"ou_{normalized_line}" if normalized_line else "ou"), normalized_line
+    if raw in _DC_TOKENS or compact in {"doublechance"}:
+        if _line_present(line):
+            return None, f"unsupported_market:{raw or 'empty'}_with_line"
+        return "dc", None
+    if raw in _DNB_TOKENS or compact in {"drawnobet"}:
+        if _line_present(line):
+            return None, f"unsupported_market:{raw or 'empty'}_with_line"
+        return "dnb", None
     return None, f"unknown_market:{raw or 'empty'}"
 
 
@@ -380,6 +392,20 @@ def canonical_selection(
             return "over", None
         if token in {"under", "u", "less", "no"}:
             return "under", None
+        return None, f"unknown_selection:{_token(selection) or 'empty'}"
+    if market == "dc":
+        token = _compact(selection)
+        if token in {"1x", "x1", "homeordraw"}:
+            return "1x", None
+        if token in {"x2", "2x", "awayordraw"}:
+            return "x2", None
+        if token in {"12", "21", "homeoraway"}:
+            return "12", None
+        return None, f"unknown_selection:{_token(selection) or 'empty'}"
+    if market == "dnb":
+        value = _team_side(selection, home, away)
+        if value in {"home", "away"}:
+            return value, None
         return None, f"unknown_selection:{_token(selection) or 'empty'}"
     return None, f"unsupported_market:{market}"
 

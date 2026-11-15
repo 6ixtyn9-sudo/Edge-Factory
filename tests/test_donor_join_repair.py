@@ -53,12 +53,19 @@ def test_betbetter_raw_market_strings_map_or_are_explicitly_unsupported():
                                       home="Alpha FC", away="Beta FC")[0].market == "1x2"
     assert canonical_market_selection("Both Teams to Score", "Yes")[0].market == "btts"
 
-    # Recognised, deliberately not priced -> explicit unsupported, still a miss.
+    # 2026-11-15: draw-no-bet is PRICED canonical vocabulary now ("dnb"); the
+    # team_name selection resolves to the side instead of an unsupported miss.
     result, failure = canonical_market_selection(
         "Draw No Bet", "Cruzeiro", home="Bragantino-SP", away="Cruzeiro")
+    assert failure is None
+    assert (result.market, result.selection) == ("dnb", "away")
+
+    # Something genuinely unpriced keeps the fail-closed miss bucket.
+    result, failure = canonical_market_selection(
+        "Correct Score", "Cruzeiro", home="Bragantino-SP", away="Cruzeiro")
     assert result is None
     assert failure.kind == "unsupported_market"
-    assert failure.raw == "draw_no_bet"
+    assert failure.raw == "correct_score"
 
 
 def test_betbetter_head_to_head_3_way_maps_to_1x2_with_team_selections():
@@ -106,14 +113,15 @@ def test_betbetter_unmappable_market_is_kept_and_counted_not_dropped():
     payload = _load("betbetter_brazil_serie_a.json")
     rows = bb.parse_picks(payload, day="2026-10-02", slug="brazil-serie-a")
     # Three picks in; the ticker-shaped game string fails closed, the other
-    # two SURVIVE - including the unmappable Draw No Bet row.
+    # two SURVIVE. 2026-11-15: the Draw No Bet pick is now mappable (canonical
+    # dnb/away) — its raw provider spelling survives on raw_market.
     assert len(rows) == 2
     unmappable = [r for r in rows if r["canonicalization_mappable"] is False]
-    assert len(unmappable) == 1
-    assert unmappable[0]["raw_market"] == "Draw No Bet"
-    assert unmappable[0]["market"] == "Draw No Bet"  # raw vocabulary preserved
-    assert unmappable[0]["canonicalization_reason"] == "unsupported_market:draw_no_bet"
-    assert unmappable[0]["price_push_eligible"] is False
+    assert unmappable == []  # every surviving row maps under the widened vocabulary
+    dnb = [r for r in rows if r["raw_market"] == "Draw No Bet"][0]
+    assert dnb["market"] == "dnb"
+    assert dnb["selection"] == "away"
+    assert dnb["price_push_eligible"] is True
 
 
 def test_betbetter_matches_a_realistic_slate_from_raw_vocabulary():
@@ -143,9 +151,12 @@ def test_betbetter_matches_a_realistic_slate_from_raw_vocabulary():
     report = pt.donor_join_diagnostics(picks, [bundle])["betbetter"]
 
     assert report["matched_rows"] == 2, "raw Bet Better vocabulary must join"
-    # The third row is not lost: it is an explicitly counted, named miss.
-    assert report["miss_counts"] == {"market_unsupported": 1}
-    assert report["unmapped_vocabulary"] == {"unsupported_market:draw_no_bet": 1}
+    # 2026-11-15: the Draw No Bet pick row now carries canonical dnb/away — it
+    # is mappable vocabulary, so the fixture-join machinery demands a dnb pick
+    # for it (the 1x2 pick is a different market): an evidential no_pick_for_fixture,
+    # not a vocabulary miss.
+    assert report["miss_counts"] == {"no_pick_for_fixture": 1}
+    assert report["unmapped_vocabulary"] == {}
 
 
 def test_betbetter_head_to_head_3_way_rows_join_and_spread_rows_are_counted():
@@ -181,13 +192,13 @@ def test_betbetter_head_to_head_3_way_rows_join_and_spread_rows_are_counted():
     report = pt.donor_join_diagnostics(picks, [bundle])["betbetter"]
 
     assert report["matched_rows"] == 1, "Head to Head 3-Way fair prices must join"
-    # The Spread and Draw No Bet rows are counted as explicit unsupported
-    # misses at the canonicalisation boundary - before any fixture question,
-    # so there is no fixture bucket left to report.
-    assert report["miss_counts"] == {"market_unsupported": 2}
+    # 2026-11-15: the Draw No Bet row is canonical dnb vocabulary now, so it
+    # reaches the fixture stage (no dnb pick exists for that board row → the
+    # evidential fixture_key_miss). Only the Spread row keeps the explicit
+    # unsupported-miss bucket.
+    assert report["miss_counts"] == {"market_unsupported": 1, "fixture_key_miss": 1}
     assert report["unmapped_vocabulary"] == {
         "unsupported_market:spread": 1,
-        "unsupported_market:draw_no_bet": 1,
     }
 
 
@@ -205,7 +216,9 @@ def test_betbetter_feed_is_multi_day_so_off_slate_rows_are_out_of_window():
     report = pt.donor_join_diagnostics(picks, [bundle])["betbetter"]
     # A legitimate future fixture is OUT OF WINDOW. Calling it date_mismatch
     # implied a date-attribution defect that is not there.
-    assert report["miss_counts"].get("out_of_window") == 1
+    # 2026-11-15: the Draw No Bet pick row no longer dies at the vocabulary
+    # boundary — it reaches the fixture stage and reports the same out_of_window.
+    assert report["miss_counts"].get("out_of_window") == 2
     assert "date_mismatch" not in report["miss_counts"]
 
 
@@ -434,8 +447,10 @@ def test_oddspapi_gets_the_same_per_reason_miss_buckets_as_the_donors():
 
 
 @pytest.mark.parametrize(("row", "bucket", "token"), [
-    ({"market": "Draw No Bet", "selection": "Cruzeiro"},
-     "market_unsupported", "unsupported_market:draw_no_bet"),
+    # 2026-11-15: draw-no-bet is priced canonical vocabulary now; keep an
+    # unpriced-family row in this census via correct score instead.
+    ({"market": "Correct Score", "selection": "2-1"},
+     "market_unsupported", "unsupported_market:correct_score"),
     ({"market": "Provider Mystery", "selection": "Home FC"},
      "market_unmapped", "unknown_market:provider_mystery"),
     ({"market": "classic", "selection": "1X"},
