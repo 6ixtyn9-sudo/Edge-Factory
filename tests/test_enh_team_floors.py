@@ -91,9 +91,9 @@ def test_a_team_under_leg_with_evidence_fires_at_any_price_above_the_minimum():
             "bucket": "CERTIFIED_CLEAN", "rule": "r1", "recommended_enhancement": "home_under_35",
             "enhancement_label": "Home Under 3.5", "enhancement_probability": 0.96,
             "enhancement_price_book": "b", "enhancement_price_source": "oddspapi"}
-    below = at.enhancement_legs([with_evidence({**pick, "enhancement_price": 1.25})], team_floors=table)[0]
-    at_min = at.enhancement_legs([with_evidence({**pick, "enhancement_price": 1.30,
-                                   "enhancement_consensus_price": 1.30})], team_floors=table)[0]
+    below = at.enhancement_legs([with_evidence({**pick, "enhancement_price": 1.24})], team_floors=table)[0]
+    at_min = at.enhancement_legs([with_evidence({**pick, "enhancement_price": 1.25,
+                                   "enhancement_consensus_price": 1.25})], team_floors=table)[0]  # at MIN_LEG_ODDS 1.25 (ARMED 2026-11-15; was 1.30)
     assert below["verdict"] == "below_min_odds"
     assert at_min["verdict"] == "fire"
     assert at_min["floor_basis"] == "pick_evidence"

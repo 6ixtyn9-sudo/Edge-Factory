@@ -40,7 +40,7 @@ def test_empty_registry_can_admit_complete_acca_without_any_placed_bets(tmp_path
     (.60, 1.3, 200, 'payout_not_supported'),
     (.60, 1.6, 200, 'fire'), (.9, 1.3, 200, 'fire'), (.74, 1.3, 200, 'fire'),
     (.60, 2.0, 29, 'no_cohort_evidence'), (.60, 2.0, 30, 'fire'),
-    (.9, 1.29, 200, 'below_min_odds')])
+    (.9, 1.24, 200, 'below_min_odds')])  # floor 1.30 -> 1.25 ARMED 2026-11-15
 def test_actual_quote_must_pay_for_cohort_uncertainty(tmp_path, rate, price, n, expected):
     row = pick(rate, price)
     row['enhancement_probability'] = None
@@ -226,7 +226,7 @@ def test_fresh_build_supersedes_only_same_fixture_and_contract(same_contract):
     assert len(at.enhancement_legs([old, fresh], execution_safe=True)) == 2
 
 
-@pytest.mark.parametrize('key,value', [('enhancement_price',1.29), ('enhancement_price_source','unknown'),
+@pytest.mark.parametrize('key,value', [('enhancement_price',1.24),   # sub-floor probe (1.25 armed 2026-11-15) ('enhancement_price_source','unknown'),
     ('enhancement_price_book','Matchbook'), ('enhancement_price_at','2026-10-22T07:00:00Z'),
     ('enhancement_price_kickoff','2026-10-22T04:00:00Z')])
 def test_non_be_alternatives_cannot_bypass_execution_checks(key, value):

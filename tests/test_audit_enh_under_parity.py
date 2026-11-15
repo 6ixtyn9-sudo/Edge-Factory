@@ -78,7 +78,8 @@ def test_counterfactual_selection_never_needs_result_and_requires_real_quote():
     assert audit.choose(rates, quotes, thresholds, True)["market"] == "match_under_35"
     assert audit.choose(rates, {}, thresholds, True) is None
     assert audit.choose({"match_under_35": .91}, quotes, thresholds, True) is None
-    assert audit.choose(rates, {("ou_3.5", "under"): {"price": 1.29}}, thresholds, True) is None
+    # probed just under MIN_LEG_ODDS 1.25 (ARMED 2026-11-15; was probed at 1.29 under the old 1.30 floor)
+    assert audit.choose(rates, {("ou_3.5", "under"): {"price": 1.24}}, thresholds, True) is None
 
 
 def card_case():
@@ -196,8 +197,11 @@ def test_preselection_slippage_reselects_and_rebuilds_complete_cards():
     cases = []
     for home in ("A", "C"):
         row = archived_row(home=home)
+        # 1.27 sits on 0.98 price-stress just under the armed 1.25 floor (1.27*.98 <
+        # 1.25) so the stress excludes btts_yes; under the old 1.30 floor the probe
+        # quote was 1.30 (1.30*.98 < 1.30). Same intent, new armed boundary.
         cases.append((row, {"btts_yes": .6, "match_under_25": .75},
-                      {("btts", "yes"): {"price": 1.30}, ("ou_2.5", "under"): {"price": 2.0}}))
+                      {("btts", "yes"): {"price": 1.27}, ("ou_2.5", "under"): {"price": 2.0}}))
     out = audit.reselect_price_stress(cases, ["2026-10-18"], {}, .02)
     assert len(out["changed_fixture_choices"]) == 2
     assert all(c["baseline"] is None and c["proposed"]["market"] == "match_under_25"

@@ -653,3 +653,54 @@ pools → deeper cards on saturated days. maxDD halves AND growth doubles.
 the live post-Forebet regime is replay-blind (§20). Any ship decision must pair the
 engine change with (a) resumed pick-pool JSON capture so forward evidence can
 accumulate, and (b) an explicit revert tripwire (re-judge after ~15 live bet-days).
+
+## 23. SHIP — combo armed 2026-11-15 (operator decision)
+
+**Decision:** certified combo from §22 armed as the live recipe.
+**Change:** `scripts/auto_tickets.py` — `MIN_LEG_ODDS 1.30 → 1.25` and new
+`SATURATED_ACCAS = 5` (resolved in `select_accas` defaults so bare `plan_day`
+calls — live tickets and the parity snapshot — see the armed constants).
+**Lane scope guard discovered in test repair:** the certification ran the main
+acca lane; the enhancement lane keeps `ENH_MAX_ACCAS = 3` on every day.
+`select_accas(..., enhancements=True)` excludes saturation (resolution is
+lane-aware) — ship does NOT silently widen the enh lane to 5.
+**Receipt:** combo +0.0307 log/day, P(B>A)=98%, p10 +0.0098, LODO
++0.0205..+0.0351, exactly additive channels (§22). Conditions: pre-recovery
+regime only; tripwire below governs the live regime.
+
+**Test surface of the ship (full suite 7120 passed / 2 skipped):** pins moved
+with receipts attached: recipe lock & parity baseline regenerated
+(`tests/data/engine_parity_baseline.json`: 30/80 archive days moved BY DESIGN —
+floor widens cards; max stake delta 12.5pp; base_commit e419930) — the file now
+pins the post-ship production recipe, generated_note carries the chain.
+Boundary probes probed 1.29 now probe 1.24 (sub-floor semantics preserved in 5
+files); the acca-gate probe universe was rebuilt so the sub-threshold block
+pairs with itself through the barbell joint on a saturated x5 card (monotone
+descend spreads weakness across every acca → completeness fallback → gate
+becomes invisible to the probe: a NO-OP class the pin explicitly names);
+routing pin (cap arithmetic) now shows saturation production math
+(per-acca 0.07×5 requested → clamps to STAKE_FRAC 25% ⇒ 5.0% per acca).
+Parity synthetic corpus review: no fixture in the [1.25,1.30) band;
+06-22 has 6 legs < VOLUME_POOL=12 (never saturated): committed corpus unchanged.
+
+**Tripwire (revert rule):** re-judge after ~15 live bet-days forward from
+11-15. Revert (MIN_LEG_ODDS back to 1.30 AND SATURATED_ACCAS back to None) if
+live forward bank growth over the first ~15 graded bet-days is materially below
+the baseline trajectory of the pre-ship live path (peak 455.1% 11-08 → 257.8%
+11-14: slide persistent). Re-judge means: paired-day live comparison of the
+armed recipe trajectory vs the baseline observed slide window (no replay —
+the slump regime is replay-blind §20): ENGINE ACTUAL bank trajectory over the
+15-day window decides, with §22 numbers as regime-certification only.
+Saved bookmarks: revert values MIN_LEG_ODDS = 1.30; SATURATED_ACCAS = None.
+
+**Capture resume (standing scope note, not shipped here):** the slump regime is
+replay-invisible simply because `localdata/archive/picks/2026/**/*.json` commits
+ended ~10-16. The writers still run live (`scripts/picks_today.py` ~7588 writes
+the day archive `picks_<day>.json` via `dated_artifact_path`; `scripts/daily.py`
+writes morning/candidate ledgers). The break is in PERSISTENCE: post-recovery
+production commits route through `scripts/phase5_persistence.py` (whitelist at
+~:31-43 spans phase5 shadows/receipts and autobets ledgers — the plain pick-pool
+JSONs are outside it; the artifact upload at `.github/workflows/daily.yml` is
+`localdata/*.json` root-only, not the dated archive). Resuming the pool commits
+(isolated, evidence-only, no money-path effect) is a follow-on; the tripwire
+window can be judged from ENGINE ACTUAL alone if capture follows afterward.

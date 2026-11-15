@@ -62,13 +62,13 @@ def doubles_options():
 
 def test_explicit_trial_options_and_enh_are_independent():
     main, enh = at.ticket_planner_options('main'), at.ticket_planner_options('enh')
-    assert (main['rank'], main['min_prob'], main['floor']) == ('ev', .65, 1.30)
+    assert (main['rank'], main['min_prob'], main['floor']) == ('ev', .65, 1.25)  # floor ARMED 2026-11-15: 1.30 -> 1.25
     assert (main['legs_per_acca'], main['max_accas']) == (2, 2)
     assert (main['addon_floor'], main['addon_ceiling'], main['addon_min_prob'],
             main['addon_rank']) == (1.20, 1.30, .65, 'ev')
     assert (main['stake_mode'], main['stake_per_acca'], main['stake_frac']) == ('per_acca', .125, .25)
     assert enh['rank'] == at.ENHANCEMENT_RANK == 'prob'
-    assert enh['max_accas'] == 3 and enh['floor'] == 1.30
+    assert enh['max_accas'] == 3 and enh['floor'] == 1.25   # shared MIN_LEG_ODDS (ARMED 2026-11-15)
     assert not ({'min_prob', 'addon_floor', 'addon_ceiling', 'addon_min_prob', 'addon_rank'} & enh.keys())
     assert enh['model_min_prob'] == .60
 
@@ -106,9 +106,11 @@ def test_probability_and_band_boundaries_cannot_make_low_odds_base_legs_or_singl
           row('below-band', .90, 1.19999), row('lower-bound', .65, 1.20)]
     plan = at.plan_day(pool(rs), 100., **at.ticket_planner_options('main'))
     assert len(plan) == 1 and len(plan[0]['legs']) == 3
-    assert all(l['odds'] >= 1.30 and l['prob'] >= .65 for l in plan[0]['legs'][:2])
+    assert all(l['odds'] >= 1.25 and l['prob'] >= .65 for l in plan[0]['legs'][:2])  # 1.30 -> 1.25 ARMED 2026-11-15
     assert plan[0]['legs'][-1]['match'] == 'Home lower-bound vs Away lower-bound'
-    assert at.plan_day(pool([row('one-base'), row('extra', .80, 1.25)]), 100.,
+    # extra at the floor now pairs ('extra' 1.25 == new MIN_LEG_ODDS, ARMED 2026-11-15);
+    # the no-pair pin needs a leg UNDER the floor
+    assert at.plan_day(pool([row('one-base'), row('extra', .80, 1.24999)]), 100.,
                        **at.ticket_planner_options('main')) == []
     # The 1.30 boundary may be a BASE leg, but must never be appended.
     p = pool(rows()[:4] + [row('upper-bound', .65, 1.30)])
