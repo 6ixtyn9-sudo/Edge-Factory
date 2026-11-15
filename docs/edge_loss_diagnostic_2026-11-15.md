@@ -516,3 +516,18 @@ the stake battery row shows growth flat 25→33% then decaying ≥50%.
 Pending confirmations before any engine admission change: (a) S1 on 43 cd window;
 (b) note semantic: veto = drop suspect accas, day goes no-bet if all dropped —
 live engine change would match (skip card), coverage cost 21→17 days.
+
+## 17. Wide-window confirmations — program conclusion (43 candidate-days / 38 bet-days)
+
+| lever | Δ log/day | P(B>A) | verdict |
+|---|---|---|---|
+| acca_veto=0:1.5:0.60 (S1 solo) | +0.0163 (318% vs 232%, hit 49→53%, maxDD 58→47%) | **67%** | LUCK-SHAPED — short-window P=98% was 2026-09-20-shaped (that day carries 92% of the wide-window diff; LODO low end +0.0007). Directionally positive on growth AND risk, uncertifiable at n=38. DO NOT SHIP. |
+| volume_pool=8,saturated_accas=4 | −0.0009 | 43% | DEAD — softer trigger adds 14 accas, hit FALLS 49→45%; 2026-10-11 carries 571%; sign flips on 4 LODO. Volume dilution needs a saturated-pool prerequisite the data rarely offers (2/43 days at 12, 7/43 at 8), and when it fires it doesn't pay. |
+
+**Program conclusion:** at the live-faithful replay ceiling (43 cd) NO admission, price-cap,
+venue, team, or volume lever separates from luck. Shipped from the diagnostic: only the
+DC-DNB settlement fix (a semantics bug, not a knob). Open items: (a) S1 consistency probe
+on --unfaithful-pool superset; (b) S1 SHADOW telemetry in live engine (log would-be-vetoed
+accas, settle separately) for out-of-sample evidence — the only evidence class that can
+certify a drop-rule, since replay is quote-history-capped. No admission change on
+retrospective luck-shaped deltas.
