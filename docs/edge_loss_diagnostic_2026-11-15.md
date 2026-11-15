@@ -1,0 +1,343 @@
+# Edge-lane losing streak — diagnostic run 2026-11-15
+
+**Question:** why is edge losing lately; is the bleed odds>1.5 + confidence<60%;
+would double-chance @odds>1.7 do better?
+
+**Data:** committed `localdata` on `origin/main` (persist run 43716676848, 15:48 SAST):
+daily rolling tickets (30d), `auto_tickets_performance.json` settled history,
+`settled_results.json` (53,402 scores), `auto_tickets_slice_ledger.jsonl`,
+theoddsapi/oddspapi monthly 1x2 odds archives, oddspapi market census.
+Harness: throwaway scripts joining printed slips → settled leg results → odds triples.
+
+---
+
+## 1. The slump, quantified (rolling main lane, 2026-10-17 → 2026-11-15)
+
+- 48 settled accas: **26W/22L, +89.4% net on 1708% staked (+5.2% ROI)** — the window
+  is positive overall; the *lately* part is concentrated.
+- Bank trajectory: 454.8% peak after 11-08 → **257.8% today** (−197% of capital in 4 bet-days).
+- **Two days are the whole slump:**
+
+| Date | Result | Day net | Deployed | Legs |
+|---|---|---|---|---|
+| 11-09 | 0W/2L | **−113.8%** | 113.8% (max of window) | 1.69@52%, 2.35@42%, 2.05@48%, 1.94@47% |
+| 11-12 | 0W/2L | **−85.3%** | 85.3% | 1.61@62%, 1.85@48%, 2.00@49%, 2.06@49% |
+
+Every other window day netted roughly breakeven-or-better except 11-13 (−9.9%).
+
+## 2. Hypothesis 1 — "odds >1.5 + confidence <60% is bleeding us": CONFIRMED (at slip level)
+
+Leg-level, flat-stake (n=94 settled legs):
+
+| odds band | n | hit | ROI |
+|---|---|---|---|
+| <1.50 | 63 | 82.5% | **+12.5%** |
+| **1.50–1.70** | 18 | 55.6% | **−12.6%** ← the only losing band |
+| 1.70–2.00 | 7 | 71.4% | +32.7% (tiny n) |
+| ≥2.00 | 6 | 50.0% | +3.5% |
+
+Suspect legs (odd>1.5 & conf<60) as *singles*: n=15, +8.7% ROI — mildly +EV. The damage is
+**structural**: inside 2-leg accas at bank-scaled stakes.
+
+Acca-level split (the money table):
+
+| acca type | n | W/L | net (% capital) | ROI |
+|---|---|---|---|---|
+| contains ≥1 suspect leg | 12 | 4W/8L | **−83.1%** | **−15.0%** |
+| clean | 36 | 22W/14L | **+172.5%** | **+15.0%** |
+
+Combined-odds bands: <2.0 → +16.2% (16W/8L) · 2.0–2.6 → **−18.9%** · 2.6–3.5 → +60.7% (n=5) · ≥3.5 → **−21.7%**.
+
+Counterfactual: skipping every acca with a suspect leg changes the window from
++89.4% to **+172.5% of capital** — roughly +83% better, and bank would sit ≈341%, not 258%.
+
+**The amplifier:** staking is 12.5% of *free bank* per acca — after the green run to 455%,
+each acca staked 56.9% of capital on 11-09, the worst card of the month. Maximum size
+landed on minimum-quality legs.
+
+**Why the gate didn't save us:** the assay labels these legs `SKIPPED_VETO`, but
+`BUCKETS` in `scripts/auto_tickets.py` explicitly includes `SKIPPED_VETO`
+(operator ruling 2026-09-08, "taken against the evidence", in-code comment). The veto
+is an assay label, not an admission gate: on 11-12, legs the ledger itself marked
+SKIPPED_VETO (Türkiye @1.85/48%, Italy @2.00/49%, Albania @2.06/49%) printed anyway.
+As flat singles the veto cohort is genuinely +EV (+8–10%, both the assay and my settle
+join agree) — so the fix is **exclude the combination from accas**, not from the universe.
+
+**Culprit mechanism — draws.** ≥6 of ~10 losing legs across red days died by draw:
+Antalyaspor 1-1, Port FC 1-1, Deportivo Garcilaso 0-0, Plymouth 1-1,
+Slovakia 2-2 (a *clean* leg: HOME @1.40, stated 63%), Salford 1-1.
+
+## 2b. Hypothesis 3 (operator) — "the international break is where it started": CONFIRMED as the trigger
+
+Split at break start (11-09, the Monday after the last full club weekend):
+
+| regime | days | legs | day-net total | day-net avg | suspect-leg share | avg conf |
+|---|---|---|---|---|---|---|
+| club season (10-17 → 11-08) | 22 | 80 | **+286.9%** | +13.0%/day | 9% | 68.9% |
+| break (11-09 → 11-15) | 5 | 20 | **−197.4%** | −49.3%/day | **40%** | 61.3% |
+
+- The two catastrophic days (11-09 avg conf **47.2%**, avg odd 2.01; 11-12: 52.0%, avg odd 1.88)
+  are the two worst-confidence cards of the whole window, both 100%/75% suspect.
+- Fixture mix flips: 7 international + 3 thin-club + 10 uncovered legs during break.
+  Settled legs by class (flat stake): club-major **90% hit / +30.2%**; international 50% / −22.3%;
+  club-minor 50% / −26.5%.
+- 11-09's card was literally Plymouth Parkway vs Berkhamsted (**English 7th tier**), Pineto
+  (Serie C), Hvidovre (Danish 2nd tier), Kristiansund (Norwegian relegation-playoff fringe).
+- November odds-archive coverage: every Nations League break fixture HAS books';
+  **13 of the 21 break-day legs sit in fixtures with ZERO coverage** from theoddsapi/oddspapi
+  (all basement clubs + the Sweden–Bosnia friendly) — i.e. single-source or watchlist-grade
+  pricing exactly when conf was lowest.
+- Mechanism chain: break drains top-league volume → miner reaches into internationals +
+  uncovered micro-leagues → stated conf collapses (47–52%) and odds lengthen (1.9–2.1) →
+  admission policy (SKIPPED_VETO ticket-eligible) lets them print anyway → bank-scaled staker
+  (12.5% of free bank per acca, peaked at the break's eve) puts RECORD stakes on the
+  weakest card of the month.
+- Caveats for honesty: midweek 11-03/11-04/11-06 also ran 50% suspect shares and won
+  (Champions League slates at proper prices) — suspect legs on *covered, top-tier* cards are
+  survivable; suspect legs on *thin-break* cards were not. And big red days existed pre-break
+  too (10-25 −71.7% at 0% suspects) — variance is not new; the regime made it systematic.
+- **Outlook → outcome:** break runs to ~Nov 17/18 (club football back 11-21/22). 11-15's two
+  accas (@4.62: Godoy Cruz @2.10/76% + Portimonense @2.20/72%; @2.64: Sochi @1.65/75% +
+  Croatia @1.60/75%) **both lost** (operator report 11-15; settled store catch-up pending at
+  the 18:47 persist) → day-net ≈ −64.4%, bank ≈ **193.4%**.
+  **Break-week tally: 11-09 −113.8 · 11-12 −85.3 · 11-13 −9.9 · 11-14 +11.7 · 11-15 −64.4
+  = −261.7% of capital, accas 2W/8L.** Bank has round-tripped 455→193 in five bet-days —
+  all of it inside the international break.
+
+## 3. Hypothesis 2 — "double chance @ odds >1.7 would do better": UNTESTABLE as stated, structurally mismatched
+
+- Only 33/204 mined legs (slip ctx, since 09-15) joinable to full book 1X2 triples
+  (archives capture what sources served; thin). Derived, margin-modelled DC prices
+  (overround-stripped, ~5.5% re-margined): **average 1.11** — the miner picks strong
+  favourites (1x2@1.2–1.6 ⇒ DC 1X/X2 ≈ 1.05–1.25).
+- **n = 0 legs pass DC>1.7.** At a book, DC>1.7 corresponds to 1x2 sides priced ≳2.6–2.8
+  — a fixture universe our miner simply never surfaces. The rule doesn't rescue these
+  slips; it changes the entire slate.
+- Sample DC flat ROI on convertible legs: −10.6% (n=33, avg price 1.11) — draw insurance
+  at near-1.0 prices does not pay for itself.
+- Draw-death pattern *is* real (§2), but DC on favourites is the most expensive insurance
+  on the market; draw-no-bet is cheaper but equally not capturable today.
+
+**Blocker to real evidence:** oddspapi publishes **market 101902 "Double Chance Full
+Time"** — seen **116×** in the November census — but `_classify_catalog_entry` routes
+"double chance" to `unsupported_double_chance` before the priced-type step; parse
+receipts show **448 DC rows skipped**. Parser support for `double_chance` already exists
+(market `dc` emission via `_DC_SELECTION`), `ml_paper` already understands
+`double_chance`, and `odds_normalization` keeps `dc` OUT of 1x2 boards (the 2026-10-11
+Vidar/Brattvag incident class stays contained). So a small classifier change starts
+capturing real DC prices from tomorrow → re-run this harness on real prices in 2–4 weeks.
+
+## 4. autobets_ML held accas — corrected answer
+
+Previous "one-tick lag, self-heals" was **wrong**. The paper lane is hard-blocked by
+`localdata/autobets_ML_integrity_block.json` (5 receipts listed invalid, from 11-13/11-14),
+written by the 11-15 10:07 deferred-restore run. `receipts()` refuses to read anything
+while the marker exists; the design **never auto-clears** ("Never clear an integrity block").
+
+**Evidence review performed now:** all 5 quarantined receipts pass
+`ml_paper.validate_record()` under current main code (schema/checksum/date/freeze chain,
+bets, concentration, admission). The block is *stale*: it was written under the
+mid-migration code state and nothing re-evaluates it. While it stands, the 6 HELD ML
+accas from 11-14 cannot settle and no new ML paper accas print. Live lanes are untouched
+by design. Unblock = operator deletes the one marker file (conflict copies in
+`localdata/autobets_ML_conflicts/` remain as evidence).
+
+## 6. Problem tally (each with evidence)
+
+- **P1 — Admission hole.** SKIPPED_VETO legs are ticket-eligible (2026-09-08 ruling, made on
+  singles evidence). Suspect cell (odd>1.5 AND conf<60%) inside accas: 12 slips 4W/8L,
+  **−15.0% ROI, −83.1% capital** vs clean accas +15.0% / +172.5%. 100% of the four
+  catastrophic accas contained suspect legs.
+- **P2 — No slate/regime awareness.** Break slates collapse input quality (avg conf 47–52%
+  on the two disaster days vs 69% club-season; 13/21 break legs in fixtures with ZERO
+  theoddsapi/oddspapi November book coverage) and the lane fires full size regardless.
+- **P3 — Stake amplifier.** 12.5% of *free bank* per acca is anti-martingale across regime
+  boundaries: record deployment (113.8% of capital on 11-09) landed on the weakest card.
+- **P4 — No combined-price containment.** Two-leg slips routinely reach 3.97–4.62 combined;
+  bands ≥2.0 ran −18.9% / −21.7% ROI vs +16.2% for <2.0.
+- **P5 — Draw deaths, no insurance priced.** ≥6 of ~10 red-day culprit legs died to draws.
+  DC/DNB never captured: oddspapi DC market 101902 catalogued 116× in Nov but classified
+  unsupported (448 rows skipped). Derived DC on our favourites ≈1.11 → a DC>1.7 rule
+  selects nothing on the current slate.
+- **P6 — Evidence exists but is not enforced.** The assay already tags these legs
+  (SKIPPED_VETO) and tracks them as *singles* (+8–10%) — nothing measures
+  bucket-in-acca performance or feeds it back into admission.
+- **P7 — ML lane ops debt.** Stale integrity block since 11-13 (5/5 quarantined receipts
+  validate under current code; never auto-clears by design) → 6 held accas unsettle-able;
+  comparison lane dark during the exact week we needed it.
+- **P8 — (context) ENH lane.** Bank 23.5%, 21W/33L over 28 bet-days — likely the same
+  slate-regime cause; not examined in this run.
+
+## 7. Solution brainstorm
+
+| # | Fix | Addresses | Evidence | Effort | Tradeoff / note |
+|---|---|---|---|---|---|
+| S1 | Reject accas containing a leg odd>1.5 & conf<60 (or halve-stake) | P1 | +89.4%→+172.5% window counterfactual | tiny (code + pins) | partly reverses 2026-09-08 ruling — for the acca *product* only, singles universe unchanged |
+| S2 | Break regime gate: dynamic morning coverage scan (corroborated-price share < threshold ⇒ tighten to conf≥60 & odd<1.5, else notify-only) | P2 | §2b; generalizes to any thin slate, no calendar to maintain | small-mid | standing down thin days forfeits their (negative-EV) learning; paper-trade mode keeps evidence w/o stakes |
+| S3 | Stake cap at fixed % of capital and/or quality-scaled stakes | P3 | 11-09: cap@25%/acca would have cut the damage ~56% | tiny | throttles the compounding that built +455%; best *after* S1/S2 so caps bind only on degraded cards |
+| S4 | Combined-odds cap <2.6 | P4 | band ROIs +16.2 vs −18.9/−21.7 | one constant | cuts some big-win days (2.6–3.5 band +60.7% on n=5) |
+| S9 | League-conditioned admission: veto (or ¼-stake) acca legs from INTL / ENG-lower / Asia-Afr groups; extend to minor/unknown during flagged break days | P2 | pure-major accas +60.4% vs negative-group −15.9% ROI (60d) | small | group taxonomy must come from NEUTRAL features (coverage/tier), not these in-window ROIs — see §10 |
+| S5 | Wire oddspapi market 101902 (fulltime DC) into capture | P5 | 116 catalog sightings/mo; 448 rows dropped | small (classifier + tests) | enables real DC-price evaluation in 2–4 wks; derived data says DC on OUR slate averages ~1.11 → insurance price, not a profit line; zero-coverage break fixtures still uncovered |
+| S6 | Self-guard loop: daily "in-acca ROI by odds×conf cell" block on the ticket assay; auto-tighten when a cell's 30d acca ROI goes negative with LB significance | P6 | ladder already computes LB bands per bucket | mid | the lasting version of S1; prevents "gate rots silently" |
+| S7 | Delete stale `autobets_ML_integrity_block.json` + daily "conflicts revalidated: 0 remain" line in persist so staleness is visible without auto-clearing | P7 | 5/5 receipts pass validate_record today | trivial | preserves fail-closed design; restores the comparison lane |
+| S8 | Same treatment for ENH lane after main lane stabilizes | P8 | 21W/33L | — | later |
+
+**Recommended sequence:** S7 (free), **S1+S4 in one PR** (the money), S2 dynamic gate (next),
+S5 (enabler for your DC hypothesis). S3 after a week of S1/S2 data. S6 when S1 shows teeth.
+None of it touches workflows — all code + tests.
+
+## 5. Recommendations (operator decisions) — superseded by §7 table
+
+1. **Acca admission guard:** reject (or halve-stake) any acca containing a leg with
+   priced-odd >1.50 AND stated conf <60%; optionally cap combined odds <2.6.
+   Window counterfactual: +89.4% → +172.5%. This reverses part of the 2026-09-08 ruling —
+   that ruling compared buckets as singles; the harm is in the acca product.
+1b. **Break-regime overlay:** during FIFA international windows (or when the scheduled
+   slate's archive-odds coverage collapses — measurable per-day, e.g. share of candidate
+   fixtures with corroborated prices), additionally require conf ≥60% AND odd <1.50
+   (i.e. only the historically-safe cell), or stand the lane down to notification-only.
+   Break days were 40% suspects at avg conf 61% vs 9%/69% in club season.
+2. **Wire oddspapi market 101902** (fulltime double chance) so real DC prices land in
+   `oddspapi_odds` archives; re-evaluate DC>1.7 on real prices in 2–4 weeks. Zero DC
+   coverage among current slips means hypothesis 2 cannot be validated until this lands.
+   **✅ LANDED this session (capture vocabulary rewire):** full-time DC + DNB now
+   classify (`double_chance` / `draw_no_bet`), parse to (`dc`, 1x/x2/12) /
+   (`dnb`, home/away) with order-insensitive names + ambiguity/unresolved fails, and
+   canonicalize in `odds_normalization` (so boards stop recounting them as unsupported
+   misses). Half-time/second-half variants still refuse at the period gate.
+   7115-pass suite verified incl. admission pins for both veto classes.
+   The one remaining blocked piece (unrelated to betting): the DC>1.7 retrospective
+   needs the provider's full catalog outcome-name strings for ids 101902/10214
+   (e.g. exact "Home or Draw" spelling) — not persisted in the repo, and outbound
+   network from the analysis sandbox was restricted. One codespace call to
+   `python3 scripts/probe_oddspapi_markets.py` closes that gap for a future-run ledger
+   test; capture does NOT wait on it.
+3. **Clear the stale ML integrity block** after the recorded review above; the 6 held
+   11-14 accas then settle on the next paper tick.
+4. Today (11-15) ACCA#1 @4.62 (2.10@76% + 2.20@72%) sits in the historically losing
+   ≥3.5 combined band — flagged, pending tonight.
+
+## 8. Counterfactual re-simulation — "where would we be with the fixes active?"
+
+Day-by-day bank re-simulation over the whole 30-day window (10-17 → 11-15), real printed
+odds/results/stakes, stakes re-derived per world (`printed stake × sim-bank / real-bank`;
+win = stake×(odds−1), loss = −stake). **Validation: simulated as-run reproduces every
+recorded close exactly.** 11-15 uses the operator-reported double loss.
+
+| world | end bank 11-15 | vs actual | break-week P/L (11-09→15) | max drawdown |
+|---|---|---|---|---|
+| actual (as-run) | **193.4%** | — | **−261.9%** | 455→193 = −57.5% |
+| S1 only (kill suspect-leg accas) | 249.8% | +56.4 | −11.7% | shallow |
+| S1+S4 (+combined cap 2.6) | 249.8% | +56.4 | −11.7% | shallow |
+| **bundle S1+S4+S2 (break overlay)** | **285.6%** | **+92.2** | **−11.2%** | ~−15% max |
+| bundle + stake cap 25%/acca | 294.1% | +100.7 | −17.0% | ~−15% max |
+
+What the bundle actually does during the collapse (fire/veto log):
+
+| date | acca@ | legs (odd,conf) | gate | real outcome |
+|---|---|---|---|---|
+| 11-09 | 3.97 | (1.69,52)(2.35,42) | veto S1+S4+S2 | LOST ✓ avoided |
+| 11-09 | 3.98 | (2.05,48)(1.94,47) | veto S1+S4+S2 | LOST ✓ avoided |
+| 11-12 | 2.98 | (1.61,62)(1.85,48) | veto S1+S4+S2 | LOST ✓ avoided |
+| 11-12 | 4.12 | (2.00,49)(2.06,49) | veto S1+S4+S2 | LOST ✓ avoided |
+| 11-13 | 1.86 | (1.33,71)(1.40,63) | FIRE | LOST ✗ taken |
+| 11-13 | 1.69 | (1.30,71)(1.30,67) | FIRE | WON ✓ taken |
+| 11-14 | 2.38 | (1.55,60)(1.54,59) | veto S1(S2) | WON ✗ forgone (+42.5%) |
+| 11-14 | 2.45 | (1.58,60)(1.55,60) | veto S2 | LOST ✓ avoided |
+| 11-15 | 4.62 | (2.10,76)(2.20,72) | veto S4+S2 | LOST ✓ avoided |
+| 11-15 | 2.64 | (1.65,75)(1.60,75) | veto S4+S2 | LOST ✓ avoided |
+
+Honest caveats:
+- The gates also skip the **winning** suspect cells before the break: 11-03/11-04/11-06
+  UCL-midweek cards (three of four suspect accas WON, +155% of capital forgone). The bundle
+  enters the break at 297 rather than 455. Net-net it still ends +46–52% ahead — the rule
+  trades jackpot upside for survival — but S1's cell is crude (4 of its 12 kills were
+  winners). S6 (data-driven cell admission) is the refined version.
+- The bundle is **not** variance-proof: 10-25 (−71.7%, two clean accas, 0% suspects) lands
+  in every world. What it kills is *systematic* bad-cell exposure, not ordinary losing days.
+- Stake-cap ends slightly ahead (+100.7pp) mostly by softening pre-break losers, at the cost
+  of throttling compounding in green streaks.
+
+## 9. 60-day panel (2026-09-17 → 11-15, recovered via localdata/archive + git)
+
+Ticket slips recovered from `localdata/archive/auto_tickets/` (54 bet-days, 196 legs).
+Legs settled against the warehouse via the repo's own alias/orientation-proof matcher
+(188/196 matched; 8 unsettled, excluded). Acca outcomes: perf ledger first (money truth),
+leg-derived fallback for recut slips (e.g. 10-15). Sim validation: day nets track history
+within rounding; end-anchor 196.2% vs true 193.4% (+1.4% drift over 60d).
+
+### signals replicate on 60d
+
+- **only negative odds band: 1.50–1.70 → −4.9%** (n=35; <1.50 +9.0% on n=130).
+  Worst cell overall: **1.50–1.70 × conf 60–66: −24% (n=21)**.
+- user cell (odd>1.5 & conf<60) as *singles*: +9.7% (n=18) — not the poison as singles.
+  **As accas: suspect-containing 6W/9L, −5.9% ROI (net −35.3%) vs clean accas +7.4% ROI —
+  but new on 60d: suspect *accas*' −35.3% net vs clean +148.1% net (additively staked).**
+- **international legs −4.4% (n=18) vs club +9.8% (n=170)** — the regime signal replicates.
+
+### counterfactual bank (60d, end = 11-15)
+
+| world | end bank | break-day P&L (7 flagged days) | club-day P&L (47 days) |
+|---|---|---|---|
+| actual | 196.2% (true 193.4) | **−110.4%** | +203.2% |
+| S1 only | 185.6% | — | — |
+| S1+S4 | 202.0% | — | — |
+| **bundle S1+S4+S2 (empirical intl-share break flag)** | **291.2%** | **+13.1%** | +174.8% |
+| bundle + cap 25% | 329.9% | +22.7% | +203.8% |
+
+- Break days (empirically flagged: ≥50% national-team legs at freeze): 09-24, 09-29,
+  10-01, 10-04, 10-06, 11-12, 11-13. Actual lost −110.4% across them; the bundle went +13.1%
+  (it still fires clean break cards: 09-29 2/2 fired).
+- November nuance: 11-09's basement-club card is NOT intl-flagged — **S1 alone catches it**
+  (4/4 suspect legs). S1+S4 lets 11-14's losing acca through (+its winner skipped) — the
+  flags are complementary, not redundant.
+- **S1-only notably ends below actual** on the 60d path: early skipped winners shrink the
+  bank that compounds later. The value is in the *combination*: S1 removes the toxic cell,
+  S4 the tail, S2 the regime days.
+- Recut reconciliation: 10-15's printed @5.36 acca was later settled as a @1.78 acca
+  (post-freeze recut) — handled via ledger-first join.
+
+## 10. League attribution (60d) — how leagues drive performance
+
+All 196 legs resolved to leagues (100%, via the lane's own CLV snapshots). Group taxonomy:
+UEFA club comps / INTL (national teams) / TOP5 / EU-MAJOR2 / NORDIC / EAST-BALK / SOUTH-AM /
+ASIA-AFR / ENG-LOWER / OTHER-MIN.
+
+### leg ROI by league group
+
+| group | n | hit | ROI | avgOdd | avgConf |
+|---|---|---|---|---|---|
+| UEFA-CLUB (UCL/UEL/UECL) | 25 | 80.0% | **+28.1%** | 1.56 | 67% |
+| EU-MAJOR2 | 13 | 84.6% | +17.3% | 1.37 | 72% |
+| NORDIC | 11 | 72.7% | +11.2% | 1.64 | 67% |
+| OTHER-MIN | 72 | 79.2% | +10.1% | 1.43 | 67% |
+| SOUTH-AM | 6 | 66.7% | +3.7% | 1.53 | 67% |
+| EAST-BALK | 9 | 66.7% | +1.9% | 1.49 | 67% |
+| INTL | 25 | 68.0% | −1.1% | 1.51 | 64% |
+| TOP5 | 16 | 68.8% | −5.3% | 1.39 | 72% |
+| ASIA-AFR | 6 | 66.7% | −8.0% | 1.48 | 69% |
+| ENG-LOWER | 5 | 60.0% | −14.8% | 1.41 | 69% |
+
+### acca containment by group (the decisive table)
+
+| acca composition | n | W/L | net | ROI |
+|---|---|---|---|---|
+| **pure major** (UEFA/TOP5/EU-MAJOR2/NORDIC/EAST-BALK) | 22 | 15W/7L | **+382.3%** | **+60.4%** |
+| contains minor/unclassified | 44 | 28W/16L | +35.9% | +2.9% |
+| **contains INTL/ENG-lower/Asia-Afr leg** | 26 | 12W/14L | **−88.5%** | **−15.9%** |
+
+- All-UEFA accas: n=9, 6W/3L, **+52.5% ROI (+169% net)**. But "any one UEFA leg" mixed accas: **−21.5%** — one golden leg does not redeem a toxic partner. Purity, not presence.
+- **Month-robustness (the subtle finding):** minor/unclassified accas were GOOD in Sep (+53%, n=14) and Oct (+18%, n=21) and collapsed only in Nov (**−37%**) — minor leagues are fine when they are *covered* mid-tiers, toxic when they're break-week basement cards. NEG-group accas were ≤0 in **every** month (−3%/−1%/−40%) — the one consistently harmless-to-hostile set. Pure-major: +50% Oct, +78% Nov (n=2 in Sep).
+- Every catastrophic break slip mixes exactly these groups (league labels from the CLV record):
+  11-09 #1 Serie C + Eliteserien playoff; #2 **FA Cup (7th tier) + Danish First Division**;
+  11-12 #1 **El Salvador + Nations League U21s of pricing**; #2 two Nations League legs @49% conf.
+- TOP5's −5.3% (n=16) is small-n variance on deep-favourite pricing (avgOdd 1.39) — flagged, not a claim.
+
+**Caveat:** the group→ROI estimates use the same 60d window they'd gate on. Safe operational use:
+anchor the taxonomy on *neutral* features (league's price-corroboration coverage + documented tier),
+then let S6 accumulate per-group in-acca ROI going forward. The honest actionable form today:
+veto INTL/ENG-lower/Asia-Afr legs from accas (≤0 in all three months, −88.5% net) and, during
+flagged break days, extend to minor+unknown.
+
+*Repro note: throwaway harness in /tmp (not committed); all inputs are committed
+localdata snapshots, so any future run reproduces these numbers until the next 30d window shifts.*

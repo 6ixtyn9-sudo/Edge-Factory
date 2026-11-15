@@ -70,14 +70,22 @@ def test_unpriced_families_are_word_token_matched_not_substring():
     collide with any family."""
     assert _classify_catalog_entry(
         {"name": "Odd Even", "marketType": "x", "period": "fulltime"}) == "unsupported_odd_even"
+    # 2026-11-15: full-time double chance and draw-no-bet are no longer
+    # *unpriced* vocabulary — the classifier routes them to the dc/dnb
+    # parsers (market 101902's 116 Nov sightings were previously dropped here).
     assert _classify_catalog_entry(
-        {"name": "Double Chance", "marketType": "x", "period": "fulltime"}) == "unsupported_double_chance"
+        {"name": "Double Chance", "marketType": "x", "period": "fulltime"}) == "double_chance"
     assert _classify_catalog_entry(
         {"name": "Correct Score", "marketType": "x", "period": "fulltime"}) == "unsupported_correct_score"
     assert _classify_catalog_entry(
         {"name": "Over Under Full Time", "marketType": "totals", "period": "fulltime"}) == "totals"
     assert _classify_catalog_entry(
-        {"name": "Draw No Bet", "marketType": "x", "period": "fulltime"}) == "unsupported_draw_no_bet"
+        {"name": "Draw No Bet", "marketType": "x", "period": "fulltime"}) == "draw_no_bet"
+    # Halves still refuse before the family label is ever considered.
+    assert _classify_catalog_entry(
+        {"name": "Double Chance First Half", "marketType": "x", "period": "p1"}) == "unsupported_period"
+    assert _classify_catalog_entry(
+        {"name": "Draw No Bet Second Half", "marketType": "x", "period": "p2"}) == "unsupported_period"
 
 
 # ---------------------------------------------------------------------------
@@ -285,3 +293,54 @@ def test_catalog_only_btts_resolves_yes_no_and_refuses_conflicts(name, ambiguous
     assert stats.get('ambiguous_btts', 0) == int(ambiguous)
     assert stats.get('unresolved_btts', 0) == 0
     assert op._catalog_outcome_selection(CATALOG_ENTRIES['104'], '104') is None
+
+
+# ---------------------------------------------------------------------------
+# 2026-11-15: full-time double-chance / draw-no-bet are priced vocabulary now
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("name,key_name,sel", [
+    ("Home or Draw", None, "1x"), ("Draw or Home", None, "1x"), ("1X", None, "1x"),
+    ("Away or Draw", None, "x2"), ("X2", None, "x2"),
+    ("Home or Away", None, "12"), ("12", None, "12"),
+    (None, "Home or Draw", "1x"), (None, "X2", "x2"),
+])
+def test_fulltime_double_chance_resolves_tuple(name, key_name, sel):
+    stats = {}
+    m, s, why = op._market_selection(
+        "double_chance", name, "Croatia", "England", None,
+        outcome={}, player0={}, outcome_key="k",
+        catalog_entry={"outcomes": {"k": key_name or ""}}, market_id="101902",
+    )
+    assert (m, s, why) == ("dc", sel, None), stats
+
+
+def test_fulltime_double_chance_refuses_ambiguous_or_unresolved():
+    # Name and catalog outcome disagree -> ambiguous miss, never a guess.
+    m, s, why = op._market_selection(
+        "double_chance", "Home or Draw", "Croatia", "England", None,
+        outcome={}, player0={}, outcome_key="k",
+        catalog_entry={"outcomes": {"k": "Away or Draw"}}, market_id="101902",
+    )
+    assert (m, s) == (None, None) and why == "ambiguous"
+    m, s, why = op._market_selection(
+        "double_chance", None, "Croatia", "England", None,
+        outcome={}, player0={}, outcome_key="k",
+        catalog_entry={"outcomes": {"k": "Total Goals"}}, market_id="101902",
+    )
+    assert (m, s) == (None, None) and why == "unresolved"
+
+
+@pytest.mark.parametrize("name,key_name,sel", [
+    ("Croatia", None, "home"), ("England", None, "away"),
+    ("Home", None, "home"), ("Away", None, "away"),
+    (None, "Croatia", "home"), (None, "Away", "away"),
+])
+def test_fulltime_draw_no_bet_resolves_side(name, key_name, sel):
+    m, s, why = op._market_selection(
+        "draw_no_bet", name, "Croatia", "England", None,
+        outcome={}, player0={}, outcome_key="k",
+        catalog_entry={"outcomes": {"k": key_name or ""}}, market_id="10214",
+    )
+    assert (m, s, why) == ("dnb", sel, None)
