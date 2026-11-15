@@ -503,3 +503,16 @@ dilution, not avoidance: `saturated_accas` is a live spec key, so the volume lev
 gets a paired bootstrap directly (`--ab live "saturated_accas=5"`). The only
 risk-shaped lever that touches blowup days is stake/day (worst-day scales linearly);
 the stake battery row shows growth flat 25→33% then decaying ≥50%.
+
+## 16. Post-fix codespace reads (main @ c0d912e) — the first real signal
+
+| probe | window | Δ log/day | P(B>A) | verdict |
+|---|---|---|---|---|
+| acca_veto=0:1.5:0.60 (clean S1: suspect leg at ANY price) | 25 cd / 21 bd | **+0.0580** (final 454% vs 192%, hit 49→62%, maxDD 58→25%) | **98%** | **CANDIDATE** — paired bootstrap one-sided, p10 +0.0129 p90 +0.0713; LODO +0.0287..+0.0523 = broad-based (no day >30%); cards differ 0/25 → still acts as drop (9 accas / 4 full days removed of 35/21), i.e. day-skip + partial-day skip of suspect accas. REQUIRES wide-window confirm (next run). |
+| acca_veto=0:1.4:0.70,side=AWAY (venue-aware away gate) | 25 cd | +0.0665 | 30% | **DEAD by coverage**: 1 bet-day / 1 acca in the whole window — away legs passing (odd<1.40 OR conf≥70) almost never pair up. Venue chapter CLOSED: §12's away toxicity loads entirely through the odd&conf cell that S1 already targets; blunt home restriction hurt (§14), away-gated pool can't field a card. |
+| saturated_accas=5 (volume dilution) | 43 cd / 38 bd | +0.0177 | 87% | NOT SHIP-GRADE YET — fires on only 2/43 days (pool rarely reaches 12 legs after faithful-pool pruning); 09-19 carries 67%; "2 coin flips". Probe softer trigger: volume_pool=8,saturated_accas=4. |
+| battery cross-checks | 25 cd | — | — | S1 row now reads +0.0580 (matches A/B); S1+min_prob60 ≡ always-on prob≥60 (+0.0168) strictly dominated by S1; S4 cap solo −0.0394 dead; UEFA-only S9 2 days, noise. |
+
+Pending confirmations before any engine admission change: (a) S1 on 43 cd window;
+(b) note semantic: veto = drop suspect accas, day goes no-bet if all dropped —
+live engine change would match (skip card), coverage cost 21→17 days.
