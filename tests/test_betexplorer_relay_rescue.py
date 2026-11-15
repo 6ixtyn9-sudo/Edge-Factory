@@ -121,6 +121,41 @@ def test_relay_miss_falls_back_to_the_existing_429_policy(monkeypatch):
     assert stats["be_429"] == 2
     assert stats["be_cooling_down"] is True
     assert stats["be_relay_fetches"] == 0
+    # The miss is COUNTED: two refused URLs, two configured-but-empty rescues.
+    assert stats["be_relay_misses"] == 2
+    assert stats["be_relay_configured"] is True
+
+
+def test_relay_miss_is_visible_once_per_run(monkeypatch, capsys):
+    """An engaged-but-empty relay must not be indistinguishable from an
+    unconfigured one in the run log (the 2026-11-15 intraday log showed both
+    429 lines and no relay line, with no field to separate the cases)."""
+
+    def urlopen(_request, timeout=20):
+        raise _http_error(429)
+
+    _configure_relay(monkeypatch, {})
+    monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
+
+    with pytest.raises(be.BetExplorerCoolingDown):
+        be._fetch(URL, retries=3)
+    err = capsys.readouterr().err
+    assert err.count("relay configured but no relay served") == 1
+    assert URL in err
+
+
+def test_unconfigured_relay_counts_no_misses(monkeypatch, capsys):
+    def urlopen(_request, timeout=20):
+        raise _http_error(429)
+
+    monkeypatch.setattr(be.public_relay, "configured", lambda: False)
+    monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
+    with pytest.raises(be.BetExplorerCoolingDown):
+        be._fetch(URL, retries=3)
+    stats = be.run_stats()
+    assert stats["be_relay_misses"] == 0
+    assert stats["be_relay_configured"] is False
+    assert "no relay served" not in capsys.readouterr().err
 
 
 def test_unconfigured_relay_keeps_the_pre_repair_policy(monkeypatch):
