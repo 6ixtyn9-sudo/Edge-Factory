@@ -1,26 +1,6 @@
 {
-  "attempted": 10,
+  "attempted": 8,
   "attempted_fixtures": [
-    {
-      "avg_p": 87.0,
-      "away": "ESWATINI",
-      "date": "2026-11-15",
-      "home": "SURINAM",
-      "league": "WNF",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 77.0,
-      "away": "SAN MARINO",
-      "date": "2026-11-15",
-      "home": "FINLAND",
-      "league": "EUN",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
     {
       "avg_p": 77.0,
       "away": "TURKEY",
@@ -47,16 +27,6 @@
       "date": "2026-11-15",
       "home": "CROATIA",
       "league": "EUN",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 75.0,
-      "away": "SABADELL",
-      "date": "2026-11-15",
-      "home": "ELDENSE",
-      "league": "ES2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.574
@@ -92,6 +62,16 @@
       "w_score": 0.5405
     },
     {
+      "avg_p": 52.203770197486534,
+      "away": "Pe\u00f1arol",
+      "date": "2026-11-15",
+      "home": "Defensor Sporting",
+      "league": "Primera Division",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
       "avg_p": 38.536730080994545,
       "away": "Sabadell",
       "date": "2026-11-15",
@@ -103,19 +83,19 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 9,
+  "be_cached": 7,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 9,
-  "candidate_fixtures": 28,
-  "captured_at": "2026-11-15T13:25:19.900208+00:00",
+  "cache_only": 7,
+  "candidate_fixtures": 13,
+  "captured_at": "2026-11-15T16:25:46.429429+00:00",
   "date": "2026-11-15",
-  "deferred_fixtures": 18,
+  "deferred_fixtures": 5,
   "errors": [],
-  "fixtures_with_rows": 10,
+  "fixtures_with_rows": 7,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 147,
     "challenge_pages": 0,
@@ -134,26 +114,6 @@
   "network_attempted": 1,
   "quoted_fixtures": [
     {
-      "avg_p": 87.0,
-      "away": "ESWATINI",
-      "date": "2026-11-15",
-      "home": "SURINAM",
-      "league": "WNF",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 77.0,
-      "away": "SAN MARINO",
-      "date": "2026-11-15",
-      "home": "FINLAND",
-      "league": "EUN",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
       "avg_p": 77.0,
       "away": "TURKEY",
       "date": "2026-11-15",
@@ -179,16 +139,6 @@
       "date": "2026-11-15",
       "home": "CROATIA",
       "league": "EUN",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 75.0,
-      "away": "SABADELL",
-      "date": "2026-11-15",
-      "home": "ELDENSE",
-      "league": "ES2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.574
@@ -234,8 +184,8 @@
       "w_score": 0.5405
     }
   ],
-  "requests": 8,
-  "rows": 30,
+  "requests": 6,
+  "rows": 21,
   "schema": 1,
   "status": "ok"
 }
