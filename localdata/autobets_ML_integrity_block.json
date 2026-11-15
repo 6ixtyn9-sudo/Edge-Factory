@@ -1,0 +1,13 @@
+{
+  "lane": "autobets_ML",
+  "paper_only": true,
+  "status": "blocked_pending_evidence_review",
+  "conflicts": [
+    {
+      "date": "2026-11-13",
+      "kind": "understated_prior_fixture_stake",
+      "detected_by": "replay check 'rolling fixture reuse lacks complete prior stake evidence'",
+      "detail": "Retained rolling receipt autobets_ML_2026-11-13_20261113T091303978090Z.json froze prior_open_stake_micro_units=0 for fixtures ('2026-11-13','serbia','germany') and ('2026-11-13','liechtenstein','azerbaijan') that the earlier retained receipt autobets_ML_2026-11-13_20261112T223642381751Z.json had already staked 97512 micro-units on. Frozen bytes are retained byte-exact; history is never rewritten. The paper lane stays blocked until an operator resolves the conflict; live lanes are unaffected."
+    }
+  ]
+}

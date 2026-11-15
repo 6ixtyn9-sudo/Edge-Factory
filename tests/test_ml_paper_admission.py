@@ -13,7 +13,7 @@ import pytest
 from edgefactory import ml_paper as mp
 from edgefactory.consensus_contracts import enhancement_fixture_identity
 import scripts.auto_tickets as at
-from test_ml_paper import candidate, pick, receipt
+from test_ml_paper import DAY, candidate, pick, receipt
 
 NOW = datetime(2026, 11, 8, 6, tzinfo=UTC)
 PAST = '2026-11-06'
@@ -637,3 +637,38 @@ def test_card_rendering_shows_joint_admission_envelope():
     assert "Joint admission envelope" in card_text
     assert "Home1 vs Away1" in card_text
     assert "Home2 vs Away2" in card_text
+
+
+def test_legacy_product_accas_carry_informational_abstention_and_still_replay():
+    # The negative-EV prefix-search lane stamps the plain model-product basis;
+    # per-leg admission is recorded evidence, not a gate, so abstaining legs
+    # are valid there. Retained 2026-11-13/14 receipts prove production shipped
+    # exactly this shape; replay must recompute its arithmetic exactly, and the
+    # admission gate must stay intact for admission-basis tickets.
+    model = mp.learn(history(n=1), NOW, score)
+    rows = [next_candidate(1), next_candidate(2)]
+    for c in rows:
+        mp.apply_learning([c], model)
+    mp.apply_admission(rows, model)
+    legs = [deepcopy(c) for c in rows]
+    estimate = math.prod(c['probability'] for c in legs)
+    odds = math.prod(c['odds'] for c in legs)
+    decision = mp._kelly(estimate, odds)
+    kelly_fraction, log_growth = decision if decision is not None else (None, None)
+    acca = {'legs': legs, 'odds': odds, 'book': legs[0]['book'],
+            'probability_basis': 'product_assumes_cross_fixture_independence_not_validated',
+            'probability_estimate': estimate, 'model_probability_estimate': estimate,
+            'estimated_ev': estimate * odds - 1,
+            'model_kelly_fraction': kelly_fraction, 'estimated_log_growth': log_growth}
+    row = {'candidates': rows, 'accas': [acca], 'learning': model,
+           'policy': {'admission': mp.ADMISSION_POLICY}, 'date': DAY}
+    mp._validate_admission(row)
+    tampered = deepcopy(row)
+    tampered['accas'][0]['estimated_ev'] += 1e-9
+    with pytest.raises(ValueError, match='ticket admission/joint risk arithmetic invalid'):
+        mp._validate_admission(tampered)
+    gated = deepcopy(row)
+    gated['accas'][0]['legs'][0]['admission']['status'] = 'abstain'
+    gated['accas'][0]['probability_basis'] = mp.ADMISSION_JOINT_BASIS
+    with pytest.raises(ValueError, match='unadmitted leg in new paper ticket'):
+        mp._validate_admission(gated)
