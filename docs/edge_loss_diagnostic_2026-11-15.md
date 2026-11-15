@@ -339,5 +339,72 @@ then let S6 accumulate per-group in-acca ROI going forward. The honest actionabl
 veto INTL/ENG-lower/Asia-Afr legs from accas (≤0 in all three months, −88.5% net) and, during
 flagged break days, extend to minor+unknown.
 
+## 11. Team-level attribution (60d) — "toxic teams" answered in the negative
+
+All 196 legs attributed to picked teams; 141 of 162 picked teams appear exactly once,
+repeat max n=3 (Inter, Barcelona, Germany, Portugal, Benfica). Worst repeat offenders:
+
+| team | n | hit | ROI | draw-kills |
+|---|---|---|---|---|
+| Slavia Praha | 2 | 50% | −36% | 1 |
+| PAOK | 2 | 50% | −35% | 0 |
+| Molde | 2 | 50% | −34% | 0 |
+| Slovakia | 2 | 50% | −30% | 1 |
+| Bursaspor | 2 | 50% | −29% | 1 |
+
+**No team survives an n≥2 & cumulative-loss bar.** Team identity is not the carrier.
+The draw-death catalogue is: **26/46 losing legs (~57%) drew**, spread across 27 different
+teams — Bayern (2-2), Dortmund (2-2 twice incl. Bayern match), Sparta, Vasco, Gibraltar (0-0),
+Russia 3-3 (!). Accas containing a leg that later drew: 4W/23L, −62.9% ROI — tautological
+(a drawn backed leg is a lost leg), but it isolates the leak class: **draws**, not teams.
+
+Draw risk is priced by the market per-fixture (derbies, cup rotation, break friendlies like
+Russia 3-3 carry rotation risk), not by team DNA at this sample size. This is the argument
+for **priced draw insurance (DC/DNB capture — landed §3-ref)** and against a static team
+blocklist. Harness support for team probes exists (`teams=` include/`!exclude` filter)
+so any future "gate team X" idea can be tested against data before pinning.
+
+## 12. Venue (home/away) attribution (60d) — the strongest clean signal in the whole panel
+
+### leg level
+| backed | n | hit | implied | gap vs market | ROI | draw-kills |
+|---|---|---|---|---|---|---|
+| at home | 129 | 77.5% | 70.4% | **+7.2pp** | **+12.2%** | 18/29 losses |
+| away | 59 | 69.5% | 68.3% | +1.2pp | +0.2% | 9/18 losses |
+
+### calibration by favourite depth (market-implied vs actual)
+| venue × depth | n | hit | implied | gap | ROI |
+|---|---|---|---|---|---|
+| HOME <1.40 | 65 | 81.5% | 77.0% | +4.5pp | +5.6% |
+| **HOME 1.40–1.60** | 42 | 73.8% | 68.0% | +5.8pp | +9.4% |
+| **HOME ≥1.60** | 22 | 72.7% | 55.2% | **+17.5pp** | **+75.8%** |
+| AWAY <1.40 | 29 | 86.2% | 76.1% | +10.1pp | +13.6% |
+| **AWAY 1.40–1.60** | 15 | 60.0% | 67.7% | **−7.7pp** | **−15.0%** |
+| **AWAY ≥1.60** | 15 | 46.7% | 54.0% | **−7.3pp** | **−21.8%** |
+
+Pattern: **home sides are under-priced at every depth (worse for longer prices)** — the market
+slate under-rates home; away faves are only safe when deep (<1.40). Medium/long away prices
+systematically underperform their own implied probability.
+
+### venue × conf (user cell becomes venue-asymmetric)
+- HOME conf<60: n=11, +41.6% ROI (home discount compensates low stated conf)
+- **AWAY conf<60: n=9, −24.8% ROI — the toxic cell**; AWAY conf 60–69 −11.5%; AWAY conf≥70 +20.9%
+
+### acca containment
+- accas with an away leg odd≥1.40 & conf<70: n=20, 7W/13L, **−26.2% ROI, −153.3% net**
+- without: n=72, 48W/24L, **+26.0% ROI, +483.0% net**
+
+### team×venue (repeat teams)
+Every repeat-team loser row is a HOME-backed failure (Molde/PAOK/Villarreal/Dortmund home);
+the dual-side repeats show the split clearly (Slovakia: home −100%, away +40%; Slavia Praha:
+home −100%, away +28%; Barcelona: home −100%, away +27%; Inter likewise). n=1–3 per cell —
+flavour, not gate material by itself.
+
+**Caveat:** away-cell n=15 per depth band — small; but the sign flip is coherent across
+bands, conf strata and containment levels (three independent cuts), and the home-side
+under-pricing has a known market-microstructure rationale (retail books shade away prices).
+Probe before pinning: harness `teams=` exists now; venue probes need a `side=` filter —
+added alongside in the same PR if this cut survives codespace replay.
+
 *Repro note: throwaway harness in /tmp (not committed); all inputs are committed
 localdata snapshots, so any future run reproduces these numbers until the next 30d window shifts.*

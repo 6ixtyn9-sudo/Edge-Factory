@@ -306,8 +306,43 @@ def test_parse_spec_accepts_leagues_and_still_rejects_unknown_keys():
     assert rh.parse_spec("leagues=EPL|Sc1") == {"leagues": "EPL|Sc1"}
     assert rh.parse_spec("floor=1.3,leagues=EPL") == {"floor": 1.3, "leagues": "EPL"}
     assert rh.parse_spec("floor=1.3,cup_floor=1.4") == {"floor": 1.3, "cup_floor": 1.4}
+    assert rh.parse_spec("teams=dortmund|paok") == {"teams": "dortmund|paok"}
+    assert rh.parse_spec("side=HOME|AWAY") == {"side": "HOME|AWAY"}
     with pytest.raises(SystemExit):
         rh.parse_spec("nonsense=1")
+
+
+def test_side_filter_keeps_only_named_backed_sides():
+    def leg(tag, pick):
+        return {"match": f"H{tag} vs A{tag}", "pick": pick, "prob": 0.75,
+                "odds": 1.40, "result": "win", "row": {}}
+    pool = at.rank_legs([leg("h", "HOME"), leg("a", "AWAY"), leg("d", "DRAW")])
+    kept = rh._filtered_pool(pool, {"side": "HOME"})
+    assert [l["pick"] for l in kept] == ["HOME"]
+    kept = rh._filtered_pool(pool, {"side": "HOME|DRAW"})
+    assert {l["pick"] for l in kept} == {"HOME", "DRAW"}
+    with pytest.raises(SystemExit):
+        rh._filtered_pool(pool, {"side": "UP"})
+
+
+def test_teams_filter_includes_and_excludes_on_match_and_row_names():
+    def leg(tag, home, away):
+        return {"match": f"{home} vs {away}", "pick": "HOME", "prob": 0.75,
+                "odds": 1.40, "result": "win", "row": {"home": home, "away": away}}
+    pool = at.rank_legs([
+        leg("a", "Borussia Dortmund", "Werder Bremen"),
+        leg("b", "PAOK", "Kalamata"),
+        leg("c", "Molde", "Aalesund"),
+    ])
+    # Include: only named teams survive (match text OR row home/away).
+    kept = rh._filtered_pool(pool, {"teams": "dortmund|paok"})
+    assert {l["row"]["home"] for l in kept} == {"Borussia Dortmund", "PAOK"}
+    # Exclude: named teams are dropped from the pool the selector sees.
+    kept = rh._filtered_pool(pool, {"teams": "!dortmund"})
+    assert {l["row"]["home"] for l in kept} == {"PAOK", "Molde"}
+    # Case-insensitive, either side counts.
+    kept = rh._filtered_pool(pool, {"teams": "!kalamata"})
+    assert {l["row"]["home"] for l in kept} == {"Borussia Dortmund", "Molde"}
 
 
 def test_cup_floor_filter_elevates_hurdle_on_cup_matches():

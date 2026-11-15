@@ -43,6 +43,9 @@ Variant spec syntax (anywhere a SPEC is accepted):
         gate_mode(off|pool|acca), fallback(0|1), stake_frac,
         stake_mode(per_day|per_acca), stake_per_acca, weights (e.g. 3,2,1),
         min_prob (harness-only always-on prob floor)
+        leagues=A|B (pool: league-substring include)  rules=rule|!rule
+        teams=T|!T (pool: team-name substring, either side)
+        acca_veto=cap[:odd_floor:prob_floor] (post-selection acca veto probe)
 
 Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py                  # status + live baseline
@@ -183,7 +186,7 @@ def parse_spec(text):
             spec[k] = float(v)
         else:
             spec[k] = v
-    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules", "cup_floor", "acca_veto"}
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules", "cup_floor", "acca_veto", "teams", "side"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
     if spec.get("acca_veto") is not None:
@@ -453,6 +456,41 @@ def _filtered_pool(pool, spec):
             pool = [l for l in pool if any(h(l) for h in inc)]
         if exc:
             pool = [l for l in pool if not any(h(l) for h in exc)]
+    want = str(spec.get("side") or "").strip().upper()
+    if want:
+        # Venue probe: restrict the pool the live selector sees to one backed
+        # side (HOME / AWAY / DRAW, |-separated). 2026-11-15 diagnostic §12:
+        # away legs at odd>=1.4 & conf<70 lost 26.2% ROI inside accas while
+        # every home depth band beat its implied probability — this is the knob
+        # those venue counterfactuals get tested through before any pinning.
+        allowed = {s for s in want.split("|") if s}
+        if not allowed <= {"HOME", "AWAY", "DRAW"}:
+            raise SystemExit(f"side= wants HOME|AWAY|DRAW tokens, got {want!r}")
+        pool = [l for l in pool if str(l.get("pick") or "").upper() in allowed]
+    want = spec.get("teams")
+    if want:
+        # Same include/exclude grammar as ``rules``: |-separated substrings,
+        # a leading ``!`` excludes. Matched against the printed match text and
+        # the archived row's home/away names, so "dortmund" and "Dortmund"
+        # both fire. The 60d team panel (docs/edge_loss_diagnostic_2026-11-15
+        # §10) found no team carries enough repeat legs to gate on; this knob
+        # exists for focused what-if probes, not because a blocklist earned it.
+        inc, exc = [], []
+        for tok in str(want).split("|"):
+            tok = tok.strip()
+            if tok:
+                (exc if tok.startswith("!") else inc).append(tok.lstrip("!").strip().lower())
+
+        def has_teams(leg, toks):
+            row = leg.get("row") or {}
+            hay = " ".join([str(leg.get("match") or ""),
+                            str(row.get("home") or ""), str(row.get("away") or "")]).lower()
+            return any(t in hay for t in toks)
+
+        if inc:
+            pool = [l for l in pool if has_teams(l, inc)]
+        if exc:
+            pool = [l for l in pool if not has_teams(l, exc)]
     return pool
 
 
