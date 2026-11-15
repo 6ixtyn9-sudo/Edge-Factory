@@ -635,3 +635,21 @@ final 435%, 69 accas, hit 52%, maxDD 58%. (This echo of the pre-slump build is t
 ```
 Caveat repeated: these certify only the PRE-recovery regime; the live regime (slump)
 is replay-blind, so even a positive P here ships, if ever, only after forward evidence.
+
+## 22. The certification trio (era window, 64 cd / 43 graded bd, pending-excluded)
+
+| arm | Δ log/day | P(B>A) | concentration | verdict |
+|---|---|---|---|---|
+| floor=1.25 | +0.0150 (829%, hit 58%, maxDD 33%) | 90% | 09-20 70%, p10 −0.0002 | positive but carrier-heavy alone |
+| saturated_accas=5 | +0.0157 (852%, hit 55%, maxDD 44%) | 87% | 09-19 67%, **3 differ-days** ("3 coin flips") | positive but ultra-thin trigger |
+| **floor=1.25 + saturated_accas=5** | **+0.0307 → final 1625%, hit 59%, maxDD 58→25%** | **98%**, p10 **+0.0098** | 09-20 33%; LODO **+0.0205..+0.0351 = broad-based**; 18/64 differ | **SHIP-GRADE retrospectively** |
+
+Notable: Δ_combo = Δ_floor + Δ_sat EXACTLY (+0.0150 + 0.0157 = +0.0307) — the two
+channels are independent and interfere zero: (i) 1.25–1.30 legs are win-positive in
+this model (§13: stated conf under-reads reality at the low-price end); (ii) deeper
+pools → deeper cards on saturated days. maxDD halves AND growth doubles.
+
+**STANDING CAVEAT (doctrine-complete):** certified on the PRE-recovery regime only;
+the live post-Forebet regime is replay-blind (§20). Any ship decision must pair the
+engine change with (a) resumed pick-pool JSON capture so forward evidence can
+accumulate, and (b) an explicit revert tripwire (re-judge after ~15 live bet-days).
