@@ -601,3 +601,37 @@ Codespace reads, main @ c0d912e:
   (morning capture) for post-10-21 days, or the only post-Forebet evidence will ever
   be the descriptive ledger. If any gate is ever proposed again, shadow telemetry +
   forward collection is the evidence path; retro replay cannot reach this regime.
+
+## 21. Full-era ladder reads (64 candidate-days / 43 graded bet-days, pending-excluded) — retrospective ceiling
+
+Main @ caf5794, --since 2026-06-13 --drop-pending-days. Baseline: +0.0342 log/day,
+final 435%, 69 accas, hit 52%, maxDD 58%. (This echo of the pre-slump build is the
+435% the real ledger spent; the regime was genuinely strong pre-recovery.)
+
+**S1 — final ledger, monotonic deflation with n:**
+| universe | bd | Δ | P(B>A) |
+|---|---|---|---|
+| faithful 09-17 | 21 | +0.0580 | 98% |
+| faithful 08-27 | 38 | +0.0163 | 67% |
+| faithful 06-13 era | 43 | **−0.0017** | **31%** (08-20 carries 89%) |
+| superset 08-27 | 50 | −0.0060 | 16% |
+**S1 CLOSED.** The 98% was small-n + carrier-day luck; every larger sample deflates it.
+
+**Battery at max n (un-bootstrapped rows, Δ vs baseline):**
+- floor 1.25: **+0.0150** → 829% final, hit 58%, maxDD 58→33%, SAME 43 days. Positive at
+  n=21 (+0.0204) AND n=43 — the only lever with the same sign in every window tried.
+- saturated_accas=5 (pool≥12): **+0.0157** → 852%, hit 49→55%, maxDD→44%.
+- legacy strict pool gate: +0.0093 → 649%, maxDD→44%.
+- DEAD at max n: rank-by-EV −0.0465 (prob-ranking superiority is now a max-n fact),
+  S4 cap −0.0379, S1+S4 −0.0457, flat max-accas 4/5/6 all negative (volume without
+  saturation-conditioning hurts), stake 75% −0.0436.
+- always-on prob≥65 +0.0365 but 18/43 days (4x-rejected tripwire stands).
+
+**Next:** paired bootstraps on the two survivors and their combo:
+```
+--since 2026-06-13 --drop-pending-days --ab live "floor=1.25"
+--since 2026-06-13 --drop-pending-days --ab live "saturated_accas=5"
+--since 2026-06-13 --drop-pending-days --ab live "floor=1.25,saturated_accas=5"
+```
+Caveat repeated: these certify only the PRE-recovery regime; the live regime (slump)
+is replay-blind, so even a positive P here ships, if ever, only after forward evidence.
