@@ -42,25 +42,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 16,
+      "be_matched": 14,
       "be_raw": 27,
-      "be_usable": 24,
+      "be_usable": 27,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 8,
+      "join_matched_rows": 6,
       "join_miss_counts": {
-        "fixture_key_miss": 4,
-        "no_pick_for_fixture": 12
+        "fixture_key_miss": 11,
+        "no_pick_for_fixture": 10
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-15\\/2026-11-15' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -92,9 +92,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 4,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 19,
+        "fixture_key_miss": 21,
         "selection_unsupported": 27
       },
       "reason": null,
@@ -156,15 +156,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 581,
+      "join_matched_rows": 595,
       "join_miss_counts": {
-        "fixture_key_miss": 13890,
-        "market_unsupported": 9492,
-        "no_pick_for_fixture": 8362
+        "fixture_key_miss": 16457,
+        "market_unsupported": 11156,
+        "no_pick_for_fixture": 10219
       },
-      "op_matched": 6,
-      "op_raw": 32325,
-      "op_usable": 32325,
+      "op_matched": 7,
+      "op_raw": 38427,
+      "op_usable": 38427,
       "reason": null,
       "status": "cache_only"
     },
@@ -183,12 +183,12 @@
       "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 31,
+      "join_matched_rows": 22,
       "join_miss_counts": {
-        "fixture_key_miss": 19125,
-        "no_pick_for_fixture": 496
+        "fixture_key_miss": 19280,
+        "no_pick_for_fixture": 350
       },
-      "pa_matched": 59,
+      "pa_matched": 43,
       "pa_raw": 19652,
       "pa_scored": 19652,
       "reason": null,

@@ -51,7 +51,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-16\\/2026-11-16' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -77,7 +77,7 @@
       "bg_matched": 0,
       "bg_raw": 0,
       "bg_scored": 0,
-      "blocker": "boggio: HTTP 404",
+      "blocker": "boggio: snapshot schema not recognized; raw sample retained",
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
