@@ -4,6 +4,15 @@ Reuses existing BZZOIRO_TOKEN + auth pattern from bzzoiro.py.
 Fetches current-day and next-day odds for 1x2, OU2.5, BTTS across real books
 (+ Polymarket when present).
 
+Failure disambiguation: a bare HTTP 403 used to collapse to
+``quota_hint=auth_or_quota`` with the response body discarded. The 2026-11-15
+run 403'd on every call against a dashboard showing 221/7,500 requests used -
+the plan was demonstrably not the cause, and the receipt could not say what
+was. Rejected responses now retain a scrubbed body snippet
+(``error_bodies``) and classify into ``auth_reason``: ``token_rejected``,
+``plan_gated``, ``rate_limited_or_quota``, ``edge_waf_blocked``, or
+``auth_or_quota_unconfirmed`` when the provider said nothing recognizable.
+
 Standard adapter contract:
     fetch_day(date: str) -> list[dict]
     COLUMNS = [...]
@@ -54,6 +63,12 @@ def _reset_diagnostics() -> None:
         "status": "not_run",
         "http_statuses": [],
         "errors": [],
+        # Scrubbed response bodies of rejected requests (max 4, 240 chars
+        # each): the status code alone could not separate "bad key" from
+        # "plan-gated endpoint" from "edge WAF blocked the runner IP" on
+        # 2026-11-15, when every call 403'd against a healthy dashboard.
+        "error_bodies": [],
+        "auth_reason": None,
         "quota_hint": "none",
         "requests": 0,
         "ok_responses": 0,
@@ -70,7 +85,87 @@ def diagnostics() -> dict[str, object]:
     out = dict(_DIAG)
     out["http_statuses"] = list(_DIAG.get("http_statuses") or [])
     out["errors"] = list(_DIAG.get("errors") or [])
+    out["error_bodies"] = [dict(entry) for entry in (_DIAG.get("error_bodies") or [])]
     return out
+
+
+def _scrub(value: str) -> str:
+    """Never retain the credential; collapse whitespace for receipt storage."""
+    if TOKEN:
+        value = value.replace(TOKEN, "[REDACTED]")
+    return " ".join(value.split())[:240]
+
+
+def _http_error_body(exc: urllib.error.HTTPError) -> tuple[str | None, str | None]:
+    """Read (once, defensively) a failed response's content-type and body.
+
+    ``str(HTTPError)`` is only "HTTP Error 403: Forbidden" - the reason lives
+    in the body. Tests construct HTTPError with fp=None, and real error
+    streams can be consumed by earlier readers, so every step is guarded.
+    """
+    content_type = None
+    try:
+        content_type = exc.headers.get("Content-Type") if exc.headers else None
+    except Exception:
+        pass
+    body = None
+    try:
+        raw = exc.read(512) if getattr(exc, "fp", None) is not None else b""
+        if raw:
+            body = _scrub(raw.decode("utf-8", "replace"))
+    except Exception:
+        pass
+    return (str(content_type) if content_type else None), (body or None)
+
+
+_CONTENT_EDGE_MARKERS = (
+    "cf-chl", "cloudflare ray", "attention required", "access denied",
+    "captcha", "verify you are human", "you have been blocked",
+    "checking your browser", "enable javascript",
+)
+#: The provider's own words for "wrong credential" - never inferred.
+_CONTENT_TOKEN_MARKERS = (
+    "invalid token", "invalid api token", "token is invalid", "token expired",
+    "expired token", "credentials were not provided", "invalid credentials",
+    "authentication credentials",
+)
+#: Plan/feature gating - the fix is subscription scope, not the key.
+_CONTENT_PLAN_MARKERS = (
+    "do not have permission", "not permitted", "not allowed",
+    "upgrade", "your plan", "subscription", "subscribe", "not included",
+    "available on", "feature is not",
+)
+#: Throughput/budget words - the fix is pacing or quota, not the key.
+_CONTENT_QUOTA_MARKERS = (
+    "throttl", "too many requests", "rate limit", "ratelimit",
+    "quota", "exceeded", "request limit",
+)
+
+
+def classify_auth_body(content_type: str | None, body: str | None) -> str:
+    """Map a 401/403 response's own words onto an operator-actionable reason.
+
+    Silence is never upgraded into a diagnosis: an empty or unrecognized body
+    stays ``auth_or_quota_unconfirmed`` rather than guessing, because guessing
+    sends the operator to billing when the edge WAF blocked the runner IP, or
+    vice versa. Order matters: edge/WAF HTML is checked first (a Cloudflare
+    "you have been blocked" page can also contain quota-flavoured words), then
+    credential rejection, then plan gating, then throughput.
+    """
+    text = str(body or "").strip()
+    if not text:
+        return "auth_or_quota_unconfirmed"
+    lowered = text.lower()
+    is_html = "html" in str(content_type or "").lower() or "<html" in lowered or "<!doctype" in lowered
+    if is_html or any(marker in lowered for marker in _CONTENT_EDGE_MARKERS):
+        return "edge_waf_blocked"
+    if any(marker in lowered for marker in _CONTENT_TOKEN_MARKERS):
+        return "token_rejected"
+    if any(marker in lowered for marker in _CONTENT_PLAN_MARKERS):
+        return "plan_gated"
+    if any(marker in lowered for marker in _CONTENT_QUOTA_MARKERS):
+        return "rate_limited_or_quota"
+    return "auth_or_quota_unconfirmed"
 
 
 def _record_error(exc: Exception) -> None:
@@ -85,8 +180,23 @@ def _record_error(exc: Exception) -> None:
         statuses = _DIAG.setdefault("http_statuses", [])
         if exc.code not in statuses:
             statuses.append(exc.code)
+        content_type, body = _http_error_body(exc)
+        if body is not None:
+            bodies = _DIAG.setdefault("error_bodies", [])
+            if not isinstance(bodies, list):
+                bodies = []
+                _DIAG["error_bodies"] = bodies
+            entry = {"status": int(exc.code), "content_type": content_type, "body": body}
+            if len(bodies) < 4 and entry not in bodies:
+                bodies.append(entry)
         if exc.code in {401, 403}:
             _DIAG["quota_hint"] = "auth_or_quota"
+            reason = classify_auth_body(content_type, body)
+            # One run, one explanation to act on: a confirmed reason is never
+            # overwritten by a later one, but ANY confirmed reason upgrades an
+            # earlier unconfirmed one (information only ever accumulates).
+            if _DIAG.get("auth_reason") in (None, "auth_or_quota_unconfirmed"):
+                _DIAG["auth_reason"] = reason
         elif exc.code in {402, 429, 430, 509}:
             _DIAG["quota_hint"] = "rate_limit_or_quota"
 
@@ -518,11 +628,13 @@ def fetch_day(date: str) -> list[dict]:
     else:
         _DIAG["status"] = "empty"
         _DIAG["quota_hint"] = "none_observed"
+    auth_reason_note = f" auth_reason={_DIAG.get('auth_reason')}" if _DIAG.get("auth_reason") else ""
     _log(
         f"bzzoiro_odds {date}: best_results={total_results} "
         f"comparison_rows={len(comparison_rows)} rows={len(out)} "
         f"status={_DIAG.get('status')} http={','.join(str(x) for x in (_DIAG.get('http_statuses') or [])) or 'none'} "
-        f"errors={len(_DIAG.get('errors') or [])} quota_hint={_DIAG.get('quota_hint')} "
+        f"errors={len(_DIAG.get('errors') or [])} quota_hint={_DIAG.get('quota_hint')}"
+        f"{auth_reason_note} "
         f"comparison_cap={MAX_EVENT_COMPARISON}"
     )
     return out
