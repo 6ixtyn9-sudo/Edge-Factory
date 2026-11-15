@@ -6,6 +6,7 @@ a +-22,000% interval for two identical variants, a band table labelled
 "floor applied" that applied no floor, and an A/B mode whose knob could not
 reach the card. None of it was covered by a test. These are those tests.
 """
+import math
 import sys
 from pathlib import Path
 
@@ -323,6 +324,29 @@ def test_side_filter_keeps_only_named_backed_sides():
     assert {l["pick"] for l in kept} == {"HOME", "DRAW"}
     with pytest.raises(SystemExit):
         rh._filtered_pool(pool, {"side": "UP"})
+
+
+def test_drop_pending_days_excludes_ungradeable_days_pairsafe(monkeypatch):
+    # Default: a pending SELECTED card nan's the headline (strict doctrine).
+    # With --drop-pending-days armed, the summary uses the graded subset —
+    # exactly what the paired bootstrap already does pair-wise.
+    def day(g):
+        return {"growth": g, "accas": [(2.0, g > 1)], "void_legs": 0,
+                "legs": [], "stake_pct": [25]}
+
+    days = rh.ReplayDays()
+    days["2026-10-01"] = day(1.5)
+    days["2026-10-02"] = day(0.5)
+    days.pending["2026-10-03"] = [{"unsettled": True}]
+    strict = rh.summarise(days)
+    assert math.isnan(strict["mean_log"]) and strict["pending_days"] == 1
+    assert strict["realized_mean_log"] == pytest.approx(
+        (math.log(1.5) + math.log(0.5)) / 2)  # conditional value stays visible
+    assert sorted(days.pending) == ["2026-10-03"]  # input never mutated
+    purified = rh._graded_only(days)
+    s = rh.summarise(purified)
+    assert s["pending_days"] == 0 and s["days"] == 2 and not math.isnan(s["mean_log"])
+    assert s["mean_log"] == pytest.approx((math.log(1.5) + math.log(0.5)) / 2)
 
 
 def test_acca_veto_zero_cap_means_no_combined_cap_not_kill_everything():

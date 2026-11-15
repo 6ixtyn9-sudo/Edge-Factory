@@ -573,3 +573,31 @@ The replay windows so far pooled TWO model regimes. Registry facts
   (41–316% of the other probes). §16–§18 verdicts are regime-pooled; re-judge on
   --since 2026-10-21 (in-regime, carriers out by construction) and the full-era
   ladder --since 2026-06-13 (maximal n, quote-coverage permitting).
+
+## 20. The replay is blind over the post-Forebet production era — and the era ladder needed a flag
+
+Codespace reads, main @ c0d912e:
+
+- **--since 2026-10-21 → 0 candidate-days.** The replay universe is built from
+  pick-pool captures (`picks_morning_*.json` / archived `picks_*.json`); committed
+  archives end mid-October (last ~2026-10-16; `localdata/archive/picks/2026/` holds
+  months 06–10 only). Post-recovery days keep `picks_*.txt` only, which the pool
+  reader deliberately ignores. **The slump regime (11-09→11-14) has ENGINE ACTUAL
+  coverage only — no counterfactual replay is possible for it from current data.**
+  All A/B verdicts in §14–§18 are pre-recovery-regime statements (strengthens the
+  nulls: no lever survived even the regime that built 455%).
+- **--since 2026-06-13 → 64 candidate-days** (June–Aug pools DO exist), but growth
+  nan'd: ~10 selected cards pending settlement in thin early-era coverage poisoned
+  the whole comparison ("A/B SKIPPED").
+- Harness fix (this branch): `--drop-pending-days` — opt-in; excludes pending-SELECTED
+  days from both arms' realized growth (the bootstrap already excluded them
+  pair-wise; default strict refusal unchanged; excluded days printed). Pinned by test.
+- Rerun list:
+  ```
+  PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-06-13 --drop-pending-days --ab live "acca_veto=0:1.5:0.60"
+  PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-06-13 --drop-pending-days --battery-fixes
+  ```
+- Structural gap for the forward regime: resume committing replayable pick-pool JSON
+  (morning capture) for post-10-21 days, or the only post-Forebet evidence will ever
+  be the descriptive ledger. If any gate is ever proposed again, shadow telemetry +
+  forward collection is the evidence path; retro replay cannot reach this regime.
