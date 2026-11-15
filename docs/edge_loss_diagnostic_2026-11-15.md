@@ -438,3 +438,41 @@ away mid/long prices.
 
 *Repro note: throwaway harness in /tmp (not committed); all inputs are committed
 localdata snapshots, so any future run reproduces these numbers until the next 30d window shifts.*
+
+## 14. Codespace paired A/B verdicts (main @ de922226, live-faithful pool, 25 candidate-days / 21 bet-days, --since 2026-09-17)
+
+ENGINE ACTUAL extended: bank 257.8% · 74 bet-days · 85W/64L · 1 open.
+New rows: 11-13 @1.86L @1.69W → 246.1%; 11-14 @2.38W @2.45L → 257.8%. Still far below the 455% peak — slump regime intact within the window.
+
+Replay baseline (window): log/day +0.0311, final 192%, 35 accas, hit 49%, maxDD 58%.
+
+| probe | Δ log/day | P(B>A) | verdict |
+|---|---|---|---|
+| acca_veto=2.6:1.5:0.60 (S1+S4 combined) | +0.0043 | 45% | **NO SHIP** — luck-shaped; acts 100% as DAY-SKIP (cards differ 0/25 days: vetoes turn 7 bet-days into no-bet days); 2026-10-15 carries 316% of the diff; sign flips on 5 of 21 leave-one-day-outs. maxDD 58→25% is real but the growth is not separable from luck at this n. |
+| side=HOME (home-only pool) | −0.0501 | 16% | **DEAD** — venue-as-pool-restriction HURTS (final 70%, hit 41%). The §12 leg-level home edge does NOT survive acca selection/pairing: restricting the pool changes which legs/pairs rank on top. Venue story remains descriptive, not admission-actionable as a blunt restriction. |
+| acca_veto=0:1.4:0.70,side=AWAY (venue-aware away gate) | — | — | **INVALID RUN** — parser artifact, see below; rerun required. |
+| battery: S1 veto / S1+min_prob rows showing 0 days 0 accas | — | — | **Same artifact**, not evidence of universal toxic-leg exposure. |
+
+**Parser artifact found & fixed (harness commit on this branch):** `_combined_veto` parsed
+`acca_veto=0:odd:prob` as combined-cap = 0.0, and every acca is priced ≥ 0.0 → veto-all.
+Semantics now: cap ≤ 0 ⇒ cap disabled; odd_floor 0 ⇒ pure prob floor. Pinned by
+`test_acca_veto_zero_cap_means_no_combined_cap_not_kill_everything`.
+
+**Battery rows that DID read true:** S4 cap ≥2.6 alone −0.0394 (hurts — price cap alone kills
+winners). Strongest in-window levers, all awaiting paired bootstrap judgement:
+5 accas on saturated days +0.0320 (final 376%, maxDD 44%), floor 1.25 +0.0204,
+legacy strict pool gate +0.0191, always-on prob ≥65 +0.0907 (8 days only, still the
+4x-rejected tripwire — §13 shows stated-conf under-reads reality).
+
+**Universe caveat:** main replays 25 candidate-days vs the stale codespace branch's 49 —
+merged live-faithful pool + rebuilt settlement facts (94,980 keys, 93 dates, pending
+candidates 26→1) are stricter. All n here is small; treat every number as exploratory and
+prefer wider windows (--since 2026-08-27 now that archive tickets are tracked on main).
+
+**Rerun list (post-fix):**
+```
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --ab live "acca_veto=0:1.4:0.70,side=AWAY"   # real away gate, no cap
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --ab live "acca_veto=0:1.5:0.60"            # clean S1-solo (suspect leg at any price)
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-09-17 --battery-fixes                              # S1 rows now read true
+PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-08-27 --ab live "acca_veto=2.6:1.5:0.60"          # widen n on the only positive gate
+```
