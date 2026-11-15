@@ -1,48 +1,15 @@
 {
-  "added": 50,
-  "attempted": 3,
-  "attempted_fixtures": [
-    {
-      "away": "San Marino",
-      "date": "2026-11-15",
-      "home": "Finland",
-      "kickoff": "2026-11-15T17:00:00Z",
-      "league": "UEFA Nations League"
-    },
-    {
-      "away": "CZECH REPUBLIC",
-      "date": "2026-11-15",
-      "home": "CROATIA",
-      "kickoff": "19:45",
-      "league": "EUN"
-    },
-    {
-      "away": "Sabadell",
-      "date": "2026-11-15",
-      "home": "Eldense",
-      "kickoff": "2026-11-15T17:30:00Z",
-      "league": "La Liga 2"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 48,
-  "captured_at": "2026-11-15T05:14:23+00:00",
+  "captured_at": "2026-11-15T07:42:38+00:00",
   "date": "2026-11-15",
-  "due_reasons": {
-    "first_at": 1,
-    "scope_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "San Marino",
-      "date": "2026-11-15",
-      "home": "Finland",
-      "kickoff": "2026-11-15T17:00:00Z",
-      "league": "UEFA Nations League"
-    }
-  ],
+  "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
     "totals",
@@ -52,17 +19,19 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 50,
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
     "priced": 5,
-    "retry_cooldown": 40
+    "retry_cooldown": 43
   },
   "skipped": [
     "SURINAM|ESWATINI (retry cooldown (6h after failed attempt))",
+    "FINLAND|SAN MARINO (retry cooldown (6h after failed attempt))",
     "FRANCE|TURKEY (retry cooldown (6h after failed attempt))",
     "DUNFERMLINE|ARBROATH (retry cooldown (6h after failed attempt))",
     "GODOY CRUZ|TRISTAN SUAREZ (retry cooldown (6h after failed attempt))",
+    "CROATIA|CZECH REPUBLIC (retry cooldown (6h after failed attempt))",
     "DOBRUDZHA 1919|ETAR VEL. TARNOBO (retry cooldown (6h after failed attempt))",
     "PANAMA|CURACAO (retry cooldown (6h after failed attempt))",
     "SOCHI|SHINNIK YAROSLAVL (retry cooldown (6h after failed attempt))",
@@ -103,16 +72,10 @@
     "Salernitana|Catania (retry cooldown (6h after failed attempt))",
     "Novara|Lecco (retry cooldown (6h after failed attempt))",
     "Cosenza|Casertana (retry cooldown (6h after failed attempt))",
+    "Eldense|Sabadell (retry cooldown (6h after failed attempt))",
     "Latvia|Armenia (priced)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "CROATIA vs CZECH REPUBLIC (league not covered: EUN)",
-    "Eldense vs Sabadell (league not covered: La Liga 2)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: EUN": 1,
-    "league not covered: La Liga 2": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

@@ -42,22 +42,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 0,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_matched": 14,
+      "be_raw": 18,
+      "be_usable": 18,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_matched_rows": 6,
+      "join_miss_counts": {
+        "fixture_key_miss": 2,
+        "no_pick_for_fixture": 10
+      },
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-15' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -88,14 +91,14 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 4,
       "join_miss_counts": {
         "fixture_key_miss": 19,
         "selection_unsupported": 27
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "bzzoiro": {
       "blocker": null,
@@ -153,13 +156,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 354,
+      "join_matched_rows": 183,
       "join_miss_counts": {
-        "fixture_key_miss": 9879,
+        "fixture_key_miss": 12416,
         "market_unsupported": 6077,
-        "no_pick_for_fixture": 4750
+        "no_pick_for_fixture": 2384
       },
-      "op_matched": 4,
+      "op_matched": 2,
       "op_raw": 21060,
       "op_usable": 21060,
       "reason": null,
@@ -332,13 +335,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 124,
+      "join_matched_rows": 138,
       "join_miss_counts": {
-        "no_pick_for_fixture": 384
+        "no_pick_for_fixture": 420
       },
-      "oa_matched": 16,
-      "oa_raw": 508,
-      "oa_usable": 508,
+      "oa_matched": 19,
+      "oa_raw": 558,
+      "oa_usable": 558,
       "reason": null,
       "status": "cache_only"
     },

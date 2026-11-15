@@ -12,11 +12,11 @@
               "match": "GODOY CRUZ vs TRISTAN SUAREZ",
               "pick": "HOME",
               "prob": 0.76,
-              "odds": 2.16,
+              "odds": 2.1,
               "result": null,
               "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
               "fixture_key": [
                 "2026-11-15",
                 "GODOY CRUZ",
@@ -39,8 +39,13 @@
               ]
             }
           ],
-          "odds": 4.75,
-          "stake_pct": 32.2229
+          "odds": 4.62,
+          "stake_pct": 32.2229,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -63,11 +68,11 @@
               "match": "CROATIA vs CZECH REPUBLIC",
               "pick": "HOME",
               "prob": 0.75,
-              "odds": 1.61,
+              "odds": 1.6,
               "result": null,
               "market": "1x2",
-              "price_book": "Betfair",
-              "price_source": "theoddsapi",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
               "fixture_key": [
                 "2026-11-15",
                 "CROATIA",
@@ -75,8 +80,13 @@
               ]
             }
           ],
-          "odds": 2.66,
-          "stake_pct": 32.2228
+          "odds": 2.64,
+          "stake_pct": 32.2228,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 64.4457
@@ -2822,6 +2832,11 @@
     },
     "2026-11-14": {
       "frozen_at": "2026-11-14T10:07:23+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-15": {
+      "frozen_at": "2026-11-15T09:51:29+02:00",
       "final": true,
       "lock_source": "state"
     }
