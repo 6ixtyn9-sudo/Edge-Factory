@@ -247,7 +247,8 @@ def test_diagnostics_and_payloads_never_leak_the_key(monkeypatch):
     assert sanitized["X-RateLimit-Remaining"] == "4"
 
 
-# --- current endpoint contract: /matches/{date} (V3 docs + captured sample) ----
+# --- current endpoint contract: /value-bets/{date} (published since the
+# --- gateway de-routed /matches/{date} on 2026-11-09; verified 2026-11-14) -
 
 
 def _value_bet_payload():
@@ -287,7 +288,7 @@ def _value_bet_payload():
     }
 
 
-def test_capture_calls_the_documented_matches_endpoint_once(monkeypatch):
+def test_capture_calls_the_published_value_bets_endpoint_once(monkeypatch):
     seen = []
 
     def fake_get(url, timeout=30):
@@ -296,9 +297,11 @@ def test_capture_calls_the_documented_matches_endpoint_once(monkeypatch):
 
     monkeypatch.setattr(bm, "get_json", fake_get)
     rows, stats = bm.capture_day("2026-10-03")
-    assert seen == ["https://betminer.p.rapidapi.com/matches/2026-10-03"]
-    assert all("/value-bets/" not in url for url in seen)
+    assert seen == ["https://betminer.p.rapidapi.com/value-bets/2026-10-03"]
+    assert all("/matches/" not in url for url in seen)
     assert stats["status"] == "ok"
+    # The value-bets route can still serve the legacy match-object wrapper;
+    # the payload shape, not the path, picks the parser.
     assert stats["schema_shape"] == "match_objects"
     assert len(rows) == 2
 
@@ -403,7 +406,7 @@ def test_404_probe_receipt_is_write_once_for_the_day(monkeypatch, tmp_path):
     receipt_path = tmp_path / "betminer_probe_2026-10-03.json"
     assert receipt_path.exists()
     receipt = json.loads(receipt_path.read_text())
-    assert receipt["endpoint"].endswith("/matches/2026-10-03")
+    assert receipt["endpoint"].endswith("/value-bets/2026-10-03")
     assert receipt["http_status"] == 404
     assert "test-key-material" not in receipt_path.read_text()
 

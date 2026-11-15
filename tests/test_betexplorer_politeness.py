@@ -19,6 +19,10 @@ from edgefactory.sources import betexplorer_odds as be  # noqa: E402
 def _reset_be(tmp_path, monkeypatch):
     monkeypatch.setattr(be, "LOCALDATA", tmp_path)
     monkeypatch.setattr(be, "CACHE_FRESHNESS_H", 24.0)
+    # Transport-policy tests are hermetic: a runner that happens to carry
+    # relay credentials must not start answering 429s through the relay.
+    monkeypatch.delenv("EDGE_FACTORY_RELAY_URLS", raising=False)
+    monkeypatch.delenv("EDGE_FACTORY_RELAY_TOKEN", raising=False)
     be.reset_fetch_count()
     yield
     be.reset_fetch_count()
@@ -73,6 +77,7 @@ def test_first_429_honors_retry_after_and_uses_30_second_floor(monkeypatch):
     assert len(calls) == 2
     assert sleeps == [31.0]
     assert be.run_stats() == {"be_429": 1, "be_cooling_down": False, "be_cached": 0,
+                              "be_relay_fetches": 0, "be_relay_mode": False,
                               "be_rows_rejected": 0, "be_rows_rejected_reasons": {}}
 
 
@@ -167,11 +172,11 @@ def test_request_counts_track_every_attempt_for_the_receipt(monkeypatch):
     monkeypatch.setattr(be.time, "sleep", lambda _seconds: None)
 
     assert be._fetch("https://www.betexplorer.com/example") == "ok"
-    assert be.request_stats() == {"requests": 2, "market_requests": 0,
-                                  "market_budget_stop": False}
+    assert be.request_stats() == {"requests": 2, "relay_fetches": 0, "relay_mode": False,
+                                  "market_requests": 0, "market_budget_stop": False}
     be.reset_fetch_count()
-    assert be.request_stats() == {"requests": 0, "market_requests": 0,
-                                  "market_budget_stop": False}
+    assert be.request_stats() == {"requests": 0, "relay_fetches": 0, "relay_mode": False,
+                                  "market_requests": 0, "market_budget_stop": False}
 
 
 @pytest.mark.parametrize('marker', ['aet', 'pen.', '<abbr title="After extra time">ET</abbr>'])

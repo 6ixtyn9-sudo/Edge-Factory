@@ -1,19 +1,31 @@
 """BetMiner adapter - prediction voice donor, conditional price donor.
 
-Endpoint contract (verified 2026-10-03)
+Endpoint contract (verified 2026-11-14)
 ---------------------------------------
-The provider's V3 documentation names the dated match board explicitly::
+From 2026-11-09 onward the RapidAPI gateway answered every
+``/matches/{date}`` probe with::
 
-    GET /matches/{date}
+    HTTP 404 {"message":"Endpoint '/matches/2026-11-09' does not exist"}
 
-Both RapidAPI-listed value-bet forms (``/value-bets/{date}`` and
-``/value-bets/{dateFrom}/{dateTo}``) returned HTTP 404 in production. They are
-betting-system endpoints, not this adapter's full dated fixture board. The
-capture therefore makes exactly one ``/matches/{date}`` request and parses the
-captured Match Object schema in
-``tests/fixtures/betminer_matches_2026-10-03.json``. There is no endpoint
-ladder: a contract failure writes one scrubbed daily probe receipt and every
-later run that day reads it instead of spending another free-tier call.
+(eight consecutive daily receipts, ``localdata/betminer_probe_2026-11-*.json``).
+RapidAPI returns that exact message when a path is not in the provider's
+published route list - not an outage, a route REMOVAL. The provider's current
+published dated board is the betting-system route::
+
+    GET /value-bets/{date}
+    GET /value-bets/{dateFrom}/{dateTo}
+
+alongside ``/accumulators/{date}``, ``/acca-builder`` and
+``/edge-analysis/{date}``; the ``/matches`` route family is no longer routed
+at the gateway. This adapter therefore probes ``/value-bets/{date}`` and
+parses the value-bet schema (which the provider's ``/matches`` board had
+already converged on: the value-bet parser handled both shapes). Only a
+ROUTING 404 - the provider's own words saying the path does not exist -
+earns ONE second probe of the range form ``/value-bets/{date}/{date}``; the
+dated Match Object parser is retained for payloads that still carry that
+shape. At most two free-tier calls are spent on a contract failure day, and a
+failure still writes exactly one scrubbed probe receipt that suppresses
+re-probing for the free-tier window (see ``_probe_receipt_is_binding``).
 
 HTTP 404 is classified as an **endpoint-contract failure**
 (``reason=http_404_endpoint_contract``) rather than a generic outage, so the
@@ -54,10 +66,11 @@ from edgefactory.odds_normalization import canonical_market_selection
 
 SOURCE = "betminer"
 BASE = "https://betminer.p.rapidapi.com"
-#: Documented dated Match Object board used by capture.
+#: Former dated Match Object board. Not routed at the gateway since
+#: 2026-11-09 (eight consecutive routing-404 probe receipts); retained only
+#: for parser/backward-compat tests and the operator escape hatch.
 ENDPOINT_MATCHES = "/matches"
-#: Betting-system endpoint retained only for parser/backward-compat tests;
-#: production observations showed both dated forms returning HTTP 404.
+#: Currently published dated board (provider docs V3, verified 2026-11-14).
 ENDPOINT_VALUE_BETS = "/value-bets"
 API_HOST = "betminer.p.rapidapi.com"
 KEY_ENV = "RAPIDAPI_KEY"
@@ -140,25 +153,29 @@ def _throttle() -> None:
 
 
 def value_bets_url(day: str) -> str:
-    """Observed-404 range form, retained for explicit offline regression."""
+    """Provider-published dated range form (``{dateFrom}/{dateTo}`` equal)."""
     return f"{BASE}{ENDPOINT_VALUE_BETS}/{day}/{day}"
 
 
 def matches_url(day: str) -> str:
-    """Provider-documented V3 dated Match Object board."""
+    """Former dated Match Object board; not routed at the gateway since
+    2026-11-09. Retained for explicit offline regression and the operator
+    ``BETMINER_ENDPOINT`` escape hatch."""
     return f"{BASE}{ENDPOINT_MATCHES}/{day}"
 
 
 def capture_url(day: str) -> str:
-    """The one endpoint ``capture_day`` calls; never an endpoint ladder.
+    """The first (preferred) endpoint ``capture_day`` calls.
 
     ``BETMINER_ENDPOINT`` is an operator-only escape hatch for a documented
     future contract. It may contain ``{date}``; otherwise the date is appended
-    once. No alternate path is attempted after any status.
+    once. When the override is set it is the ONLY path attempted; without it
+    the published dated board is probed first and a routing-404 earns one
+    range-form probe (see ``_candidate_urls``).
     """
     configured = os.environ.get("BETMINER_ENDPOINT")
     if not configured or not configured.strip():
-        return matches_url(day)
+        return f"{BASE}{ENDPOINT_VALUE_BETS}/{day}"
     endpoint = configured.strip()
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
@@ -167,6 +184,22 @@ def capture_url(day: str) -> str:
     else:
         endpoint = f"{endpoint.rstrip('/')}/{day}"
     return f"{BASE}{endpoint}"
+
+
+def _candidate_urls(day: str) -> list[str]:
+    """Ordered probe list for the dated board.
+
+    An explicit ``BETMINER_ENDPOINT`` override collapses the list to exactly
+    that path - the operator owns that choice and its call budget. Otherwise
+    the published single-date board is probed first and only a ROUTING 404
+    (the provider's body saying the path does not exist, as opposed to a
+    subscription wall) earns one probe of the range form. Everything else -
+    auth, quota, 5xx, transport, an unrecognized schema - stops on the first
+    response because it told us something the second path cannot correct.
+    """
+    if os.environ.get("BETMINER_ENDPOINT", "").strip():
+        return [capture_url(day)]
+    return [capture_url(day), value_bets_url(day)]
 
 
 def _sanitize_headers(headers: Any) -> dict[str, str]:
@@ -721,6 +754,23 @@ def settlement_coverage(rows: list[dict[str, Any]], settled_scores: list[dict[st
     }
 
 
+def _receipt_describes_current_contract(receipt: dict[str, Any], day: str) -> bool:
+    """A receipt binds only while it speaks for a path we would still probe.
+
+    Receipts written before the 2026-11-14 endpoint repair recorded
+    ``/matches/{date}`` - a route this adapter will never ask for again - so
+    their "contract is broken" observation cannot stand in for the current
+    candidates, and they must not suppress the one re-probe that confirms the
+    repaired contract. A receipt that RECORDS no endpoint (older schema rows)
+    cannot be proven stale this way and binds by freshness alone, exactly as
+    before the repair.
+    """
+    endpoint = str(receipt.get("endpoint") or "").strip()
+    if not endpoint:
+        return True
+    return endpoint in _candidate_urls(day)
+
+
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Capture one dated Betminer slate. Cache-first, budget-capped, inert
     without ``RAPIDAPI_KEY`` (status ``not_run`` with a blocker)."""
@@ -748,11 +798,22 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["bm_scored"] = len(committed)
         return list(committed), _set_diag(stats)
     receipt = _load_probe_receipt(day, localdata=localdata)
-    if receipt is not None and _probe_receipt_is_binding(receipt):
+    if (
+        receipt is not None
+        and _probe_receipt_is_binding(receipt)
+        and _receipt_describes_current_contract(receipt, day)
+    ):
         # A contract failure already consumed today's discovery observation.
         # Never re-run an endpoint ladder on a free-tier day; the operator can
         # inspect the scrubbed receipt or explicitly remove it after confirming
         # a new contract.
+        #
+        # The endpoint guard above keeps a receipt honest across an adapter
+        # endpoint change: a receipt recorded against a path this adapter no
+        # longer probes (e.g. the /matches receipts written before the
+        # 2026-11-14 contract repair) describes a route we will not ask for
+        # again, so it cannot speak for the current candidates and does not
+        # suppress the one re-probe that confirms the repaired contract.
         #
         # Binding is now time-bounded. A failure receipt stops suppressing once
         # it is older than the free-tier window, so a cached failure can no
@@ -771,13 +832,34 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             blocker="betminer: persisted endpoint probe receipt; no re-probe today",
         )
         return [], _set_diag(stats)
-    try:
-        status, payload, rate_headers = get_json(capture_url(day))
+    candidates = _candidate_urls(day)
+    url = candidates[0]
+    for index, url in enumerate(candidates):
+        try:
+            status, payload, rate_headers = get_json(url)
+        except UpstreamBlocked as exc:
+            code = _http_code_in(str(exc))
+            if (code == 404 and index + 1 < len(candidates)
+                    and classify_404(_provider_snippet(str(exc))) == "http_404_endpoint_contract"):
+                # Routing failure on the preferred dated board: the provider's
+                # route list changed (a daily routing-404 receipt streak from
+                # 2026-11-09 is how the /matches removal showed up). ONE probe
+                # of the range form stays within the free-tier daily cap. A
+                # subscription-wall 404 (or silence) cannot be fixed by
+                # another path, so it falls through to the failure outcome.
+                stats["requests"] += 1
+                stats["calls_consumed"] = stats["requests"]
+                stats["calls_remaining"] = max(0, FREE_TIER_DAILY_CALL_CAP - stats["calls_consumed"])
+                stats["http_statuses"].append(404)
+                stats["errors"].append(str(exc)[:180])
+                continue
+            return [], _set_diag(_upstream_blocked_stats(stats, exc, day=day, url=url, localdata=localdata))
         stats["requests"] += 1
         stats["calls_consumed"] = stats["requests"]
         stats["calls_remaining"] = max(0, FREE_TIER_DAILY_CALL_CAP - stats["calls_consumed"])
         stats["http_statuses"].append(status)
         stats["rate_limit_headers"] = rate_headers
+        stats["endpoint"] = url.replace(day, "{date}")
         if status == 200 and payload is not None:
             if isinstance(payload, dict) and payload.get("success") is False:
                 stats["status"] = "unavailable"
@@ -800,7 +882,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
                 stats["reason"] = "schema_unrecognized"
                 stats["blocker"] = "betminer: response schema not recognized; scrubbed sample retained"
                 receipt = _persist_probe_receipt(
-                    day, endpoint=capture_url(day), http_status=status,
+                    day, endpoint=url, http_status=status,
                     reason=stats["reason"], schema_sample=stats["schema_sample"],
                     localdata=localdata,
                 )
@@ -820,54 +902,72 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["blocker"] = f"betminer: HTTP {status} or non-JSON payload"
         if status == 404:
             receipt = _persist_probe_receipt(
-                day, endpoint=capture_url(day), http_status=status,
+                day, endpoint=url, http_status=status,
                 reason=stats["reason"], schema_sample=schema_sample(payload),
                 localdata=localdata,
             )
             stats["probe_receipt"] = True
             stats["probe_receipt_path"] = str(receipt)
         return [], _set_diag(stats)
-    except UpstreamBlocked as exc:
-        message = str(exc)
-        stats["calls_consumed"] = int(_CALLS_THIS_RUN)
-        stats["calls_remaining"] = max(0, FREE_TIER_DAILY_CALL_CAP - stats["calls_consumed"])
-        stats["http_429"] = _429S
-        if "429" in message:
-            stats["status"] = "cooldown" if _COOLING_DOWN else "quota"
-            stats["quota_hint"] = "rate_limit_or_quota"
-        elif "budget" in message:
-            stats["status"] = "quota"
-            stats["quota_hint"] = "budget_reached"
-        elif "not set" in message:
-            stats["status"] = "not_run"
-        else:
-            code = _http_code_in(message)
-            stats["status"] = _status_for_http(code)
-            stats["reason"] = _reason_for_http(code)
-            stats["quota_hint"] = _quota_hint_for_status(stats["status"])
-        stats["blocker"] = message[:180]
-        stats["errors"].append(message[:180])
+    return [], _set_diag(stats)
+
+
+def _upstream_blocked_stats(
+    stats: dict[str, Any],
+    exc: "UpstreamBlocked",
+    *,
+    day: str,
+    url: str,
+    localdata: Path | None = None,
+) -> dict[str, Any]:
+    """Classify a terminal UpstreamBlocked into run stats (and a 404 receipt).
+
+    ``url`` is the candidate that produced the failure, so a probe receipt
+    names the path that actually 404'd rather than the preferred one.
+    Earlier ladder attempts recorded in ``stats['http_statuses']`` are kept.
+    """
+    message = str(exc)
+    stats["calls_consumed"] = int(_CALLS_THIS_RUN)
+    stats["calls_remaining"] = max(0, FREE_TIER_DAILY_CALL_CAP - stats["calls_consumed"])
+    stats["http_429"] = _429S
+    if "429" in message:
+        stats["status"] = "cooldown" if _COOLING_DOWN else "quota"
+        stats["quota_hint"] = "rate_limit_or_quota"
+    elif "budget" in message:
+        stats["status"] = "quota"
+        stats["quota_hint"] = "budget_reached"
+    elif "not set" in message:
+        stats["status"] = "not_run"
+    else:
         code = _http_code_in(message)
-        if code is not None:
-            stats["http_statuses"] = [code]
-            stats["requests"] = max(int(stats.get("requests") or 0), int(_CALLS_THIS_RUN))
-        if code == 404:
-            # `message` is the UpstreamBlocked text, which already carries the
-            # provider's response snippet after the status. Recover it so the
-            # receipt records WHY we got a 404 rather than only that we did.
-            provider_message = _provider_snippet(message)
-            reason = classify_404(provider_message)
-            stats["reason"] = reason
-            receipt = _persist_probe_receipt(
-                day, endpoint=capture_url(day), http_status=code,
-                reason=reason, schema_sample=None,
-                provider_message=provider_message,
-                localdata=localdata,
-            )
-            stats["probe_receipt"] = True
-            stats["probe_receipt_path"] = str(receipt)
-            stats["provider_message"] = provider_message
-        return [], _set_diag(stats)
+        stats["status"] = _status_for_http(code)
+        stats["reason"] = _reason_for_http(code)
+        stats["quota_hint"] = _quota_hint_for_status(stats["status"])
+    stats["blocker"] = message[:180]
+    stats["errors"].append(message[:180])
+    code = _http_code_in(message)
+    if code is not None:
+        # Multiplicity matters once the probe ladder exists: [404, 404] says
+        # BOTH published dated forms are unrouted; [404] says one.
+        stats["http_statuses"].append(code)
+        stats["requests"] = max(int(stats.get("requests") or 0), int(_CALLS_THIS_RUN))
+    if code == 404:
+        # `message` is the UpstreamBlocked text, which already carries the
+        # provider's response snippet after the status. Recover it so the
+        # receipt records WHY we got a 404 rather than only that we did.
+        provider_message = _provider_snippet(message)
+        reason = classify_404(provider_message)
+        stats["reason"] = reason
+        receipt = _persist_probe_receipt(
+            day, endpoint=url, http_status=code,
+            reason=reason, schema_sample=None,
+            provider_message=provider_message,
+            localdata=localdata,
+        )
+        stats["probe_receipt"] = True
+        stats["probe_receipt_path"] = str(receipt)
+        stats["provider_message"] = provider_message
+    return stats
 
 
 _provider_snippet = _rapidapi.provider_snippet
