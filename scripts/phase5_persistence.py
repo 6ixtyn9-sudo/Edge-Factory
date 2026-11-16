@@ -854,6 +854,43 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
     return retained
 
 
+def _clear_reviewed_ml_paper_block(repo: Path) -> None:
+    """Retire only exact stale cache bytes covered by a committed review.
+
+    Deleting a tracked block does not remove an old cache copy: PAPER evidence
+    is deliberately exempt from checkout/clean. Cache-provided approvals are
+    never trusted, nor may a review clear a different or newly extended block.
+    Called only after the current restore found no receipt conflicts.
+    """
+    relative = "localdata/autobets_ML_integrity_block.json"
+    marker = repo / relative
+    committed = _committed_localdata_files(repo)
+    if not marker.exists() or relative in committed:
+        return
+    original = marker.read_bytes()
+    sha = hashlib.sha256(original).hexdigest()
+    prefix = "localdata/autobets_ML_conflicts/integrity_block.resolved_"
+    for path in sorted(committed):
+        if not path.startswith(prefix) or not path.endswith(f".{sha}.json"):
+            continue
+        try:
+            review = json.loads(_head_blob(repo, path) or b"null")
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if not isinstance(review, dict) or not (
+            review.get("lane") == "autobets_ML"
+            and review.get("paper_only") is True
+            and review.get("status") == "resolved_copies_byte_identical"
+            and review.get("block_sha256") == sha
+        ):
+            continue
+        archive = repo / f"localdata/autobets_ML_conflicts/integrity_block.reviewed_{sha}.json"
+        _atomic_write(archive, original)
+        marker.unlink()
+        print(f"restore: retired reviewed autobets_ML cache block {sha}", flush=True)
+        return
+
+
 def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
     """Preserve paper evidence independently; never reconcile live financials.
 
@@ -1009,6 +1046,8 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             "status": "blocked_pending_evidence_review", "conflicts": list(merged.values())},
             indent=2).encode())
         print("::warning::autobets_ML evidence conflict retained; PAPER blocked, live lanes unchanged")
+    else:
+        _clear_reviewed_ml_paper_block(repo)
     return retained
 
 

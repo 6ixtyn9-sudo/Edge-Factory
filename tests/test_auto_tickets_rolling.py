@@ -1016,3 +1016,167 @@ def test_settle_loss_leg_decides_even_with_conflicted_sibling(monkeypatch):
     # decided by the certain loss; the conflict is surfaced, not silent
     assert any("decided by settled loss leg" in ln and "conflict" in ln and
                "Dinamo Tirana" in ln for ln in lines)
+
+
+# ---------------- history-leg heal (2026-11-16 orphaned legs) ----------------
+#
+# Booked accas are closed accounting: a leg whose result evidence could not be
+# read at settle time (missing per-day archive row, or a fixture filed under a
+# spelling the leg's own key space could not reach) used to stay result=None
+# forever, because settlement only ever reads OPEN slips. The heal is an
+# audit-completeness backfill over ALREADY-SETTLED history accas: it writes a
+# result only when the same evidence bars the live path enforces say one
+# outcome/score, and it never rebooks bank or stakes.
+
+
+def _history_state_with_result_hole(leg):
+    st = at.fresh_state()
+    st["history"].append({
+        "date": "2026-11-08",
+        "staked_pct": 40.0, "returned_pct": 0.0,
+        "accas": [{"odds": 2.0, "stake_pct": 40.0, "won": False,
+                   "legs": [dict(_leg("gamma", 0.7, 2.0, "loss")), dict(leg)]}],
+    })
+    st["bank"] = 60.0
+    return st
+
+
+def test_heal_history_leg_results_backfills_agreed_entry_outcome(tmp_path, monkeypatch):
+    """The 2026-11-08 Deportivo Garcilaso case: the per-day archive row never
+    landed, the settled entries all file the fixture as a draw, so the HOME
+    pick's result is a provable loss."""
+    leg = {"match": "Deportivo Garcilaso vs Comerciantes Unidos",
+           "home": "Deportivo Garcilaso", "away": "Comerciantes Unidos",
+           "pick": "HOME", "prob": 0.71, "odds": 1.48, "result": None}
+    st = _history_state_with_result_hole(leg)
+    entries = {"2026-11-08": [
+        {"date": "2026-11-08", "home": "Deportivo Garcilaso",
+         "away": "Comerciantes Unidos", "outcome": "draw"},
+        {"date": "2026-11-08", "home": "Garcilaso",
+         "away": "Comerciantes", "outcome": "draw"},
+    ]}
+    settled = {}
+    healed = at.heal_history_leg_results(st, settled, entries_by_date=entries,
+                                         scores={})
+    assert healed == [("2026-11-08",
+                       "Deportivo Garcilaso vs Comerciantes Unidos", "loss")]
+    acca = st["history"][0]["accas"][0]
+    assert acca["legs"][1]["result"] == "loss"
+    # Booked accounting is never reopened by an audit backfill.
+    assert acca["won"] is False and acca["stake_pct"] == 40.0
+    assert st["bank"] == 60.0
+
+
+def test_heal_history_leg_results_market_leg_needs_one_exact_score(tmp_path, monkeypatch):
+    """The 2026-11-05 AC Milan case: an over-2.5 leg left behind by an acca
+    that lost on its other leg; one store score 0-2 grades it a loss."""
+    leg = {"match": "AC Milan vs Ferencvarosi TC", "market": "match_over_25",
+           "pick": "over", "prob": 0.63, "odds": 1.5, "result": None,
+           "fixture_key": ["2026-11-05", "Ac Milan", "Ferencvarosi Tc"]}
+    st = _history_state_with_result_hole(leg)
+    entries = {"2026-11-05": [
+        {"date": "2026-11-05", "home": "Milan", "away": "Ferencvaros",
+         "outcome": "away"},
+    ]}
+    scores = {("2026-11-05", "milan", "ferencvar"): (0, 2),
+              ("2026-11-05", "milan", "ferencvaros"): (0, 2)}
+    healed = at.heal_history_leg_results(st, {}, entries_by_date=entries,
+                                         scores=scores)
+    assert healed == [("2026-11-05", "AC Milan vs Ferencvarosi TC", "loss")]
+    assert st["history"][0]["accas"][0]["legs"][1]["result"] == "loss"
+
+
+def test_heal_history_leg_results_holds_conflict_or_missing_evidence(tmp_path, monkeypatch):
+    """Fail-closed: the 2026-10-21 Sporting JAX leg (no settled evidence at
+    all) stays None, and so does a fixture whose spellings disagree on the
+    outcome — a conflicted donor is untrusted data, not a backfill source."""
+    jax = {"match": "Sporting JAX vs Louisville City", "pick": "AWAY",
+           "prob": 0.72, "odds": 1.37, "result": None,
+           "row": {"home": "Sporting JAX", "away": "Louisville City", "pick": "away"}}
+    st = _history_state_with_result_hole(jax)
+    assert at.heal_history_leg_results(st, {}, entries_by_date={}, scores={}) == []
+    assert st["history"][0]["accas"][0]["legs"][1]["result"] is None
+
+    split = {"match": "Pafos vs Dinamo Tirana", "pick": "HOME",
+             "prob": 0.6, "odds": 1.6, "result": None,
+             "row": {"home": "Pafos", "away": "Dinamo Tirana", "pick": "home"}}
+    st2 = _history_state_with_result_hole(split)
+    entries = {"2026-11-08": [
+        {"date": "2026-11-08", "home": "Pafos", "away": "KS Dinamo Tirana",
+         "outcome": "draw"},
+        {"date": "2026-11-08", "home": "Pafos", "away": "Dinamo Tirana",
+         "outcome": "home"},
+    ]}
+    assert at.heal_history_leg_results(st2, {}, entries_by_date=entries,
+                                       scores={}) == []
+    assert st2["history"][0]["accas"][0]["legs"][1]["result"] is None
+
+
+def test_heal_is_idempotent_and_never_overwrites_booked_results(monkeypatch):
+    from copy import deepcopy
+
+    leg = {"match": "Home Club vs Away Club", "pick": "HOME", "result": None}
+    st = _history_state_with_result_hole(leg)
+    entries = {"2026-11-08": [
+        {"home": "Home Club", "away": "Away Club", "outcome": "home"},
+    ]}
+    before = deepcopy(st)
+    assert at.heal_history_leg_results(st, {}, entries_by_date=entries, scores={})
+    expected = deepcopy(before)
+    expected["history"][0]["accas"][0]["legs"][1]["result"] = "win"
+    assert st == expected  # every booked accounting field is unchanged
+    assert at.heal_history_leg_results(st, {}, entries_by_date=entries, scores={}) == []
+    for result in ("win", "loss", "void", "conflict"):
+        st["history"][0]["accas"][0]["legs"][1]["result"] = result
+        before = deepcopy(st)
+        assert at.heal_history_leg_results(st, {}, entries_by_date=entries, scores={}) == []
+        assert st == before
+
+
+@pytest.mark.parametrize("damage", ["scores_disagree", "outcome_disagrees", "frozen_identity_disagrees",
+                                    "different_day", "not_settled", "scoreless_market"])
+def test_heal_holds_inconsistent_or_insufficient_evidence(monkeypatch, damage):
+    monkeypatch.setattr(at, "SETTLED_KEY_NAMES", {})
+    day = "2026-11-08"
+    home, away = "AC Milan", "Ferencvarosi TC"
+    leg = {"match": f"{home} vs {away}", "market": "match_over_25",
+           "pick": "over", "result": None}
+    st = _history_state_with_result_hole(leg)
+    entries = {day: [{"home": home, "away": away, "outcome": "away"}]}
+    keys = at._result_write_keys(home, away)
+    assert len(keys) > 1
+    scores = {(day, hk, ak): (0, 2) for hk, ak in keys}
+    if damage == "scores_disagree":
+        # Both imply the same 1X2 outcome; the market still cannot pick a score.
+        scores[(day, *keys[-1])] = (0, 4)
+    if damage == "outcome_disagrees":
+        entries[day][0]["outcome"] = "home"
+    if damage == "frozen_identity_disagrees":
+        st["history"][0]["accas"][0]["legs"][1]["fixture_key"] = [day, "Inter Milan", away]
+    if damage == "different_day":
+        scores = {("2026-11-09", hk, ak): score for (_, hk, ak), score in scores.items()}
+    if damage == "not_settled":
+        st["history"][0]["accas"][0]["won"] = None
+    if damage == "scoreless_market":
+        scores = {}
+    assert at.heal_history_leg_results(st, {}, entries_by_date=entries, scores=scores) == []
+    assert st["history"][0]["accas"][0]["legs"][1]["result"] is None
+
+
+@pytest.mark.parametrize("damage", ["squad", "narrow_neighbour"])
+def test_heal_obeys_live_squad_and_narrow_key_guards(monkeypatch, damage):
+    day = "2026-11-08"
+    home, away = "Manchester United", "Arsenal"
+    leg = {"match": f"{home} vs {away}", "market": "match_over_25",
+           "pick": "over", "result": None}
+    st = _history_state_with_result_hole(leg)
+    keys = at._result_write_keys(home, away)
+    if damage == "squad":
+        filed = {(day, hk, ak): {(home + " U21", away + " U21")} for hk, ak in keys}
+    else:
+        keys = [pair for pair in keys if pair in at._narrow_result_keys(home, away)]
+        assert keys
+        filed = {(day, hk, ak): {("Manchester City", away)} for hk, ak in keys}
+    monkeypatch.setattr(at, "SETTLED_KEY_NAMES", filed)
+    scores = {(day, hk, ak): (4, 0) for hk, ak in keys}
+    assert at.heal_history_leg_results(st, {}, entries_by_date={}, scores=scores) == []
