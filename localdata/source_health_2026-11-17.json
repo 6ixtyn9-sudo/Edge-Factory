@@ -77,14 +77,14 @@
       "bg_matched": 0,
       "bg_raw": 0,
       "bg_scored": 0,
-      "blocker": "boggio: snapshot schema not recognized; raw sample retained",
+      "blocker": "boggio: no eligible key in ring",
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
-      "status": "unavailable"
+      "status": "cooldown"
     },
     "bzzoiro": {
       "blocker": null,

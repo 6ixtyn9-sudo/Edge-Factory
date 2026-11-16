@@ -1,11 +1,92 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 11,
+  "attempted_fixtures": [
+    {
+      "away": "LIECHTENSTEIN",
+      "date": "2026-11-16",
+      "home": "LITHUANIA",
+      "kickoff": "17:00",
+      "league": "EUN"
+    },
+    {
+      "away": "LUXEMBOURG",
+      "date": "2026-11-16",
+      "home": "ICELAND",
+      "kickoff": "17:00",
+      "league": "EUN"
+    },
+    {
+      "away": "GHANA",
+      "date": "2026-11-16",
+      "home": "SOMALIA",
+      "kickoff": "15:00",
+      "league": "AFN"
+    },
+    {
+      "away": "BERMUDA",
+      "date": "2026-11-16",
+      "home": "GUADELOUPE",
+      "kickoff": "19:00",
+      "league": "COA"
+    },
+    {
+      "away": "CAMEROON",
+      "date": "2026-11-16",
+      "home": "NAMIBIA",
+      "kickoff": "13:00",
+      "league": "AFN"
+    },
+    {
+      "away": "SENEGAL",
+      "date": "2026-11-16",
+      "home": "SUDAN",
+      "kickoff": "13:00",
+      "league": "AFN"
+    },
+    {
+      "away": "Pachuca (w)",
+      "date": "2026-11-16",
+      "home": "Monterrey (w)",
+      "kickoff": "18:00",
+      "league": "Mexico,Liga Mx Femenil Apertura Playoffs"
+    },
+    {
+      "away": "SLOVAKIA",
+      "date": "2026-11-16",
+      "home": "KAZAKHSTAN",
+      "kickoff": "15:00",
+      "league": "EUN"
+    },
+    {
+      "away": "Puerto Rico",
+      "date": "2026-11-16",
+      "home": "Guyana",
+      "kickoff": "2026-11-16T19:00:00Z",
+      "league": "CONCACAF Nations League"
+    },
+    {
+      "away": "SERBIA",
+      "date": "2026-11-16",
+      "home": "GREECE",
+      "kickoff": "19:45",
+      "league": "EUN"
+    },
+    {
+      "away": "SLOVENIA",
+      "date": "2026-11-16",
+      "home": "NORTH MACEDONIA",
+      "kickoff": "19:45",
+      "league": "EUN"
+    }
+  ],
   "candidate_fixtures": 14,
-  "captured_at": "2026-11-16T17:12:54+00:00",
+  "captured_at": "2026-11-16T19:55:53+00:00",
   "date": "2026-11-16",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 8,
+    "scope_at": 3
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -22,26 +103,33 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 3,
-    "retry_cooldown": 11
+    "priced": 3
   },
   "skipped": [
-    "LITHUANIA|LIECHTENSTEIN (retry cooldown (6h after failed attempt))",
-    "ICELAND|LUXEMBOURG (retry cooldown (6h after failed attempt))",
-    "SOMALIA|GHANA (retry cooldown (6h after failed attempt))",
-    "GUADELOUPE|BERMUDA (retry cooldown (6h after failed attempt))",
-    "NAMIBIA|CAMEROON (retry cooldown (6h after failed attempt))",
-    "SUDAN|SENEGAL (retry cooldown (6h after failed attempt))",
-    "Monterrey (w)|Pachuca (w) (retry cooldown (6h after failed attempt))",
     "Gibraltar|Malta (priced)",
-    "KAZAKHSTAN|SLOVAKIA (retry cooldown (6h after failed attempt))",
-    "Guyana|Puerto Rico (retry cooldown (6h after failed attempt))",
-    "GREECE|SERBIA (retry cooldown (6h after failed attempt))",
     "Switzerland|Scotland (priced)",
-    "NORTH MACEDONIA|SLOVENIA (retry cooldown (6h after failed attempt))",
     "Germany|Netherlands (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "LITHUANIA vs LIECHTENSTEIN (league not covered: EUN)",
+    "ICELAND vs LUXEMBOURG (league not covered: EUN)",
+    "SOMALIA vs GHANA (league not covered: AFN)",
+    "GUADELOUPE vs BERMUDA (league not covered: COA)",
+    "NAMIBIA vs CAMEROON (league not covered: AFN)",
+    "SUDAN vs SENEGAL (league not covered: AFN)",
+    "KAZAKHSTAN vs SLOVAKIA (league not covered: EUN)",
+    "Guyana vs Puerto Rico (league not covered: CONCACAF Nations League)",
+    "GREECE vs SERBIA (league not covered: EUN)",
+    "NORTH MACEDONIA vs SLOVENIA (league not covered: EUN)",
+    "Monterrey (w) vs Pachuca (w) (no event in soccer_mexico_ligamx)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: AFN": 3,
+    "league not covered: COA": 1,
+    "league not covered: CONCACAF Nations League": 1,
+    "league not covered: EUN": 5,
+    "no event in soccer_mexico_ligamx": 1
+  }
 }
