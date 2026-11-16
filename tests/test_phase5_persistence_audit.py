@@ -1361,3 +1361,73 @@ def test_persist_retains_committed_manifest_whose_shards_predate_the_baseline(tm
                 if '.part-' in f]
     with pytest.raises(ValueError, match='invalid multipart ticket receipt'):
         ticket_receipt_bytes(path)  # conflicted evidence, never silently whole
+
+
+@pytest.mark.parametrize('lane', ['main', 'enh'])
+@pytest.mark.parametrize('case', [
+    'stale_none', 'cached_extension', 'known_conflict', 'bank', 'stake',
+    'different_pick', 'different_lock', 'unapproved_cached_result', 'unsettled',
+])
+def test_committed_leg_backfills_do_not_relax_financial_restore(tmp_path, lane, case):
+    from copy import deepcopy
+
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    persistence = _persistence_module()
+    relative = persistence.MAIN_STATE if lane == 'main' else persistence.ENH_STATE
+    path = repo / relative
+    state = {
+        'base_pct': 100., 'bank': 90., 'cycle_base': 100., 'events': [],
+        'open_slips': [], 'frozen_by_date': {},
+        'history': [{
+            'date': '2026-11-08', 'staked_pct': 10., 'returned_pct': 0.,
+            'accas': [{
+                'won': False, 'stake_pct': 10., 'returned_pct': 0., 'odds': 2.,
+                'legs': [
+                    {'match': 'Alpha vs Bravo', 'pick': 'HOME', 'odds': 1.5, 'result': 'win'},
+                    {'match': 'Charlie vs Delta', 'pick': 'AWAY', 'odds': 1.333, 'result': 'loss'},
+                ],
+            }],
+        }],
+    }
+    cache = deepcopy(state)
+    leg = cache['history'][0]['accas'][0]['legs'][0]
+    leg['result'] = None
+    if case == 'cached_extension':
+        day = deepcopy(state['history'][0])
+        day.update(date='2026-11-09')
+        cache['history'].append(day)
+        cache['bank'] -= 10
+    if case == 'known_conflict':
+        leg['result'] = 'loss'
+    if case == 'bank':
+        cache['bank'] += 1
+    if case == 'stake':
+        cache['history'][0]['accas'][0]['stake_pct'] += 1
+    if case == 'different_pick':
+        leg['pick'] = 'AWAY'
+    if case == 'different_lock':
+        cache['frozen_by_date']['2026-11-08'] = {'final': True}
+    if case == 'unapproved_cached_result':
+        state['history'][0]['accas'][0]['legs'][0]['result'] = None
+        leg['result'] = 'win'
+    if case == 'unsettled':
+        state['history'][0]['accas'][0]['won'] = None
+        cache['history'][0]['accas'][0]['won'] = None
+    path.write_text(json.dumps(state))
+    _git(repo, 'add', '-f', relative)
+    _git(repo, 'commit', '-qm', 'committed audit fill, unchanged booked accounting')
+    path.write_text(json.dumps(cache))
+    if case in ('stale_none', 'cached_extension'):
+        retained = json.loads(persistence._retain_financial_state(repo, relative))
+        expected = deepcopy(cache)
+        expected['history'][0]['accas'][0]['legs'][0]['result'] = 'win'
+        assert retained == expected
+        assert retained['bank'] == cache['bank']
+        assert state['history'][0]['accas'][0]['legs'][0]['result'] == 'win'
+    else:
+        with pytest.raises(persistence.EvidenceMergeError):
+            persistence._retain_financial_state(repo, relative)
+    # Projection is read-only; even rejected evidence survives for investigation.
+    assert json.loads(path.read_text()) == cache

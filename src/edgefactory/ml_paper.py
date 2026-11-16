@@ -93,6 +93,8 @@ ADMISSION_ALPHA = 0.05  # statistical error budget, NOT a minimum win probabilit
 # An operator deed may replace a still-open PAPER acca before any of its legs
 # kick off. Replacement never rewrites history: the deed lives on the later
 # receipt and names the earlier accas it voids for grading and capital.
+# Receipt observed 2026-11-13: 1a902a22 replaces fdbe9fde / acca 1 before kickoff;
+# the reviewed deed and exact hashes are backed by docs/operator/DATED-CLAIMS.md.
 SUPERSESSION_POLICY = "operator_pre_kickoff_paper_replacement_v1"
 
 

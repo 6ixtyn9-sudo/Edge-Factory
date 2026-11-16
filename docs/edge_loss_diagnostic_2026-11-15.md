@@ -764,14 +764,25 @@ settled accas: same-day 1X2 outcomes must agree, market legs require one exact
 score, and every available outcome/score must be consistent. Frozen identities,
 squad markers and narrow-key neighbour guards still apply; adjacent dates are
 not borrowed. It never rebooks won/stakes/banks and is idempotent.
+Restore carries HEAD's confirmed None-to-result audit fills into a stale
+cache only for identical frozen leg metadata on settled accas, then applies
+all existing bank, placement, history and freeze checks. It never trusts a
+cache-only fill or overwrites a known conflicting result. This prevents an
+unchanged-money cache from rejecting the committed audit heal. The historical
+October recovery snapshot remains untouched; its preservation test explicitly
+pins the one Mes Shahr None-to-win difference and every other original field.
 The fourth orphan — Main 2026-10-21 Sporting JAX vs Louisville City AWAY —
 has no settled-facts evidence on or near its date and correctly stays None.
 
 Out of scope, deliberately: no booked bank/stake rewriting anywhere; the
-supersession deed surfaces and voids — history rows are preserved verbatim; ENH
+supersession deed surfaces and voids — frozen ML receipts remain byte-identical; ENH
 ticket-decision receipt shard gaps and the >50 MiB conflict-cache files
 flagged in the same CI run are adjacent infra follow-ons, untouched here.
 Proof: tests/test_ml_paper_supersession.py (24),
 tests/test_ml_paper_integrity_resolution.py (7, including restore + publish),
-and tests/test_auto_tickets_rolling.py (12 heal cases, 50 total) — plus the
-in-process receipts()/performance() check over the restored store above.
+tests/test_auto_tickets_rolling.py (12 heal cases, 50 total), and 18 paired-lane
+financial cache backfill/guard cases in tests/test_phase5_persistence_audit.py —
+plus the in-process receipts()/performance() check over the restored store above.
+Full regression: **7,189 passed, 2 skipped** (`PYTHONPATH=src:scripts:tests
+.venv/bin/python -m pytest tests/ -q`); all 118 frozen ML receipts remain
+byte-identical after report regeneration.

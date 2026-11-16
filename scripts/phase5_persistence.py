@@ -509,6 +509,31 @@ def _approved_cached_freeze(repo, relative, head, cache):
         raise EvidenceMergeError(f"approved cached freeze recovery refused: {exc}") from exc
 
 
+def _carry_committed_history_results(head, cache):
+    """Carry HEAD's audit-only None-to-result fills into an otherwise stale cache.
+
+    Only confirmed settled accas and byte-equivalent frozen leg metadata match.
+    No known result is overwritten, no cache claim changes HEAD, and every
+    financial/placement/freeze check still runs on the full projected state.
+    """
+    import copy
+
+    projected = copy.deepcopy(cache)
+    by_day = {row["date"]: row for row in head.get("history", [])}
+    for row in projected.get("history", []):
+        committed = by_day.get(row["date"], {})
+        for acca, prior in zip(row.get("accas") or [], committed.get("accas") or []):
+            if type(prior.get("won")) is not bool or acca.get("won") is not prior["won"]:
+                continue
+            for leg, known in zip(acca.get("legs") or [], prior.get("legs") or []):
+                if leg.get("result") is not None or known.get("result") not in ("win", "loss"):
+                    continue
+                if ({k: v for k, v in leg.items() if k != "result"}
+                        == {k: v for k, v in known.items() if k != "result"}):
+                    leg["result"] = known["result"]
+    return projected
+
+
 def _retain_financial_state(repo, relative=ENH_STATE):
     """Cache is never allowed to reset/truncate durable ticket finance.
 
@@ -545,6 +570,12 @@ def _retain_financial_state(repo, relative=ENH_STATE):
             and receipt.get("superseded_financial_sha256") == cache_sha
             and receipt.get("retained_financial_sha256") == head_sha):
         return blob
+    # A committed audit backfill must not turn the unchanged cached money
+    # ledger into a restore conflict. Exact approvals above still bind their
+    # original snapshots; all checks below retain every financial field.
+    cache = _carry_committed_history_results(head, cache)
+    crows = _financial_rows(cache)
+    cache_sha = _financial_fingerprint(cache)
     # A reversed unplaced settlement is not "new history" just because an old
     # cache has more rows. The committed reconciliation book is a durable
     # tombstone even if its original receipt file was later removed. Permit a
