@@ -1,33 +1,7 @@
 {
-  "added": 14337,
-  "attempted": 5,
-  "attempted_fixtures": [
-    {
-      "away": "Juventus FC Managua",
-      "fixture_id": "id1004819776711498",
-      "home": "Tigres de Chinandega"
-    },
-    {
-      "away": "Ponce FC",
-      "fixture_id": "id1004876976724840",
-      "home": "Taurinos Cayey"
-    },
-    {
-      "away": "CF Pachuca",
-      "fixture_id": "id1002895376595264",
-      "home": "CF Monterrey"
-    },
-    {
-      "away": "Real Cartagena FC",
-      "fixture_id": "id1000123876737670",
-      "home": "Deportes Quindio"
-    },
-    {
-      "away": "Club America",
-      "fixture_id": "id1002895376595266",
-      "home": "Deportivo Toluca FC"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-16",
     "keys": 3,
@@ -36,155 +10,35 @@
     "remaining_today": 11,
     "spent_today": 14
   },
-  "captured_at": "2026-11-15T22:29:44+00:00",
+  "budget_deferred": 3,
+  "captured_at": "2026-11-16T01:17:18+00:00",
   "date": "2026-11-16",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 15,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 110,
-  "future_slate_fixtures": 12,
+  "future_slate_fixtures": 13,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 457,
-  "markets": {
-    "1x2": 2149,
-    "btts": 984,
-    "dc": 1959,
-    "dnb": 947,
-    "ou_0.5": 259,
-    "ou_0.75": 52,
-    "ou_1": 68,
-    "ou_1.25": 54,
-    "ou_1.5": 595,
-    "ou_1.75": 110,
-    "ou_2": 120,
-    "ou_2.25": 168,
-    "ou_2.5": 920,
-    "ou_2.75": 144,
-    "ou_3": 166,
-    "ou_3.25": 186,
-    "ou_3.5": 1017,
-    "ou_3.75": 174,
-    "ou_4": 140,
-    "ou_4.25": 114,
-    "ou_4.5": 649,
-    "ou_4.75": 80,
-    "ou_5": 78,
-    "ou_5.25": 68,
-    "ou_5.5": 326,
-    "ou_5.75": 32,
-    "ou_6": 48,
-    "ou_6.25": 28,
-    "ou_6.5": 76,
-    "ou_6.75": 28,
-    "ou_7": 28,
-    "ou_7.25": 28,
-    "ou_7.5": 47,
-    "ou_7.75": 20,
-    "ou_8": 20,
-    "ou_8.25": 20,
-    "ou_8.5": 34,
-    "tt_away_0.5": 261,
-    "tt_away_0.75": 34,
-    "tt_away_1": 42,
-    "tt_away_1.25": 34,
-    "tt_away_1.5": 288,
-    "tt_away_1.75": 2,
-    "tt_away_2": 50,
-    "tt_away_2.25": 16,
-    "tt_away_2.5": 298,
-    "tt_away_2.75": 22,
-    "tt_away_3": 16,
-    "tt_away_3.5": 108,
-    "tt_away_4.5": 20,
-    "tt_away_5.5": 17,
-    "tt_home_0.5": 238,
-    "tt_home_0.75": 34,
-    "tt_home_1": 42,
-    "tt_home_1.25": 34,
-    "tt_home_1.5": 404,
-    "tt_home_1.75": 18,
-    "tt_home_2": 42,
-    "tt_home_2.25": 16,
-    "tt_home_2.5": 234,
-    "tt_home_3": 16,
-    "tt_home_3.5": 93,
-    "tt_home_4.5": 15,
-    "tt_home_5.5": 7
-  },
-  "markets_source": "fetch",
-  "matched": 5,
+  "market_census_distinct": 0,
+  "markets": {},
+  "markets_source": "cache",
+  "matched": 0,
   "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 7,
-    "market_inactive": 52,
-    "market_unsupported_clean_sheet": 130,
-    "market_unsupported_corners": 819,
-    "market_unsupported_correct_score": 733,
-    "market_unsupported_early_payout": 38,
-    "market_unsupported_handicap": 2778,
-    "market_unsupported_market_type": 1899,
-    "market_unsupported_non_goal": 86,
-    "market_unsupported_odd_even": 638,
-    "market_unsupported_period": 8519,
-    "market_unsupported_win_to_nil": 190,
-    "outcome_inactive": 768
-  },
   "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 7,
-      "market_inactive": 52,
-      "outcome_inactive": 768
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_clean_sheet": 130,
-      "market_unsupported_corners": 819,
-      "market_unsupported_correct_score": 733,
-      "market_unsupported_early_payout": 38,
-      "market_unsupported_handicap": 2778,
-      "market_unsupported_market_type": 1899,
-      "market_unsupported_non_goal": 86,
-      "market_unsupported_odd_even": 638,
-      "market_unsupported_period": 8519,
-      "market_unsupported_win_to_nil": 190
-    }
+    "expected": {},
+    "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 5,
-  "quoted_fixtures": [
-    {
-      "away": "Juventus FC Managua",
-      "fixture_id": "id1004819776711498",
-      "home": "Tigres de Chinandega"
-    },
-    {
-      "away": "Ponce FC",
-      "fixture_id": "id1004876976724840",
-      "home": "Taurinos Cayey"
-    },
-    {
-      "away": "CF Pachuca",
-      "fixture_id": "id1002895376595264",
-      "home": "CF Monterrey"
-    },
-    {
-      "away": "Real Cartagena FC",
-      "fixture_id": "id1000123876737670",
-      "home": "Deportes Quindio"
-    },
-    {
-      "away": "Club America",
-      "fixture_id": "id1002895376595266",
-      "home": "Deportivo Toluca FC"
-    }
-  ],
-  "reserved_requests": 12,
-  "rows": 14337,
+  "pending_fixtures": 3,
+  "quoted_fixtures": [],
+  "reserved_requests": 11,
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 13,
+  "slate_candidate_fixtures": 14,
   "slate_match_mode": "exact_normalized_pair",
   "slate_priority_fixtures": 0,
-  "slate_provider_overlap_fixtures": 12,
+  "slate_provider_overlap_fixtures": 13,
   "slate_unmatched_fixtures": [
     {
       "away": "Pachuca (w)",
@@ -193,5 +47,6 @@
       "normalized_pair": "monterrey (w)|pachuca (w)"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "reserved"
 }

@@ -1,62 +1,15 @@
 {
-  "added": 146,
-  "attempted": 4,
-  "attempted_fixtures": [
-    {
-      "away": "LUXEMBOURG",
-      "date": "2026-11-16",
-      "home": "ICELAND",
-      "kickoff": "17:00",
-      "league": "EUN"
-    },
-    {
-      "away": "Slovenia",
-      "date": "2026-11-16",
-      "home": "North Macedonia",
-      "kickoff": "2026-11-16T19:45:00Z",
-      "league": "UEFA Nations League"
-    },
-    {
-      "away": "SERBIA",
-      "date": "2026-11-16",
-      "home": "GREECE",
-      "kickoff": "19:45",
-      "league": "EUN"
-    },
-    {
-      "away": "Scotland",
-      "date": "2026-11-16",
-      "home": "Switzerland",
-      "kickoff": "2026-11-16T19:45:00Z",
-      "league": "UEFA Nations League"
-    }
-  ],
-  "candidate_fixtures": 13,
-  "captured_at": "2026-11-15T22:37:15+00:00",
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 14,
+  "captured_at": "2026-11-16T01:27:35+00:00",
   "date": "2026-11-16",
-  "due_reasons": {
-    "first_at": 2,
-    "scope_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "Slovenia",
-      "date": "2026-11-16",
-      "home": "North Macedonia",
-      "kickoff": "2026-11-16T19:45:00Z",
-      "league": "UEFA Nations League"
-    },
-    {
-      "away": "Scotland",
-      "date": "2026-11-16",
-      "home": "Switzerland",
-      "kickoff": "2026-11-16T19:45:00Z",
-      "league": "UEFA Nations League"
-    }
-  ],
+  "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
     "totals",
@@ -66,14 +19,15 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 146,
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 2,
-    "retry_cooldown": 7
+    "priced": 3,
+    "retry_cooldown": 11
   },
   "skipped": [
     "LITHUANIA|LIECHTENSTEIN (retry cooldown (6h after failed attempt))",
+    "ICELAND|LUXEMBOURG (retry cooldown (6h after failed attempt))",
     "SOMALIA|GHANA (retry cooldown (6h after failed attempt))",
     "GUADELOUPE|BERMUDA (retry cooldown (6h after failed attempt))",
     "NAMIBIA|CAMEROON (retry cooldown (6h after failed attempt))",
@@ -81,15 +35,13 @@
     "Monterrey (w)|Pachuca (w) (retry cooldown (6h after failed attempt))",
     "Gibraltar|Malta (priced)",
     "KAZAKHSTAN|SLOVAKIA (retry cooldown (6h after failed attempt))",
+    "Guyana|Puerto Rico (retry cooldown (6h after failed attempt))",
+    "GREECE|SERBIA (retry cooldown (6h after failed attempt))",
+    "Switzerland|Scotland (priced)",
+    "NORTH MACEDONIA|SLOVENIA (retry cooldown (6h after failed attempt))",
     "Germany|Netherlands (priced)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "ICELAND vs LUXEMBOURG (league not covered: EUN)",
-    "GREECE vs SERBIA (league not covered: EUN)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: EUN": 2
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

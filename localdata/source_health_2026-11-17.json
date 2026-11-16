@@ -51,7 +51,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-17\\/2026-11-17' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -163,20 +163,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 12,
+      "coherence_excluded_rows": 6,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 12
+        "withheld_mixed_events_one_x_two": 6
       },
-      "coherence_withheld_fixtures": 2,
+      "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 13917
+        "out_of_window": 13740
       },
       "pa_matched": 0,
-      "pa_raw": 745,
-      "pa_scored": 13917,
+      "pa_raw": 735,
+      "pa_scored": 13740,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -269,9 +269,6 @@
           "unsupported_market:asian_handicap": 4
         },
         "card_fixture_count": 0,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 100,
@@ -283,16 +280,16 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 4
       },
-      "reason": null,
+      "reason": "cache_rows_pending_join",
       "sa_matched": 0,
-      "sa_raw": 1,
+      "sa_raw": 4,
       "sa_scored": 4,
-      "status": "ok"
+      "status": "cache_only"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
