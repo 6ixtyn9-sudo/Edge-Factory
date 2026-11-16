@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-16T22:05:38",
+  "generated_at": "2026-11-17T01:14:32",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 193.337119,
-  "multiple": 1.93337119,
+  "bank_pct": 190.195396,
+  "multiple": 1.90195396,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 75,
+  "bet_days": 76,
   "accas": {
-    "wins": 85,
-    "losses": 66
+    "wins": 86,
+    "losses": 67
   },
-  "open_slips": [
-    {
-      "date": "2026-11-16",
-      "staked_pct": 48.3342
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -2649,6 +2644,87 @@
       ],
       "bank_pct": 193.3371,
       "close_pct": 193.337
+    },
+    {
+      "date": "2026-11-16",
+      "staked_pct": 48.3342,
+      "returned_pct": 45.1925,
+      "accas": [
+        {
+          "odds": 1.91,
+          "won": false,
+          "stake_pct": 24.1671,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "ICELAND vs LUXEMBOURG",
+              "pick": "HOME",
+              "odds": 1.27,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-16",
+                "ICELAND",
+                "LUXEMBOURG"
+              ]
+            },
+            {
+              "match": "Gibraltar vs Malta",
+              "pick": "AWAY",
+              "odds": 1.5,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-16",
+                "Gibraltar",
+                "Malta"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 1.87,
+          "won": true,
+          "stake_pct": 24.1671,
+          "returned_pct": 45.1925,
+          "legs": [
+            {
+              "match": "GUADELOUPE vs BERMUDA",
+              "pick": "HOME",
+              "odds": 1.26,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-16",
+                "GUADELOUPE",
+                "BERMUDA"
+              ]
+            },
+            {
+              "match": "NAMIBIA vs CAMEROON",
+              "pick": "AWAY",
+              "odds": 1.4878,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-16",
+                "NAMIBIA",
+                "CAMEROON"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 190.1954,
+      "close_pct": 190.1953
     }
   ]
 }

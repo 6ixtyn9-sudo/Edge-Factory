@@ -30,12 +30,12 @@
   "selected_leg_brier_score": 0.20820839212702544,
   "calibration": {
     "all_candidates": {
-      "resolved_fixtures": 117,
-      "resolved_observations": 2542,
-      "base_brier": 0.20577499009552774,
-      "base_logloss": 0.5958643567658876,
-      "calibrated_brier": 0.20797865620925413,
-      "calibrated_logloss": 0.6011174594385202
+      "resolved_fixtures": 130,
+      "resolved_observations": 2834,
+      "base_brier": 0.2040747467657071,
+      "base_logloss": 0.5917223090426171,
+      "calibrated_brier": 0.2060525382221299,
+      "calibrated_logloss": 0.5964528658198445
     },
     "selected_candidates": {
       "resolved_fixtures": 56,
@@ -50,16 +50,16 @@
       "weighting": "one_total_weight_per_fixture_within_each_group",
       "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
       "all_candidates": {
-        "paired_fixtures": 117,
-        "paired_observations": 2466,
+        "paired_fixtures": 130,
+        "paired_observations": 2758,
         "missing_source_fixtures": 13,
         "missing_source_observations": 76,
-        "base_brier": 0.20657730940782051,
-        "base_logloss": 0.5976423157549942,
-        "model_brier": 0.20874447076431954,
-        "model_logloss": 0.6028749647282696,
-        "source_brier": 0.20617709156396113,
-        "source_logloss": 0.5965886414310496
+        "base_brier": 0.2047968341467706,
+        "base_logloss": 0.5933224721328131,
+        "model_brier": 0.20674177132168878,
+        "model_logloss": 0.5980346205806188,
+        "source_brier": 0.2044367530363715,
+        "source_logloss": 0.5923744361910008
       },
       "selected_candidates": {
         "paired_fixtures": 54,
@@ -75,16 +75,16 @@
       },
       "by_model_source_gap": {
         "lt_10pp": {
-          "paired_fixtures": 112,
-          "paired_observations": 2356,
+          "paired_fixtures": 125,
+          "paired_observations": 2648,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.20100257987826137,
-          "base_logloss": 0.5855599005998032,
-          "model_brier": 0.20173344807238336,
-          "model_logloss": 0.5877609166176869,
-          "source_brier": 0.20091204187424574,
-          "source_logloss": 0.5856964408052855
+          "base_brier": 0.19973065747784363,
+          "base_logloss": 0.5823238344088747,
+          "model_brier": 0.20037978701200873,
+          "model_logloss": 0.5842988197076308,
+          "source_brier": 0.1996496549732829,
+          "source_logloss": 0.5824464562207142
         },
         "10_to_lt_20pp": {
           "paired_fixtures": 23,
@@ -125,16 +125,16 @@
       },
       "by_board_bucket": {
         "CAUTION": {
-          "paired_fixtures": 10,
-          "paired_observations": 120,
+          "paired_fixtures": 12,
+          "paired_observations": 158,
           "missing_source_fixtures": 1,
           "missing_source_observations": 2,
-          "base_brier": 0.24256394731693506,
-          "base_logloss": 0.6786081670882084,
-          "model_brier": 0.23993432232049586,
-          "model_logloss": 0.6757541054013637,
-          "source_brier": 0.24070294291978236,
-          "source_logloss": 0.6667170818479528
+          "base_brier": 0.2270606415362195,
+          "base_logloss": 0.6436810342608162,
+          "model_brier": 0.22465908942809046,
+          "model_logloss": 0.6408608771331121,
+          "source_brier": 0.22551085167825682,
+          "source_logloss": 0.6337734281700966
         },
         "CERTIFIED_CLEAN": {
           "paired_fixtures": 2,
@@ -149,16 +149,16 @@
           "source_logloss": 0.7837066830355147
         },
         "SKIPPED_VETO": {
-          "paired_fixtures": 104,
-          "paired_observations": 2287,
+          "paired_fixtures": 115,
+          "paired_observations": 2541,
           "missing_source_fixtures": 11,
           "missing_source_observations": 70,
-          "base_brier": 0.2019641932973416,
-          "base_logloss": 0.5865339244468856,
-          "model_brier": 0.2046179554389371,
-          "model_logloss": 0.5931800693852849,
-          "source_brier": 0.2022552459147673,
-          "source_logloss": 0.5883065222301023
+          "base_brier": 0.20138461840020358,
+          "base_logloss": 0.5849496333579112,
+          "model_brier": 0.20380024963575202,
+          "model_logloss": 0.591009283015295,
+          "source_brier": 0.2016478518777336,
+          "source_logloss": 0.5865528143457943
         },
         "WATCHLIST_UNCORROBORATED_PRICE": {
           "paired_fixtures": 1,

@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-16",
+ "generated_at": "2026-11-17",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -5984,10 +5984,10 @@
    "status_since": "2026-10-24"
   },
   "match_over_15@v1": {
-   "hits": 45,
-   "inv_price_sum": 48.722770468749125,
+   "hits": 46,
+   "inv_price_sum": 49.47465016799725,
    "multi_n": 10,
-   "n": 61,
+   "n": 62,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -6073,9 +6073,10 @@
     "2026-11-09|Quer\u00e9taro vs Puebla|match_over_15@v1",
     "2026-11-13|Llaneros vs Chico|match_over_15@v1",
     "2026-11-14|Ecuador vs Costa Rica|match_over_15@v1",
-    "2026-11-15|UD Ibiza vs FC Cartagena|match_over_15@v1"
+    "2026-11-15|UD Ibiza vs FC Cartagena|match_over_15@v1",
+    "2026-11-16|Switzerland vs Scotland|match_over_15@v1"
    ],
-   "profit": -1.205,
+   "profit": -0.875,
    "records": [
     {
      "away": "Aston Villa",
@@ -7046,6 +7047,35 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Scotland",
+     "away_key": "scotland",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7729,
+     "date": "2026-11-16",
+     "hit": true,
+     "home": "Switzerland",
+     "home_key": "switzerland",
+     "league": "UEFA Nations League",
+     "match": "Switzerland vs Scotland",
+     "multi_source": false,
+     "price": 1.33,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-15T22:31:23.237249+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-16T00:31:30+02:00",
+      "kickoff": "2026-11-16T19:45:00+00:00",
+      "league": "UEFA Nations League",
+      "price": 1.33,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-16T23:11:08.561400+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -7054,11 +7084,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 355,
+   "hits": 357,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 351.5470410544622,
+   "inv_price_sum": 353.2150394973085,
    "multi_n": 103,
-   "n": 540,
+   "n": 543,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -7843,9 +7873,12 @@
     "2026-11-12|San Marino vs Belarus|match_over_25@v1",
     "2026-11-12|England vs Croatia|match_over_25@v1",
     "2026-11-13|Llaneros vs Chico|match_over_25@v1",
-    "2026-11-14|Norway vs Wales|match_over_25@v1"
+    "2026-11-14|Norway vs Wales|match_over_25@v1",
+    "2026-11-16|GREECE vs SERBIA|match_over_25@v1",
+    "2026-11-16|SUDAN vs SENEGAL|match_over_25@v1",
+    "2026-11-16|Guyana vs Puerto Rico|match_over_25@v1"
    ],
-   "profit": 6.667,
+   "profit": 7.347,
    "records": [
     {
      "away": "Spartak Varna",
@@ -16473,6 +16506,93 @@
      "recorded_at": "2026-11-15T05:21:38.133562+00:00",
      "rule": "pfc_4a3e5fbac72b2ebef11632f0",
      "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "SERBIA",
+     "away_key": "serbia",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6013,
+     "date": "2026-11-16",
+     "hit": false,
+     "home": "GREECE",
+     "home_key": "greece",
+     "league": "EUN",
+     "match": "GREECE vs SERBIA",
+     "multi_source": false,
+     "price": 1.74,
+     "price_context": {
+      "book": "1xBet",
+      "captured_at": "2026-11-15T22:28:52.379632+00:00",
+      "contract_id": "pfc_5519ee999fdb4f22dd17b20d",
+      "decision_at": "2026-11-16T00:31:30+02:00",
+      "kickoff": "2026-11-16T19:45:00+00:00",
+      "league": "EUN",
+      "price": 1.74,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-16T23:11:08.541176+00:00",
+     "rule": "pfc_5519ee999fdb4f22dd17b20d",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "SENEGAL",
+     "away_key": "senegal",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7097,
+     "date": "2026-11-16",
+     "hit": true,
+     "home": "SUDAN",
+     "home_key": "sudan",
+     "league": "AFN",
+     "match": "SUDAN vs SENEGAL",
+     "multi_source": false,
+     "price": 1.98,
+     "price_context": {
+      "book": "BetMGM.us",
+      "captured_at": "2026-11-15T22:30:51.834788+00:00",
+      "contract_id": "pfc_c33854a6f17eda6cca30d634",
+      "decision_at": "2026-11-16T00:31:30+02:00",
+      "kickoff": "2026-11-16T13:00:00+00:00",
+      "league": "AFN",
+      "price": 1.98,
+      "selection": "away",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-16T23:11:08.552187+00:00",
+     "rule": "pfc_c33854a6f17eda6cca30d634",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Puerto Rico",
+     "away_key": "puertorico",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6479,
+     "date": "2026-11-16",
+     "hit": true,
+     "home": "Guyana",
+     "home_key": "guyana",
+     "league": "CONCACAF Nations League",
+     "match": "Guyana vs Puerto Rico",
+     "multi_source": false,
+     "price": 1.7,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-16T01:20:34.465601+00:00",
+      "contract_id": "pfc_825c29fe41b13b2e5a30ccf9",
+      "decision_at": "2026-11-16T18:30:29+02:00",
+      "kickoff": "2026-11-16T19:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.7,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-16T23:11:08.570525+00:00",
+     "rule": "pfc_825c29fe41b13b2e5a30ccf9",
+     "source": "betexplorer",
      "stated": null
     }
    ],

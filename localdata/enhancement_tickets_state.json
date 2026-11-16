@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 23.203360999999997,
+  "bank": 24.402192999999997,
   "cycle_base": 100.0,
   "history": [
     {
@@ -8572,54 +8572,28 @@
       ],
       "bank_pct": 23.2034,
       "close_pct": 23.2034
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-11-16",
+      "staked_pct": 5.8008,
+      "returned_pct": 6.9996,
       "accas": [
         {
+          "odds": 1.92,
+          "won": true,
+          "stake_pct": 1.9336,
+          "returned_pct": 3.7125,
           "legs": [
             {
               "match": "Gibraltar vs Malta",
               "pick": "over",
-              "prob": 0.8381,
               "odds": 1.44,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
               "market": "match_over_15",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.8381,
-                "n": 247,
-                "contract_id": "pfc_825c29fe41b13b2e5a30ccf9",
-                "as_of_exclusive": "2026-11-16",
-                "market": "match_over_15",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 207,
-                "cohort_lower_bound": 0.7869968811052168,
-                "price_context": {
-                  "contract_id": "pfc_825c29fe41b13b2e5a30ccf9",
-                  "selection": "away",
-                  "league": "UEFA Nations League",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.44,
-                  "captured_at": "2026-11-16T01:22:40.483827+00:00",
-                  "decision_at": "2026-11-16T09:19:51+02:00",
-                  "kickoff": "2026-11-16T19:45:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.9012048499332904,
-              "ml_model_key": "9f97a88011022d944a2d641c2af0e156d6aa1acbfebce64bf353325be89fb316",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 1.5 Goals",
-              "floor": 1.7243454764612196,
-              "floor_basis": "market",
-              "league": "UEFA Nations League",
               "price_at": "2026-11-16T01:22:40.483827+00:00",
-              "price_kickoff": "2026-11-16T19:45:00+00:00",
               "price_provenance": {
                 "away": "Malta",
                 "bookmaker": "bet365.us",
@@ -8822,54 +8796,54 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-16",
                 "Gibraltar",
                 "Malta"
-              ]
-            },
-            {
-              "match": "Switzerland vs Scotland",
-              "pick": "over",
-              "prob": 0.7729,
-              "odds": 1.33,
-              "result": null,
-              "market": "match_over_15",
-              "price_book": "bet365.us",
-              "price_source": "betexplorer",
+              ],
+              "prob": 0.8381,
               "cohort_evidence": {
-                "rate": 0.7729,
-                "n": 2933,
-                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "rate": 0.8381,
+                "n": 247,
+                "contract_id": "pfc_825c29fe41b13b2e5a30ccf9",
                 "as_of_exclusive": "2026-11-16",
                 "market": "match_over_15",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 2267,
-                "cohort_lower_bound": 0.7574159340323359,
+                "cohort_min_hits": 207,
+                "cohort_lower_bound": 0.7869968811052168,
                 "price_context": {
-                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-                  "selection": "home",
+                  "contract_id": "pfc_825c29fe41b13b2e5a30ccf9",
+                  "selection": "away",
                   "league": "UEFA Nations League",
                   "book": "bet365.us",
                   "source": "betexplorer",
-                  "price": 1.33,
-                  "captured_at": "2026-11-15T22:31:23.237249+00:00",
+                  "price": 1.44,
+                  "captured_at": "2026-11-16T01:22:40.483827+00:00",
                   "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.696764610961605,
-              "ml_model_key": "b50f02bcb411d68466ad2702ff904c511f107c51e9463e421837699231ced667",
+              "ml_rank_probability": 0.9012048499332904,
+              "ml_model_key": "9f97a88011022d944a2d641c2af0e156d6aa1acbfebce64bf353325be89fb316",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 1.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7243454764612196,
               "floor_basis": "market",
               "league": "UEFA Nations League",
+              "shadow": true,
+              "price_kickoff": "2026-11-16T19:45:00+00:00"
+            },
+            {
+              "match": "Switzerland vs Scotland",
+              "pick": "over",
+              "odds": 1.33,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
+              "market": "match_over_15",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
               "price_at": "2026-11-15T22:31:23.237249+00:00",
-              "price_kickoff": "2026-11-16T19:45:00+00:00",
               "price_provenance": {
                 "away": "Scotland",
                 "bookmaker": "bet365.us",
@@ -9072,65 +9046,62 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-16",
                 "Switzerland",
                 "Scotland"
-              ]
-            }
-          ],
-          "odds": 1.92,
-          "stake_pct": 1.9336,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "NORTH MACEDONIA vs SLOVENIA",
-              "pick": "over",
-              "prob": 0.8333,
-              "odds": 1.36,
-              "result": null,
-              "market": "match_over_15",
-              "price_book": "bet365.us",
-              "price_source": "betexplorer",
+              ],
+              "prob": 0.7729,
               "cohort_evidence": {
-                "rate": 0.8333,
-                "n": 234,
-                "contract_id": "pfc_5519ee999fdb4f22dd17b20d",
+                "rate": 0.7729,
+                "n": 2933,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
                 "as_of_exclusive": "2026-11-16",
                 "market": "match_over_15",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 195,
-                "cohort_lower_bound": 0.7802816693961261,
+                "cohort_min_hits": 2267,
+                "cohort_lower_bound": 0.7574159340323359,
                 "price_context": {
-                  "contract_id": "pfc_5519ee999fdb4f22dd17b20d",
-                  "selection": "away",
-                  "league": "EUN",
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "home",
+                  "league": "UEFA Nations League",
                   "book": "bet365.us",
                   "source": "betexplorer",
-                  "price": 1.36,
-                  "captured_at": "2026-11-16T01:23:12.786065+00:00",
+                  "price": 1.33,
+                  "captured_at": "2026-11-15T22:31:23.237249+00:00",
                   "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.9266109839447023,
-              "ml_model_key": "fcd9638e5635b07dfb3a06fc8e109e67af5a966e454474cbd4d4351e611a4f1d",
+              "ml_rank_probability": 0.696764610961605,
+              "ml_model_key": "b50f02bcb411d68466ad2702ff904c511f107c51e9463e421837699231ced667",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 1.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7243454764612196,
               "floor_basis": "market",
-              "league": "EUN",
+              "league": "UEFA Nations League",
+              "shadow": true,
+              "price_kickoff": "2026-11-16T19:45:00+00:00"
+            }
+          ]
+        },
+        {
+          "odds": 1.7,
+          "won": true,
+          "stake_pct": 1.9336,
+          "returned_pct": 3.2871,
+          "legs": [
+            {
+              "match": "NORTH MACEDONIA vs SLOVENIA",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
+              "market": "match_over_15",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
               "price_at": "2026-11-16T01:23:12.786065+00:00",
-              "price_kickoff": "2026-11-16T19:45:00+00:00",
               "price_provenance": {
                 "away": "Slovenia",
                 "bookmaker": "bet365.us",
@@ -9268,54 +9239,54 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-16",
                 "NORTH MACEDONIA",
                 "SLOVENIA"
-              ]
+              ],
+              "prob": 0.8333,
+              "cohort_evidence": {
+                "rate": 0.8333,
+                "n": 234,
+                "contract_id": "pfc_5519ee999fdb4f22dd17b20d",
+                "as_of_exclusive": "2026-11-16",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 195,
+                "cohort_lower_bound": 0.7802816693961261,
+                "price_context": {
+                  "contract_id": "pfc_5519ee999fdb4f22dd17b20d",
+                  "selection": "away",
+                  "league": "EUN",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.36,
+                  "captured_at": "2026-11-16T01:23:12.786065+00:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
+                  "kickoff": "2026-11-16T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.9266109839447023,
+              "ml_model_key": "fcd9638e5635b07dfb3a06fc8e109e67af5a966e454474cbd4d4351e611a4f1d",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7243454764612196,
+              "floor_basis": "market",
+              "league": "EUN",
+              "shadow": true,
+              "price_kickoff": "2026-11-16T19:45:00+00:00"
             },
             {
               "match": "LITHUANIA vs LIECHTENSTEIN",
               "pick": "over",
-              "prob": 0.7972,
               "odds": 1.25,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
               "market": "match_over_15",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.7972,
-                "n": 986,
-                "contract_id": "pfc_c33854a6f17eda6cca30d634",
-                "as_of_exclusive": "2026-11-16",
-                "market": "match_over_15",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 786,
-                "cohort_lower_bound": 0.7709300696112413,
-                "price_context": {
-                  "contract_id": "pfc_c33854a6f17eda6cca30d634",
-                  "selection": "home",
-                  "league": "EUN",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.25,
-                  "captured_at": "2026-11-16T01:18:57.278203+00:00",
-                  "decision_at": "2026-11-16T09:19:51+02:00",
-                  "kickoff": "2026-11-16T17:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.9836901186054468,
-              "ml_model_key": "18fd43965c62f84d87df9aeb95c57a3d2baa01fb90feb8298d06bcf9eed6e958",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 1.5 Goals",
-              "floor": 1.7243454764612196,
-              "floor_basis": "market",
-              "league": "EUN",
               "price_at": "2026-11-16T01:18:57.278203+00:00",
-              "price_kickoff": "2026-11-16T17:00:00+00:00",
               "price_provenance": {
                 "away": "Liechtenstein",
                 "bookmaker": "bet365.us",
@@ -9502,65 +9473,62 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-16",
                 "LITHUANIA",
                 "LIECHTENSTEIN"
-              ]
+              ],
+              "prob": 0.7972,
+              "cohort_evidence": {
+                "rate": 0.7972,
+                "n": 986,
+                "contract_id": "pfc_c33854a6f17eda6cca30d634",
+                "as_of_exclusive": "2026-11-16",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 786,
+                "cohort_lower_bound": 0.7709300696112413,
+                "price_context": {
+                  "contract_id": "pfc_c33854a6f17eda6cca30d634",
+                  "selection": "home",
+                  "league": "EUN",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.25,
+                  "captured_at": "2026-11-16T01:18:57.278203+00:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
+                  "kickoff": "2026-11-16T17:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.9836901186054468,
+              "ml_model_key": "18fd43965c62f84d87df9aeb95c57a3d2baa01fb90feb8298d06bcf9eed6e958",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7243454764612196,
+              "floor_basis": "market",
+              "league": "EUN",
+              "shadow": true,
+              "price_kickoff": "2026-11-16T17:00:00+00:00"
             }
-          ],
-          "odds": 1.7,
-          "stake_pct": 1.9336,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         },
         {
+          "odds": 1.73,
+          "won": false,
+          "stake_pct": 1.9336,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "Germany vs Netherlands",
               "pick": "under",
-              "prob": 0.8196,
               "odds": 1.33,
-              "result": null,
+              "result": "loss",
+              "label": "Match Under 4.5 Goals",
               "market": "match_under_45",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.8196,
-                "n": 2933,
-                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-                "as_of_exclusive": "2026-11-16",
-                "market": "match_under_45",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 2404,
-                "cohort_lower_bound": 0.8053085808467451,
-                "price_context": {
-                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-                  "selection": "home",
-                  "league": "UEFA Nations League",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.33,
-                  "captured_at": "2026-11-16T01:21:37.474401+00:00",
-                  "decision_at": "2026-11-16T09:19:51+02:00",
-                  "kickoff": "2026-11-16T19:45:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.6055397221468403,
-              "ml_model_key": "b50f02bcb411d68466ad2702ff904c511f107c51e9463e421837699231ced667",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 4.5 Goals",
-              "floor": null,
-              "floor_basis": "inherited",
-              "league": "UEFA Nations League",
               "price_at": "2026-11-16T01:21:37.474401+00:00",
-              "price_kickoff": "2026-11-16T19:45:00+00:00",
               "price_provenance": {
                 "away": "Netherlands",
                 "bookmaker": "bet365.us",
@@ -9763,54 +9731,54 @@
                 "selection": "under",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-16",
                 "Germany",
                 "Netherlands"
-              ]
+              ],
+              "prob": 0.8196,
+              "cohort_evidence": {
+                "rate": 0.8196,
+                "n": 2933,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-16",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 2404,
+                "cohort_lower_bound": 0.8053085808467451,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "home",
+                  "league": "UEFA Nations League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.33,
+                  "captured_at": "2026-11-16T01:21:37.474401+00:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
+                  "kickoff": "2026-11-16T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6055397221468403,
+              "ml_model_key": "b50f02bcb411d68466ad2702ff904c511f107c51e9463e421837699231ced667",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "UEFA Nations League",
+              "shadow": true,
+              "price_kickoff": "2026-11-16T19:45:00+00:00"
             },
             {
               "match": "KAZAKHSTAN vs SLOVAKIA",
               "pick": "over",
-              "prob": 0.8115,
               "odds": 1.3,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
               "market": "match_over_15",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.8115,
-                "n": 122,
-                "contract_id": "pfc_0d72f28c85762f31e35144a9",
-                "as_of_exclusive": "2026-11-16",
-                "market": "match_over_15",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 99,
-                "cohort_lower_bound": 0.7329716513566709,
-                "price_context": {
-                  "contract_id": "pfc_0d72f28c85762f31e35144a9",
-                  "selection": "away",
-                  "league": "EUN",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.3,
-                  "captured_at": "2026-11-16T01:20:02.979578+00:00",
-                  "decision_at": "2026-11-16T09:19:51+02:00",
-                  "kickoff": "2026-11-16T15:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8166419793182621,
-              "ml_model_key": "52d9ef5faf3a82d8fbe2fe4ab277da4f30e6915d9e1d4b21f5e3102f1bf090ee",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 1.5 Goals",
-              "floor": 1.7243454764612196,
-              "floor_basis": "market",
-              "league": "EUN",
               "price_at": "2026-11-16T01:20:02.979578+00:00",
-              "price_kickoff": "2026-11-16T15:00:00+00:00",
               "price_provenance": {
                 "away": "Slovakia",
                 "bookmaker": "bet365.us",
@@ -9997,28 +9965,53 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-16",
                 "KAZAKHSTAN",
                 "SLOVAKIA"
-              ]
+              ],
+              "prob": 0.8115,
+              "cohort_evidence": {
+                "rate": 0.8115,
+                "n": 122,
+                "contract_id": "pfc_0d72f28c85762f31e35144a9",
+                "as_of_exclusive": "2026-11-16",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 99,
+                "cohort_lower_bound": 0.7329716513566709,
+                "price_context": {
+                  "contract_id": "pfc_0d72f28c85762f31e35144a9",
+                  "selection": "away",
+                  "league": "EUN",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.3,
+                  "captured_at": "2026-11-16T01:20:02.979578+00:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
+                  "kickoff": "2026-11-16T15:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8166419793182621,
+              "ml_model_key": "52d9ef5faf3a82d8fbe2fe4ab277da4f30e6915d9e1d4b21f5e3102f1bf090ee",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7243454764612196,
+              "floor_basis": "market",
+              "league": "EUN",
+              "shadow": true,
+              "price_kickoff": "2026-11-16T15:00:00+00:00"
             }
-          ],
-          "odds": 1.73,
-          "stake_pct": 1.9336,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 5.8008
+      "bank_pct": 24.4022,
+      "close_pct": 24.4022
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,
