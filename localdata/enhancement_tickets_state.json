@@ -8607,7 +8607,7 @@
                   "source": "betexplorer",
                   "price": 1.44,
                   "captured_at": "2026-11-16T01:22:40.483827+00:00",
-                  "decision_at": "2026-11-16T06:19:04+02:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T19:45:00+00:00"
                 }
               },
@@ -8637,7 +8637,7 @@
                 "kickoff_utc": "2026-11-16T19:45:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-16.json",
-                "ledger_sha256": "b5d1e8cea2e26ec508c95b398075abf2218f647cc0df1a0dc9014eff78657df4",
+                "ledger_sha256": "ef776e66b50cde648b631ee7c2cafa2ded7deba79497018b1c5e52d27bfeaaf7",
                 "market": "ou_1.5",
                 "price": 1.44,
                 "quote_evidence": {
@@ -8680,7 +8680,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -8705,7 +8705,7 @@
                       "away": "Malta",
                       "csv_data_row": 1862,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "6c656acf08bc8a47b6a084bb0e65775f4395af8e6cbb9eec7a627d53f247f17e",
+                      "file_sha256": "d954b8d561739b0907133fe324f1da0fc95535420c3aba742fc128a30ec0450a",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Gibraltar",
                       "kickoff_origin": "provider_explicit_offset",
@@ -8756,7 +8756,7 @@
                       "away": "Malta",
                       "csv_data_row": 7910,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Gibraltar",
                       "kickoff_origin": "provider_explicit_offset",
@@ -8795,7 +8795,7 @@
                       "csv_data_row": 7910,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Gibraltar",
                       "kickoff_origin": "provider_explicit_offset",
@@ -8816,29 +8816,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Malta",
-                      "board_fetched_at": "2026-11-15T22:28:53+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002375568932816",
-                        "participant1Name": "Gibraltar",
-                        "participant2Name": "Malta",
-                        "sportId": 10,
-                        "startTime": "2026-11-16T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "3ab81b2d3953eea39ddc3f2903c04e86abff049331de01248866e2ecaaed0d64",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Gibraltar",
-                      "json_pointer": "/boards/2026-11-16/fixtures/99",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-15T22:28:53+00:00",
-                      "provider_event_id": "id1002375568932816",
-                      "row_sha256": "916e9ec0edd4e04d750725cba286c7e95a218258c7b8742640cfc5f0bf091206",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -8880,7 +8857,7 @@
                   "source": "betexplorer",
                   "price": 1.33,
                   "captured_at": "2026-11-15T22:31:23.237249+00:00",
-                  "decision_at": "2026-11-16T06:19:04+02:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T19:45:00+00:00"
                 }
               },
@@ -8910,7 +8887,7 @@
                 "kickoff_utc": "2026-11-16T19:45:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-16.json",
-                "ledger_sha256": "b5d1e8cea2e26ec508c95b398075abf2218f647cc0df1a0dc9014eff78657df4",
+                "ledger_sha256": "ef776e66b50cde648b631ee7c2cafa2ded7deba79497018b1c5e52d27bfeaaf7",
                 "market": "ou_1.5",
                 "price": 1.33,
                 "quote_evidence": {
@@ -8953,7 +8930,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -8978,7 +8955,7 @@
                       "away": "Scotland",
                       "csv_data_row": 1876,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "6c656acf08bc8a47b6a084bb0e65775f4395af8e6cbb9eec7a627d53f247f17e",
+                      "file_sha256": "d954b8d561739b0907133fe324f1da0fc95535420c3aba742fc128a30ec0450a",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Switzerland",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9029,7 +9006,7 @@
                       "away": "Scotland",
                       "csv_data_row": 7957,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Switzerland",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9068,7 +9045,7 @@
                       "csv_data_row": 7957,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Switzerland",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9089,29 +9066,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Scotland",
-                      "board_fetched_at": "2026-11-15T22:28:53+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002375568932802",
-                        "participant1Name": "Switzerland",
-                        "participant2Name": "Scotland",
-                        "sportId": 10,
-                        "startTime": "2026-11-16T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "3ab81b2d3953eea39ddc3f2903c04e86abff049331de01248866e2ecaaed0d64",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Switzerland",
-                      "json_pointer": "/boards/2026-11-16/fixtures/98",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-15T22:28:53+00:00",
-                      "provider_event_id": "id1002375568932802",
-                      "row_sha256": "63e77e2c18111c9b40d25734932b305362aa2a01d4a4dd3c2387942ecc7e29dc",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -9129,7 +9083,12 @@
             }
           ],
           "odds": 1.92,
-          "stake_pct": 1.9336
+          "stake_pct": 1.9336,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -9159,7 +9118,7 @@
                   "source": "betexplorer",
                   "price": 1.36,
                   "captured_at": "2026-11-16T01:23:12.786065+00:00",
-                  "decision_at": "2026-11-16T06:19:04+02:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T19:45:00+00:00"
                 }
               },
@@ -9189,7 +9148,7 @@
                 "kickoff_utc": "2026-11-16T19:45:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-16.json",
-                "ledger_sha256": "b5d1e8cea2e26ec508c95b398075abf2218f647cc0df1a0dc9014eff78657df4",
+                "ledger_sha256": "ef776e66b50cde648b631ee7c2cafa2ded7deba79497018b1c5e52d27bfeaaf7",
                 "market": "ou_1.5",
                 "price": 1.36,
                 "quote_evidence": {
@@ -9232,7 +9191,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -9257,7 +9216,7 @@
                       "away": "Slovenia",
                       "csv_data_row": 1871,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "6c656acf08bc8a47b6a084bb0e65775f4395af8e6cbb9eec7a627d53f247f17e",
+                      "file_sha256": "d954b8d561739b0907133fe324f1da0fc95535420c3aba742fc128a30ec0450a",
                       "fixture_identity_origin": "provider_participants",
                       "home": "North Macedonia",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9303,29 +9262,6 @@
                         "status": "19:45"
                       },
                       "source": "scoutingstats"
-                    },
-                    {
-                      "away": "Slovenia",
-                      "board_fetched_at": "2026-11-15T22:28:53+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002375568932800",
-                        "participant1Name": "North Macedonia",
-                        "participant2Name": "Slovenia",
-                        "sportId": 10,
-                        "startTime": "2026-11-16T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "3ab81b2d3953eea39ddc3f2903c04e86abff049331de01248866e2ecaaed0d64",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "North Macedonia",
-                      "json_pointer": "/boards/2026-11-16/fixtures/97",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-15T22:28:53+00:00",
-                      "provider_event_id": "id1002375568932800",
-                      "row_sha256": "620947b2ea3bd24c9cf19cdef35cde9ee7f3b6e7cee8572477dbc39b6fe9ff02",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -9367,7 +9303,7 @@
                   "source": "betexplorer",
                   "price": 1.25,
                   "captured_at": "2026-11-16T01:18:57.278203+00:00",
-                  "decision_at": "2026-11-16T06:19:04+02:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T17:00:00+00:00"
                 }
               },
@@ -9397,7 +9333,7 @@
                 "kickoff_utc": "2026-11-16T17:00:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-16.json",
-                "ledger_sha256": "b5d1e8cea2e26ec508c95b398075abf2218f647cc0df1a0dc9014eff78657df4",
+                "ledger_sha256": "ef776e66b50cde648b631ee7c2cafa2ded7deba79497018b1c5e52d27bfeaaf7",
                 "market": "ou_1.5",
                 "price": 1.25,
                 "quote_evidence": {
@@ -9440,7 +9376,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-16T17:00:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -9449,7 +9385,7 @@
                       "away": "Liechtenstein",
                       "csv_data_row": 1868,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "6c656acf08bc8a47b6a084bb0e65775f4395af8e6cbb9eec7a627d53f247f17e",
+                      "file_sha256": "d954b8d561739b0907133fe324f1da0fc95535420c3aba742fc128a30ec0450a",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Lithuania",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9500,7 +9436,7 @@
                       "away": "Liechtenstein",
                       "csv_data_row": 7925,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Lithuania",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9539,7 +9475,7 @@
                       "csv_data_row": 7925,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Lithuania",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9560,29 +9496,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Liechtenstein",
-                      "board_fetched_at": "2026-11-15T22:28:53+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002375568932078",
-                        "participant1Name": "Lithuania",
-                        "participant2Name": "Liechtenstein",
-                        "sportId": 10,
-                        "startTime": "2026-11-16T17:00:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "3ab81b2d3953eea39ddc3f2903c04e86abff049331de01248866e2ecaaed0d64",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Lithuania",
-                      "json_pointer": "/boards/2026-11-16/fixtures/71",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-                      "observed_at_utc": "2026-11-15T22:28:53+00:00",
-                      "provider_event_id": "id1002375568932078",
-                      "row_sha256": "2ddc716d32f633a82f7552a8e17e13a22b74ad8b8b44bed1c27a83a18b6e0abc",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -9600,7 +9513,12 @@
             }
           ],
           "odds": 1.7,
-          "stake_pct": 1.9336
+          "stake_pct": 1.9336,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -9630,7 +9548,7 @@
                   "source": "betexplorer",
                   "price": 1.33,
                   "captured_at": "2026-11-16T01:21:37.474401+00:00",
-                  "decision_at": "2026-11-16T06:19:04+02:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T19:45:00+00:00"
                 }
               },
@@ -9660,7 +9578,7 @@
                 "kickoff_utc": "2026-11-16T19:45:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-16.json",
-                "ledger_sha256": "b5d1e8cea2e26ec508c95b398075abf2218f647cc0df1a0dc9014eff78657df4",
+                "ledger_sha256": "ef776e66b50cde648b631ee7c2cafa2ded7deba79497018b1c5e52d27bfeaaf7",
                 "market": "ou_4.5",
                 "price": 1.33,
                 "quote_evidence": {
@@ -9703,7 +9621,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -9728,7 +9646,7 @@
                       "away": "Netherlands",
                       "csv_data_row": 1861,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "6c656acf08bc8a47b6a084bb0e65775f4395af8e6cbb9eec7a627d53f247f17e",
+                      "file_sha256": "d954b8d561739b0907133fe324f1da0fc95535420c3aba742fc128a30ec0450a",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Germany",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9779,7 +9697,7 @@
                       "away": "Netherlands",
                       "csv_data_row": 7909,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Germany",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9818,7 +9736,7 @@
                       "csv_data_row": 7909,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Germany",
                       "kickoff_origin": "provider_explicit_offset",
@@ -9839,29 +9757,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Netherlands",
-                      "board_fetched_at": "2026-11-15T22:28:53+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002375568931588",
-                        "participant1Name": "Germany",
-                        "participant2Name": "Netherlands",
-                        "sportId": 10,
-                        "startTime": "2026-11-16T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "3ab81b2d3953eea39ddc3f2903c04e86abff049331de01248866e2ecaaed0d64",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Germany",
-                      "json_pointer": "/boards/2026-11-16/fixtures/95",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-15T22:28:53+00:00",
-                      "provider_event_id": "id1002375568931588",
-                      "row_sha256": "50dcd38564a9b943443ed4af037707742de15c734051e5b4712f62ed4ab38fdc",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -9903,7 +9798,7 @@
                   "source": "betexplorer",
                   "price": 1.3,
                   "captured_at": "2026-11-16T01:20:02.979578+00:00",
-                  "decision_at": "2026-11-16T06:19:04+02:00",
+                  "decision_at": "2026-11-16T09:19:51+02:00",
                   "kickoff": "2026-11-16T15:00:00+00:00"
                 }
               },
@@ -9933,7 +9828,7 @@
                 "kickoff_utc": "2026-11-16T15:00:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-16.json",
-                "ledger_sha256": "b5d1e8cea2e26ec508c95b398075abf2218f647cc0df1a0dc9014eff78657df4",
+                "ledger_sha256": "ef776e66b50cde648b631ee7c2cafa2ded7deba79497018b1c5e52d27bfeaaf7",
                 "market": "ou_1.5",
                 "price": 1.3,
                 "quote_evidence": {
@@ -9976,7 +9871,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-16T15:00:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -9985,7 +9880,7 @@
                       "away": "Slovakia",
                       "csv_data_row": 1867,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "6c656acf08bc8a47b6a084bb0e65775f4395af8e6cbb9eec7a627d53f247f17e",
+                      "file_sha256": "d954b8d561739b0907133fe324f1da0fc95535420c3aba742fc128a30ec0450a",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Kazakhstan",
                       "kickoff_origin": "provider_explicit_offset",
@@ -10036,7 +9931,7 @@
                       "away": "Slovakia",
                       "csv_data_row": 7922,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Kazakhstan",
                       "kickoff_origin": "provider_explicit_offset",
@@ -10075,7 +9970,7 @@
                       "csv_data_row": 7922,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "5c3778eea3f67d531d8987ba75c5c0556d0b3089be09c66988806c7afc0655e6",
+                      "file_sha256": "e4fdaa2561a89a3d538212e71718beae5efa09aa9a7be8020d4646933fe5a312",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Kazakhstan",
                       "kickoff_origin": "provider_explicit_offset",
@@ -10096,29 +9991,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Slovakia",
-                      "board_fetched_at": "2026-11-15T22:28:53+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002375568932378",
-                        "participant1Name": "Kazakhstan",
-                        "participant2Name": "Slovakia",
-                        "sportId": 10,
-                        "startTime": "2026-11-16T15:00:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "3ab81b2d3953eea39ddc3f2903c04e86abff049331de01248866e2ecaaed0d64",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Kazakhstan",
-                      "json_pointer": "/boards/2026-11-16/fixtures/61",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-16T15:00:00+00:00",
-                      "observed_at_utc": "2026-11-15T22:28:53+00:00",
-                      "provider_event_id": "id1002375568932378",
-                      "row_sha256": "7b3dc004e7ba8bb43e0b496a7baca67b844141606930d4d150c8f98859c591a4",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -10136,7 +10008,12 @@
             }
           ],
           "odds": 1.73,
-          "stake_pct": 1.9336
+          "stake_pct": 1.9336,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 5.8008
@@ -10285,6 +10162,11 @@
     },
     "2026-11-15": {
       "frozen_at": "2026-11-15T12:37:02+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-16": {
+      "frozen_at": "2026-11-16T09:56:55+02:00",
       "final": true,
       "lock_source": "state"
     }

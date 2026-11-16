@@ -16,14 +16,14 @@
       "bb_matched": 0,
       "bb_raw": 0,
       "bb_scored": 0,
-      "blocker": "betbetter: every configured league request failed",
-      "can_fetch_today": false,
+      "blocker": "fetch returned zero rows",
+      "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
-      "status": "unavailable"
+      "status": "empty"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
