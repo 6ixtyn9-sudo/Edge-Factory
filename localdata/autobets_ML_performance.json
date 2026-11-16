@@ -3,367 +3,118 @@
   "paper_only": true,
   "unit": "model_chosen_paper_stakes_compounding_own_bank",
   "base_paper_units": 100.0,
-  "paper_bank_units": 60.414731315748,
-  "paper_multiple": 0.60414731315748,
-  "paper_committed_units": 0.12082799999999999,
-  "paper_free_units": 60.293903315748,
-  "settled_stake_units": 65.473331,
+  "paper_bank_units": 56.39072837764799,
+  "paper_multiple": 0.5639072837764799,
+  "paper_committed_units": 8.868524,
+  "paper_free_units": 47.52220437764799,
+  "settled_stake_units": 56.72563500000003,
   "receipt_days": 13,
   "decision_receipts": 118,
   "bet_days": 8,
   "no_bet_days": 5,
-  "superseded_accas": 1,
-  "superseded_tickets": [
-    {
-      "superseded_by": "1a902a22be9afaae22f42f8f503b5baa03a363dbbc1b0e4103791841ed734182",
-      "superseded_at": "2026-11-13T09:15:47.208439+00:00",
-      "reason": "Operator requested the reconstructed multi-acca chance-first PAPER slip be visible on GitHub, approved a one-off ML-only runtime-state commit, and explicitly rejected new machinery. Replace the original still-active double-draw using current-time validated existing local evidence; share the existing paper-risk budget and preserve original receipts.",
-      "date": "2026-11-13",
-      "receipt_sha256": "fdbe9fde2b5cc5f819d495357022510122dd04300de5a7ae242c8d564573a852",
-      "acca_index": 1,
-      "odds": 35.775,
-      "stake_units": 0.097512,
-      "legs": [
-        {
-          "admission": {
-            "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
-            "evidence_sha256": "a9f591cbc2e7337ff8ed797421d5a4debfc8b62ab5a2f8f318ed906257e659ba",
-            "fixtures": 74,
-            "joint_basis": "independent_leg_admission_lower_envelope",
-            "lower_hit_rate": 0.197433731114,
-            "policy": "source_market_price_evidence_v1",
-            "probability_lower": 0.197433731114,
-            "reason": "positive_conservative_edge",
-            "required_model_probability": 0.14814814814814814,
-            "required_source_probability": 0.14814814814814814,
-            "source_probability": 0.2085478899665123,
-            "status": "eligible",
-            "wins": 19
-          },
-          "away": "Germany",
-          "base_partition": [
-            [
-              "1x2",
-              "home",
-              0.1603468640111416
-            ],
-            [
-              "1x2",
-              "draw",
-              0.2085478899665123
-            ],
-            [
-              "1x2",
-              "away",
-              0.6311052460223462
-            ]
-          ],
-          "base_probability": 0.2085478899665123,
-          "book": "Winamax (DE)",
-          "bucket": "CAUTION",
-          "candidate_id": "ad2cb075e322aba3d0fea7c075e661f845b16437aa5cbfa14c56f5d6fc42797c",
-          "context": {
-            "as_of": "2026-11-12T22:36:42.381751+00:00",
-            "country": "Europe",
-            "country_sources": [
-              "scoutingstats"
-            ],
-            "form_as_of_exclusive": "2026-11-13",
-            "form_values": {
-              "away_form_btts": 0.625,
-              "away_form_ga": 1.0,
-              "away_form_gf": 1.75,
-              "away_form_over15": 0.75,
-              "away_form_over25": 0.5,
-              "away_form_over35": 0.125
-            },
-            "league": "world uefa nations league",
-            "parent_confidence": 0.6695786676788764,
-            "parent_selection": "away",
-            "schema": "source_market_context_v2"
-          },
-          "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-          "date": "2026-11-13",
-          "fixture": [
-            "2026-11-13",
-            "serbia",
-            "germany"
-          ],
-          "forecast_model_key": "fb1072cc58ba56195536120c143e6df15560ff8d40d6a0897e37d542367a7a35",
-          "home": "Serbia",
-          "kickoff_utc": "2026-11-13T19:45:00+00:00",
-          "market": "1x2",
-          "ml_inputs": {
-            "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-            "fixture": [
-              "2026-11-13",
-              "serbia",
-              "germany",
-              [],
-              []
-            ],
-            "sources": [
-              "bettingclosed",
-              "bzzoiro",
-              "prosoccer",
-              "scoutingstats",
-              "statarea",
-              "vitibet"
-            ],
-            "values": {
-              "forecast_1x2_away_mean": 0.6312314670715506,
-              "forecast_1x2_away_spread": 0.22915733535775284,
-              "forecast_1x2_draw_mean": 0.2085895995445056,
-              "forecast_1x2_draw_spread": 0.12405200227747201,
-              "forecast_1x2_home_mean": 0.16037893338394382,
-              "forecast_1x2_home_spread": 0.11510533308028088,
-              "forecast_btts_yes_mean": 0.5333172043010753,
-              "forecast_btts_yes_spread": 0.00863440860215059,
-              "forecast_ou_1.5_over_mean": 0.8780464301357863,
-              "forecast_ou_1.5_over_spread": 0.08000000000000007,
-              "forecast_ou_2.5_over_mean": 0.6442827868852459,
-              "forecast_ou_2.5_over_spread": 0.19999999999999996,
-              "forecast_ou_3.5_over_mean": 0.4281218637992832,
-              "forecast_ou_3.5_over_spread": 0.07236559139784948,
-              "forecast_ou_4.5_over_mean": null,
-              "forecast_ou_4.5_over_spread": null,
-              "forecast_xg_away_mean": 2.13,
-              "forecast_xg_away_spread": 0.0,
-              "forecast_xg_home_mean": 0.83,
-              "forecast_xg_home_spread": 0.0
-            }
-          },
-          "model_key": "1cc0d4b429a2f7a74dd8cc65dee367bf70e4c303a6be3b7a4c78c186cb2d1747",
-          "odds": 6.75,
-          "pre_normalized_probability": 0.20941195212135935,
-          "price_age_seconds_at_decision": 485.100526,
-          "price_age_seconds_at_freeze": 651.08808,
-          "price_at": "2026-11-12T22:28:37.281225+00:00",
-          "price_provenance": null,
-          "price_source": "theoddsapi",
-          "probability": 0.20941195212135935,
-          "probability_normalization": "complete_source_market_partition_v1",
-          "selection": "draw"
-        },
-        {
-          "admission": {
-            "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
-            "evidence_sha256": "a9f591cbc2e7337ff8ed797421d5a4debfc8b62ab5a2f8f318ed906257e659ba",
-            "fixtures": 74,
-            "joint_basis": "independent_leg_admission_lower_envelope",
-            "lower_hit_rate": 0.197433731114,
-            "policy": "source_market_price_evidence_v1",
-            "probability_lower": 0.197433731114,
-            "reason": "positive_conservative_edge",
-            "required_model_probability": 0.18867924528301888,
-            "required_source_probability": 0.18867924528301888,
-            "source_probability": 0.21069886848451125,
-            "status": "eligible",
-            "wins": 19
-          },
-          "away": "Azerbaijan",
-          "base_partition": [
-            [
-              "1x2",
-              "home",
-              0.11934943424225561
-            ],
-            [
-              "1x2",
-              "draw",
-              0.21069886848451125
-            ],
-            [
-              "1x2",
-              "away",
-              0.6699516972732331
-            ]
-          ],
-          "base_probability": 0.21069886848451125,
-          "book": "Winamax (DE)",
-          "bucket": "CAUTION",
-          "candidate_id": "b1eea2d26bc2a317e72632176c52a59c92f30dcd15b0703c31d485b2b2f5ba67",
-          "context": {
-            "as_of": "2026-11-12T22:36:42.381751+00:00",
-            "country": "Europe",
-            "country_sources": [
-              "scoutingstats"
-            ],
-            "form_as_of_exclusive": null,
-            "form_values": {},
-            "league": "world uefa nations league",
-            "parent_confidence": 0.7058792431830829,
-            "parent_selection": "away",
-            "schema": "source_market_context_v2"
-          },
-          "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-          "date": "2026-11-13",
-          "fixture": [
-            "2026-11-13",
-            "liechtenstein",
-            "azerbaijan"
-          ],
-          "forecast_model_key": "fb1072cc58ba56195536120c143e6df15560ff8d40d6a0897e37d542367a7a35",
-          "home": "Liechtenstein",
-          "kickoff_utc": "2026-11-13T19:45:00+00:00",
-          "market": "1x2",
-          "ml_inputs": {
-            "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-            "fixture": [
-              "2026-11-13",
-              "liechtenstein",
-              "azerbaijan",
-              [],
-              []
-            ],
-            "sources": [
-              "bettingclosed",
-              "bzzoiro",
-              "prosoccer",
-              "scoutingstats",
-              "statarea",
-              "vitibet"
-            ],
-            "values": {
-              "forecast_1x2_away_mean": 0.6699516972732331,
-              "forecast_1x2_away_spread": 0.14800000000000002,
-              "forecast_1x2_draw_mean": 0.21069886848451125,
-              "forecast_1x2_draw_spread": 0.12000000000000002,
-              "forecast_1x2_home_mean": 0.11934943424225561,
-              "forecast_1x2_home_spread": 0.096,
-              "forecast_btts_yes_mean": 0.30419650655021835,
-              "forecast_btts_yes_spread": 0.027606986899563313,
-              "forecast_ou_1.5_over_mean": 0.7283577981651376,
-              "forecast_ou_1.5_over_spread": 0.1429999999999999,
-              "forecast_ou_2.5_over_mean": 0.5016738845144357,
-              "forecast_ou_2.5_over_spread": 0.16430446194225712,
-              "forecast_ou_3.5_over_mean": 0.2649054916985952,
-              "forecast_ou_3.5_over_spread": 0.11900000000000002,
-              "forecast_ou_4.5_over_mean": null,
-              "forecast_ou_4.5_over_spread": null,
-              "forecast_xg_away_mean": 1.54,
-              "forecast_xg_away_spread": 0.0,
-              "forecast_xg_home_mean": 0.68,
-              "forecast_xg_home_spread": 0.0
-            }
-          },
-          "model_key": "40d9e4608e3f77059f307c9b85ab40cf30e0691724a71fc3a8327b5729fe0376",
-          "odds": 5.3,
-          "pre_normalized_probability": 0.2107374693643865,
-          "price_age_seconds_at_decision": 485.186828,
-          "price_age_seconds_at_freeze": 651.174382,
-          "price_at": "2026-11-12T22:28:37.194923+00:00",
-          "price_provenance": null,
-          "price_source": "theoddsapi",
-          "probability": 0.2107374693643865,
-          "probability_normalization": "complete_source_market_partition_v1",
-          "selection": "draw"
-        }
-      ]
-    }
-  ],
   "missed_freeze_days": 0,
-  "settled_accas": 50,
+  "settled_accas": 53,
   "wins": 7,
-  "losses": 43,
-  "hit_rate": 0.14,
-  "pending_accas": 6,
-  "unresolved_result_legs": 9,
-  "resolved_result_legs": 67,
-  "profit_units": -39.585268684252,
-  "roi": -0.6046014167852862,
-  "max_daily_close_drawdown_units": 39.6110756083,
-  "max_daily_close_drawdown_fraction": 0.396110756083,
+  "losses": 46,
+  "hit_rate": 0.1320754716981132,
+  "pending_accas": 3,
+  "superseded_tickets": 1,
+  "unresolved_result_legs": 8,
+  "resolved_result_legs": 68,
+  "profit_units": -43.60927162235201,
+  "roi": -0.7687753803435076,
+  "max_daily_close_drawdown_units": 43.609271622352,
+  "max_daily_close_drawdown_fraction": 0.43609271622351997,
   "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
   "drawdown_has_pending_results": true,
-  "selected_leg_brier_score": 0.20200050393268068,
+  "selected_leg_brier_score": 0.2078994744648365,
   "calibration": {
     "all_candidates": {
-      "resolved_fixtures": 109,
-      "resolved_observations": 2316,
-      "base_brier": 0.20541681971390496,
-      "base_logloss": 0.5945337504049117,
-      "calibrated_brier": 0.20797769656242013,
-      "calibrated_logloss": 0.6005585186058078
+      "resolved_fixtures": 110,
+      "resolved_observations": 2437,
+      "base_brier": 0.20723204187374358,
+      "base_logloss": 0.5984387580993801,
+      "calibrated_brier": 0.20899151086753112,
+      "calibrated_logloss": 0.6029299055339898
     },
     "selected_candidates": {
-      "resolved_fixtures": 49,
-      "resolved_observations": 69,
-      "base_brier": 0.21270860717077247,
-      "base_logloss": 0.6210391038046752,
-      "calibrated_brier": 0.22428700905738047,
-      "calibrated_logloss": 0.6428573938872942
+      "resolved_fixtures": 51,
+      "resolved_observations": 76,
+      "base_brier": 0.22110176685452565,
+      "base_logloss": 0.6377352753611154,
+      "calibrated_brier": 0.22940703984117525,
+      "calibrated_logloss": 0.6523807311129087
     },
     "source_comparison": {
       "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
       "weighting": "one_total_weight_per_fixture_within_each_group",
       "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
       "all_candidates": {
-        "paired_fixtures": 109,
-        "paired_observations": 2240,
-        "missing_source_fixtures": 13,
-        "missing_source_observations": 76,
-        "base_brier": 0.20627802484728344,
-        "base_logloss": 0.5964422017968886,
-        "model_brier": 0.20879971769033437,
-        "model_logloss": 0.6024450151094837,
-        "source_brier": 0.20584917089453458,
-        "source_logloss": 0.5953121757254226
+        "paired_fixtures": 110,
+        "paired_observations": 2363,
+        "missing_source_fixtures": 12,
+        "missing_source_observations": 74,
+        "base_brier": 0.20802018945512205,
+        "base_logloss": 0.6001585787877451,
+        "model_brier": 0.20980751840272402,
+        "model_logloss": 0.6048074879005636,
+        "source_brier": 0.20755371506855308,
+        "source_logloss": 0.5991131691546131
       },
       "selected_candidates": {
-        "paired_fixtures": 47,
-        "paired_observations": 62,
+        "paired_fixtures": 49,
+        "paired_observations": 69,
         "missing_source_fixtures": 4,
         "missing_source_observations": 7,
-        "base_brier": 0.21421835490656654,
-        "base_logloss": 0.6233338358473316,
-        "model_brier": 0.22429632574743547,
-        "model_logloss": 0.641378512999804,
-        "source_brier": 0.21069641428902716,
-        "source_logloss": 0.6130831957845786
+        "base_brier": 0.22289247018003233,
+        "base_logloss": 0.6406178212614775,
+        "model_brier": 0.22962495710648487,
+        "model_logloss": 0.6513509203524839,
+        "source_brier": 0.22349961266064455,
+        "source_logloss": 0.639249052102755
       },
       "by_model_source_gap": {
         "lt_10pp": {
-          "paired_fixtures": 104,
-          "paired_observations": 2130,
+          "paired_fixtures": 105,
+          "paired_observations": 2263,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.20026008128850165,
-          "base_logloss": 0.5833726723048511,
-          "model_brier": 0.2012520416627692,
-          "model_logloss": 0.5861476772587217,
-          "source_brier": 0.20016335196573404,
-          "source_logloss": 0.5835207449695214
+          "base_brier": 0.2021474510916015,
+          "base_logloss": 0.587318707894152,
+          "model_brier": 0.20275242698234117,
+          "model_logloss": 0.5894239833535437,
+          "source_brier": 0.2017116736502164,
+          "source_logloss": 0.5869529155038785
         },
         "10_to_lt_20pp": {
-          "paired_fixtures": 23,
-          "paired_observations": 106,
+          "paired_fixtures": 20,
+          "paired_observations": 97,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.214614874387604,
-          "base_logloss": 0.612100999506816,
-          "model_brier": 0.23063915856011993,
-          "model_logloss": 0.6493239690500624,
-          "source_brier": 0.2228799540824891,
-          "source_logloss": 0.6291171677863893
+          "base_brier": 0.2325836758410879,
+          "base_logloss": 0.6531170679331664,
+          "model_brier": 0.2453669544964169,
+          "model_logloss": 0.6839400642950464,
+          "source_brier": 0.2342882369526708,
+          "source_logloss": 0.6530318987461972
         },
         "ge_20pp": {
-          "paired_fixtures": 4,
-          "paired_observations": 4,
+          "paired_fixtures": 3,
+          "paired_observations": 3,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.20754308857604098,
-          "base_logloss": 0.6059614010877061,
-          "model_brier": 0.20754308857604098,
-          "model_logloss": 0.6059614010877061,
-          "source_brier": 0.21547966798227086,
-          "source_logloss": 0.6130101885847541
+          "base_brier": 0.21727114602144396,
+          "base_logloss": 0.6250335685594391,
+          "model_brier": 0.21727114602144396,
+          "model_logloss": 0.6250335685594391,
+          "source_brier": 0.27146157456495307,
+          "source_logloss": 0.7353703463962681
         },
         "unavailable": {
           "paired_fixtures": 0,
           "paired_observations": 0,
-          "missing_source_fixtures": 13,
-          "missing_source_observations": 76,
+          "missing_source_fixtures": 12,
+          "missing_source_observations": 74,
           "base_brier": null,
           "base_logloss": null,
           "model_brier": null,
@@ -398,16 +149,16 @@
           "source_logloss": 0.7837066830355147
         },
         "SKIPPED_VETO": {
-          "paired_fixtures": 96,
-          "paired_observations": 2061,
+          "paired_fixtures": 98,
+          "paired_observations": 2195,
           "missing_source_fixtures": 11,
           "missing_source_observations": 70,
-          "base_brier": 0.20123995427669192,
-          "base_logloss": 0.5842455957812777,
-          "model_brier": 0.20433680744240124,
-          "model_logloss": 0.5918839894770384,
-          "source_brier": 0.20155609885058975,
-          "source_logloss": 0.5861670251934256
+          "base_brier": 0.20326132397476218,
+          "base_logloss": 0.5889571693649845,
+          "model_brier": 0.20538642730182194,
+          "model_logloss": 0.5944462630968591,
+          "source_brier": 0.2037407380956246,
+          "source_logloss": 0.5909948860870592
         },
         "WATCHLIST_UNCORROBORATED_PRICE": {
           "paired_fixtures": 1,
@@ -422,16 +173,16 @@
           "source_logloss": 0.6368846118651413
         },
         "WATCHLIST_UNKNOWN_CTX": {
-          "paired_fixtures": 2,
-          "paired_observations": 33,
-          "missing_source_fixtures": 1,
-          "missing_source_observations": 2,
-          "base_brier": 0.157621089634405,
-          "base_logloss": 0.5046642251194802,
-          "model_brier": 0.1486824798493073,
-          "model_logloss": 0.47156056108121,
-          "source_brier": 0.16822099284604383,
-          "source_logloss": 0.5081948416453845
+          "paired_fixtures": 1,
+          "paired_observations": 22,
+          "missing_source_fixtures": 0,
+          "missing_source_observations": 0,
+          "base_brier": 0.11258417201397442,
+          "base_logloss": 0.3843467182643089,
+          "model_brier": 0.10548639464377682,
+          "model_logloss": 0.370567350594261,
+          "source_brier": 0.11258417201397442,
+          "source_logloss": 0.3843467182643089
         }
       }
     },
@@ -450,9 +201,9 @@
   },
   "acca_calibration_by_length": {
     "2": {
-      "resolved": 47,
+      "resolved": 46,
       "wins": 7,
-      "predicted_wins": 14.872034460807617
+      "predicted_wins": 14.806006759949565
     },
     "3": {
       "resolved": 1,
@@ -473,24 +224,19 @@
     "max_new_fixture_stake_fraction_of_total_bank": 0.05,
     "accas_mutually_exclusive_within_new_publications": true,
     "fixture_concentration_policy": "ml_paper_fixture_gross_stake_cap",
-    "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-    "new_paper_stake_fraction_of_total_bank": 0.001,
-    "new_paper_risk_budget_scope": "one_publication_shared_across_all_accas",
-    "max_accas_per_publication": null,
-    "minimum_ticket_hit_probability": null,
     "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
     "bankruptcy": "zero_free_capital_no_new_stakes_no_refill"
   },
   "by_bucket_market_leg_diagnostics": {
     "bucket:SKIPPED_VETO": {
-      "settled": 58,
-      "wins": 23,
-      "profit": -13.075999999999999
+      "settled": 60,
+      "wins": 26,
+      "profit": -10.088999999999997
     },
     "market:1x2": {
-      "settled": 25,
-      "wins": 10,
-      "profit": -0.8099999999999994
+      "settled": 27,
+      "wins": 12,
+      "profit": -0.3699999999999992
     },
     "bucket:CAUTION": {
       "settled": 4,
@@ -498,9 +244,9 @@
       "profit": -1.4
     },
     "market:match_over_25": {
-      "settled": 6,
-      "wins": 3,
-      "profit": -2.0700000000000003
+      "settled": 7,
+      "wins": 4,
+      "profit": -1.2900000000000003
     },
     "bucket:WATCHLIST_UNCORROBORATED_PRICE": {
       "settled": 2,
@@ -523,14 +269,14 @@
       "profit": 1.23
     },
     "market:match_under_25": {
-      "settled": 12,
-      "wins": 2,
-      "profit": -7.860000000000001
+      "settled": 13,
+      "wins": 4,
+      "profit": -5.76
     },
     "market:match_over_15": {
-      "settled": 10,
-      "wins": 6,
-      "profit": -2.7859999999999996
+      "settled": 7,
+      "wins": 3,
+      "profit": -3.2089999999999996
     },
     "market:home_under_45": {
       "settled": 1,
@@ -552,11 +298,6 @@
       "wins": 1,
       "profit": 0.75
     },
-    "bucket:WATCHLIST_UNKNOWN_CTX": {
-      "settled": 2,
-      "wins": 2,
-      "profit": 0.3560000000000001
-    },
     "bucket:CERTIFIED_CLEAN": {
       "settled": 1,
       "wins": 0,
@@ -566,6 +307,11 @@
       "settled": 1,
       "wins": 0,
       "profit": -1.0
+    },
+    "bucket:WATCHLIST_UNKNOWN_CTX": {
+      "settled": 1,
+      "wins": 1,
+      "profit": 0.266
     }
   },
   "history": [
@@ -750,8 +496,7 @@
               "probability": 0.8080528850852269,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "awaiting_prior_paper_results"
@@ -937,18 +682,17 @@
               "probability": 0.9321827224998585,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 5.76,
           "stake_units": 1.26354,
           "leg_outcomes": [
-            false,
+            null,
             true
           ],
-          "status": "loss",
-          "profit_units": -1.26354,
+          "status": "pending",
+          "profit_units": null,
           "legs": [
             {
               "away": "Paris Saint Germain",
@@ -1118,18 +862,17 @@
               "probability": 0.9321827224998585,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 2
+          ]
         },
         {
           "odds": 12.349199999999998,
           "stake_units": 4.471153,
           "leg_outcomes": [
-            false,
+            null,
             true
           ],
-          "status": "loss",
-          "profit_units": -4.471153,
+          "status": "pending",
+          "profit_units": null,
           "legs": [
             {
               "away": "Paris Saint Germain",
@@ -1300,8 +1043,7 @@
               "probability": 0.6809363708034292,
               "selection": "away"
             }
-          ],
-          "publication_local_index": 3
+          ]
         }
       ],
       "learning_status": "awaiting_prior_paper_results",
@@ -1907,8 +1649,7 @@
               "probability": 0.8277678564888227,
               "selection": "x2"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 3.1089,
@@ -2499,8 +2240,7 @@
               "probability": 0.8277678564888227,
               "selection": "x2"
             }
-          ],
-          "publication_local_index": 2
+          ]
         },
         {
           "odds": 4.265700000000001,
@@ -3086,8 +2826,7 @@
               "probability": 0.5145004175215743,
               "selection": "yes"
             }
-          ],
-          "publication_local_index": 3
+          ]
         },
         {
           "odds": 6.748,
@@ -3673,8 +3412,7 @@
               "probability": 0.5145004175215743,
               "selection": "yes"
             }
-          ],
-          "publication_local_index": 4
+          ]
         },
         {
           "odds": 9.1098,
@@ -4555,8 +4293,7 @@
               "probability": 0.5145004175215743,
               "selection": "yes"
             }
-          ],
-          "publication_local_index": 5
+          ]
         }
       ],
       "learning_status": "awaiting_prior_paper_results",
@@ -4801,8 +4538,7 @@
               "probability": 0.5279401601012755,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -4818,7 +4554,7 @@
           "odds": 5.7084,
           "stake_units": 2.393197,
           "leg_outcomes": [
-            false,
+            null,
             false
           ],
           "status": "loss",
@@ -4995,8 +4731,7 @@
               "probability": 0.5884301476312978,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -5187,8 +4922,7 @@
               "probability": 0.680626336405263,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -5440,8 +5174,7 @@
               "probability": 0.4926243676439403,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -5954,8 +5687,7 @@
               "probability": 0.5777451597869449,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -6147,8 +5879,7 @@
               "probability": 0.4722419655228967,
               "selection": "home"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -6340,8 +6071,7 @@
               "probability": 0.4722419655228967,
               "selection": "home"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -6533,8 +6263,7 @@
               "probability": 0.4717762189415856,
               "selection": "home"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -6722,8 +6451,7 @@
               "probability": 0.4939839319566665,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -6911,8 +6639,7 @@
               "probability": 0.49470277053799455,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 22.099999999999998,
@@ -7499,8 +7226,7 @@
               "probability": 0.37201325094363913,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -8102,8 +7828,7 @@
               "probability": 0.3322985635805995,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -8291,8 +8016,7 @@
               "probability": 0.4947029250906079,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 22.099999999999998,
@@ -8879,8 +8603,7 @@
               "probability": 0.3720132509598493,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -9068,8 +8791,7 @@
               "probability": 0.4947029250906079,
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 22.099999999999998,
@@ -9656,8 +9378,7 @@
               "probability": 0.3720132509598493,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -9878,8 +9599,7 @@
               "probability": 0.8504271236227411,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -10100,8 +9820,7 @@
               "probability": 0.8504271236227411,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -10322,8 +10041,7 @@
               "probability": 0.850427123623327,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -10544,8 +10262,7 @@
               "probability": 0.850427123623327,
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -10734,8 +10451,7 @@
               "probability": 0.4122192062669223,
               "selection": "draw"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -10924,8 +10640,7 @@
               "probability": 0.4122192062669223,
               "selection": "draw"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -11114,8 +10829,7 @@
               "probability": 0.4122192062548207,
               "selection": "draw"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -11304,8 +11018,7 @@
               "probability": 0.4122192062548207,
               "selection": "draw"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -11322,10 +11035,10 @@
           "stake_units": 3.133831,
           "leg_outcomes": [
             true,
-            true
+            null
           ],
-          "status": "win",
-          "profit_units": 9.6757032125,
+          "status": "pending",
+          "profit_units": null,
           "legs": [
             {
               "away": "Leicester City",
@@ -11938,8 +11651,7 @@
               "probability_normalization": "complete_score_model_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_prior_paper_errors",
@@ -12001,7 +11713,7 @@
           "stake_units": 0.98792,
           "leg_outcomes": [
             false,
-            false
+            null
           ],
           "status": "loss",
           "profit_units": -0.98792,
@@ -12233,8 +11945,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -12485,8 +12196,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -12741,8 +12451,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "under"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 108.10000000000001,
@@ -12925,8 +12634,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "away"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -12951,7 +12659,7 @@
           "odds": 3.51,
           "stake_units": 0.418621,
           "leg_outcomes": [
-            true,
+            null,
             false
           ],
           "status": "loss",
@@ -13177,8 +12885,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 11.75,
@@ -13359,8 +13066,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "away"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -13386,7 +13092,7 @@
           "stake_units": 2.026981,
           "leg_outcomes": [
             false,
-            true
+            null
           ],
           "status": "loss",
           "profit_units": -2.026981,
@@ -13617,8 +13323,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 518.1750000000001,
@@ -13967,8 +13672,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "away"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -14224,8 +13928,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -14441,8 +14144,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "away"
             }
-          ],
-          "publication_local_index": 1
+          ]
         },
         {
           "odds": 34.562,
@@ -14649,8 +14351,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 2
+          ]
         }
       ],
       "learning_status": "fitted_source_market_temperature",
@@ -15111,7 +14812,259 @@
     {
       "date": "2026-11-13",
       "status": "paper_accas",
-      "accas": [],
+      "accas": [
+        {
+          "odds": 35.775,
+          "stake_units": 0.097512,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "superseded",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "a9f591cbc2e7337ff8ed797421d5a4debfc8b62ab5a2f8f318ed906257e659ba",
+                "fixtures": 74,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.197433731114,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.197433731114,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.14814814814814814,
+                "required_source_probability": 0.14814814814814814,
+                "source_probability": 0.2085478899665123,
+                "status": "eligible",
+                "wins": 19
+              },
+              "away": "Germany",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.1603468640111416
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.2085478899665123
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.6311052460223462
+                ]
+              ],
+              "base_probability": 0.2085478899665123,
+              "book": "Winamax (DE)",
+              "bucket": "CAUTION",
+              "candidate_id": "ad2cb075e322aba3d0fea7c075e661f845b16437aa5cbfa14c56f5d6fc42797c",
+              "context": {
+                "as_of": "2026-11-12T22:36:42.381751+00:00",
+                "country": "Europe",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-13",
+                "form_values": {
+                  "away_form_btts": 0.625,
+                  "away_form_ga": 1.0,
+                  "away_form_gf": 1.75,
+                  "away_form_over15": 0.75,
+                  "away_form_over25": 0.5,
+                  "away_form_over35": 0.125
+                },
+                "league": "world uefa nations league",
+                "parent_confidence": 0.6695786676788764,
+                "parent_selection": "away",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-13",
+              "fixture": [
+                "2026-11-13",
+                "serbia",
+                "germany"
+              ],
+              "forecast_model_key": "fb1072cc58ba56195536120c143e6df15560ff8d40d6a0897e37d542367a7a35",
+              "home": "Serbia",
+              "kickoff_utc": "2026-11-13T19:45:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-13",
+                  "serbia",
+                  "germany",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.6312314670715506,
+                  "forecast_1x2_away_spread": 0.22915733535775284,
+                  "forecast_1x2_draw_mean": 0.2085895995445056,
+                  "forecast_1x2_draw_spread": 0.12405200227747201,
+                  "forecast_1x2_home_mean": 0.16037893338394382,
+                  "forecast_1x2_home_spread": 0.11510533308028088,
+                  "forecast_btts_yes_mean": 0.5333172043010753,
+                  "forecast_btts_yes_spread": 0.00863440860215059,
+                  "forecast_ou_1.5_over_mean": 0.8780464301357863,
+                  "forecast_ou_1.5_over_spread": 0.08000000000000007,
+                  "forecast_ou_2.5_over_mean": 0.6442827868852459,
+                  "forecast_ou_2.5_over_spread": 0.19999999999999996,
+                  "forecast_ou_3.5_over_mean": 0.4281218637992832,
+                  "forecast_ou_3.5_over_spread": 0.07236559139784948,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 2.13,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 0.83,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "1cc0d4b429a2f7a74dd8cc65dee367bf70e4c303a6be3b7a4c78c186cb2d1747",
+              "odds": 6.75,
+              "pre_normalized_probability": 0.20941195212135935,
+              "price_age_seconds_at_decision": 485.100526,
+              "price_age_seconds_at_freeze": 651.08808,
+              "price_at": "2026-11-12T22:28:37.281225+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.20941195212135935,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            },
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "a9f591cbc2e7337ff8ed797421d5a4debfc8b62ab5a2f8f318ed906257e659ba",
+                "fixtures": 74,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.197433731114,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.197433731114,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.18867924528301888,
+                "required_source_probability": 0.18867924528301888,
+                "source_probability": 0.21069886848451125,
+                "status": "eligible",
+                "wins": 19
+              },
+              "away": "Azerbaijan",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.11934943424225561
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.21069886848451125
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.6699516972732331
+                ]
+              ],
+              "base_probability": 0.21069886848451125,
+              "book": "Winamax (DE)",
+              "bucket": "CAUTION",
+              "candidate_id": "b1eea2d26bc2a317e72632176c52a59c92f30dcd15b0703c31d485b2b2f5ba67",
+              "context": {
+                "as_of": "2026-11-12T22:36:42.381751+00:00",
+                "country": "Europe",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": null,
+                "form_values": {},
+                "league": "world uefa nations league",
+                "parent_confidence": 0.7058792431830829,
+                "parent_selection": "away",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-13",
+              "fixture": [
+                "2026-11-13",
+                "liechtenstein",
+                "azerbaijan"
+              ],
+              "forecast_model_key": "fb1072cc58ba56195536120c143e6df15560ff8d40d6a0897e37d542367a7a35",
+              "home": "Liechtenstein",
+              "kickoff_utc": "2026-11-13T19:45:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-13",
+                  "liechtenstein",
+                  "azerbaijan",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.6699516972732331,
+                  "forecast_1x2_away_spread": 0.14800000000000002,
+                  "forecast_1x2_draw_mean": 0.21069886848451125,
+                  "forecast_1x2_draw_spread": 0.12000000000000002,
+                  "forecast_1x2_home_mean": 0.11934943424225561,
+                  "forecast_1x2_home_spread": 0.096,
+                  "forecast_btts_yes_mean": 0.30419650655021835,
+                  "forecast_btts_yes_spread": 0.027606986899563313,
+                  "forecast_ou_1.5_over_mean": 0.7283577981651376,
+                  "forecast_ou_1.5_over_spread": 0.1429999999999999,
+                  "forecast_ou_2.5_over_mean": 0.5016738845144357,
+                  "forecast_ou_2.5_over_spread": 0.16430446194225712,
+                  "forecast_ou_3.5_over_mean": 0.2649054916985952,
+                  "forecast_ou_3.5_over_spread": 0.11900000000000002,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.54,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 0.68,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "40d9e4608e3f77059f307c9b85ab40cf30e0691724a71fc3a8327b5729fe0376",
+              "odds": 5.3,
+              "pre_normalized_probability": 0.2107374693643865,
+              "price_age_seconds_at_decision": 485.186828,
+              "price_age_seconds_at_freeze": 651.174382,
+              "price_at": "2026-11-12T22:28:37.194923+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.2107374693643865,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            }
+          ],
+          "superseded": true,
+          "receipt_sha256": "fdbe9fde2b5cc5f819d495357022510122dd04300de5a7ae242c8d564573a852",
+          "acca_index": 1,
+          "superseded_by_receipt_sha256": "1a902a22be9afaae22f42f8f503b5baa03a363dbbc1b0e4103791841ed734182"
+        }
+      ],
       "learning_status": "fitted_source_market_context",
       "decision_id": "20261112T223642381751Z",
       "captured_at": "2026-11-12T22:36:42.381751+00:00",
@@ -15368,11 +15321,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "home"
             }
-          ],
-          "publication_local_index": 1,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.46245447547765384,
-          "model_probability_estimate": 0.46245447547765384
+          ]
         },
         {
           "odds": 2.028,
@@ -15626,11 +15575,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "home"
             }
-          ],
-          "publication_local_index": 2,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.38241159643211803,
-          "model_probability_estimate": 0.38241159643211803
+          ]
         },
         {
           "odds": 3.0082,
@@ -15866,11 +15811,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "under"
             }
-          ],
-          "publication_local_index": 3,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.3126147309247027,
-          "model_probability_estimate": 0.3126147309247027
+          ]
         }
       ],
       "learning_status": "fitted_source_market_context",
@@ -16185,11 +16126,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "home"
             }
-          ],
-          "publication_local_index": 1,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.6527545958329921,
-          "model_probability_estimate": 0.6527545958329921
+          ]
         }
       ],
       "learning_status": "fitted_source_market_context",
@@ -16520,11 +16457,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.6888069531602209,
-          "model_probability_estimate": 0.6888069531602209
+          ]
         }
       ],
       "learning_status": "fitted_source_market_context",
@@ -16549,11 +16482,11 @@
           "odds": 1.5725799999999999,
           "stake_units": 0.020138,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.020138,
           "legs": [
             {
               "admission": {
@@ -16826,21 +16759,17 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 1,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.5657676166765677,
-          "model_probability_estimate": 0.5657676166765677
+          ]
         },
         {
           "odds": 2.3408,
           "stake_units": 0.020138,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.020138,
           "legs": [
             {
               "admission": {
@@ -17076,21 +17005,17 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "home"
             }
-          ],
-          "publication_local_index": 2,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.404466276225522,
-          "model_probability_estimate": 0.404466276225522
+          ]
         },
         {
           "odds": 2.9484,
           "stake_units": 0.020138,
           "leg_outcomes": [
-            null,
-            null
+            false,
+            true
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.020138,
           "legs": [
             {
               "admission": {
@@ -17315,11 +17240,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "under"
             }
-          ],
-          "publication_local_index": 3,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.3273877326711885,
-          "model_probability_estimate": 0.3273877326711885
+          ]
         }
       ],
       "learning_status": "fitted_source_market_context",
@@ -17344,11 +17265,11 @@
           "odds": 1.8788,
           "stake_units": 0.020138,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            true
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "win",
+          "profit_units": 0.0176972744,
           "legs": [
             {
               "admission": {
@@ -17585,21 +17506,17 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "home"
             }
-          ],
-          "publication_local_index": 1,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.453978141525201,
-          "model_probability_estimate": 0.453978141525201
+          ]
         },
         {
           "odds": 2.3712,
           "stake_units": 0.020138,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.020138,
           "legs": [
             {
               "admission": {
@@ -17831,21 +17748,17 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "home"
             }
-          ],
-          "publication_local_index": 2,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.35910916588306224,
-          "model_probability_estimate": 0.35910916588306224
+          ]
         },
         {
           "odds": 3.3642,
           "stake_units": 0.020138,
           "leg_outcomes": [
-            null,
-            null
+            false,
+            true
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.020138,
           "legs": [
             {
               "admission": {
@@ -18068,11 +17981,7 @@
               "probability_normalization": "complete_source_market_partition_v1",
               "selection": "over"
             }
-          ],
-          "publication_local_index": 3,
-          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
-          "probability_estimate": 0.2967297496379291,
-          "model_probability_estimate": 0.2967297496379291
+          ]
         }
       ],
       "learning_status": "fitted_source_market_context",

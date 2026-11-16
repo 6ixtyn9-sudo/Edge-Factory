@@ -4926,6 +4926,147 @@ def _rescheduled_leg_result(day: str, pick: dict, settled: dict):
     return "win" if outcome == sel else "loss"
 
 
+def _history_leg_fixture_texts(leg: dict) -> list:
+    """Every fixture-identity text the FROZEN leg itself asserts.
+
+    History legs predate parts of the current leg schema: some carry only a
+    display ``match`` string, some a ``fixture_key``, some explicit home/away.
+    The heal never invents identity — it only reuses what the frozen bet slip
+    already said, so a backfill can never attach a neighbour fixture's result.
+    """
+    texts = []
+    match = str(leg.get("match") or "").strip()
+    if match:
+        texts.append(match)
+    fk = leg.get("fixture_key")
+    if isinstance(fk, (list, tuple)) and len(fk) >= 3 and fk[1] and fk[2]:
+        texts.append(f"{fk[1]} vs {fk[2]}")
+    home, away = _leg_fixture_names(leg)
+    if home and away:
+        texts.append(f"{home} vs {away}")
+    seen, out = set(), []
+    for text in texts:
+        if text and text not in seen:
+            seen.add(text)
+            out.append(text)
+    return out
+
+
+def heal_history_leg_results(st, settled, archives=None, entries_by_date=None,
+                             scores=None):
+    """Backfill ``result=None`` legs of ALREADY-SETTLED history accas.
+
+    Booked accas are closed accounting: ``won``, stakes and banks never move
+    here. This is an audit-completeness pass for legs settlement could not
+    resolve at the time (a per-day archive row that never landed, a fixture
+    filed under a spelling the leg's own key space could not reach). Only a
+    same-day result meeting the live settlement evidence guards can be
+    written: agreeing 1X2 entries, or one exact market score consistent with
+    any entries. Missing required evidence or any alias/score conflict keeps
+    the leg at ``result=None`` (fail-closed hold).
+    Returns [(day, match, result), ...] so the run log names every backfill.
+    """
+    if entries_by_date is None:
+        entries_by_date = (settled.entries if isinstance(settled, _SettledOutcomes)
+                           else load_settled_entries())
+    if scores is None:
+        scores = settled.scores if isinstance(settled, _SettledOutcomes) else load_settled_scores()
+    healed = []
+    for day_row in st.get("history") or []:
+        day = str(day_row.get("date") or "")[:10]
+        if not day:
+            continue
+        for acca in day_row.get("accas") or []:
+            if type(acca.get("won")) is not bool:
+                continue  # history placement alone is not settled-accounting proof
+            for leg in acca.get("legs") or []:
+                if leg.get("result") is not None:
+                    continue
+                r = _heal_one_history_leg(leg, day, entries_by_date, scores)
+                if r is not None:
+                    leg["result"] = r
+                    healed.append((_history_leg_day(leg, day),
+                                   str(leg.get("match") or ""), r))
+    return healed
+
+
+def _history_leg_day(leg, day):
+    """The leg's own fixture day wins (fixture_key), like settlement grading."""
+    stored = leg.get("fixture_key")
+    if isinstance(stored, (list, tuple)) and len(stored) >= 1 and stored[0]:
+        return str(stored[0])[:10]
+    return day
+
+
+def _heal_one_history_leg(leg, day, entries_by_date, scores):
+    """One same-day consensus result, or None; never choose the first alias.
+
+    This audit-only pass is intentionally stricter than live reschedule
+    grading. Conflicting frozen identities, outcomes or exact scores hold.
+    The donor spellings must identify the same clubs and pass settlement's
+    squad-marker and narrow-key guards before their scores can be used.
+    """
+    from edgefactory.util import squad_markers
+
+    day = _history_leg_day(leg, day)
+    names = [text.split(" vs ") for text in _history_leg_fixture_texts(leg)
+             if len(text.split(" vs ")) == 2]
+    if not names:
+        return None
+    home, away = names[0]
+    if not all(_same_club_names(home, rh) and _same_club_names(away, ra)
+               for rh, ra in names):
+        return None
+    outcomes = set()
+    donor_names = list(names)
+    for rh, ra in names:
+        probe = {"date": day, "home": rh, "away": ra}
+        if alias_outcome_conflict(probe, entries_by_date):
+            return None
+        for entry in _alias_candidate_entries(probe, entries_by_date):
+            eh, ea = str(entry.get("home") or ""), str(entry.get("away") or "")
+            if not (_same_club_names(home, eh) and _same_club_names(away, ea)):
+                continue
+            outcome = str(entry.get("outcome") or "")
+            if outcome in _ONE_X_TWO_SELECTIONS:
+                outcomes.add(outcome)
+                donor_names.append((eh, ea))
+    if len(outcomes) > 1:
+        return None
+    markers = (squad_markers(home), squad_markers(away))
+    score_pairs = set()
+    for rh, ra in donor_names:
+        narrow_keys = _narrow_result_keys(rh, ra)
+        for hk, ak in _result_write_keys(rh, ra):
+            if _marker_boundary_blocks(*markers, day, hk, ak):
+                continue
+            if ((hk, ak) in narrow_keys
+                    and _narrow_key_blocks(day, hk, ak, home, away)):
+                continue
+            pair = scores.get((day, hk, ak))
+            if pair is not None:
+                score_pairs.add((pair[0], pair[1]))
+    if len(score_pairs) > 1:
+        return None
+    if score_pairs:
+        hs, gs = next(iter(score_pairs))
+        implied = "home" if hs > gs else "away" if hs < gs else "draw"
+        if outcomes and implied not in outcomes:
+            return None
+    if market_graded_selection(leg):
+        if not score_pairs:
+            return None
+        hs, gs = next(iter(score_pairs))
+        hit = check_enhancement_hit(
+            leg.get("market") or selection_market(leg),
+            str(leg.get("pick") or ""), hs, gs)
+        return None if hit is None else ("win" if hit else "loss")
+    if not outcomes:
+        return None
+    return ("win" if str(leg.get("pick") or "").strip().lower() in outcomes
+            else "loss")
+
+
 def settle_open_slips(st, settled, archives=None, entries_by_date=None,
                       lane: "Lane | None" = None, scores=None):
     """Grade every acca whose outcome is decided; the bank moves per acca.
@@ -5120,6 +5261,17 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
     if withheld:
         lines.append("held " + ", ".join(sorted(set(withheld)))
                      + ": card never frozen (not a placed bet) — settlement withheld")
+    # Audit-completeness backfill: legs of ALREADY-SETTLED history accas whose
+    # result evidence exists now but could not be read at settle time (missing
+    # per-day archive row, spelling the leg's key space could not reach). Never
+    # rebooks bank/stakes; conflicted or scoreless legs hold at result=None.
+    healed = heal_history_leg_results(st, settled, archives=archives,
+                                      entries_by_date=entries_by_date, scores=scores)
+    # Zero-included like every settlement run scalar: "no legs healed" is an
+    # observable the sunset criterion reads off the run log.
+    print(f"settlement_history_legs_healed={len(healed)}", file=sys.stderr)
+    for hday, hmatch, hresult in healed:
+        lines.append(f"healed history leg {hday} {hmatch}: {hresult}")
     # Route the write the same way the read was routed: a lane settles into
     # its OWN state file. (Caught by the §5 run-1-freezes/run-2-settles
     # proof: without the lane here the settlement landed in the main lane's

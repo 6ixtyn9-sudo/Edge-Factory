@@ -704,3 +704,85 @@ JSONs are outside it; the artifact upload at `.github/workflows/daily.yml` is
 `localdata/*.json` root-only, not the dated archive). Resuming the pool commits
 (isolated, evidence-only, no money-path effect) is a follow-on; the tripwire
 window can be judged from ENGINE ACTUAL alone if capture follows afterward.
+
+---
+
+## 24. autobets_ML lane unblock (resolution landed 2026-11-16)
+
+Production CI run 43801399651 (2026-11-16, main c4088c0) showed the paper lane
+still blocked: `autobets_ML evidence conflict; paper lane blocked, live lanes
+unchanged` at persistence restore, both PAPER capture steps, and the ENH grade
+(`autobets_ML report unavailable`). The 2026-11-15 local resolution of the same
+chain never reached the remote (workspace loss before commit); this section
+records the re-applied resolution now shipped.
+
+**Link 1 — integrity block of 2026-11-13/14, cleared.** All five conflicted
+receipts are byte-identical between cache and committed copies (sha256 of each
+`.cached.` side equals the `.committed.` side), so no evidence ever diverged;
+the block came from row-level sha ties during those restores under the schema
+then current. Resolution marker
+`localdata/autobets_ML_conflicts/integrity_block.resolved_2026-11-16.510997949f38d746af358cbea8d61d396b68b620801a2e337bc911f190fb8f5d.json`
+documents the review; `localdata/autobets_ML_integrity_block.json` is removed.
+The cache can resurrect a deleted block, so persistence restore retires only
+its exact reviewed bytes when HEAD contains the matching approval, no active
+block remains committed, and the current restore found no new receipt conflicts.
+The original bytes are archived before removal. Cache-only approvals, changed
+blocks and new conflicts never clear PAPER. Receipt validation post-clear:
+all 118 receipts pass (137 s in the initial in-process check).
+
+**Link 2 — operator supersession deed, honored in code.** Receipt 1a902a22
+(2026-11-13T09:13:03Z) carries `supersession.policy =
+operator_pre_kickoff_paper_replacement_v1` targeting acca 1 of fdbe9fde
+(2026-11-12T22:36:42Z, a still-open double-draw; both legs kicked off 19:45 UTC,
+~10.5 h after the replacement froze). Without the deed in the committed-ledger
+fixture accounting, the replacement's declared `prior_open_stake_micro_units: 0`
+failed validation; without it in performance accounting, the replaced acca
+booked P&L it never risked. `SUPERSESSION_POLICY` + `_superseded_accas`
+(src/edgefactory/ml_paper.py) now validate deeds fail-closed (unknown policy,
+self/unknown/out-of-range targets, non-earlier receipts, kicked-off legs all
+raise), receipts() releases superseded stakes at the replacement decision,
+not retroactively across intervening receipts. The pre-kickoff check uses the
+replacement's actual freeze, not its earlier capture. Performance voids
+superseded accas — neither settled nor pending — surfacing
+`superseded_tickets` and both receipt hashes in the release audit, not the HELD
+list. Cancelled forecasts remain candidate-pool evidence but are no longer
+selected-ticket observations unless actively re-selected. Ledger after the
+fix: 53 settled (7W/46L),
+3 pending, 1 superseded, profit −43.6093 u, paper bank 56.3907 u.
+
+**Link 3 — orphaned history legs healed, evidence-only.** Three settled-acca
+legs permanently stuck at `result=None` (settlement only reads open slips):
+ENH 2026-10-19 Mes Shahr-e Babak vs Persepolis FC over-1.5 → **win** (0-3; the
+store spells the club "Mes Shahr Babak" — a curated identity pair was added in
+BOTH `TEAM_KEY_RAW_ALIASES` and `Config/entity_overrides.json`, either table
+alone being insufficient); ENH 2026-11-05 AC Milan vs Ferencvarosi TC over-2.5
+→ **loss** (0-2); Main 2026-11-08 Deportivo Garcilaso vs Comerciantes Unidos
+HOME → **loss** (0-0 draw; per-day archive row never landed).
+`heal_history_leg_results` (scripts/auto_tickets.py, wired into
+settle_open_slips before save_state) fills only None results on confirmed
+settled accas: same-day 1X2 outcomes must agree, market legs require one exact
+score, and every available outcome/score must be consistent. Frozen identities,
+squad markers and narrow-key neighbour guards still apply; adjacent dates are
+not borrowed. It never rebooks won/stakes/banks and is idempotent.
+Restore carries HEAD's confirmed None-to-result audit fills into a stale
+cache only for identical frozen leg metadata on settled accas, then applies
+all existing bank, placement, history and freeze checks. It never trusts a
+cache-only fill or overwrites a known conflicting result. This prevents an
+unchanged-money cache from rejecting the committed audit heal. The historical
+October recovery snapshot remains untouched; its preservation test explicitly
+pins the one Mes Shahr None-to-win difference and every other original field.
+The fourth orphan — Main 2026-10-21 Sporting JAX vs Louisville City AWAY —
+has no settled-facts evidence on or near its date and correctly stays None.
+
+Out of scope, deliberately: no booked bank/stake rewriting anywhere; the
+supersession deed surfaces and voids — frozen ML receipts remain byte-identical; ENH
+ticket-decision receipt shard gaps and the >50 MiB conflict-cache files
+flagged in the same CI run are adjacent infra follow-ons, untouched here.
+Proof: tests/test_ml_paper_supersession.py (24),
+tests/test_ml_paper_integrity_resolution.py (7, including restore + publish),
+tests/test_auto_tickets_rolling.py (12 heal cases, 50 total), and 18 paired-lane
+financial cache backfill/guard cases in tests/test_phase5_persistence_audit.py —
+plus the in-process receipts()/performance() check over the restored store above.
+Full regression: **7,189 passed, 2 skipped** (`PYTHONPATH=src:scripts:tests
+.venv/bin/python -m pytest tests/ -q`); all 118 frozen ML receipts remain
+byte-identical after report regeneration.

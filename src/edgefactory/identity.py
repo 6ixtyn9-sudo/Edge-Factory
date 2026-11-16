@@ -171,6 +171,10 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("Hobart Zebras", "Clarence Zebras"),
     ("Neftchi", "Neftchi Fergana"),
     ("Dila", "Dila Gori"),
+    # corpus-audited 2026-11-16 (orphaned-leg heal evidence): settled-facts
+    # files the 2026-10-19 fixture as "Mes Shahr Babak" while the frozen slip
+    # spells it "Mes Shahr-e Babak". Same club; the hyphen split the key space.
+    ("Mes Shahr-e Babak", "Mes Shahr Babak"),
     # corpus-audited same-club pairs (2026-09-22 red-team pass)
     ("Borussia M'gladbach", "Borussia Monchengladbach"),
     ("Rodina Moscow", "Rodina Moskva"),

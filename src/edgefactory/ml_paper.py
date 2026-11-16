@@ -90,6 +90,70 @@ ADMISSION_POLICY = "source_market_price_evidence_v1"
 ADMISSION_JOINT_BASIS = "frechet_leg_admission_lower_envelope_v1"
 ADMISSION_JOINT_BASES = {ADMISSION_JOINT_BASIS, "independent_leg_admission_lower_envelope"}
 ADMISSION_ALPHA = 0.05  # statistical error budget, NOT a minimum win probability
+# An operator deed may replace a still-open PAPER acca before any of its legs
+# kick off. Replacement never rewrites history: the deed lives on the later
+# receipt and names the earlier accas it voids for grading and capital.
+# Receipt observed 2026-11-13: 1a902a22 replaces fdbe9fde / acca 1 before kickoff;
+# the reviewed deed and exact hashes are backed by docs/operator/DATED-CLAIMS.md.
+SUPERSESSION_POLICY = "operator_pre_kickoff_paper_replacement_v1"
+
+
+def _superseded_accas(rows):
+    """Operator-approved pre-kickoff paper replacements; malformed deeds fail closed.
+
+    Maps (superseded receipt sha256, 1-based acca index) -> superseding receipt
+    sha256. A deed is valid only under SUPERSESSION_POLICY, targeting accas of a
+    strictly earlier receipt whose every leg kicks off after the replacement was
+    frozen. Anything else is an evidence error, never a silent reset.
+    """
+    by_sha = {}
+    for row in rows:
+        sha = row.get("sha256")
+        if sha is not None:
+            if sha in by_sha:
+                raise ValueError("duplicate ML paper receipt sha256")
+            by_sha[sha] = row
+    superseded = {}
+    for row in rows:
+        deed = row.get("supersession")
+        if deed is None:
+            continue
+        if not isinstance(deed, dict) or deed.get("policy") != SUPERSESSION_POLICY:
+            raise ValueError("invalid ML paper supersession deed")
+        captured = parse_zoned_timestamp(row.get("captured_at"))
+        frozen = parse_zoned_timestamp(row.get("frozen_at") or row.get("persisted_at"))
+        if captured is None or frozen is None or frozen < captured:
+            raise ValueError("invalid ML paper supersession timestamp")
+        targets = deed.get("targets")
+        if not isinstance(targets, list) or not targets:
+            raise ValueError("invalid ML paper supersession targets")
+        for target in targets:
+            if not isinstance(target, dict):
+                raise ValueError("invalid ML paper supersession target")
+            prior = by_sha.get(target.get("receipt_sha256") or "")
+            index = target.get("acca_index")
+            prior_captured = (
+                parse_zoned_timestamp(prior["captured_at"]) if prior is not None else None
+            )
+            if (
+                prior is None
+                or prior["sha256"] == row["sha256"]
+                or not isinstance(index, int)
+                or isinstance(index, bool)
+                or not 1 <= index <= len(prior["accas"])
+                or prior_captured is None
+                or prior_captured >= captured
+            ):
+                raise ValueError("invalid ML paper supersession target")
+            acca = prior["accas"][index - 1]
+            kickoffs = [parse_zoned_timestamp(c.get("kickoff_utc")) for c in acca["legs"]]
+            if not kickoffs or any(k is None or k <= frozen for k in kickoffs):
+                raise ValueError("supersession after kickoff is not a paper replacement")
+            key = (prior["sha256"], index)
+            if key in superseded:
+                raise ValueError("competing ML paper supersession deeds")
+            superseded[key] = row["sha256"]
+    return superseded
 
 
 def _wilson_lower_bound(wins, n, z=1.282):
@@ -436,9 +500,22 @@ def receipts(root):
         blobs[day] = blob
         result[day] = row
     ordered = sorted(result.values(), key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
+    superseded = _superseded_accas(ordered)
+    by_sha = {row["sha256"]: row for row in ordered}
+    released_by = defaultdict(list)
+    for (sha, index), replacement in superseded.items():
+        released_by[replacement].append(by_sha[sha]["accas"][index - 1])
     committed = defaultdict(int)
     prior_hashes = []
     for row in ordered:
+        # Release at the replacement decision, not retroactively: intervening
+        # receipts must still account for the then-open original stake.
+        for acca in released_by[row["sha256"]]:
+            stake = _decimal_micro_units(acca["stake_units"], "prior open stake", rounding=ROUND_CEILING)
+            for fixture in {tuple(c["fixture"]) for c in acca["legs"]}:
+                committed[fixture] -= stake
+                if committed[fixture] == 0:
+                    del committed[fixture]
         fixtures = {tuple(c["fixture"]) for a in row["accas"] for c in a["legs"]}
         if row.get("freeze_basis") == ROLLING_FREEZE:
             reused = set(committed).intersection(fixtures)
@@ -1999,7 +2076,7 @@ def _prior_open_fixture_micro_units(report):
     prior = defaultdict(int)
     for day in report["history"]:
         for acca in day["accas"]:
-            if acca["profit_units"] is None:
+            if acca["profit_units"] is None and not acca.get("superseded"):
                 stake = _decimal_micro_units(
                     acca["stake_units"], "prior open stake", rounding=ROUND_CEILING
                 )
@@ -3223,8 +3300,16 @@ def calibration_diagnostics(history, score_lookup):
     comparisons = {}
     excluded = Counter()
     excluded_fixtures = set()
+    superseded = _superseded_accas(history)
     for receipt in history:
-        selected = {c["candidate_id"] for a in receipt["accas"] for c in a["legs"]}
+        # A cancelled selection remains pool forecast evidence, not a placed
+        # ticket. A later active selection of the same forecast still counts.
+        selected = {
+            c["candidate_id"]
+            for index, a in enumerate(receipt["accas"], 1)
+            if (receipt.get("sha256"), index) not in superseded
+            for c in a["legs"]
+        }
         for c in receipt["candidates"]:
             reason = _learning_quote_rejection(c)
             if reason is not None:
@@ -3307,10 +3392,32 @@ def performance(history, score_lookup):
     unresolved_legs = 0
     equity = peak = drawdown = drawdown_fraction = 0.0
     day_marks = defaultdict(float)
+    superseded = _superseded_accas(history)
+    superseded_tickets = 0
     for receipt in history:
         _validate_bets(receipt)
         daily = []
-        for acca in receipt["accas"]:
+        for acca_index, acca in enumerate(receipt["accas"], 1):
+            if (receipt.get("sha256"), acca_index) in superseded:
+                # Operator pre-kickoff paper replacement: void, never settled or
+                # pending. Kept on the day for audit; excluded from capital,
+                # grading, calibration and leg diagnostics entirely.
+                superseded_tickets += 1
+                daily.append(
+                    {
+                        "odds": acca["odds"],
+                        "stake_units": acca["stake_units"],
+                        "leg_outcomes": [None] * len(acca["legs"]),
+                        "status": "superseded",
+                        "profit_units": None,
+                        "legs": acca["legs"],
+                        "superseded": True,
+                        "receipt_sha256": receipt["sha256"],
+                        "acca_index": acca_index,
+                        "superseded_by_receipt_sha256": superseded[(receipt["sha256"], acca_index)],
+                    }
+                )
+                continue
             outcomes = []
             for c in acca["legs"]:
                 score = score_lookup(c)
@@ -3399,6 +3506,7 @@ def performance(history, score_lookup):
         "losses": sum(a["status"] == "loss" for a in graded),
         "hit_rate": sum(a["status"] == "win" for a in graded) / len(graded) if graded else None,
         "pending_accas": len(accas) - len(graded),
+        "superseded_tickets": superseded_tickets,
         "unresolved_result_legs": unresolved_legs,
         "resolved_result_legs": len(brier),
         "profit_units": profit,
@@ -3755,9 +3863,11 @@ def _paper_performance_history_lines(report):
              "  Staked/returned/net cover settled accas only; pending stakes are separate."]
     bank_mark = base
     held = []
+    released = []
     for day, entries in sorted(by_day.items()):
         settled = [a for _, _, a in entries if a["profit_units"] is not None]
-        pending = [a for _, _, a in entries if a["profit_units"] is None]
+        pending = [a for _, _, a in entries
+                   if a["profit_units"] is None and not a.get("superseded")]
         staked = sum(a["stake_units"] for a in settled)
         profit = sum(a["profit_units"] for a in settled)
         returned = staked + profit
@@ -3774,6 +3884,13 @@ def _paper_performance_history_lines(report):
             f"   bank* {100 * bank_mark / base:6.1f}%"
         )
         for daily_index, (publication, original_index, acca) in enumerate(entries, 1):
+            if acca.get("superseded"):
+                released.extend([
+                    (f"  {day} @{acca['odds']:.3f} · released {acca['stake_units']:.6f} paper units"),
+                    (f"      Original receipt {acca['receipt_sha256']} / ticket {original_index}"),
+                    (f"      Replacement receipt {acca['superseded_by_receipt_sha256']}"),
+                ])
+                continue
             if acca["profit_units"] is not None:
                 continue
             held.extend([
@@ -3794,6 +3911,8 @@ def _paper_performance_history_lines(report):
     if not by_day:
         lines.append("  No bet days recorded.")
     lines.extend(["", "HELD (not yet settled; stake counted as committed)", *(held or ["  None."])])
+    if released:
+        lines.extend(["", "SUPERSEDED BEFORE KICKOFF — released, not wins or losses", *released])
     lines.extend([
         "", "NOTES",
         f"  Percentages of capital use the initial {base:g}-paper-unit base, not today's free bank.",

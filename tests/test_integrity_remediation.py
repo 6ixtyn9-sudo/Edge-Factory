@@ -124,7 +124,15 @@ def test_enh_recovery_preserves_six_days_and_actual_later_stakes():
     before = json.loads((audit / 'before-reset.json').read_text())
     after = json.loads((audit / 'after-reset.json').read_text())
     st = json.loads((ROOT / 'localdata/enhancement_tickets_state.json').read_text())
-    assert st['history'][:6] == before['history']
+    # The sole later audit-only backfill in these six days fills a None leg;
+    # all original accounting, placements and other leg results stay exact.
+    expected = json.loads(json.dumps(before['history']))
+    assert expected[5]['date'] == '2026-10-19'
+    healed = expected[5]['accas'][0]['legs'][0]
+    assert healed['match'] == 'Mes Shahr-e Babak vs Persepolis FC'
+    assert healed['result'] is None
+    healed['result'] = 'win'
+    assert st['history'][:6] == expected
     assert len(st['history']) >= 7
     # Oct 20 entry must match after-reset snapshot
     assert st['history'][6]['date'] == after['history'][-1]['date'] == '2026-10-20'

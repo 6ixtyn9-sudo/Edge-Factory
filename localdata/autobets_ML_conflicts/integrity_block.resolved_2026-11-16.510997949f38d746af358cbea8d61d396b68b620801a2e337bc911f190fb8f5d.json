@@ -1,0 +1,10 @@
+{
+  "lane": "autobets_ML",
+  "paper_only": true,
+  "status": "resolved_copies_byte_identical",
+  "resolved_on": "2026-11-16",
+  "block_sha256": "510997949f38d746af358cbea8d61d396b68b620801a2e337bc911f190fb8f5d",
+  "conflicts_reviewed": 5,
+  "evidence": "localdata/autobets_ML_conflicts/",
+  "rationale": "Every conflicted copy is byte-identical to its committed counterpart (sha256 of each .cached side equals the .committed side), so no evidence diverges; the row-level sha tie that raised the block during the 2026-11-13/14 restores validates cleanly under the current schema. The block is cleared; PAPER unreblocks, live lanes were never affected. Supersession deed honored by code: operator_pre_kickoff_paper_replacement_v1."
+}
