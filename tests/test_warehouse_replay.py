@@ -71,7 +71,11 @@ def test_live_recipe_constants_unchanged(at):
 
     ARMED 2026-09-09: PAIRING/MAX_ACCAS/STAKE_FRAC were moved deliberately to
     barbell x2 @ 1/4 -- an operator decision taken against the pre-registered
-    October bar, on in-sample evidence only. Every other setting is untouched.
+    October bar, on in-sample evidence only.
+    ARMED 2026-11-15: MIN_LEG_ODDS 1.30 -> 1.25 and SATURATED_ACCAS None -> 5 --
+    era-ladder paired A/B (64 candidate-days / 43 graded bet-days, combo):
+    +0.0307 log/day, P(B>A)=98%, LODO broad-based, maxDD 58->25%, the deltas
+    exactly additive. See docs/edge_loss_diagnostic_2026-11-15.md §21-§23.
     """
     assert at.PAIRING == "barbell"
     assert at.STAKE_FRAC == pytest.approx(1.0 / 4.0)
@@ -79,9 +83,10 @@ def test_live_recipe_constants_unchanged(at):
     assert at.STAKE_PER_ACCA is None
     assert at.STAKE_WEIGHTS is None
     assert at.MAX_ACCAS == 2
+    assert at.SATURATED_ACCAS == 5   # ARMED 2026-11-15 (above); revert = None
     assert at.MIN_ACCAS == 1
     assert at.LEGS_PER_ACCA == 2
-    assert at.MIN_LEG_ODDS == 1.30   # operator 2026-10-14: both lanes 1.20 -> 1.30
+    assert at.MIN_LEG_ODDS == 1.25   # ARMED 2026-11-15; supersedes 2026-10-14 1.20 -> 1.30; revert = 1.30
     assert at.VOLUME_POOL == 12
     assert at.VOLUME_MIN_PROB == 0.65
     assert at.GATE_MODE == "off"
@@ -133,7 +138,9 @@ def _synthetic_match(i):
 
 
 # Pinned against the live recipe constants (barbell x2 @ 1/4 bank, per-acca
-# 25/2 = 12.5 deployment, MIN_LEG_ODDS 1.30, MAX_ACCAS 2, LEGS_PER_ACCA 2).
+# 25/2 = 12.5 deployment, MIN_LEG_ODDS 1.25, MAX_ACCAS 2, LEGS_PER_ACCA 2).
+# (MIN_LEG_ODDS 1.30 -> 1.25 armed 2026-11-15; no synthetic leg sits in the
+# [1.25, 1.30) band, so the pinned cards are unchanged deliberately.)
 EXPECTED_SYNTHETIC = {
     "2026-06-20": {
         "legs": [[[_synthetic_match(1), "HOME", 1.4],

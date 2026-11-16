@@ -601,3 +601,106 @@ Codespace reads, main @ c0d912e:
   (morning capture) for post-10-21 days, or the only post-Forebet evidence will ever
   be the descriptive ledger. If any gate is ever proposed again, shadow telemetry +
   forward collection is the evidence path; retro replay cannot reach this regime.
+
+## 21. Full-era ladder reads (64 candidate-days / 43 graded bet-days, pending-excluded) — retrospective ceiling
+
+Main @ caf5794, --since 2026-06-13 --drop-pending-days. Baseline: +0.0342 log/day,
+final 435%, 69 accas, hit 52%, maxDD 58%. (This echo of the pre-slump build is the
+435% the real ledger spent; the regime was genuinely strong pre-recovery.)
+
+**S1 — final ledger, monotonic deflation with n:**
+| universe | bd | Δ | P(B>A) |
+|---|---|---|---|
+| faithful 09-17 | 21 | +0.0580 | 98% |
+| faithful 08-27 | 38 | +0.0163 | 67% |
+| faithful 06-13 era | 43 | **−0.0017** | **31%** (08-20 carries 89%) |
+| superset 08-27 | 50 | −0.0060 | 16% |
+**S1 CLOSED.** The 98% was small-n + carrier-day luck; every larger sample deflates it.
+
+**Battery at max n (un-bootstrapped rows, Δ vs baseline):**
+- floor 1.25: **+0.0150** → 829% final, hit 58%, maxDD 58→33%, SAME 43 days. Positive at
+  n=21 (+0.0204) AND n=43 — the only lever with the same sign in every window tried.
+- saturated_accas=5 (pool≥12): **+0.0157** → 852%, hit 49→55%, maxDD→44%.
+- legacy strict pool gate: +0.0093 → 649%, maxDD→44%.
+- DEAD at max n: rank-by-EV −0.0465 (prob-ranking superiority is now a max-n fact),
+  S4 cap −0.0379, S1+S4 −0.0457, flat max-accas 4/5/6 all negative (volume without
+  saturation-conditioning hurts), stake 75% −0.0436.
+- always-on prob≥65 +0.0365 but 18/43 days (4x-rejected tripwire stands).
+
+**Next:** paired bootstraps on the two survivors and their combo:
+```
+--since 2026-06-13 --drop-pending-days --ab live "floor=1.25"
+--since 2026-06-13 --drop-pending-days --ab live "saturated_accas=5"
+--since 2026-06-13 --drop-pending-days --ab live "floor=1.25,saturated_accas=5"
+```
+Caveat repeated: these certify only the PRE-recovery regime; the live regime (slump)
+is replay-blind, so even a positive P here ships, if ever, only after forward evidence.
+
+## 22. The certification trio (era window, 64 cd / 43 graded bd, pending-excluded)
+
+| arm | Δ log/day | P(B>A) | concentration | verdict |
+|---|---|---|---|---|
+| floor=1.25 | +0.0150 (829%, hit 58%, maxDD 33%) | 90% | 09-20 70%, p10 −0.0002 | positive but carrier-heavy alone |
+| saturated_accas=5 | +0.0157 (852%, hit 55%, maxDD 44%) | 87% | 09-19 67%, **3 differ-days** ("3 coin flips") | positive but ultra-thin trigger |
+| **floor=1.25 + saturated_accas=5** | **+0.0307 → final 1625%, hit 59%, maxDD 58→25%** | **98%**, p10 **+0.0098** | 09-20 33%; LODO **+0.0205..+0.0351 = broad-based**; 18/64 differ | **SHIP-GRADE retrospectively** |
+
+Notable: Δ_combo = Δ_floor + Δ_sat EXACTLY (+0.0150 + 0.0157 = +0.0307) — the two
+channels are independent and interfere zero: (i) 1.25–1.30 legs are win-positive in
+this model (§13: stated conf under-reads reality at the low-price end); (ii) deeper
+pools → deeper cards on saturated days. maxDD halves AND growth doubles.
+
+**STANDING CAVEAT (doctrine-complete):** certified on the PRE-recovery regime only;
+the live post-Forebet regime is replay-blind (§20). Any ship decision must pair the
+engine change with (a) resumed pick-pool JSON capture so forward evidence can
+accumulate, and (b) an explicit revert tripwire (re-judge after ~15 live bet-days).
+
+## 23. SHIP — combo armed 2026-11-15 (operator decision)
+
+**Decision:** certified combo from §22 armed as the live recipe.
+**Change:** `scripts/auto_tickets.py` — `MIN_LEG_ODDS 1.30 → 1.25` and new
+`SATURATED_ACCAS = 5` (resolved in `select_accas` defaults so bare `plan_day`
+calls — live tickets and the parity snapshot — see the armed constants).
+**Lane scope guard discovered in test repair:** the certification ran the main
+acca lane; the enhancement lane keeps `ENH_MAX_ACCAS = 3` on every day.
+`select_accas(..., enhancements=True)` excludes saturation (resolution is
+lane-aware) — ship does NOT silently widen the enh lane to 5.
+**Receipt:** combo +0.0307 log/day, P(B>A)=98%, p10 +0.0098, LODO
++0.0205..+0.0351, exactly additive channels (§22). Conditions: pre-recovery
+regime only; tripwire below governs the live regime.
+
+**Test surface of the ship (full suite 7120 passed / 2 skipped):** pins moved
+with receipts attached: recipe lock & parity baseline regenerated
+(`tests/data/engine_parity_baseline.json`: 30/80 archive days moved BY DESIGN —
+floor widens cards; max stake delta 12.5pp; base_commit e419930) — the file now
+pins the post-ship production recipe, generated_note carries the chain.
+Boundary probes probed 1.29 now probe 1.24 (sub-floor semantics preserved in 5
+files); the acca-gate probe universe was rebuilt so the sub-threshold block
+pairs with itself through the barbell joint on a saturated x5 card (monotone
+descend spreads weakness across every acca → completeness fallback → gate
+becomes invisible to the probe: a NO-OP class the pin explicitly names);
+routing pin (cap arithmetic) now shows saturation production math
+(per-acca 0.07×5 requested → clamps to STAKE_FRAC 25% ⇒ 5.0% per acca).
+Parity synthetic corpus review: no fixture in the [1.25,1.30) band;
+06-22 has 6 legs < VOLUME_POOL=12 (never saturated): committed corpus unchanged.
+
+**Tripwire (revert rule):** re-judge after ~15 live bet-days forward from
+11-15. Revert (MIN_LEG_ODDS back to 1.30 AND SATURATED_ACCAS back to None) if
+live forward bank growth over the first ~15 graded bet-days is materially below
+the baseline trajectory of the pre-ship live path (peak 455.1% 11-08 → 257.8%
+11-14: slide persistent). Re-judge means: paired-day live comparison of the
+armed recipe trajectory vs the baseline observed slide window (no replay —
+the slump regime is replay-blind §20): ENGINE ACTUAL bank trajectory over the
+15-day window decides, with §22 numbers as regime-certification only.
+Saved bookmarks: revert values MIN_LEG_ODDS = 1.30; SATURATED_ACCAS = None.
+
+**Capture resume (standing scope note, not shipped here):** the slump regime is
+replay-invisible simply because `localdata/archive/picks/2026/**/*.json` commits
+ended ~10-16. The writers still run live (`scripts/picks_today.py` ~7588 writes
+the day archive `picks_<day>.json` via `dated_artifact_path`; `scripts/daily.py`
+writes morning/candidate ledgers). The break is in PERSISTENCE: post-recovery
+production commits route through `scripts/phase5_persistence.py` (whitelist at
+~:31-43 spans phase5 shadows/receipts and autobets ledgers — the plain pick-pool
+JSONs are outside it; the artifact upload at `.github/workflows/daily.yml` is
+`localdata/*.json` root-only, not the dated archive). Resuming the pool commits
+(isolated, evidence-only, no money-path effect) is a follow-on; the tripwire
+window can be judged from ENGINE ACTUAL alone if capture follows afterward.

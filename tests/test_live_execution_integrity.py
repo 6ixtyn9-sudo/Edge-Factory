@@ -68,7 +68,7 @@ def test_valid_source_alone_cannot_substitute_for_priced_evidence():
     assert verdict(row) == 'invalid_execution_quote_context'
     pool = at.enhancement_pool(at.enhancement_legs([row], execution_safe=True))
     assert pool == []
-    assert at.MIN_LEG_ODDS == 1.30
+    assert at.MIN_LEG_ODDS == 1.25   # ARMED 2026-11-15 (era-ladder A/B); was 1.30
 
 
 def test_shared_source_guard_respects_existing_runtime_policy(monkeypatch):

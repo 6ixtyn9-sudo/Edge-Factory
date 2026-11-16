@@ -142,10 +142,10 @@ def test_ev_fields_gate_nothing(tmp_path, _tmp_lane):
     """No EV veto and no price floor: a leg with a big sample edge fires at any
     price above the minimum; only a price under MIN_LEG_ODDS is refused."""
     above = _pick(price=1.59, prob=0.95)
-    below = _pick(price=1.25, prob=0.95)
+    below = _pick(price=1.24, prob=0.95)   # probed just under MIN_LEG_ODDS 1.25 (armed 2026-11-15; was 1.25 vs 1.30)
     legs = {l["price"]: l for l in at.enhancement_legs([above, below])}
     assert legs[1.59]["verdict"] == "fire"
-    assert legs[1.25]["verdict"] == "below_min_odds"
+    assert legs[1.24]["verdict"] == "below_min_odds"
     # The information fields remain on the row; nothing consults them here.
     assert below.get("enhancement_edge_sample") is None  # set by enh_pricing, not here
 

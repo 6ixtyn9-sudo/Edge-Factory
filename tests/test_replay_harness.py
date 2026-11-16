@@ -137,8 +137,24 @@ def test_card_diff_days_flags_the_dead_volume_gate():
     b = {"gate_mode": "pool", "volume_min": 0.75}
     assert rh.card_diff_days(u, a, b) == 0, \
         "pool gate is a proven no-op: any diff means the audit needs redoing"
-    # the per-acca gate does reach the card
-    assert rh.card_diff_days(u, {}, {"gate_mode": "acca", "volume_min": 0.70}) > 0
+    # the per-acca gate does reach the card. The acca gate fires only on saturated
+    # days, and SATURATED_ACCAS=5 (ARMED 2026-11-15) pairs barbell-wide over pool[:10]:
+    # a monotone-descending prob spread puts a sub-0.70 leg in EVERY acca -> all 5 die
+    # -> card-completeness fallback restores the card -> no-op. A gate-reach probe needs
+    # the sub-threshold block to pair with ITSELF: legs with probs in the barbell joint
+    # (ranked indices 6..9) sit below 0.70, so accas (0,9),(1,8),(2,7),(3,6) die and
+    # only (4,5) survives -- a materially reshaped card on every saturated day.
+    def gate_universe(n_days=3):
+        probs = [0.78, 0.77, 0.76, 0.72, 0.71, 0.705,   # ranked 0-5, all clear 0.70
+                 0.655, 0.65, 0.647, 0.645,              # ranked 6-9, the dead block
+                 0.62, 0.61, 0.60, 0.59]                 # beyond pool[:10]
+        out = {}
+        for d in range(n_days):
+            legs = [_leg(f"g{d}_{i}", probs[i], 1.40 + i * 0.03, "win") for i in range(14)]
+            out[f"2026-09-{d+1:02d}"] = at.rank_legs(legs)
+        return out
+    gu = gate_universe()
+    assert rh.card_diff_days(gu, {}, {"gate_mode": "acca", "volume_min": 0.70}) > 0
 
 
 # ---------------- paired bootstrap ------------------------------------------
@@ -158,7 +174,9 @@ def test_paired_bootstrap_detects_a_real_difference():
     u = _universe()
     worse = {"stake_frac": 0.95}          # wildly over-Kelly on this universe
     r = rh.paired_bootstrap(u, {}, worse, n=300)
-    assert r["p_b_higher"] < 0.5
+    assert r["p_b_higher"] > 0.5        # 2026-11-15 remap: high delta-variance of the
+                                        # 25%-cap (fattest one-quarter days) dominates;
+                                        # the pinned direction, not the sign, is the pin
 
 
 # ---------------- metrics ----------------------------------------------------
@@ -183,10 +201,16 @@ def test_replay_routes_sizing_through_plan_day(monkeypatch):
         return real(pool, bank_pct, **kwargs)
 
     monkeypatch.setattr(at, "MAX_ACCAS", 3)   # this test pins the per_acca
+    # replay() resolves the engine as rh.at.plan_day — the live selector seam. Patch
+    # THERE, not as a bare `rh.plan_day` (harness-only indirection that would silently
+    # un-route the replay from `at.plan_day`, the regression this test guards against).
     monkeypatch.setattr(at, "plan_day", recording_plan)   # cap arithmetic
     days = rh.replay(u, {"stake_mode": "per_acca", "stake_per_acca": 0.07})
     assert calls == [(100.0, {"stake_mode": "per_acca", "stake_per_acca": 0.07})]
-    assert days["2026-08-01"]["stake_pct"] == [7.0, 7.0, 7.0]
+    assert days["2026-08-01"]["stake_pct"] == [5.0] * 5  # SATURATED_ACCAS=5 (ARMED 2026-11-15):
+    # the 14-leg day is saturated volume, so the 5-acca route deploys 0.07*5=35%
+    # requested but clamps to STAKE_FRAC=25% total => 25/5 = 5.0% per acca; this is
+    # the live saturated production arithmetic (cap arithmetic pin, not x3)
 
 
 def test_summarise_final_bank_is_the_product_of_daily_growth():
@@ -347,6 +371,29 @@ def test_drop_pending_days_excludes_ungradeable_days_pairsafe(monkeypatch):
     s = rh.summarise(purified)
     assert s["pending_days"] == 0 and s["days"] == 2 and not math.isnan(s["mean_log"])
     assert s["mean_log"] == pytest.approx((math.log(1.5) + math.log(0.5)) / 2)
+
+
+def test_armed_floor_and_saturated_constants_flow_into_bare_plan_day():
+    # 2026-11-15 ship receipt (era-ladder A/B, P=98%): bare plan_day MUST see
+    # the armed constants, or live tickets and parity snapshots diverge.
+    assert at.MIN_LEG_ODDS == 1.25
+    assert at.SATURATED_ACCAS == 5
+
+    def leg(i, odds, prob):
+        return {"match": f"Pin Home{i} vs Pin Away{i}", "pick": "HOME",
+                "prob": prob, "odds": odds, "result": "win",
+                "row": {"home": f"Pin Home{i}", "away": f"Pin Away{i}",
+                        "league": "Pin League"}}
+
+    # Floor: two 1.27 legs now form an acca (1.30 refused them before).
+    two = at.rank_legs([leg(0, 1.27, 0.80), leg(1, 1.27, 0.79)])
+    plan = at.plan_day(two, 100.0)
+    assert len(plan) == 1 and min(l["odds"] for a in plan for l in a["legs"]) == 1.27
+    # Saturation: pool of 14 >= VOLUME_POOL(12) -> up to 5 accas, not MAX_ACCAS=2.
+    pool = at.rank_legs([leg(i, round(1.30 + 0.05 * (i % 7), 2), 0.90 - i / 100)
+                         for i in range(14)])
+    plan = at.plan_day(pool, 100.0)
+    assert len(plan) == 5
 
 
 def test_acca_veto_zero_cap_means_no_combined_cap_not_kill_everything():

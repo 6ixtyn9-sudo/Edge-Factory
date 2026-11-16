@@ -334,7 +334,10 @@ def test_acca_gate_actually_bites_and_is_not_live():
     ungated = at.select_accas(pool, gate_mode="off", pairing="consecutive")
     gated = at.select_accas(pool, gate_mode="acca", volume_min=0.65,
                             pairing="consecutive")
-    assert len(ungated) == at.MAX_ACCAS
+    # 14 legs >= VOLUME_POOL: the armed saturated route (SATURATED_ACCAS=5,
+    # ARMED 2026-11-15) builds 5 accas, not MAX_ACCAS=2 (the gate then pricing
+    # is the pin, card count unchanged below).
+    assert len(ungated) == at.SATURATED_ACCAS
     assert len(gated) == 1, "only the all->=65% acca may ride"
     assert all(l["prob"] >= 0.65 for a in gated for l in a)
     # fallback: an empty card is not an opinion -> full card returns
@@ -775,11 +778,13 @@ def test_card_completeness_on_starved_saturated_days():
         pool.append({"match": f"Mid{i} vs Y", "pick": "HOME", "prob": 0.60,
                      "odds": 1.45 + i * 0.05, "result": None})
     plan = at.plan_day(pool, bank_pct=100.0)
-    assert len(plan) == at.MAX_ACCAS, (
-        f"starved card must still build {at.MAX_ACCAS} accas, got {len(plan)}")
+    # 13 legs >= VOLUME_POOL: saturated route (SATURATED_ACCAS=5, ARMED 2026-11-15)
+    # builds 5 accas and completeness keeps the starved card at that shape
+    assert len(plan) == at.SATURATED_ACCAS, (
+        f"starved saturated card must still build {at.SATURATED_ACCAS} accas, got {len(plan)}")
     assert all(len(a["legs"]) == 2 for a in plan)
-    # stakes: STAKE_FRAC split across MAX_ACCAS whatever the card shape
-    assert abs(plan[0]["stake_pct"] - 100.0 * at.STAKE_FRAC / at.MAX_ACCAS) < 0.01
+    # stakes: STAKE_FRAC split across the saturated acca count (the dilution channel)
+    assert abs(plan[0]["stake_pct"] - 100.0 * at.STAKE_FRAC / at.SATURATED_ACCAS) < 0.01
 
     # control: a saturated pool WITH >=6 gated legs still applies the gate
     pool2 = []
@@ -790,8 +795,11 @@ def test_card_completeness_on_starved_saturated_days():
         pool2.append({"match": f"M{i} vs W", "pick": "HOME", "prob": 0.58,
                       "odds": 1.50 + i * 0.05, "result": None})
     plan2 = at.plan_day(pool2, bank_pct=100.0)
-    # top-6 by prob are the eight 0.70 legs' best six — with or without a gate
-    assert all(l["prob"] == 0.70 for a in plan2 for l in a["legs"])
+    # saturated route (SATURATED_ACCAS=5, ARMED 2026-11-15) takes pool[:10] ranked by
+    # prob: all eight 0.70 legs plus the two best 0.58 legs, with the 0.70 block first
+    assert len(plan2) == at.SATURATED_ACCAS
+    ranks = [(l["prob"]) for a in plan2 for l in a["legs"]]
+    assert ranks.count(0.70) == 8 and ranks.count(0.58) == 2
 
     # control 2: sub-floor legs never ride regardless of starvation
     pool3 = [

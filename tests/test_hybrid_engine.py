@@ -281,7 +281,7 @@ def test_selection_takes_the_highest_hit_rate_among_priced_at_the_minimum(monkey
     index = _priced_index(prices, default=1.10)
     out = _compute(con, _pick(), index)
     assert out["recommended_enhancement"] == "match_over_25"
-    assert all(n["enhancement_price"] >= 1.30 for n in out["event_notes"])  # MIN_LEG_ODDS
+    assert all(n["enhancement_price"] >= 1.25 for n in out["event_notes"])  # MIN_LEG_ODDS (1.30 -> 1.25 ARMED 2026-11-15)
 
 
 def test_no_recommendation_when_nothing_is_priced_at_the_minimum(monkeypatch):
@@ -332,7 +332,7 @@ def test_under_competes_at_shared_minimum_without_legacy_line_filter(monkeypatch
 
 
 @pytest.mark.parametrize("price, over35, reason", [
-    (1.29, 0.20, "below_min_leg_odds"),
+    (1.24, 0.20, "below_min_leg_odds"),  # floor 1.30 -> 1.25 ARMED 2026-11-15
     (1.30, 0.09, "prob_outside_band"),  # 91%: existing ceiling still applies
     (1.30, 0.80, "below_line_threshold"),  # 20%: existing lower bound
 ])
@@ -419,7 +419,7 @@ def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
         expected = []
         for market in set(pt.COHORT_DIRECT_KEYS) | set(pt.COHORT_COMPLEMENT_KEYS):
             rate = pt.cohort_realized_rate(cohort, market)
-            if MARKET_PRICE_MAP.get(market) and .25 <= rate <= .90 and prices[market] >= 1.30:
+            if MARKET_PRICE_MAP.get(market) and .25 <= rate <= .90 and prices[market] >= 1.25:  # mirror armed floor
                 expected.append((rate, prices[market], market))
         if not expected:
             assert out["recommended_enhancement"] is None
@@ -427,7 +427,7 @@ def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
         best_rate, best_price, _ = max(expected)
         assert out["enhancement_cohort_rate"] == pytest.approx(best_rate, abs=.000051)
         assert out["enhancement_price"] == best_price
-        assert out["enhancement_price"] >= 1.30
+        assert out["enhancement_price"] >= 1.25
         assert all(.25 <= n["cohort_rate"] <= .90 for n in out["event_notes"])
     con.close()
 
@@ -438,7 +438,7 @@ def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
     (.85, 1.40, True, None),
     (.90, 1.40, True, None),
     (.9001, 1.40, False, 'prob_outside_band'),
-    (.85, 1.29, False, 'below_min_leg_odds'),
+    (.85, 1.24, False, 'below_min_leg_odds'),  # floor 1.30 -> 1.25 ARMED 2026-11-15
 ])
 def test_legacy_rollback_under25_threshold_and_price_boundaries(monkeypatch, rate, price, eligible, reason):
     monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "0")
@@ -503,7 +503,7 @@ def test_full_market_contention_not_under25_in_isolation(monkeypatch, scenario, 
     else:
         # U2.5=80%, BTTS=60%; legacy admits BTTS but excludes U2.5.
         scores = [(1, 1)] * 40 + [(0, 0)] * 40 + [(2, 1)] * 20
-        prices = {'match_under_25': 1.29 if scenario == 'under_below_price_floor' else 1.40,
+        prices = {'match_under_25': 1.24 if scenario == 'under_below_price_floor' else 1.40,  # new sub-floor probe
                   'btts_yes': 2.10 if scenario == 'higher_roi_btts' else 1.80}
     n = len(scores)
     cohort = {'n': n, 'avg_goals': sum(h+a for h, a in scores)/n,

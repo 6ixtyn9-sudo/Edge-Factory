@@ -216,8 +216,22 @@ MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
 PAIRING = "barbell"        # ARMED 2026-09-09. Revert = "consecutive".
-MIN_LEG_ODDS = 1.30        # min odds per leg, both lanes (operator 2026-10-14: 1.20 -> 1.30; was 2026-09-02..04 band evidence; the
-                           # replay harness A/Bs this knob — never inline the number)
+MIN_LEG_ODDS = 1.25        # min odds per leg, both lanes. ARMED 2026-11-15 (operator ship decision):
+                           # era-ladder paired A/B, 64 candidate-days / 43 graded bet-days
+                           # (06-13→10-20, pre-recovery regime): floor=1.25 combined with
+                           # SATURATED_ACCAS=5 gave +0.0307 log/day (final 435->1625%),
+                           # hit 52->59%, maxDD 58->25%; paired bootstrap P(B>A)=98%,
+                           # p10 +0.0098, LODO +0.0205..+0.0351 broad-based. Effect was
+                           # exactly additive (Δfloor +0.0150 + Δsat +0.0157): two
+                           # independent channels. Supersedes operator 2026-10-14 1.20->1.30
+                           # (that raise predates the recovery regime the slump ran in).
+                           # Revert = 1.30; tripwire + re-judge rule in
+                           # docs/edge_loss_diagnostic_2026-11-15.md §23.
+                           # The replay harness A/Bs this knob — never inline the number.
+SATURATED_ACCAS = 5        # on saturated days (pool >= VOLUME_POOL after drops) build up to
+                           # 5 accas instead of MAX_ACCAS (dilution, not concentration:
+                           # worst-day stays stake-capped). ARMED 2026-11-15 — same receipt
+                           # as MIN_LEG_ODDS. Revert = None.
 # Operator-confirmed selection rule (2026-10-31): widened-window completed ROI.
 # Historical ROI comparisons are retrospective, not a validated optimum. Old receipts
 # retain their captured options; optional add-ons are disabled for new cards.
@@ -3607,6 +3621,11 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
     max_accas = MAX_ACCAS if max_accas is None else max_accas
     min_accas = MIN_ACCAS if min_accas is None else min_accas
     pairing = PAIRING if pairing is None else pairing
+    # Main lane only: the saturated-5 dilution is certified on the main acca
+    # lane (era-ladder A/B 2026-11-15, §21-§22). The enhancement lane keeps its
+    # explicit ENH_MAX_ACCAS=3 operator pin on every day, saturated or not.
+    if saturated_accas is None:
+        saturated_accas = None if enhancements else SATURATED_ACCAS
     volume_pool = VOLUME_POOL if volume_pool is None else volume_pool
     volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
     gate_mode = GATE_MODE if gate_mode is None else gate_mode

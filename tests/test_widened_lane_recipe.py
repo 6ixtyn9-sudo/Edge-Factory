@@ -28,7 +28,7 @@ def test_live_defaults_are_the_fully_graded_widened_recipes(monkeypatch):
     main, enh = at.ticket_planner_options('main'), at.ticket_planner_options('enh')
     assert (main['rank'], main['min_prob'], main['max_accas']) == ('prob', 0., 2)
     assert main['addon_floor'] is None and main['addon_ceiling'] is None
-    assert at._main_pool_floor() == main['floor'] == enh['floor'] == 1.3
+    assert at._main_pool_floor() == main['floor'] == enh['floor'] == 1.25  # ARMED 2026-11-15; was 1.30
     assert (enh['rank'], enh['ml_enabled'], enh['model_min_prob'], enh['max_accas']) == ('prob', False, .6, 3)
     for options in (main, enh):
         assert (options['pairing'], options['legs_per_acca']) == ('barbell', 2)
@@ -38,14 +38,17 @@ def test_live_defaults_are_the_fully_graded_widened_recipes(monkeypatch):
 def test_main_has_no_added_probability_floor_and_does_not_append(monkeypatch):
     monkeypatch.delenv('EDGE_FACTORY_ENH_ML', raising=False)
     pool = [leg(i, prob=p, odds=o) for i, (p, o) in enumerate([
-        (.8, 1.3), (.75, 1.4), (.7, 1.5), (.64, 2.), (.6, 2.1), (.95, 1.25)])]
+        (.8, 1.3), (.75, 1.4), (.7, 1.5), (.64, 2.), (.6, 2.1), (.95, 1.24)])]
+    # the high-prob 1.24 tail stays OUT under the armed 1.25 floor (was a 1.25
+    # tail below the 1.30 floor) — the assertion is about added probability
+    # floors, not the odds floor, so keep the probe sub-floor in both recipes.
     for l in pool:
         l['pick'] = 'HOME'
     card = at.plan_day(pool, 100., **at.ticket_planner_options('main'))
     assert len(card) == 2 and all(len(a['legs']) == 2 for a in card)
     chosen = [l for a in card for l in a['legs']]
     assert any(l['prob'] == .64 for l in chosen)
-    assert all(l['odds'] >= 1.3 for l in chosen)
+    assert all(l['odds'] >= 1.25 for l in chosen)
     assert all(a['stake_pct'] == 12.5 for a in card)
 
 
