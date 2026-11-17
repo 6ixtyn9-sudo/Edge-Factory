@@ -1,6 +1,16 @@
 {
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
+    {
+      "avg_p": 53.03667551001738,
+      "away": "Sint Maarten",
+      "date": "2026-11-17",
+      "home": "Belize",
+      "league": "CONCACAF Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.592
+    },
     {
       "avg_p": 54.03803090010634,
       "away": "Northern Ireland",
@@ -13,19 +23,21 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 1,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 22,
-  "captured_at": "2026-11-16T22:27:05.433599+00:00",
+  "cache_only": 1,
+  "candidate_fixtures": 50,
+  "captured_at": "2026-11-17T01:27:18.112824+00:00",
   "date": "2026-11-17",
-  "deferred_fixtures": 21,
-  "errors": [],
+  "deferred_fixtures": 49,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 1,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 3,
     "challenge_pages": 0,
@@ -39,7 +51,7 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
+  "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
   "network_attempted": 1,
   "quoted_fixtures": [
@@ -54,7 +66,7 @@
       "w_score": 0.6145
     }
   ],
-  "requests": 6,
+  "requests": 3,
   "rows": 3,
   "schema": 1,
   "status": "ok"

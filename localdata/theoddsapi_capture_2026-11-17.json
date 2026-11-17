@@ -1,33 +1,82 @@
 {
-  "added": 75,
-  "attempted": 1,
+  "added": 0,
+  "attempted": 9,
   "attempted_fixtures": [
     {
-      "away": "Romania",
+      "away": "COSTA RICA",
       "date": "2026-11-17",
-      "home": "Bosnia & Herzegovina",
-      "kickoff": "2026-11-17T19:45:00Z",
-      "league": "UEFA Nations League"
+      "home": "ARGENTINA",
+      "kickoff": "23:00",
+      "league": "WNF"
+    },
+    {
+      "away": "BOLIVIA",
+      "date": "2026-11-17",
+      "home": "ECUADOR",
+      "kickoff": "23:30",
+      "league": "WNF"
+    },
+    {
+      "away": "PARAGUAY",
+      "date": "2026-11-17",
+      "home": "JAPAN",
+      "kickoff": "13:10",
+      "league": "WNF"
+    },
+    {
+      "away": "ANGOLA",
+      "date": "2026-11-17",
+      "home": "SOUTH SUDAN",
+      "kickoff": "13:00",
+      "league": "AFN"
+    },
+    {
+      "away": "EGYPT",
+      "date": "2026-11-17",
+      "home": "MALAWI",
+      "kickoff": "13:00",
+      "league": "AFN"
+    },
+    {
+      "away": "BRAZIL",
+      "date": "2026-11-17",
+      "home": "SINGAPORE",
+      "kickoff": "10:00",
+      "league": "WNF"
+    },
+    {
+      "away": "PORTUGAL",
+      "date": "2026-11-17",
+      "home": "WALES",
+      "kickoff": "19:45",
+      "league": "EUN"
+    },
+    {
+      "away": "AUSTRIA",
+      "date": "2026-11-17",
+      "home": "ISRAEL",
+      "kickoff": "19:45",
+      "league": "EUN"
+    },
+    {
+      "away": "NORWAY",
+      "date": "2026-11-17",
+      "home": "DENMARK",
+      "kickoff": "19:45",
+      "league": "EUN"
     }
   ],
-  "candidate_fixtures": 23,
-  "captured_at": "2026-11-16T23:05:14+00:00",
+  "candidate_fixtures": 43,
+  "captured_at": "2026-11-17T02:07:38+00:00",
   "date": "2026-11-17",
   "due_reasons": {
-    "scope_at": 1
+    "first_at": 6,
+    "scope_at": 3
   },
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "Romania",
-      "date": "2026-11-17",
-      "home": "Bosnia & Herzegovina",
-      "kickoff": "2026-11-17T19:45:00Z",
-      "league": "UEFA Nations League"
-    }
-  ],
+  "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
     "totals",
@@ -37,38 +86,64 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 75,
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 7,
-    "retry_cooldown": 15
+    "priced": 5,
+    "retry_cooldown": 29
   },
   "skipped": [
-    "Singapore|Brazil (retry cooldown (6h after failed attempt))",
-    "Argentina|Costa Rica (retry cooldown (6h after failed attempt))",
-    "Uruguay|Dominican Republic (retry cooldown (6h after failed attempt))",
+    "URUGUAY|DOMINICAN REPUB (retry cooldown (6h after failed attempt))",
     "Canada|Guatemala (retry cooldown (6h after failed attempt))",
-    "Ecuador|Bolivia (retry cooldown (6h after failed attempt))",
     "Trinidad and Tobago|Antigua and Barbuda (retry cooldown (6h after failed attempt))",
+    "ATLETICO NACIONAL|ONCE CALDAS (retry cooldown (6h after failed attempt))",
+    "RUSSIA|VENEZUELA (retry cooldown (6h after failed attempt))",
+    "U. ARAB EMIRATE|SYRIA (retry cooldown (6h after failed attempt))",
     "Martinique|Aruba (retry cooldown (6h after failed attempt))",
-    "Malawi|Egypt (retry cooldown (6h after failed attempt))",
-    "South Sudan|Angola (retry cooldown (6h after failed attempt))",
+    "LUTON TOWN|PETERBOROUGH (retry cooldown (6h after failed attempt))",
+    "HUNGARY|NORTH. IRELAND (retry cooldown (6h after failed attempt))",
+    "MALAYSIA|YEMEN (retry cooldown (6h after failed attempt))",
+    "NIGER|MOROCCO (retry cooldown (6h after failed attempt))",
+    "RWANDA|MALI (retry cooldown (6h after failed attempt))",
+    "LESOTHO|GABON (retry cooldown (6h after failed attempt))",
+    "SIERRA LEONE|D.R.CONGO (retry cooldown (6h after failed attempt))",
+    "TANZANIA|NIGERIA (retry cooldown (6h after failed attempt))",
+    "ETHIOPIA|MOZAMBIQUE (retry cooldown (6h after failed attempt))",
+    "GUINEA-BISSAU|MADAGASCAR (retry cooldown (6h after failed attempt))",
+    "IRELAND|KOSOVO (retry cooldown (6h after failed attempt))",
     "United Arab Emirates|Syria (retry cooldown (6h after failed attempt))",
-    "Wales|Portugal (priced)",
+    "ST. LUCIA|BARBADOS (retry cooldown (6h after failed attempt))",
+    "CONGO|COMOROS (retry cooldown (6h after failed attempt))",
     "Dominica|Cayman Islands (retry cooldown (6h after failed attempt))",
-    "Japan|Paraguay (retry cooldown (6h after failed attempt))",
-    "Israel|Austria (priced)",
+    "GAMBIA|IVORY COAST (retry cooldown (6h after failed attempt))",
+    "INDIA|PAKISTAN (retry cooldown (6h after failed attempt))",
+    "QATAR|SOUTH KOREA (retry cooldown (6h after failed attempt))",
+    "TOGO|ALGERIA (retry cooldown (6h after failed attempt))",
     "Hungary|Northern Ireland (priced)",
     "Belize|Sint Maarten (retry cooldown (6h after failed attempt))",
     "Bosnia and Herzegovina|Romania (priced)",
     "Jordan|Australia (retry cooldown (6h after failed attempt))",
+    "Bosnia & Herzegovina|Romania (priced)",
     "Chile|Colombia (retry cooldown (6h after failed attempt))",
     "Ukraine|Georgia (priced)",
-    "Denmark|Norway (priced)",
     "Poland|Sweden (priced)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [],
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "ARGENTINA vs COSTA RICA (league not covered: WNF)",
+    "ECUADOR vs BOLIVIA (league not covered: WNF)",
+    "JAPAN vs PARAGUAY (league not covered: WNF)",
+    "SOUTH SUDAN vs ANGOLA (league not covered: AFN)",
+    "MALAWI vs EGYPT (league not covered: AFN)",
+    "SINGAPORE vs BRAZIL (league not covered: WNF)",
+    "WALES vs PORTUGAL (league not covered: EUN)",
+    "ISRAEL vs AUSTRIA (league not covered: EUN)",
+    "DENMARK vs NORWAY (league not covered: EUN)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: AFN": 2,
+    "league not covered: EUN": 3,
+    "league not covered: WNF": 4
+  }
 }

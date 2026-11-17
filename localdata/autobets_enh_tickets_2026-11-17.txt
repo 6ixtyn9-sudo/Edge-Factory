@@ -1,8 +1,14 @@
 ENHANCEMENT TICKETS (ROLLING) — 2026-11-17
 ==============================================================
 PERFORMANCE: total bank 24.4% of capital (x0.24) = free bank 24.4% + committed 0.0% · next take-profit notification at 200.0%
-NO BET — only 1 eligible fixture (9 priced quotes), need 2 for an acca
-(bank stays unbet; a lone leg is never a single)
-Quote/payout evidence: {"below_min_odds": 348, "below_model_probability_floor": 12, "fire": 9, "invalid_execution_quote_context": 9, "kickoff_guard": 1158, "payout_not_supported": 134}
+[ACCA #1] @4.54 — stake 3.1% of capital (12.5% of free bank) [SKIPPED_VETO parent]
+   Hungary vs Northern Ireland                    Match Over 2.5 Goals @ 2.61 (parent cohort 64%, n=532; not fixture probability) (rank: cohort; model ordering not used)
+   ISRAEL vs AUSTRIA                              Match Over 2.5 Goals @ 1.74 (parent cohort 61%, n=213; not fixture probability) (rank: cohort; model ordering not used)
 
+[ACCA #2] @2.21 — stake 3.1% of capital (12.5% of free bank)
+   WALES vs PORTUGAL                              Match Over 2.5 Goals @ 1.50 (parent cohort 61%, n=213; not fixture probability) (rank: cohort; model ordering not used)
+   DENMARK vs NORWAY                              Match Over 2.5 Goals @ 1.47 (parent cohort 60%, n=608; not fixture probability) (rank: cohort; model ordering not used)
+
+ML-INACTIVE on card (cohort ordering)
+deploying 25.0% of free bank today = 6.1% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
 All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
