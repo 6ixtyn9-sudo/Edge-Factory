@@ -1,0 +1,327 @@
+{
+  "added": 45929,
+  "attempted": 10,
+  "attempted_fixtures": [
+    {
+      "away": "Jamaica",
+      "fixture_id": "id1002742075466990",
+      "home": "Mexico"
+    },
+    {
+      "away": "Haiti",
+      "fixture_id": "id1002742075466988",
+      "home": "USA"
+    },
+    {
+      "away": "Saint Vincent and the Grenadines",
+      "fixture_id": "id1002742075468446",
+      "home": "French Guiana"
+    },
+    {
+      "away": "SC Corinthians SP",
+      "fixture_id": "id1003091375591888",
+      "home": "Red Bull Bragantino SP"
+    },
+    {
+      "away": "Academia Costa Del Este",
+      "fixture_id": "id1001949076875152",
+      "home": "Chorrillo FC"
+    },
+    {
+      "away": "Saint-Martin",
+      "fixture_id": "id1002742075512554",
+      "home": "El Salvador"
+    },
+    {
+      "away": "Internacional de Bogota.",
+      "fixture_id": "id1000133576520696",
+      "home": "America de Cali"
+    },
+    {
+      "away": "Veraguas United FC",
+      "fixture_id": "id1002710276822364",
+      "home": "CD Arabe Unido"
+    },
+    {
+      "away": "Montserrat",
+      "fixture_id": "id1002742075512556",
+      "home": "Nicaragua"
+    },
+    {
+      "away": "AC Nagano Parceiro",
+      "fixture_id": "id1003459072339098",
+      "home": "JEF United Ichihara Chiba"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-18",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 441,
+    "remaining_today": 1,
+    "spent_today": 24
+  },
+  "captured_at": "2026-11-17T22:25:21+00:00",
+  "date": "2026-11-18",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 5,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 169,
+  "future_slate_fixtures": 0,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 535,
+  "markets": {
+    "1x2": 5344,
+    "btts": 2872,
+    "dc": 4691,
+    "dnb": 2360,
+    "ou_0.5": 969,
+    "ou_0.75": 96,
+    "ou_1": 150,
+    "ou_1.25": 188,
+    "ou_1.5": 2104,
+    "ou_1.75": 288,
+    "ou_2": 534,
+    "ou_2.25": 648,
+    "ou_2.5": 2693,
+    "ou_2.75": 896,
+    "ou_3": 890,
+    "ou_3.25": 870,
+    "ou_3.5": 2546,
+    "ou_3.75": 764,
+    "ou_4": 667,
+    "ou_4.25": 452,
+    "ou_4.5": 1953,
+    "ou_4.75": 348,
+    "ou_5": 280,
+    "ou_5.25": 128,
+    "ou_5.5": 1336,
+    "ou_5.75": 94,
+    "ou_6": 122,
+    "ou_6.25": 62,
+    "ou_6.5": 661,
+    "ou_6.75": 50,
+    "ou_7": 40,
+    "ou_7.25": 36,
+    "ou_7.5": 303,
+    "ou_7.75": 32,
+    "ou_8": 32,
+    "ou_8.25": 32,
+    "ou_8.5": 109,
+    "tt_away_0.5": 1513,
+    "tt_away_0.75": 112,
+    "tt_away_1": 126,
+    "tt_away_1.25": 86,
+    "tt_away_1.5": 1204,
+    "tt_away_1.75": 80,
+    "tt_away_2": 54,
+    "tt_away_2.25": 22,
+    "tt_away_2.5": 647,
+    "tt_away_3.5": 150,
+    "tt_away_4.5": 22,
+    "tt_away_5.5": 8,
+    "tt_home_0.5": 778,
+    "tt_home_0.75": 22,
+    "tt_home_1": 98,
+    "tt_home_1.25": 64,
+    "tt_home_1.5": 1386,
+    "tt_home_1.75": 60,
+    "tt_home_2": 108,
+    "tt_home_2.25": 78,
+    "tt_home_2.5": 1247,
+    "tt_home_2.75": 78,
+    "tt_home_3": 76,
+    "tt_home_3.25": 44,
+    "tt_home_3.5": 1002,
+    "tt_home_3.75": 38,
+    "tt_home_4": 36,
+    "tt_home_4.25": 16,
+    "tt_home_4.5": 657,
+    "tt_home_5": 32,
+    "tt_home_5.5": 344,
+    "tt_home_6.5": 73,
+    "tt_home_7.5": 28
+  },
+  "markets_source": "fetch",
+  "matched": 10,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 1,
+    "market_inactive": 132,
+    "market_unsupported_cards": 1115,
+    "market_unsupported_clean_sheet": 770,
+    "market_unsupported_corners": 4257,
+    "market_unsupported_correct_score": 2725,
+    "market_unsupported_early_payout": 117,
+    "market_unsupported_handicap": 11263,
+    "market_unsupported_market_type": 8316,
+    "market_unsupported_non_goal": 381,
+    "market_unsupported_odd_even": 2195,
+    "market_unsupported_period": 39026,
+    "market_unsupported_win_to_nil": 1256,
+    "outcome_inactive": 3218
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 1,
+      "market_inactive": 132,
+      "outcome_inactive": 3218
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 1115,
+      "market_unsupported_clean_sheet": 770,
+      "market_unsupported_corners": 4257,
+      "market_unsupported_correct_score": 2725,
+      "market_unsupported_early_payout": 117,
+      "market_unsupported_handicap": 11263,
+      "market_unsupported_market_type": 8316,
+      "market_unsupported_non_goal": 381,
+      "market_unsupported_odd_even": 2195,
+      "market_unsupported_period": 39026,
+      "market_unsupported_win_to_nil": 1256
+    }
+  },
+  "pending_fixtures": 10,
+  "quoted_fixtures": [
+    {
+      "away": "Jamaica",
+      "fixture_id": "id1002742075466990",
+      "home": "Mexico"
+    },
+    {
+      "away": "Haiti",
+      "fixture_id": "id1002742075466988",
+      "home": "USA"
+    },
+    {
+      "away": "Saint Vincent and the Grenadines",
+      "fixture_id": "id1002742075468446",
+      "home": "French Guiana"
+    },
+    {
+      "away": "SC Corinthians SP",
+      "fixture_id": "id1003091375591888",
+      "home": "Red Bull Bragantino SP"
+    },
+    {
+      "away": "Academia Costa Del Este",
+      "fixture_id": "id1001949076875152",
+      "home": "Chorrillo FC"
+    },
+    {
+      "away": "Saint-Martin",
+      "fixture_id": "id1002742075512554",
+      "home": "El Salvador"
+    },
+    {
+      "away": "Internacional de Bogota.",
+      "fixture_id": "id1000133576520696",
+      "home": "America de Cali"
+    },
+    {
+      "away": "Veraguas United FC",
+      "fixture_id": "id1002710276822364",
+      "home": "CD Arabe Unido"
+    },
+    {
+      "away": "Montserrat",
+      "fixture_id": "id1002742075512556",
+      "home": "Nicaragua"
+    },
+    {
+      "away": "AC Nagano Parceiro",
+      "fixture_id": "id1003459072339098",
+      "home": "JEF United Ichihara Chiba"
+    }
+  ],
+  "reserved_requests": 0,
+  "rows": 45929,
+  "schema": 1,
+  "slate_candidate_fixtures": 14,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 1,
+  "slate_provider_overlap_fixtures": 1,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "FC Cartagena",
+      "home": "Deportiva Minera",
+      "league": "Copa Del Rey",
+      "normalized_pair": "cartagena|deportiva minera"
+    },
+    {
+      "away": "ATLETICO PR",
+      "home": "FLAMENGO",
+      "league": "BR1",
+      "normalized_pair": "atletico pr|flamengo"
+    },
+    {
+      "away": "Sabadell",
+      "home": "Utebo FC",
+      "league": "Copa Del Rey",
+      "normalized_pair": "sabadell|utebo"
+    },
+    {
+      "away": "OH Leuven W",
+      "home": "Juventus W",
+      "league": "UEFA Women's Champions League",
+      "normalized_pair": "juventus w|oh leuven w"
+    },
+    {
+      "away": "Mallorca",
+      "home": "Alcoyano",
+      "league": "Copa Del Rey",
+      "normalized_pair": "alcoyano|mallorca"
+    },
+    {
+      "away": "Real Uni\u00f3n Club",
+      "home": "Portugalete",
+      "league": "Copa Del Rey",
+      "normalized_pair": "portugalete|real union"
+    },
+    {
+      "away": "Inter Milano W",
+      "home": "Real Madrid W",
+      "league": "UEFA Women's Champions League",
+      "normalized_pair": "inter milano w|real madrid w"
+    },
+    {
+      "away": "Saint Martin",
+      "home": "El Salvador",
+      "league": "CONCACAF Nations League",
+      "normalized_pair": "el salvador|saint martin"
+    },
+    {
+      "away": "Mallorca",
+      "home": "CD Alcoyano",
+      "league": "Copa del Rey",
+      "normalized_pair": "cd alcoyano|mallorca"
+    },
+    {
+      "away": "Chapecoense",
+      "home": "Remo",
+      "league": "Brasileir\u00e3o Serie A",
+      "normalized_pair": "chapecoense|remo"
+    },
+    {
+      "away": "CD Tenerife",
+      "home": "CD Badajoz",
+      "league": "Copa del Rey",
+      "normalized_pair": "cd badajoz|cd tenerife"
+    },
+    {
+      "away": "SANTOS",
+      "home": "CORITIBA",
+      "league": "BR1",
+      "normalized_pair": "coritiba|santos"
+    },
+    {
+      "away": "Al-Orobah FC",
+      "home": "Al Adalah",
+      "league": "Division 1",
+      "normalized_pair": "al adalah|al-orobah"
+    }
+  ],
+  "source": "oddspapi_odds"
+}

@@ -1,0 +1,36 @@
+autobets_ML TICKETS — 2026-11-18
+==============================================================
+CURRENT PAPER BANK (all dates): 59.925 units · free 59.655 / reserved 0.270
+2 paper accas · 2 ticket publications · 0 scans without tickets · times in SAST
+PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
+Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
+
+[PAPER ACCA #1] @55.555 — 0.113315 paper units — kalshi
+   Published 2026-11-18 00:33:04 SAST · reference P1/1
+   El Salvador vs Saint Martin · KICKOFF 2026-11-18 03:00 SAST
+      Draw (1X2) @5.000 · ML 20.9% · CAUTION
+
+   Mexico vs Jamaica · KICKOFF 2026-11-18 04:30 SAST
+      Draw (1X2) @11.111 · ML 12.3% · SKIPPED_VETO
+
+[PAPER ACCA #2] @85.466 — 0.156992 paper units — kalshi
+   Published 2026-11-18 00:37:46 SAST · reference P2/1
+   Mexico vs Jamaica · KICKOFF 2026-11-18 04:30 SAST
+      Draw (1X2) @11.111 · ML 12.3% · SKIPPED_VETO
+
+   NICARAGUA vs MONTSERRAT · KICKOFF 2026-11-18 05:00 SAST
+      Draw (1X2) @7.692 · ML 20.3% · SKIPPED_VETO
+
+PUBLICATION REFERENCES
+P/publication-local index maps each displayed acca to its immutable receipt.
+P1 · 2026-11-18 00:33:04 SAST · ACCA #1 · receipt 20261117T223239688645Z
+P2 · 2026-11-18 00:37:46 SAST · ACCA #2 · receipt 20261117T223716185531Z
+
+Full scan/leg diagnostics: phase5_reconciliation/ml_paper_receipts/reports/autobets_ML_2026-11-18_audit.txt
+Frozen JSON receipts remain alongside that reports directory.
+
+ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
+STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.
+           Fixture subtotals overlap; do not add them to bank commitments.
+           Decision-specific limits are in the audit report; old positions are not resized.
+Paper only. No real-money stakes or automatic promotion.

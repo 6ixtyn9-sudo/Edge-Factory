@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-17T22:04:53",
+  "generated_at": "2026-11-18T00:45:44",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 190.195396,
-  "multiple": 1.90195396,
+  "bank_pct": 213.01911599999997,
+  "multiple": 2.13019116,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 76,
+  "bet_days": 77,
   "accas": {
-    "wins": 86,
-    "losses": 67
+    "wins": 88,
+    "losses": 70
   },
-  "open_slips": [
-    {
-      "date": "2026-11-17",
-      "staked_pct": 47.5488
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -2730,6 +2725,195 @@
       ],
       "bank_pct": 190.1954,
       "close_pct": 190.1953
+    },
+    {
+      "date": "2026-11-17",
+      "staked_pct": 47.5488,
+      "returned_pct": 70.3726,
+      "accas": [
+        {
+          "odds": 2.91,
+          "won": false,
+          "stake_pct": 9.5098,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "JAPAN vs PARAGUAY",
+              "pick": "HOME",
+              "odds": 1.72,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "JAPAN",
+                "PARAGUAY"
+              ]
+            },
+            {
+              "match": "GUINEA-BISSAU vs MADAGASCAR",
+              "pick": "HOME",
+              "odds": 1.6897,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "GUINEA-BISSAU",
+                "MADAGASCAR"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 3.22,
+          "won": true,
+          "stake_pct": 9.5098,
+          "returned_pct": 30.6216,
+          "legs": [
+            {
+              "match": "RUSSIA vs VENEZUELA",
+              "pick": "HOME",
+              "odds": 1.5,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "RUSSIA",
+                "VENEZUELA"
+              ]
+            },
+            {
+              "match": "IRELAND vs KOSOVO",
+              "pick": "HOME",
+              "odds": 2.15,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "IRELAND",
+                "KOSOVO"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 4.18,
+          "won": true,
+          "stake_pct": 9.5098,
+          "returned_pct": 39.751,
+          "legs": [
+            {
+              "match": "LUTON TOWN vs PETERBOROUGH",
+              "pick": "HOME",
+              "odds": 1.5495,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "LUTON TOWN",
+                "PETERBOROUGH"
+              ]
+            },
+            {
+              "match": "ETHIOPIA vs MOZAMBIQUE",
+              "pick": "AWAY",
+              "odds": 2.7,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "ETHIOPIA",
+                "MOZAMBIQUE"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.5,
+          "won": false,
+          "stake_pct": 9.5098,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "RWANDA vs MALI",
+              "pick": "AWAY",
+              "odds": 1.8065,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "RWANDA",
+                "MALI"
+              ]
+            },
+            {
+              "match": "TANZANIA vs NIGERIA",
+              "pick": "AWAY",
+              "odds": 1.3817,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "TANZANIA",
+                "NIGERIA"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.2,
+          "won": false,
+          "stake_pct": 9.5096,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "LESOTHO vs GABON",
+              "pick": "AWAY",
+              "odds": 1.4854,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "LESOTHO",
+                "GABON"
+              ]
+            },
+            {
+              "match": "SIERRA LEONE vs D.R.CONGO",
+              "pick": "AWAY",
+              "odds": 1.4831,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-17",
+                "SIERRA LEONE",
+                "D.R.CONGO"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 213.0191,
+      "close_pct": 213.0191
     }
   ]
 }

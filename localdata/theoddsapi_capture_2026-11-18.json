@@ -1,0 +1,89 @@
+{
+  "added": 204,
+  "attempted": 3,
+  "attempted_fixtures": [
+    {
+      "away": "Jamaica",
+      "date": "2026-11-18",
+      "home": "Mexico",
+      "kickoff": "2026-11-18T02:30:00Z",
+      "league": "CONCACAF Nations League"
+    },
+    {
+      "away": "CHAPECOENSE",
+      "date": "2026-11-18",
+      "home": "REMO",
+      "kickoff": "23:00",
+      "league": "BR1"
+    },
+    {
+      "away": "SANTOS",
+      "date": "2026-11-18",
+      "home": "CORITIBA",
+      "kickoff": "22:30",
+      "league": "BR1"
+    }
+  ],
+  "candidate_fixtures": 15,
+  "captured_at": "2026-11-17T22:38:24+00:00",
+  "date": "2026-11-18",
+  "due_reasons": {
+    "first_at": 3
+  },
+  "errors": [],
+  "fixtures_with_rows": 2,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [
+    {
+      "away": "Chapecoense",
+      "date": "2026-11-18",
+      "home": "Remo",
+      "kickoff": "2026-11-18T23:00:00Z",
+      "league": "BR1"
+    },
+    {
+      "away": "Santos",
+      "date": "2026-11-18",
+      "home": "Coritiba",
+      "kickoff": "2026-11-18T22:30:00Z",
+      "league": "BR1"
+    }
+  ],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 204,
+  "schema": 1,
+  "skip_reasons": {
+    "priced": 6,
+    "retry_cooldown": 6
+  },
+  "skipped": [
+    "Deportiva Minera|FC Cartagena (priced)",
+    "FLAMENGO|ATLETICO PR (retry cooldown (6h after failed attempt))",
+    "Utebo FC|Sabadell (priced)",
+    "Juventus W|OH Leuven W (retry cooldown (6h after failed attempt))",
+    "Alcoyano|Mallorca (priced)",
+    "Portugalete|Real Uni\u00f3n Club (priced)",
+    "Real Madrid W|Inter Milano W (retry cooldown (6h after failed attempt))",
+    "El Salvador|Saint Martin (retry cooldown (6h after failed attempt))",
+    "NICARAGUA|MONTSERRAT (retry cooldown (6h after failed attempt))",
+    "CD Badajoz|CD Tenerife (priced)",
+    "ALCOYANO|MALLORCA (priced)",
+    "Al Adalah|Al-Orobah FC (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "ok",
+  "unmatched": [
+    "Mexico vs Jamaica (league not covered: CONCACAF Nations League)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: CONCACAF Nations League": 1
+  }
+}

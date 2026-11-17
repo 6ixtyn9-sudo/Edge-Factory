@@ -1,16 +1,16 @@
 autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
-BANK     60.3%   x0.603 of the initial base · 60.332 paper units
-CAPITAL  59.9% free / 0.4% reserved · 59.925 free / 0.407 reserved paper units
+BANK     59.9%   x0.599 of the initial base · 59.925 paper units
+CAPITAL  59.7% free / 0.3% reserved · 59.655 free / 0.270 reserved paper units
 
-RECORD   8W / 48L   (14.3% hit)   over 9 bet-days
-OPEN     1 held accas · 3 unresolved leg results
-PROFIT   -39.7% of capital · -39.668 paper units · ROI -60.5%
-DRAWDOWN 39.668 paper units / 39.7% (ticket-date marks; pending at cost)
-DAYS     9 bet / 6 no-bet · 0 missed freeze
+RECORD   8W / 49L   (14.0% hit)   over 10 bet-days
+OPEN     2 held accas · 4 unresolved leg results
+PROFIT   -40.1% of capital · -40.075 paper units · ROI -60.7%
+DRAWDOWN 40.075 paper units / 40.1% (ticket-date marks; pending at cost)
+DAYS     10 bet / 6 no-bet · 0 missed freeze
 
-BET-DAYS, oldest first (9 of 9)
+BET-DAYS, oldest first (10 of 10)
   Staked/returned/net cover settled accas only; pending stakes are separate.
   2026-11-02   0W/1L   staked    8.2%   returned    0.0%   net   -8.2%   pending    0.0%   bank*   91.8%
   2026-11-03   3W/5L   staked   15.2%   returned   12.9%   net   -2.3%   pending    0.0%   bank*   89.5%
@@ -20,15 +20,22 @@ BET-DAYS, oldest first (9 of 9)
   2026-11-07   0W/9L   staked    6.7%   returned    0.0%   net   -6.7%   pending    0.0%   bank*   60.4%
   2026-11-13   3W/2L   staked    0.2%   returned    0.2%   net   +0.0%   pending    0.0%   bank*   60.4%
   2026-11-14   1W/5L   staked    0.1%   returned    0.0%   net   -0.1%   pending    0.0%   bank*   60.3%
-  2026-11-17   0W/0L   staked    0.0%   returned       —   net       —   pending    0.4%   bank*   60.3%
+  2026-11-17   0W/1L   staked    0.4%   returned    0.0%   net   -0.4%   pending    0.0%   bank*   59.9%
+  2026-11-18   0W/0L   staked    0.0%   returned       —   net       —   pending    0.3%   bank*   59.9%
 
 HELD (not yet settled; stake counted as committed)
-  2026-11-17   ACCA #1 @137.150   stake 0.4% (0.406731 paper units)   HELD (not settled)
-      Receipt 20261117T074156690330Z / publication-local ticket 1
-      Japan vs Paraguay · 2026-11-17 15:10 SAST
-         Match Under 2.5 Goals @2.110
-      Singapore vs Brazil · 2026-11-17 12:00 SAST
-         Draw (1X2) @65.000
+  2026-11-18   ACCA #1 @55.555   stake 0.1% (0.113315 paper units)   HELD (not settled)
+      Receipt 20261117T223239688645Z / publication-local ticket 1
+      El Salvador vs Saint Martin · 2026-11-18 03:00 SAST
+         Draw (1X2) @5.000
+      Mexico vs Jamaica · 2026-11-18 04:30 SAST
+         Draw (1X2) @11.111
+  2026-11-18   ACCA #2 @85.466   stake 0.2% (0.156992 paper units)   HELD (not settled)
+      Receipt 20261117T223716185531Z / publication-local ticket 1
+      Mexico vs Jamaica · 2026-11-18 04:30 SAST
+         Draw (1X2) @11.111
+      NICARAGUA vs MONTSERRAT · 2026-11-18 05:00 SAST
+         Draw (1X2) @7.692
 
 SUPERSEDED BEFORE KICKOFF — released, not wins or losses
   2026-11-13 @35.775 · released 0.097512 paper units
@@ -43,16 +50,16 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 81 resolved selected observations / 56 fixtures · pool 130 resolved fixtures
-LEARNING last decision: 130 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+EVIDENCE 83 resolved selected observations / 58 fixtures · pool 142 resolved fixtures
+LEARNING last decision: 142 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
-FORWARD POOL: Brier 0.2041 → 0.2061 · log loss 0.5917 → 0.5965 (base → adjusted)
-        adjusted worse on both metrics; 130 fixtures / 2834 observations
-FORWARD SELECTED: Brier 0.2223 → 0.2319 · log loss 0.6421 → 0.6601 (base → adjusted)
-        adjusted worse on both metrics; 56 fixtures / 81 observations
+FORWARD POOL: Brier 0.2043 → 0.2060 · log loss 0.5925 → 0.5965 (base → adjusted)
+        adjusted worse on both metrics; 142 fixtures / 3012 observations
+FORWARD SELECTED: Brier 0.2190 → 0.2285 · log loss 0.6334 → 0.6512 (base → adjusted)
+        adjusted worse on both metrics; 58 fixtures / 83 observations
         Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
-PAIRED   130 fixtures / 2758 observations · Brier model 0.2067 / source 0.2044
+PAIRED   142 fixtures / 2936 observations · Brier model 0.2066 / source 0.2047
 
 DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
              Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.
