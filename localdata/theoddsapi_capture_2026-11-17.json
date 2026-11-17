@@ -1,70 +1,11 @@
 {
   "added": 0,
-  "attempted": 8,
-  "attempted_fixtures": [
-    {
-      "away": "Guatemala",
-      "date": "2026-11-17",
-      "home": "Canada",
-      "kickoff": "2026-11-17T01:00:00Z",
-      "league": "CONCACAF Nations League"
-    },
-    {
-      "away": "Antigua and Barbuda",
-      "date": "2026-11-17",
-      "home": "Trinidad and Tobago",
-      "kickoff": "2026-11-17T00:00:00Z",
-      "league": "CONCACAF Nations League"
-    },
-    {
-      "away": "Aruba",
-      "date": "2026-11-17",
-      "home": "Martinique",
-      "kickoff": "2026-11-17T00:00:00Z",
-      "league": "CONCACAF Nations League"
-    },
-    {
-      "away": "Syria",
-      "date": "2026-11-17",
-      "home": "United Arab Emirates",
-      "kickoff": "2026-11-17T14:10:00Z",
-      "league": "International Friendly Games"
-    },
-    {
-      "away": "Cayman Islands",
-      "date": "2026-11-17",
-      "home": "Dominica",
-      "kickoff": "2026-11-17T19:00:00Z",
-      "league": "CONCACAF Nations League"
-    },
-    {
-      "away": "Sint Maarten",
-      "date": "2026-11-17",
-      "home": "Belize",
-      "kickoff": "2026-11-17T19:00:00Z",
-      "league": "CONCACAF Nations League"
-    },
-    {
-      "away": "Australia",
-      "date": "2026-11-17",
-      "home": "Jordan",
-      "kickoff": "2026-11-17T16:00:00Z",
-      "league": "International Friendly Games"
-    },
-    {
-      "away": "Colombia",
-      "date": "2026-11-17",
-      "home": "Chile",
-      "kickoff": "2026-11-17T23:00:00Z",
-      "league": "International Friendly Games"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 43,
-  "captured_at": "2026-11-17T16:53:13+00:00",
+  "captured_at": "2026-11-17T19:53:02+00:00",
   "date": "2026-11-17",
-  "due_reasons": {
-    "first_at": 8
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -82,15 +23,18 @@
   "schema": 1,
   "skip_reasons": {
     "priced": 5,
-    "retry_cooldown": 30
+    "retry_cooldown": 38
   },
   "skipped": [
     "ARGENTINA|COSTA RICA (retry cooldown (6h after failed attempt))",
     "URUGUAY|DOMINICAN REPUB (retry cooldown (6h after failed attempt))",
+    "Canada|Guatemala (retry cooldown (6h after failed attempt))",
+    "Trinidad and Tobago|Antigua and Barbuda (retry cooldown (6h after failed attempt))",
     "ATLETICO NACIONAL|ONCE CALDAS (retry cooldown (6h after failed attempt))",
     "ECUADOR|BOLIVIA (retry cooldown (6h after failed attempt))",
     "RUSSIA|VENEZUELA (retry cooldown (6h after failed attempt))",
     "U. ARAB EMIRATE|SYRIA (retry cooldown (6h after failed attempt))",
+    "Martinique|Aruba (retry cooldown (6h after failed attempt))",
     "Malawi|Egypt (retry cooldown (6h after failed attempt))",
     "LUTON TOWN|PETERBOROUGH (retry cooldown (6h after failed attempt))",
     "HUNGARY|NORTH. IRELAND (retry cooldown (6h after failed attempt))",
@@ -105,8 +49,10 @@
     "ETHIOPIA|MOZAMBIQUE (retry cooldown (6h after failed attempt))",
     "GUINEA-BISSAU|MADAGASCAR (retry cooldown (6h after failed attempt))",
     "IRELAND|KOSOVO (retry cooldown (6h after failed attempt))",
+    "United Arab Emirates|Syria (retry cooldown (6h after failed attempt))",
     "ST. LUCIA|BARBADOS (retry cooldown (6h after failed attempt))",
     "CONGO|COMOROS (retry cooldown (6h after failed attempt))",
+    "Dominica|Cayman Islands (retry cooldown (6h after failed attempt))",
     "GAMBIA|IVORY COAST (retry cooldown (6h after failed attempt))",
     "INDIA|PAKISTAN (retry cooldown (6h after failed attempt))",
     "WALES|PORTUGAL (retry cooldown (6h after failed attempt))",
@@ -115,26 +61,16 @@
     "ISRAEL|AUSTRIA (retry cooldown (6h after failed attempt))",
     "Japan|Paraguay (retry cooldown (6h after failed attempt))",
     "Hungary|Northern Ireland (priced)",
+    "Belize|Sint Maarten (retry cooldown (6h after failed attempt))",
     "Bosnia and Herzegovina|Romania (priced)",
+    "Jordan|Australia (retry cooldown (6h after failed attempt))",
     "Bosnia & Herzegovina|Romania (priced)",
     "DENMARK|NORWAY (retry cooldown (6h after failed attempt))",
+    "Chile|Colombia (retry cooldown (6h after failed attempt))",
     "Ukraine|Georgia (priced)",
     "Poland|Sweden (priced)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Canada vs Guatemala (league not covered: CONCACAF Nations League)",
-    "Trinidad and Tobago vs Antigua and Barbuda (league not covered: CONCACAF Nations League)",
-    "Martinique vs Aruba (league not covered: CONCACAF Nations League)",
-    "United Arab Emirates vs Syria (league not covered: International Friendly Games)",
-    "Dominica vs Cayman Islands (league not covered: CONCACAF Nations League)",
-    "Belize vs Sint Maarten (league not covered: CONCACAF Nations League)",
-    "Jordan vs Australia (league not covered: International Friendly Games)",
-    "Chile vs Colombia (league not covered: International Friendly Games)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: CONCACAF Nations League": 5,
-    "league not covered: International Friendly Games": 3
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
