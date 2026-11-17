@@ -151,13 +151,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 201,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 30794,
-        "market_unsupported": 12441,
-        "no_pick_for_fixture": 3534
+        "fixture_key_miss": 34529,
+        "market_unsupported": 12441
       },
-      "op_matched": 2,
+      "op_matched": 0,
       "op_raw": 46970,
       "op_usable": 46970,
       "reason": null,
@@ -178,12 +177,12 @@
       "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 17,
+      "join_matched_rows": 14,
       "join_miss_counts": {
-        "fixture_key_miss": 13433,
-        "no_pick_for_fixture": 290
+        "fixture_key_miss": 13484,
+        "no_pick_for_fixture": 242
       },
-      "pa_matched": 72,
+      "pa_matched": 67,
       "pa_raw": 13740,
       "pa_scored": 13740,
       "reason": null,
@@ -193,7 +192,7 @@
       "zero_row_kind": null
     },
     "predictiq": {
-      "blocker": "convergent echo-candidate: zero voice credit permanently, never corroborates (SOURCE-HUNT-2026-10 section 5.5)",
+      "blocker": "convergent echo-candidate: zero voice credit permanently, never corroborates (docs/operator/SOURCES.md#predictiq)",
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,

@@ -1,5 +1,5 @@
 {
-  "attempted": 17,
+  "attempted": 16,
   "attempted_fixtures": [
     {
       "avg_p": 87.0,
@@ -53,16 +53,6 @@
     },
     {
       "avg_p": 72.0,
-      "away": "MADAGASCAR",
-      "date": "2026-11-17",
-      "home": "GUINEA-BISSAU",
-      "league": "AFN",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 72.0,
       "away": "KOSOVO",
       "date": "2026-11-17",
       "home": "IRELAND",
@@ -72,14 +62,24 @@
       "w_score": 0.574
     },
     {
-      "avg_p": 69.10560452816183,
-      "away": "Syria",
+      "avg_p": 66.6797731568998,
+      "away": "Portugal",
       "date": "2026-11-17",
-      "home": "United Arab Emirates",
-      "league": "International Friendly Games",
+      "home": "Wales",
+      "league": "UEFA Nations League",
       "market": "1x2",
-      "pick": "home",
+      "pick": "away",
       "w_score": 0.7021
+    },
+    {
+      "avg_p": 60.0,
+      "away": "PORTUGAL",
+      "date": "2026-11-17",
+      "home": "WALES",
+      "league": "EUN",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5716
     },
     {
       "avg_p": 54.03803090010634,
@@ -143,16 +143,6 @@
     },
     {
       "avg_p": 77.0,
-      "away": "VENEZUELA",
-      "date": "2026-11-17",
-      "home": "RUSSIA",
-      "league": "WNF",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 77.0,
       "away": "GEORGIA",
       "date": "2026-11-17",
       "home": "UKRAINE",
@@ -173,19 +163,19 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 14,
+  "be_cached": 15,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 14,
-  "candidate_fixtures": 35,
-  "captured_at": "2026-11-17T13:38:41.185076+00:00",
+  "cache_only": 15,
+  "candidate_fixtures": 28,
+  "captured_at": "2026-11-17T16:33:05.210293+00:00",
   "date": "2026-11-17",
-  "deferred_fixtures": 18,
+  "deferred_fixtures": 12,
   "errors": [],
-  "fixtures_with_rows": 15,
+  "fixtures_with_rows": 12,
   "market_budget_stop": false,
-  "market_requests": 11,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 187,
     "challenge_pages": 0,
@@ -201,7 +191,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 3,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 87.0,
@@ -235,16 +225,6 @@
     },
     {
       "avg_p": 72.0,
-      "away": "MADAGASCAR",
-      "date": "2026-11-17",
-      "home": "GUINEA-BISSAU",
-      "league": "AFN",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 72.0,
       "away": "KOSOVO",
       "date": "2026-11-17",
       "home": "IRELAND",
@@ -252,16 +232,6 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.574
-    },
-    {
-      "avg_p": 69.10560452816183,
-      "away": "Syria",
-      "date": "2026-11-17",
-      "home": "United Arab Emirates",
-      "league": "International Friendly Games",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7021
     },
     {
       "avg_p": 54.03803090010634,
@@ -325,16 +295,6 @@
     },
     {
       "avg_p": 77.0,
-      "away": "VENEZUELA",
-      "date": "2026-11-17",
-      "home": "RUSSIA",
-      "league": "WNF",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.574
-    },
-    {
-      "avg_p": 77.0,
       "away": "GEORGIA",
       "date": "2026-11-17",
       "home": "UKRAINE",
@@ -354,8 +314,8 @@
       "w_score": 0.5405
     }
   ],
-  "requests": 20,
-  "rows": 45,
+  "requests": 5,
+  "rows": 36,
   "schema": 1,
   "status": "ok"
 }
