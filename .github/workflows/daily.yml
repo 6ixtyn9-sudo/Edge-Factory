@@ -286,9 +286,29 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           python3 scripts/phase5_persistence.py persist --run-id "${{ github.run_id }}"
 
+      - name: Prepare lossless report recovery bundle
+        id: report_bundle
+        if: always()
+        continue-on-error: true
+        # Only byte-verified, published Git evidence may be referenced instead
+        # of uploaded. Cache-only shards/unpublished changes always ride along.
+        # If preparation fails, the next fallback preserves the original lane.
+        run: python3 scripts/phase5_persistence.py artifact-bundle --run-id "${{ github.run_id }}"
+
       - name: Upload Pick Ledgers & Reports as Artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.report_bundle.outcome == 'success'
+        with:
+          name: EdgeFactory-Reports
+          path: .cache/edgefactory-reports/**
+          if-no-files-found: error
+          # Text is losslessly gzip'd once; do not re-deflate receipt shards.
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload full report recovery fallback
+        uses: actions/upload-artifact@v4
+        if: always() && steps.report_bundle.outcome != 'success'
         with:
           name: EdgeFactory-Reports
           path: |
@@ -298,6 +318,9 @@ jobs:
             localdata/phase5_shadow/**
             localdata/phase5_activation/**
             localdata/phase5_reconciliation/**
+            localdata/autobets_ML_conflicts/**
+            localdata/archive/**
+            !localdata/replay_parity.json
           retention-days: 7
 
       - name: Upload Scored-Candidate Audit Ledgers
@@ -320,18 +343,18 @@ jobs:
         # as history grows. timeout-minutes + --parity-time-budget bound it;
         # together they still do NOT establish parity, and a green step
         # proves nothing about MATCH (continue-on-error stays true).
-        # 2026-11-15: the audit repeatedly spent its whole 5-minute wall clock
-        # (receipt scan + one slow shard read is un-budgeted between-receipt
-        # work). The graceful budget now expires well inside the wall so the
-        # usual exit is the harness's own budget-exhausted report instead of
-        # a killed step, and the wall costs 3 minutes, not 5.
+        # The harness now interrupts a single expensive receipt/result load,
+        # not only the gap between receipts. A separate 150s process deadline
+        # leaves room for a truthful summary before the 3-minute step wall.
+        # A current-run incomplete checkpoint replaces any cached PASS first.
         if: always() && inputs.mode != 'remine_only'
         timeout-minutes: 3
         continue-on-error: true
         run: |
           set +e
           mkdir -p localdata
-          PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
+          rm -f localdata/replay_parity.json localdata/replay_parity.json.tmp
+          PYTHONPATH=src timeout --signal=TERM --kill-after=10s 150s python3 scripts/replay_harness.py --decision-parity \
             --parity-window-days 7 \
             --parity-time-budget 120 \
             --parity-output localdata/replay_parity.json
@@ -340,10 +363,11 @@ jobs:
           if [ ! -f localdata/replay_parity.json ]; then
             echo '**AUDIT NOT PRODUCED** — the replay wrote no report (killed, or it failed before completion).' >> "$GITHUB_STEP_SUMMARY"
           else
-            status=$(python3 -c "import json;print(json.load(open('localdata/replay_parity.json')).get('status','UNKNOWN'))" 2>/dev/null || echo UNREADABLE)
+            status=$(python3 -c "import json,os; r=json.load(open('localdata/replay_parity.json')); e=r.get('execution',{}); print(r.get('status','UNKNOWN') if e.get('run_id')==os.environ.get('GITHUB_RUN_ID') and e.get('run_attempt')==os.environ.get('GITHUB_RUN_ATTEMPT') else 'STALE_OR_UNBOUND')" 2>/dev/null || echo UNREADABLE)
             case "$status" in
               PASS)   echo '**parity PASS for the audited window** (see scope; a narrow window is not full-history parity).' >> "$GITHUB_STEP_SUMMARY" ;;
               INCOMPLETE_TIME_BUDGET) echo '**AUDIT INCOMPLETE — time budget exhausted. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+              INCOMPLETE_INTERRUPTED) echo '**AUDIT INTERRUPTED — no completed verdict for this run. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
               FAIL)   echo '**AUDIT FAILED — a receipt replayed to a different ticket. This is NOT a MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
               *)      echo "**AUDIT STATUS: ${status}** — not a parity MATCH." >> "$GITHUB_STEP_SUMMARY" ;;
             esac
