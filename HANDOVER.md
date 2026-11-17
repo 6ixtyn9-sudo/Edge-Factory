@@ -1,5 +1,16 @@
 Edge Factory — Handover
 
+Receipt runtime/storage handoff — code PR plus manual workflow
+
+The runtime/storage code is committed separately from the live workflow because
+this integration cannot update `.github/workflows/daily.yml`. The complete
+replacement is `docs/operator/daily-runtime-storage.yml`; apply its contents to
+`.github/workflows/daily.yml` on main **after the code PR is merged**. Do not
+merge or dispatch a production run just to test this handoff. The code PR leaves
+all `.github/workflows/` files unchanged. Artifact-bundle wiring, the external
+replay deadline and workflow provenance checks remain pending manual application.
+See `docs/operator/runtime-storage-containment.md` for scope and validation.
+
 2026-10-27 addendum — decision-time replay through the existing ticket machinery
 
 - Authorized scope: "proceed using existing machinery". Main and ENH now share
@@ -66,19 +77,27 @@ Manual replay step for the existing daily workflow (after ticket generation):
 
 ```yaml
 - name: Ticket decision replay parity (read-only, flag never gate)
-  # CONTAINMENT, not a performance fix. A retained ENH decision receipt is a
-  # ~545-byte manifest over up to 21 shards (200-607 MB per day, 1.3 GB of JSON
-  # once materialised). Replaying every retained day is unbounded as history
-  # grows; run 42432286562 spent its final ~29 min here before the runner shut
-  # down. This bound stops the step ranaway-ing again. It does NOT establish
-  # parity, and a green step still proves nothing about MATCH.
+  # RUNS LAST, ON PURPOSE. This is a read-only audit of retained ENH
+  # decision receipts; it is now scheduled behind every durable write
+  # so that a shutdown signal here can no longer orphan a frozen card.
+  # CONTAINMENT, not a performance fix: a receipt is a ~545-byte
+  # manifest over up to 21 shards (200-607 MB per day, 1.3 GB of JSON
+  # once materialised), so replaying every retained day is unbounded
+  # as history grows. timeout-minutes + --parity-time-budget bound it;
+  # together they still do NOT establish parity, and a green step
+  # proves nothing about MATCH (continue-on-error stays true).
+  # The harness now interrupts a single expensive receipt/result load,
+  # not only the gap between receipts. A separate 150s process deadline
+  # leaves room for a truthful summary before the 3-minute step wall.
+  # A current-run incomplete checkpoint replaces any cached PASS first.
   if: always() && inputs.mode != 'remine_only'
   timeout-minutes: 3
   continue-on-error: true
   run: |
     set +e
     mkdir -p localdata
-    PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
+    rm -f localdata/replay_parity.json localdata/replay_parity.json.tmp
+    PYTHONPATH=src timeout --signal=TERM --kill-after=10s 150s python3 scripts/replay_harness.py --decision-parity \
       --parity-window-days 7 \
       --parity-time-budget 120 \
       --parity-output localdata/replay_parity.json
@@ -87,10 +106,11 @@ Manual replay step for the existing daily workflow (after ticket generation):
     if [ ! -f localdata/replay_parity.json ]; then
       echo '**AUDIT NOT PRODUCED** — the replay wrote no report (killed, or it failed before completion).' >> "$GITHUB_STEP_SUMMARY"
     else
-      status=$(python3 -c "import json;print(json.load(open('localdata/replay_parity.json')).get('status','UNKNOWN'))" 2>/dev/null || echo UNREADABLE)
+      status=$(python3 -c "import json,os; r=json.load(open('localdata/replay_parity.json')); e=r.get('execution',{}); print(r.get('status','UNKNOWN') if e.get('run_id')==os.environ.get('GITHUB_RUN_ID') and e.get('run_attempt')==os.environ.get('GITHUB_RUN_ATTEMPT') else 'STALE_OR_UNBOUND')" 2>/dev/null || echo UNREADABLE)
       case "$status" in
         PASS)   echo '**parity PASS for the audited window** (see scope; a narrow window is not full-history parity).' >> "$GITHUB_STEP_SUMMARY" ;;
         INCOMPLETE_TIME_BUDGET) echo '**AUDIT INCOMPLETE — time budget exhausted. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+        INCOMPLETE_INTERRUPTED) echo '**AUDIT INTERRUPTED — no completed verdict for this run. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
         FAIL)   echo '**AUDIT FAILED — a receipt replayed to a different ticket. This is NOT a MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
         *)      echo "**AUDIT STATUS: ${status}** — not a parity MATCH." >> "$GITHUB_STEP_SUMMARY" ;;
       esac

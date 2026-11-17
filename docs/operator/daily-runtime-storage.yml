@@ -1,0 +1,421 @@
+name: Autonomous Edge Factory 3-Hour Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Execution Mode'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - official_morning
+          - forecast_refresh
+          - clv_only
+          - remine_only
+          - recover_and_rebuild
+
+permissions:
+  contents: write
+
+concurrency:
+  group: edge-factory-main
+  cancel-in-progress: false
+
+jobs:
+  run-autonomous-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+      RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+      RAPIDAPI_KEYS: ${{ secrets.RAPIDAPI_KEYS || '' }}
+      PINNAPI_KEY: ${{ secrets.PINNAPI_KEY }}
+      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '20' }}
+      EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
+      EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+      EDGE_FACTORY_FOREBET_BROWSER: "off"
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
+      ODDS_API_REGIONS: ${{ secrets.ODDS_API_REGIONS || 'eu' }}
+      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals,alternate_totals,btts,team_totals,alternate_team_totals,double_chance' }}
+      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '0.5,1.5,2.5,3.5,4.5' }}
+      ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
+      ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
+      SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
+      SHARPAPI_ENDPOINT: ${{ secrets.SHARPAPI_ENDPOINT || '/api/v1/odds' }}
+      SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '1000' }}
+      SHARPAPI_LEAGUE: ${{ secrets.SHARPAPI_LEAGUE }}
+      SHARPAPI_KEY: ${{ secrets.SHARPAPI_KEY }}
+      ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
+      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
+      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '70' }}
+      EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
+      EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
+      EDGE_FACTORY_ENH_BOARD: '1'
+      EDGE_FACTORY_ENH_COHORT_PARITY: '1'
+      TZ: 'Africa/Johannesburg'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Resolve the requested branch AFTER the concurrency queue releases.
+          # The event SHA may predate the preceding run's state commit/cache.
+          ref: ${{ github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "supabase>=2.4,<3"
+
+      - name: Add swap space for memory-heavy ticket builds
+        # 2026-11-08 run #1272: the runner lost communication with the server
+        # 48m into `Enhancement tickets`, before any persist step ran, so the
+        # job failed with steps 16-23 pending and nothing was committed. The
+        # ENH decision receipt materialises ~1.3 GB of JSON at a measured peak
+        # RSS of 2.7 GB while the settlement index is resident. This is a
+        # survival buffer, not a performance fix: it turns an OOM kill into
+        # slow progress. It makes no audit or gate pass, and it changes no
+        # threshold, stake, bank or retained evidence.
+        run: |
+          # 2026-11-08 run #1274: the hosted image ALREADY has /swapfile open,
+          # so `fallocate` and the `dd` fallback both failed with "Text file
+          # busy" and `set -e` killed the job in the same second, skipping
+          # steps 6-17 so nothing was tested. This step now tolerates a
+          # pre-provisioned swap, uses its own path, and never fails the job
+          # for a reason that is not the build's fault.
+          set -e
+          echo "swap before:"
+          sudo swapon --show || true
+          free -m
+          if [ -n "$(sudo swapon --show --noheadings 2>/dev/null | tr -d '[:space:]')" ]; then
+            echo "swap already active; keeping the image-provided swap"
+            free -m
+            exit 0
+          fi
+          SWAP=/mnt/ef-swapfile
+          sudo swapoff "$SWAP" 2>/dev/null || true
+          sudo rm -f "$SWAP"
+          if ! sudo fallocate -l 6G "$SWAP"; then
+            echo "fallocate unavailable; falling back to dd"
+            sudo rm -f "$SWAP"
+            sudo dd if=/dev/zero of="$SWAP" bs=1M count=6144
+          fi
+          sudo chmod 600 "$SWAP"
+          sudo mkswap "$SWAP"
+          sudo swapon "$SWAP"
+          echo "swap after:"
+          sudo swapon --show
+          free -m
+
+      - name: Restore localdata State (Cache)
+        uses: actions/cache/restore@v4
+        with:
+          path: localdata
+          key: localdata-v2-${{ github.run_id }}
+          restore-keys: |
+            localdata-v2-
+
+      - name: Restore committed data (override stale cache)
+        run: |
+          set -e
+          python3 scripts/phase5_persistence.py restore
+          echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
+
+      - name: Invalidate the approved unplaced enhancement ticket
+        if: inputs.mode == 'recover_and_rebuild'
+        run: PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements --apply-unplaced-resets
+
+      - name: Stage current state before historical restore
+        id: history_stage
+        if: inputs.mode == 'recover_and_rebuild'
+        run: python3 scripts/phase5_persistence.py history-prepare
+
+      - name: Restore exact healthy prediction-history cache
+        id: history_reference
+        if: inputs.mode == 'recover_and_rebuild'
+        uses: actions/cache/restore@v4
+        with:
+          path: localdata
+          key: localdata-v2-39371954018
+
+      - name: Merge prediction history and restore current operational state
+        if: always() && inputs.mode == 'recover_and_rebuild' && steps.history_stage.outcome == 'success'
+        run: python3 scripts/phase5_persistence.py history-recover --reference-hit "${{ steps.history_reference.outputs.cache-hit || 'false' }}"
+
+      - name: Verify retained prediction history before mining or publication
+        run: python3 scripts/phase5_persistence.py history-check
+
+      - name: Recover, validate, activate and rebuild enhancement ticket
+        id: recovery
+        if: inputs.mode == 'recover_and_rebuild'
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 scripts/build_warehouse.py
+          PYTHONPATH=src python3 scripts/mine_consensus.py --activate
+          if python3 -c "import json,sys; d=json.load(open('localdata/edges_consensus.json')); sys.exit(0 if d.get('operating_contract') == 'post_forebet_v1' and any(e.get('contract_schema') == 'post_forebet_v1' and e.get('status') == 'certified' for e in d.get('edges', [])) else 1)"; then
+            PYTHONPATH=src python3 scripts/assay_purity.py
+            PYTHONPATH=src python3 scripts/decay_monitor.py
+          fi
+          PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements --rebuild-unplaced
+          PYTHONPATH=src python3 scripts/auto_tickets_grade.py --lane enh --no-settle
+          python3 scripts/phase5_persistence.py history-check
+
+      - name: Contract and replacement evidence in run summary
+        if: always() && inputs.mode == 'recover_and_rebuild'
+        env:
+          RECOVERY_OUTCOME: ${{ steps.recovery.outcome }}
+        run: |
+          python3 - <<'PY_EVIDENCE'
+          import json, os
+          from datetime import date
+          from pathlib import Path
+          root = Path('localdata')
+          root.mkdir(exist_ok=True)
+          outcome = os.environ.get('RECOVERY_OUTCOME', 'skipped')
+          slip = root / f'autobets_enh_tickets_{date.today().isoformat()}.txt'
+          if outcome != 'success' and not slip.exists():
+              slip.write_text('NO BET — recovery/validation incomplete; no replacement authorised.\nNo stake committed by this attempt.\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write(f'### Recovery and enhancement rebuild: {outcome}\n')
+              out.write('Current registry snapshot follows; research passes alone are not activation.\n')
+              try:
+                  registry = json.loads((root / 'edges_consensus.json').read_text())
+                  edges = [e for e in registry.get('edges', []) if e.get('contract_schema') == 'post_forebet_v1']
+                  out.write(f"Post-Forebet contracts: {len(edges)}; certified: {sum(e.get('status') == 'certified' for e in edges)}\n")
+                  for edge in edges:
+                      evidence = {k: edge.get(k) for k in ('contract_id', 'research_rule', 'status', 'sources', 'strategy', 'threshold', 'activated_as_of', 'train', 'valid', 'decay')}
+                      out.write('```json\n' + json.dumps(evidence, indent=2) + '\n```\n')
+              except (OSError, ValueError) as error:
+                  out.write(f'Registry unavailable: {type(error).__name__}\n')
+              if slip.exists():
+                  out.write('### Enhancement artifact (a newer frozen replacement is never overwritten)\n```text\n' + slip.read_text() + '\n```\n')
+          PY_EVIDENCE
+
+      - name: Execute Autonomous Smart Schedule
+        if: inputs.mode != 'recover_and_rebuild'
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" != "auto" ]; then
+            echo ">>> Executing explicit manual mode: ${{ inputs.mode }}"
+            if [ "${{ inputs.mode }}" = "official_morning" ]; then
+              PYTHONPATH=src python3 scripts/daily.py --force-repick
+            elif [ "${{ inputs.mode }}" = "forecast_refresh" ]; then
+              PYTHONPATH=src python3 scripts/daily.py --forecast-refresh
+            elif [ "${{ inputs.mode }}" = "clv_only" ]; then
+              PYTHONPATH=src python3 scripts/daily.py --clv-only
+            elif [ "${{ inputs.mode }}" = "remine_only" ]; then
+              PYTHONPATH=src python3 scripts/build_warehouse.py
+              PYTHONPATH=src python3 scripts/mine_consensus.py
+            fi
+          else
+            PYTHONPATH=src python3 scripts/daily.py --auto-once
+          fi
+
+      - name: Enhancement tickets (generate/freeze)
+        # MEASUREMENT, not mitigation. /usr/bin/time is the PARENT of the build,
+        # so it reports the child's rusage even when the child is SIGKILLed:
+        # "Maximum resident set size" plus "Command terminated by signal 9" is
+        # the line that decides OOM versus a blocked call. Runs #1272 and #1274
+        # both died inside this step and left the cause unknown.
+        if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
+        continue-on-error: true
+        run: |
+          echo "memory before enhancement build:"
+          free -m
+          PYTHONPATH=src /usr/bin/time -v python3 -u scripts/auto_tickets.py --enhancements
+          echo "memory after enhancement build:"
+          free -m
+          echo "swap after enhancement build:"
+          sudo swapon --show || true
+
+      - name: Enhancement performance report
+        if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
+        continue-on-error: true
+        run: |
+          PYTHONPATH=src python3 scripts/auto_tickets_grade.py --lane enh
+
+      - name: Phase 5 K-contract coverage (read-only diagnostic)
+        if: always() && inputs.mode != 'remine_only'
+        continue-on-error: true
+        run: |
+          PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
+
+      # ---------------------------------------------------------------
+      # DURABILITY BARRIER
+      # Everything ABOVE this line may still be a judgement call.
+      # Everything BELOW it is a read-only diagnostic that must never be
+      # able to delay, or be killed before, the writes that keep a frozen
+      # card. The run of 2026-11-08T07:00Z froze 2 ACCAs (MAIN @2.31/@2.03,
+      # ENH @2.26/@1.12) at ~08:50Z, entered the parity diagnostic at
+      # ~09:09Z, took a runner shutdown signal at 09:36Z, and lost the
+      # cache save, the git persist and both artifact uploads — steps that
+      # were queued behind the diagnostic. A cancelled step does not run
+      # later "always()" steps, so ordering is the only protection.
+      # This barrier does NOT protect against a kill during the mining
+      # phase before it, nor during the persist steps themselves.
+      # ---------------------------------------------------------------
+
+      - name: Final history completeness publication gate
+        if: inputs.mode != 'remine_only'
+        run: python3 scripts/phase5_persistence.py history-check
+
+      - name: Persist localdata State (Cache)
+        uses: actions/cache/save@v4
+        if: always() && inputs.mode != 'remine_only'
+        with:
+          path: localdata
+          key: localdata-v2-${{ github.run_id }}
+
+      - name: Persist pipeline state to git (single source of truth)
+        if: always() && inputs.mode != 'remine_only'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python3 scripts/phase5_persistence.py persist --run-id "${{ github.run_id }}"
+
+      - name: Prepare lossless report recovery bundle
+        id: report_bundle
+        if: always()
+        continue-on-error: true
+        # Only byte-verified, published Git evidence may be referenced instead
+        # of uploaded. Cache-only shards/unpublished changes always ride along.
+        # If preparation fails, the next fallback preserves the original lane.
+        run: python3 scripts/phase5_persistence.py artifact-bundle --run-id "${{ github.run_id }}"
+
+      - name: Upload Pick Ledgers & Reports as Artifacts
+        uses: actions/upload-artifact@v4
+        if: always() && steps.report_bundle.outcome == 'success'
+        with:
+          name: EdgeFactory-Reports
+          path: .cache/edgefactory-reports/**
+          if-no-files-found: error
+          # Text is losslessly gzip'd once; do not re-deflate receipt shards.
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload full report recovery fallback
+        uses: actions/upload-artifact@v4
+        if: always() && steps.report_bundle.outcome != 'success'
+        with:
+          name: EdgeFactory-Reports
+          path: |
+            localdata/*.txt
+            localdata/*.json
+            localdata/*.md
+            localdata/phase5_shadow/**
+            localdata/phase5_activation/**
+            localdata/phase5_reconciliation/**
+            localdata/autobets_ML_conflicts/**
+            localdata/archive/**
+            !localdata/replay_parity.json
+          retention-days: 7
+
+      - name: Upload Scored-Candidate Audit Ledgers
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Scored-Candidate-Audit-${{ github.run_id }}
+          path: |
+            localdata/scored_candidate_shadow_*.jsonl
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Ticket decision replay parity (read-only, flag never gate)
+        # RUNS LAST, ON PURPOSE. This is a read-only audit of retained ENH
+        # decision receipts; it is now scheduled behind every durable write
+        # so that a shutdown signal here can no longer orphan a frozen card.
+        # CONTAINMENT, not a performance fix: a receipt is a ~545-byte
+        # manifest over up to 21 shards (200-607 MB per day, 1.3 GB of JSON
+        # once materialised), so replaying every retained day is unbounded
+        # as history grows. timeout-minutes + --parity-time-budget bound it;
+        # together they still do NOT establish parity, and a green step
+        # proves nothing about MATCH (continue-on-error stays true).
+        # The harness now interrupts a single expensive receipt/result load,
+        # not only the gap between receipts. A separate 150s process deadline
+        # leaves room for a truthful summary before the 3-minute step wall.
+        # A current-run incomplete checkpoint replaces any cached PASS first.
+        if: always() && inputs.mode != 'remine_only'
+        timeout-minutes: 3
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p localdata
+          rm -f localdata/replay_parity.json localdata/replay_parity.json.tmp
+          PYTHONPATH=src timeout --signal=TERM --kill-after=10s 150s python3 scripts/replay_harness.py --decision-parity \
+            --parity-window-days 7 \
+            --parity-time-budget 120 \
+            --parity-output localdata/replay_parity.json
+          result=$?
+          echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f localdata/replay_parity.json ]; then
+            echo '**AUDIT NOT PRODUCED** — the replay wrote no report (killed, or it failed before completion).' >> "$GITHUB_STEP_SUMMARY"
+          else
+            status=$(python3 -c "import json,os; r=json.load(open('localdata/replay_parity.json')); e=r.get('execution',{}); print(r.get('status','UNKNOWN') if e.get('run_id')==os.environ.get('GITHUB_RUN_ID') and e.get('run_attempt')==os.environ.get('GITHUB_RUN_ATTEMPT') else 'STALE_OR_UNBOUND')" 2>/dev/null || echo UNREADABLE)
+            case "$status" in
+              PASS)   echo '**parity PASS for the audited window** (see scope; a narrow window is not full-history parity).' >> "$GITHUB_STEP_SUMMARY" ;;
+              INCOMPLETE_TIME_BUDGET) echo '**AUDIT INCOMPLETE — time budget exhausted. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+              INCOMPLETE_INTERRUPTED) echo '**AUDIT INTERRUPTED — no completed verdict for this run. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+              FAIL)   echo '**AUDIT FAILED — a receipt replayed to a different ticket. This is NOT a MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+              *)      echo "**AUDIT STATUS: ${status}** — not a parity MATCH." >> "$GITHUB_STEP_SUMMARY" ;;
+            esac
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$result"
+
+      - name: Retain replay parity report
+        # Step 24 runs AFTER the cache save and git persist by design: that
+        # ordering keeps a durability barrier between a frozen card and a
+        # read-only audit. The cost is that the audit's own output is never
+        # captured -- the report it writes dies with the runner. This step
+        # sits last, so it cannot delay or precede any write; it only makes
+        # the verdict readable once the runner is gone.
+        if: always() && inputs.mode != 'remine_only'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Replay-Parity-${{ github.run_id }}
+          path: localdata/replay_parity.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  regression-tests:
+    name: Regression tests (flag, never gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: pytest
+        run: PYTHONPATH=src python3 -m pytest tests/ -q

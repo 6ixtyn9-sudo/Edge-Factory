@@ -14,6 +14,7 @@ from edgefactory.util import ticket_receipt_path, ticket_receipt_bytes, ticket_r
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOW = ROOT / ".github" / "workflows" / "daily.yml"
+MANUAL_WORKFLOW = ROOT / "docs" / "operator" / "daily-runtime-storage.yml"
 LEDGER = "localdata/phase5_shadow/rows.jsonl"
 ATTEMPTS = "localdata/phase5_shadow/attempts.jsonl"
 
@@ -203,9 +204,14 @@ def test_concurrent_append_conflict_is_unioned_rebased_and_pushed(tmp_path):
     assert _git(repo, "status", "--short").stdout.strip() == ""
 
 
-def test_upload_artifact_patterns_cover_nested_phase5_evidence():
-    yaml = WORKFLOW.read_text(encoding="utf-8")
-    upload = yaml.split("- name: Upload Pick Ledgers & Reports as Artifacts", 1)[1]
+@pytest.mark.parametrize("workflow_path", [WORKFLOW, MANUAL_WORKFLOW])
+def test_upload_artifact_patterns_cover_nested_phase5_evidence(workflow_path):
+    # The live workflow is unchanged in this PR; also validate the supplied
+    # manual replacement without pretending it has already been deployed.
+    yaml = workflow_path.read_text(encoding="utf-8")
+    full_upload = ("Upload full report recovery fallback" if "- name: Upload full report recovery fallback" in yaml
+                   else "Upload Pick Ledgers & Reports as Artifacts")
+    upload = yaml.split("- name: " + full_upload, 1)[1]
     upload = upload.split("retention-days:", 1)[0]
     assert "localdata/*.json" in upload
     assert "localdata/phase5_shadow/**" in upload
@@ -544,12 +550,18 @@ def test_divergent_frozen_decisions_are_quarantined_not_auto_merged(tmp_path):
     assert [ticket_receipt_bytes(p) for p in ticket_receipt_files(repo / 'localdata','auto_tickets',conflicts=True)] == [cached]
 
 
-def test_operator_applied_decision_report_step_reuses_existing_artifacts_and_persistence(tmp_path):
+def test_documented_decision_report_step_preserves_existing_non_gating_contract(tmp_path):
     import yaml
-    # The operator applied the workflow separately; this PR does not edit it.
-    # Check the applied command, documented step and existing artifact coverage.
+    # Keep the documented manual step aligned with the workflow command and
+    # its explicitly incomplete statuses, never infer MATCH from a green job.
     doc = (ROOT / 'HANDOVER.md').read_text()
     step = yaml.safe_load(doc.split('```yaml\n', 1)[1].split('\n```', 1)[0])[0]
+    proposed = yaml.safe_load(MANUAL_WORKFLOW.read_text())
+    proposed_step = next(s for s in proposed['jobs']['run-autonomous-agent']['steps']
+                         if s['name'] == step['name'])
+    # YAML at EOF can omit the final shell newline; command contents must agree.
+    assert {**proposed_step, 'run': proposed_step['run'].rstrip('\n')} == {
+        **step, 'run': step['run'].rstrip('\n')}
     # The audit is windowed and bounded (2026-11-08): full-history replay grew
     # without limit as retained receipts accumulated. The step stays non-gating.
     for fragment in ('scripts/replay_harness.py --decision-parity',
@@ -637,7 +649,8 @@ def test_cross_format_draft_upgrade_still_requires_independent_financial_freeze(
     assert bool(ticket_receipt_files(base, 'auto_tickets', conflicts=True)) is not authorized
 
 
-def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_paths(tmp_path):
+@pytest.mark.parametrize("workflow_path", [WORKFLOW, MANUAL_WORKFLOW])
+def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_paths(tmp_path, workflow_path):
     from fnmatch import fnmatch
     from edgefactory.util import write_ticket_receipt
     repo = tmp_path / 'repo'
@@ -657,10 +670,11 @@ def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_pat
     relative = path.relative_to(repo).as_posix()
     assert _git(repo, 'check-ignore', '--no-index', '-q', relative, check=False).returncode == 1
     import yaml
-    workflow = yaml.safe_load(WORKFLOW.read_text())
+    workflow = yaml.safe_load(workflow_path.read_text())
     steps = workflow['jobs']['pipeline']['steps'] if 'pipeline' in workflow['jobs'] else next(iter(workflow['jobs'].values()))['steps']
-    report_step = next(s for s in steps if s.get('with', {}).get('name') == 'EdgeFactory-Reports')
-    assert any(fnmatch(relative, pattern) for pattern in report_step['with']['path'].splitlines())
+    report_steps = [s for s in steps if s.get('with', {}).get('name') == 'EdgeFactory-Reports']
+    assert any(fnmatch(relative, pattern)
+               for step in report_steps for pattern in step['with']['path'].splitlines())
     cache_steps = [s for s in steps if 'actions/cache' in s.get('uses', '')]
     assert any(any(fnmatch(relative, pattern.rstrip('/') + '/**') for pattern in s.get('with', {}).get('path', '').splitlines()) for s in cache_steps)
 
@@ -1054,20 +1068,9 @@ def test_exact_snapshot_approval_recovers_only_original_freeze_without_money_cha
     before = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
     module.restore_committed_localdata(repo)
     after = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
-    if multipart:
-        # *.part-* shards are out of history since the 2026-11 baseline, so a
-        # second restore may surface out-of-HEAD shards as a retained, visible
-        # conflict set instead of silently re-deriving them. What must not
-        # move: every TRACKED byte, the readable frozen receipt, and the money
-        # fields asserted above.
-        tracked = set(_git(repo, 'ls-files', 'localdata').stdout.splitlines())
-        in_lane = lambda m: {p: b for p, b in m.items()              # noqa: E731
-                             if p.relative_to(repo).as_posix() in tracked}
-        assert in_lane(before) == in_lane(after)
-        assert util.ticket_receipt_bytes(canonical) == original
-        assert json.loads((repo / relative).read_bytes())['frozen_by_date'] == cache['frozen_by_date']
-    else:
-        assert before == after
+    assert before == after
+    assert util.ticket_receipt_bytes(canonical) == original
+    assert json.loads((repo / relative).read_bytes())['frozen_by_date'] == cache['frozen_by_date']
 
 
 @pytest.mark.parametrize('damage', ['unbound', 'before', 'after', 'bad_hash', 'missing_before',
@@ -1431,3 +1434,60 @@ def test_committed_leg_backfills_do_not_relax_financial_restore(tmp_path, lane, 
             persistence._retain_financial_state(repo, relative)
     # Projection is read-only; even rejected evidence survives for investigation.
     assert json.loads(path.read_text()) == cache
+
+
+def test_cache_only_parts_are_verified_against_committed_manifest_without_conflict_copies(tmp_path, monkeypatch, capsys):
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    _seed_repo(tmp_path)
+    module = _persistence_module()
+    path = util.ticket_receipt_path(tmp_path / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    original = _large_decision_blob()
+    util.write_ticket_receipt(path, original)
+    _git(tmp_path, 'add', str(path.relative_to(tmp_path)))
+    _git(tmp_path, 'commit', '-qm', 'manifest in Git, shards deliberately only in cache')
+    before = {p: p.read_bytes() for p in path.parent.iterdir()}
+    decode, calls = module.ticket_receipt_bytes, []
+    def counting(*args, **kwargs):
+        calls.append(args[0])
+        return decode(*args, **kwargs)
+    monkeypatch.setattr(module, 'ticket_receipt_bytes', counting)
+    for _ in range(2):
+        retained = module._retain_ticket_decisions(tmp_path, {})
+        assert retained[path.relative_to(tmp_path).as_posix()] == path.read_bytes()
+        assert not any('.part-' in key for key in retained)  # not duplicated in RAM
+    assert len(calls) == 2  # one decompression, not two, on each restore
+    assert 'conflict' not in capsys.readouterr().out.lower()
+    assert {p: p.read_bytes() for p in path.parent.iterdir()} == before
+    assert util.ticket_receipt_bytes(path) == original
+
+
+@pytest.mark.parametrize('damage', ['missing', 'corrupt', 'payload_hash', 'context'])
+def test_cache_only_parts_never_relax_missing_corrupt_or_signed_payload_checks(tmp_path, monkeypatch, capsys, damage):
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    _seed_repo(tmp_path)
+    path = util.ticket_receipt_path(tmp_path / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    original = _large_decision_blob()
+    if damage in {'payload_hash', 'context'}:
+        payload = json.loads(original)
+        if damage == 'payload_hash':
+            payload['sha256'] = '0' * 64
+        else:
+            payload.pop('sha256')
+            payload['context']['lane'] = 'enh'
+            import hashlib
+            payload['sha256'] = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        original = json.dumps(payload).encode()
+    util.write_ticket_receipt(path, original)
+    _git(tmp_path, 'add', str(path.relative_to(tmp_path)))
+    _git(tmp_path, 'commit', '-qm', 'manifest without Git shards')
+    if damage in {'missing', 'corrupt'}:
+        part = next(path.parent.glob(path.name + '.part-*'))
+        if damage == 'missing':
+            part.unlink()
+        else:
+            part.write_bytes(b'damaged shard evidence')
+    _persistence_module()._retain_ticket_decisions(tmp_path, {})
+    assert 'conflict' in capsys.readouterr().out.lower()
+    assert util.ticket_receipt_files(tmp_path / 'localdata', 'auto_tickets', conflicts=True)

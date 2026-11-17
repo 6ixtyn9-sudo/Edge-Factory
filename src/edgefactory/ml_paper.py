@@ -37,6 +37,7 @@ import math
 import os
 import tempfile
 from collections import Counter, defaultdict
+from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from heapq import heappush, heapreplace
@@ -59,6 +60,7 @@ from .enh_registry import (
 from .identity import source_team_key, squad_marker_mismatch
 from .odds_normalization import parse_zoned_timestamp
 from .util import dated_artifact_path, norm_team
+from .step_timing import timed
 
 SCHEMA = "autobets_ML_v2"
 READABLE_SCHEMAS = {"autobets_ML_v1", SCHEMA}
@@ -465,12 +467,13 @@ def validate_record(row, day, *, draft=False):
     _validate_admission(row)
 
 
+@timed("ml_paper.receipts: read and validate frozen history")
 def receipts(root):
     """Corrupt evidence is an error, never an empty/reset performance history."""
     if (Path(root) / f"{PREFIX}_integrity_block.json").exists():
         raise ValueError("autobets_ML evidence conflict; paper lane blocked, live lanes unchanged")
     result = {}
-    blobs = {}
+    storage_ids = {}  # do not retain another full-history copy of the raw JSON
     for path in receipt_files(root):
         try:
             blob = path.read_bytes()
@@ -482,24 +485,35 @@ def receipts(root):
             path = receipt_path(root, path.stem.removeprefix(f"{PREFIX}_"))
             blob = path.read_bytes()  # absence still fails closed, never empty history
         row = json.loads(blob)
-        unsigned = {k: v for k, v in row.items() if k != "sha256"}
         day = path.stem.removeprefix(f"{PREFIX}_")[:10]
         canonical = (rolling_receipt_path(root, row) if row.get("freeze_basis") == ROLLING_FREEZE
                      else receipt_path(root, day))
         if (
             row.get("schema") not in READABLE_SCHEMAS
-            or row.get("sha256") != digest(unsigned)
             or row.get("date") != day
             or path not in (canonical, Path(root) / canonical.name)
         ):
             raise ValueError(f"invalid ML paper receipt: {path.name}")
-        validate_record(row, row["date"])
+        try:
+            validate_record(row, row["date"])
+        except ValueError as exc:
+            raise ValueError(f"invalid ML paper receipt: {path.name}: {exc}") from exc
         day = (row["date"], row.get("decision_id", ""))
-        if day in blobs and blobs[day] != blob:
+        storage_id = (len(blob), hashlib.sha256(blob).digest())
+        if day in storage_ids and storage_ids[day] != storage_id:
             raise ValueError(f"conflicting ML paper receipt layouts: {day}")
-        blobs[day] = blob
+        storage_ids[day] = storage_id
         result[day] = row
-    ordered = sorted(result.values(), key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
+    return _validate_history(result.values())
+
+
+def _validate_history(rows):
+    """Cross-record checks after every individual receipt has been validated.
+
+    Restore can use a compact projection (no model/candidate graph) without
+    replaying every frozen forecast twice. This is not a record validator.
+    """
+    ordered = sorted(rows, key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
     superseded = _superseded_accas(ordered)
     by_sha = {row["sha256"]: row for row in ordered}
     released_by = defaultdict(list)
@@ -539,12 +553,20 @@ def receipts(root):
     return ordered
 
 
-def _migrate_frozen_receipts(root):
-    """Caller holds the lane lock. Validate everything before moving exact bytes."""
-    receipts(root)  # corruption, conflicts and integrity blocks must never disappear
+def _migrate_frozen_receipts(root, *, _history=None):
+    """Caller holds the lane lock. Validate before moving; no scan for a no-op.
+
+    _history is the current operation's already validated snapshot, never a
+    persisted cache or a caller-supplied substitute for an evidence check.
+    """
     root = Path(root)
+    legacy_files = sorted(root.glob(f"{PREFIX}_????-??-??.json"))
+    if not legacy_files:
+        return 0
+    if _history is None:
+        receipts(root)  # corruption/conflicts must not disappear during a move
     moved = 0
-    for legacy in sorted(root.glob(f"{PREFIX}_????-??-??.json")):
+    for legacy in legacy_files:
         blob = legacy.read_bytes()
         day = legacy.stem.removeprefix(f"{PREFIX}_")
         destination = receipt_path(root, day)
@@ -568,7 +590,8 @@ def migrate_receipts(root):
         return 0
     with (root / f".{PREFIX}.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        return _migrate_frozen_receipts(root)
+        history = receipts(root)
+        return _migrate_frozen_receipts(root, _history=history)
 
 
 def hit(market, selection, hs, gs):
@@ -3058,138 +3081,139 @@ def _validate_rolling_record(row, captured):
 
 def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                     min_leg_odds=1.0, now=None, index=None):
-    """Next-24h PAPER decisions at every existing run; no daily clock gate.
+    """Next-24h PAPER decisions; one locked, validated history per operation."""
+    with paper_run(root) as operation:
+        return operation.capture_rolling(
+            context, score_lookup=score_lookup, kickoff_fn=kickoff_fn,
+            source_guard=source_guard, min_leg_odds=min_leg_odds, now=now, index=index)
 
-    Never edits old receipts, spends live capital, or invents future inputs.
-    Quarter-Kelly remains unchanged; remaining aggregate commitment headroom
-    can only reduce a new allocation. Pending fixtures may reuse residual budget;
-    settled fixtures never re-enter.
+
+def _capture_rolling(context, *, root, history, score_lookup, kickoff_fn, source_guard,
+                     min_leg_odds=1.0, now=None, index=None):
+    """Caller holds paper_run's lock and supplies its freshly validated history.
+
+    Decision, learning, freshness and stake rules below are unchanged. Never
+    edits old receipts, spends live capital, or invents future inputs.
     """
     clock = (lambda: now) if now is not None else (lambda: datetime.now(UTC))
-    root = Path(root)
-    root.mkdir(parents=True, exist_ok=True)
-    with (root / f".{PREFIX}.lock").open("a") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        _migrate_frozen_receipts(root)
-        captured = clock()
-        day = captured.astimezone(LOCAL_TZ).date().isoformat()
-        _recover_acknowledged_state(root, day, captured)
-        _read_state(root)  # corruption is not permission to restart paper capital
-        _migrate_legacy_drafts(root)
-        built = parse_zoned_timestamp(context.get("build_at"))
-        if (built is None or not timedelta(0) <= captured - built <= timedelta(minutes=5)
-                or not isinstance(context.get("slate"), list)):
-            return None  # missing context never seals a fictitious daily NO BET
-        history = receipts(root)
-        if any(parse_zoned_timestamp(r["persisted_at"]) > captured for r in history):
-            raise ValueError("future paper evidence cannot fund a rolling decision")
-        report = performance(history, score_lookup)
-        prior_open = _prior_open_fixture_micro_units(report)
-        fixture_limit = _fixture_limit_micro_units(report["paper_bank_units"])
-        # Never reopen settled evidence (including an acca already lost with
-        # unresolved other legs). Pending fixtures may reuse residual budget.
-        settled = {tuple(c["fixture"]) for r in report["history"] for a in r["accas"]
-                   if a["profit_units"] is not None for c in a["legs"]}
-        end = captured + timedelta(hours=24)
-        eligible = defaultdict(list)
-        rejected = Counter()
-        for row in context["slate"]:
-            kickoff = kickoff_fn(row) if isinstance(row, dict) else None
-            if kickoff is None or not captured + MIN_LEAD <= kickoff <= end:
-                rejected["outside_rolling_window_or_unproven_kickoff"] += 1
-                continue
-            fixture_day = kickoff.astimezone(LOCAL_TZ).date().isoformat()
-            fixture = (fixture_day, source_team_key(row.get("home")), source_team_key(row.get("away")))
-            if fixture in settled:
-                rejected["previously_settled_fixture"] += 1
-                continue
-            if prior_open.get(fixture, 0) >= fixture_limit:
-                rejected["fixture_budget_exhausted"] += 1
-                continue
-            if row.get("date") != fixture_day:
-                rejected["fixture_date_unproven"] += 1
-                continue
-            eligible[fixture_day].append(row)
-        rows, models = [], {}
-        for fixture_day, slate in sorted(eligible.items()):
-            quotes = index if index is not None else load_prices_index(root.parent, fixture_day)
-            found, bound_models, failures = candidates(
-                slate, fixture_day, captured, quotes, kickoff_fn=kickoff_fn,
-                source_guard=source_guard, min_leg_odds=min_leg_odds, freeze_at=captured, rolling=True)
-            rows.extend(found)
-            models.update(bound_models)
-            rejected.update(failures)
-        learner = learn(history, captured, score_lookup)
-        apply_learning(rows, learner)
-        if captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF:
-            apply_admission(rows, learner)
-        available = max(0.0, report["paper_free_units"])
-        if not rows and history:
-            return None  # no new eligible opportunity, not another daily seal
-        search = {}
-        # Timestamp AFTER search/sizing and recheck every guard at publication.
-        # If a slow search crosses expiry, rebuild only the surviving candidates.
-        for _ in range(3):
-            plan, concentration_audit = _size_publication_accas(rows, report, search)
-            persisted = clock()
-            if persisted < captured or persisted.astimezone(LOCAL_TZ).date().isoformat() != day:
-                return None
-            final_rows = [c for c in rows
-                          if persisted - parse_zoned_timestamp(c["price_at"]) <= _quote_max_age(c["price_source"])
-                          and persisted + MIN_LEAD <= parse_zoned_timestamp(c["kickoff_utc"]) <= end]
-            if len(final_rows) == len(rows):
-                break
-            rejected["quote_or_kickoff_expired_during_build"] += len(rows) - len(final_rows)
-            rows = final_rows
-        else:
-            return None  # continuously expiring inputs are not publishable
-        snapshot = digest({
-            "date": day, "candidates": [{k: v for k, v in c.items()
-                if not k.startswith("price_age_seconds_")} for c in rows],
-            "learning": learner, "bank": report["paper_bank_units"],
-            "committed": report["paper_committed_units"], "rejections": dict(rejected),
-            # Policy/prior exposure participate in deduplication identity. Equal
-            # bank totals do not imply equal per-fixture residual budgets.
-            "fixture_concentration": {
-                "policy": _fixture_concentration_policy(report["paper_bank_units"]),
-                "prior_open_fixture_micro_units": [
-                    [e["fixture"], e["prior_open_stake_micro_units"]]
-                    for e in concentration_audit["fixtures"]
-                    if e["prior_open_stake_micro_units"]
-                ],
-            },
-        })
-        if any(r.get("snapshot_sha256") == snapshot for r in history):
+    captured = clock()
+    day = captured.astimezone(LOCAL_TZ).date().isoformat()
+    _recover_acknowledged_state(root, day, captured)
+    _read_state(root)  # corruption is not permission to restart paper capital
+    _migrate_legacy_drafts(root)
+    built = parse_zoned_timestamp(context.get("build_at"))
+    if (built is None or not timedelta(0) <= captured - built <= timedelta(minutes=5)
+            or not isinstance(context.get("slate"), list)):
+        return None  # missing context never seals a fictitious daily NO BET
+    if any(parse_zoned_timestamp(r["persisted_at"]) > captured for r in history):
+        raise ValueError("future paper evidence cannot fund a rolling decision")
+    report = _performance(history, score_lookup, check_bets=False)
+    prior_open = _prior_open_fixture_micro_units(report)
+    fixture_limit = _fixture_limit_micro_units(report["paper_bank_units"])
+    # Never reopen settled evidence (including an acca already lost with
+    # unresolved other legs). Pending fixtures may reuse residual budget.
+    settled = {tuple(c["fixture"]) for r in report["history"] for a in r["accas"]
+               if a["profit_units"] is not None for c in a["legs"]}
+    end = captured + timedelta(hours=24)
+    eligible = defaultdict(list)
+    rejected = Counter()
+    for row in context["slate"]:
+        kickoff = kickoff_fn(row) if isinstance(row, dict) else None
+        if kickoff is None or not captured + MIN_LEAD <= kickoff <= end:
+            rejected["outside_rolling_window_or_unproven_kickoff"] += 1
+            continue
+        fixture_day = kickoff.astimezone(LOCAL_TZ).date().isoformat()
+        fixture = (fixture_day, source_team_key(row.get("home")), source_team_key(row.get("away")))
+        if fixture in settled:
+            rejected["previously_settled_fixture"] += 1
+            continue
+        if prior_open.get(fixture, 0) >= fixture_limit:
+            rejected["fixture_budget_exhausted"] += 1
+            continue
+        if row.get("date") != fixture_day:
+            rejected["fixture_date_unproven"] += 1
+            continue
+        eligible[fixture_day].append(row)
+    rows, models = [], {}
+    for fixture_day, slate in sorted(eligible.items()):
+        quotes = index if index is not None else load_prices_index(root.parent, fixture_day)
+        found, bound_models, failures = candidates(
+            slate, fixture_day, captured, quotes, kickoff_fn=kickoff_fn,
+            source_guard=source_guard, min_leg_odds=min_leg_odds, freeze_at=captured, rolling=True)
+        rows.extend(found)
+        models.update(bound_models)
+        rejected.update(failures)
+    learner = learn(history, captured, score_lookup)
+    apply_learning(rows, learner)
+    if captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF:
+        apply_admission(rows, learner)
+    available = max(0.0, report["paper_free_units"])
+    if not rows and history:
+        return None  # no new eligible opportunity, not another daily seal
+    search = {}
+    # Timestamp AFTER search/sizing and recheck every guard at publication.
+    # If a slow search crosses expiry, rebuild only the surviving candidates.
+    for _ in range(3):
+        plan, concentration_audit = _size_publication_accas(rows, report, search)
+        persisted = clock()
+        if persisted < captured or persisted.astimezone(LOCAL_TZ).date().isoformat() != day:
             return None
-        for c in rows:
-            c["price_age_seconds_at_freeze"] = (persisted - parse_zoned_timestamp(c["price_at"])).total_seconds()
-        receipt = {
-            "schema": SCHEMA, "date": day, "mode": "paper_only_no_real_stakes",
-            "decision_id": captured.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ"),
-            "captured_at": captured.isoformat(), "persisted_at": persisted.isoformat(),
-            "frozen_at": persisted.isoformat(), "freeze_at": persisted.isoformat(),
-            "freeze_basis": ROLLING_FREEZE, "window_start": captured.isoformat(), "window_end": end.isoformat(),
-            "prior_receipt_sha256s": [r["sha256"] for r in history],
-            "snapshot_sha256": snapshot, "status": "paper_accas" if plan else "no_paper_bet",
-            "paper_available_at_decision": available, "paper_bank_at_decision": report["paper_bank_units"],
-            "paper_pending_reserved_at_decision": report["paper_committed_units"],
-            "candidates": rows, "models": models, "learning": learner, "accas": plan,
-            "fixture_concentration": concentration_audit,
-            "search": search, "rejections": dict(rejected),
-            "coverage": {"candidate_count": len(rows), "candidate_fixtures": len({tuple(c["fixture"]) for c in rows}),
-                         "slate_rows": len(context["slate"]), "status": "inputs_available" if rows else "input_starved_not_strategy_selectivity"},
-            "policy": {"window_hours": 24, "kelly_multiplier": KELLY_MULTIPLIER,
-                       **({"admission": ADMISSION_POLICY} if "admission" in learner else {}),
-                       "max_aggregate_bank_exposure": MAX_PAPER_EXPOSURE, "odds_band": None,
-                       "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
-                       "stricter_source_limits_retained": True, "minimum_legs": 2,
-                       "oddspapi_min_schema_version": ODDSPAPI_MIN_SCHEMA_VERSION,
-                       "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
-                       "fixture_concentration": _fixture_concentration_policy(
-                           report["paper_bank_units"])},
-        }
-        receipt["sha256"] = digest(receipt)
-        return receipt if _publish_receipt(rolling_receipt_path(root, receipt), receipt) else None
+        final_rows = [c for c in rows
+                      if persisted - parse_zoned_timestamp(c["price_at"]) <= _quote_max_age(c["price_source"])
+                      and persisted + MIN_LEAD <= parse_zoned_timestamp(c["kickoff_utc"]) <= end]
+        if len(final_rows) == len(rows):
+            break
+        rejected["quote_or_kickoff_expired_during_build"] += len(rows) - len(final_rows)
+        rows = final_rows
+    else:
+        return None  # continuously expiring inputs are not publishable
+    snapshot = digest({
+        "date": day, "candidates": [{k: v for k, v in c.items()
+            if not k.startswith("price_age_seconds_")} for c in rows],
+        "learning": learner, "bank": report["paper_bank_units"],
+        "committed": report["paper_committed_units"], "rejections": dict(rejected),
+        # Policy/prior exposure participate in deduplication identity. Equal
+        # bank totals do not imply equal per-fixture residual budgets.
+        "fixture_concentration": {
+            "policy": _fixture_concentration_policy(report["paper_bank_units"]),
+            "prior_open_fixture_micro_units": [
+                [e["fixture"], e["prior_open_stake_micro_units"]]
+                for e in concentration_audit["fixtures"]
+                if e["prior_open_stake_micro_units"]
+            ],
+        },
+    })
+    if any(r.get("snapshot_sha256") == snapshot for r in history):
+        return None
+    for c in rows:
+        c["price_age_seconds_at_freeze"] = (persisted - parse_zoned_timestamp(c["price_at"])).total_seconds()
+    receipt = {
+        "schema": SCHEMA, "date": day, "mode": "paper_only_no_real_stakes",
+        "decision_id": captured.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ"),
+        "captured_at": captured.isoformat(), "persisted_at": persisted.isoformat(),
+        "frozen_at": persisted.isoformat(), "freeze_at": persisted.isoformat(),
+        "freeze_basis": ROLLING_FREEZE, "window_start": captured.isoformat(), "window_end": end.isoformat(),
+        "prior_receipt_sha256s": [r["sha256"] for r in history],
+        "snapshot_sha256": snapshot, "status": "paper_accas" if plan else "no_paper_bet",
+        "paper_available_at_decision": available, "paper_bank_at_decision": report["paper_bank_units"],
+        "paper_pending_reserved_at_decision": report["paper_committed_units"],
+        "candidates": rows, "models": models, "learning": learner, "accas": plan,
+        "fixture_concentration": concentration_audit,
+        "search": search, "rejections": dict(rejected),
+        "coverage": {"candidate_count": len(rows), "candidate_fixtures": len({tuple(c["fixture"]) for c in rows}),
+                     "slate_rows": len(context["slate"]), "status": "inputs_available" if rows else "input_starved_not_strategy_selectivity"},
+        "policy": {"window_hours": 24, "kelly_multiplier": KELLY_MULTIPLIER,
+                   **({"admission": ADMISSION_POLICY} if "admission" in learner else {}),
+                   "max_aggregate_bank_exposure": MAX_PAPER_EXPOSURE, "odds_band": None,
+                   "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
+                   "stricter_source_limits_retained": True, "minimum_legs": 2,
+                   "oddspapi_min_schema_version": ODDSPAPI_MIN_SCHEMA_VERSION,
+                   "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
+                   "fixture_concentration": _fixture_concentration_policy(
+                       report["paper_bank_units"])},
+    }
+    receipt["sha256"] = digest(receipt)
+    return receipt if _publish_receipt(rolling_receipt_path(root, receipt), receipt) else None
 
 
 def source_forecast_probability(candidate):
@@ -3378,6 +3402,12 @@ def calibration_diagnostics(history, score_lookup):
 
 
 def performance(history, score_lookup):
+    """Validate supplied records, then grade; arbitrary callers remain fail-closed."""
+    return _performance(history, score_lookup, check_bets=True)
+
+
+@timed("ml_paper.performance: grade and diagnostics")
+def _performance(history, score_lookup, *, check_bets):
     """Own acca/unit ROI, drawdown, Brier error and market/bucket diagnostics.
 
     Exact regulation outcomes only. Missing/ambiguous scores stay pending.
@@ -3395,7 +3425,8 @@ def performance(history, score_lookup):
     superseded = _superseded_accas(history)
     superseded_tickets = 0
     for receipt in history:
-        _validate_bets(receipt)
+        if check_bets:
+            _validate_bets(receipt)
         daily = []
         for acca_index, acca in enumerate(receipt["accas"], 1):
             if (receipt.get("sha256"), acca_index) in superseded:
@@ -4002,8 +4033,12 @@ def render_performance(report):
 def latest_card(root, *, now=None):
     """Current draft/frozen card for adjacent display; never selects or settles."""
     now = now or datetime.now(LOCAL_TZ)
+    return _latest_card(root, receipts(root), now=now)
+
+
+def _latest_card(root, history, *, now=None):
+    now = now or datetime.now(LOCAL_TZ)
     today = now.astimezone(LOCAL_TZ).date().isoformat()
-    history = receipts(root)
     if history and history[-1].get("freeze_basis") == ROLLING_FREEZE:
         return history[-1]
     if state_path(root).exists() and not has_receipt(root, today):
@@ -4028,10 +4063,14 @@ def render_latest_card(root, report=None, *, card=None):
 
 
 def publish(root, score_lookup):
-    """Sibling card/performance files, read by the same existing lane-report CLI."""
-    migrate_receipts(root)
-    history = receipts(root)
-    report = performance(history, score_lookup)
+    """Sibling reports from one checked snapshot; no global/disk validation cache."""
+    with paper_run(root) as operation:
+        return operation.publish(score_lookup)
+
+
+def _publish(root, history, score_lookup):
+    """Render only: caller owns the lock and has fully validated this history."""
+    report = _performance(history, score_lookup, check_bets=False)
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     (root / f"{PREFIX}_performance.json").write_text(json.dumps(report, indent=2, allow_nan=False))
@@ -4046,7 +4085,69 @@ def publish(root, score_lookup):
             audit_path = root / RECEIPT_DIR / "reports" / f"{PREFIX}_{latest_day}_audit.txt"
             audit_path.parent.mkdir(parents=True, exist_ok=True)
             audit_path.write_text(render_daily_card(daily, report, audit=True))
-    card = latest_card(root)
+    card = _latest_card(root, history)
     if card is not None and card.get("freeze_basis") != ROLLING_FREEZE:
         dated_artifact_path(root, f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
     return report
+
+
+class _PaperRun:
+    """Short-lived snapshot, private to a locked capture/report operation.
+
+    No verdict or parsed graph survives the operation. Every new operation
+    rereads and validates all on-disk evidence, including integrity blocks.
+    Public performance() still validates caller-provided/mutated dictionaries.
+    """
+
+    def __init__(self, root, history):
+        self.root = root
+        self._history = history
+
+    def _checked_history(self):
+        if self._history is None:
+            raise RuntimeError("paper operation is closed")
+        return self._history
+
+    def capture_rolling(self, context, **kwargs):
+        history = self._checked_history()
+        row = _capture_rolling(context, root=self.root, history=history, **kwargs)
+        if row is not None:
+            # _publish_receipt has fully validated this new immutable record.
+            history.append(row)
+        return row
+
+    def publish(self, score_lookup):
+        return _publish(self.root, self._checked_history(), score_lookup)
+
+    def latest_card(self, *, now=None):
+        return _latest_card(self.root, self._checked_history(), now=now)
+
+    def render_latest_card(self, report=None, *, card=None):
+        history = self._checked_history()
+        card = self.latest_card() if card is None else card
+        if card is None:
+            return ""
+        if card.get("freeze_basis") != ROLLING_FREEZE:
+            return render_card(card)
+        return render_daily_card([r for r in history if r["date"] == card["date"]], report)
+
+
+@contextmanager
+def paper_run(root):
+    """One validation/read for capture + grade + display under the PAPER lock.
+
+    Scoped reuse is not a validation waiver: no unvalidated history enters
+    this object and none is reused after releasing the lock. Standalone readers
+    remain read-only and standalone capture/publication use this same path.
+    """
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    with (root / f".{PREFIX}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        history = receipts(root)
+        _migrate_frozen_receipts(root, _history=history)
+        operation = _PaperRun(root, history)
+        try:
+            yield operation
+        finally:
+            operation._history = None  # release the large graph; never global

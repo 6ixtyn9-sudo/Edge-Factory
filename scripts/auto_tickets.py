@@ -4276,34 +4276,32 @@ def _run_ml_paper():
         return
     try:
         from edgefactory import ml_paper
-        now = datetime.now(TZ)
-        history = ml_paper.receipts(LOCALDATA)
-        lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
-        # Consume only existing, timestamped model/forecast rows. The future
-        # planner is the existing engine, not a new feed or a future-data fill.
-        slate, found = [], False
-        for path in [LOCALDATA / "picks_today.json", *sorted(LOCALDATA.glob("picks_next_*days.json"))]:
-            if not path.exists():
-                continue
-            rows = json.loads(path.read_text())
-            if not isinstance(rows, list):
-                raise TypeError(f"invalid ML forecast slate: {path.name}")
-            slate.extend(rows)
-            found = True
-        if found:
-            row = ml_paper.capture_rolling({"build_at": now.isoformat(), "slate": slate},
-                root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
-                source_guard=execution_source_rejection, min_leg_odds=1.0)
-        else:
-            ml_paper.migrate_receipts(LOCALDATA)
-            row = None  # absent input is not a fabricated NO BET decision
-        ml_paper.publish(LOCALDATA, lookup)
-        card = row or ml_paper.latest_card(LOCALDATA)
-        if card is not None:
-            # Report the complete day's immutable publications, not merely a
-            # last NO BET/addition that could hide earlier outstanding tickets.
-            daily_card = LOCALDATA / f"{ml_paper.PREFIX}_{card['date']}.txt"
-            print(daily_card.read_text())
+        with ml_paper.paper_run(LOCALDATA) as operation:
+            lookup = ml_paper_score_lookup(
+                load_settled_scores() if ml_paper.receipt_files(LOCALDATA) else {})
+            # Consume only existing timestamped forecasts; this operation never
+            # touches live state. Take the observation time after history/result
+            # loading, not minutes before those unrelated checks have finished.
+            now = datetime.now(TZ)
+            slate, found = [], False
+            for path in [LOCALDATA / "picks_today.json", *sorted(LOCALDATA.glob("picks_next_*days.json"))]:
+                if not path.exists():
+                    continue
+                rows = json.loads(path.read_text())
+                if not isinstance(rows, list):
+                    raise TypeError(f"invalid ML forecast slate: {path.name}")
+                slate.extend(rows)
+                found = True
+            row = (operation.capture_rolling({"build_at": now.isoformat(), "slate": slate},
+                score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
+                source_guard=execution_source_rejection, min_leg_odds=1.0) if found else None)
+            # Missing inputs are not a fabricated NO BET decision. Publication,
+            # grading and display reuse ONLY this operation's checked snapshot.
+            operation.publish(lookup)
+            card = row or operation.latest_card()
+            if card is not None:
+                daily_card = LOCALDATA / f"{ml_paper.PREFIX}_{card['date']}.txt"
+                print(daily_card.read_text())
         return True
     except Exception as exc:
         print(f"::warning::autobets_ML unavailable; live lanes unchanged: "

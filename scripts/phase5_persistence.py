@@ -757,6 +757,7 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
     receipts are retained as an artifact-visible conflict, never auto-merged.
     """
     retained = {}
+    committed = _committed_localdata_files(repo)
     for prefix in ("auto_tickets", "autobets_enh_tickets"):
         for path in ticket_receipt_files(repo / "localdata", prefix):
             relative = path.relative_to(repo).as_posix()
@@ -781,11 +782,21 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                     head_files = {}
                     def head_part(name):
                         part = str(Path(head_relative).with_name(name))
-                        result = _run(repo, "show", f"HEAD:{part}")
-                        if result.returncode != 0:
-                            raise ValueError(f"missing committed receipt part: {part}")
-                        head_files[part] = result.stdout
-                        return result.stdout
+                        if part in committed:
+                            result = _run(repo, "show", f"HEAD:{part}")
+                            if result.returncode != 0:
+                                raise ValueError(f"unreadable committed receipt part: {part}")
+                            head_files[part] = result.stdout
+                            return result.stdout
+                        # Shards deliberately ride cache/artifacts, not Git.
+                        # HEAD's manifest derives the name and pins the part's
+                        # length/hash AND the complete compressed stream hash.
+                        # ticket_receipt_bytes verifies all of those before any
+                        # signed JSON is trusted below. Never accept arbitrary
+                        # cache metadata, a different part, or a partial bundle.
+                        # These unchanged cache-only files already survive clean;
+                        # retaining another multi-GB in-memory copy is unnecessary.
+                        return (repo / part).read_bytes()
                     head_raw = ticket_receipt_bytes(repo / head_relative, raw=head_blob,
                                                     read_part=head_part)
                     if head_relative == canonical:
@@ -943,6 +954,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
         *ml_paper.receipt_files(repo / "localdata"),
     ] if pattern.fullmatch(str(p.relative_to(repo)))}
     retained = {}
+    history = {}
     conflicts = []
     for relative in sorted(tracked | cached):
         match = pattern.fullmatch(relative)
@@ -965,6 +977,12 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
                     ml_paper.validate_state(row)
                 else:
                     ml_paper.validate_record(row, day, draft=draft)
+                    if not draft:
+                        expected = (ml_paper.rolling_receipt_path(repo / "localdata", row)
+                                    if row.get("freeze_basis") == ml_paper.ROLLING_FREEZE
+                                    else ml_paper.receipt_path(repo / "localdata", day))
+                        if Path(relative).name != expected.name:
+                            raise ValueError("ML paper receipt filename/context mismatch")
                 values[label] = row
             except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
                 invalid = True
@@ -1043,6 +1061,17 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             conflicts.append(detail)
         if chosen is not None:
             retained[relative] = chosen
+            if not draft and not conflict:
+                row = values["committed" if chosen is head else "cached"]
+                # Only these small fields participate in cross-record checks.
+                # Keeping candidates/models/learning would expand the complete
+                # production graph alongside the retained raw byte history.
+                history[(row["date"], row.get("decision_id", ""))] = {
+                    k: row[k] for k in ("date", "captured_at", "decision_id", "sha256", "accas",
+                        "freeze_basis", "fixture_concentration", "prior_receipt_sha256s",
+                        "frozen_at", "persisted_at", "supersession") if k in row}
+        # Drop the last large decoded graph before parsing the next one.
+        values = row = h = c = None
     frozen_by_day = {}
     for relative, blob in retained.items():
         match = pattern.fullmatch(relative)
@@ -1059,6 +1088,12 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             _atomic_write(repo / path, blob)
             detail["copies"][relative] = {"file": path, "sha256": sha}
         conflicts.append(detail)
+    if not conflicts:
+        try:
+            ml_paper._validate_history(history.values())
+        except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
+            conflicts.append({"history_integrity_error": str(exc),
+                              "files": sorted(retained)})
     if conflicts:
         marker = repo / "localdata/autobets_ML_integrity_block.json"
         # Do not erase earlier unresolved conflict details on later restores.
@@ -1218,10 +1253,13 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     if clean.returncode != 0:
         raise RuntimeError(f"git clean failed: {_decode_output(clean.stderr)}")
     from edgefactory import ml_paper
-    try:
-        ml_paper.migrate_receipts(repo / "localdata")
-    except (OSError, ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
-        print(f"::warning::autobets_ML receipt migration deferred; live lanes unchanged: {exc}")
+    # Individual records AND the capital/supersession chain were checked by
+    # _retain_ml_paper_evidence. A no-op migration must not replay it all again.
+    if any((repo / "localdata").glob(f"{ml_paper.PREFIX}_????-??-??.json")):
+        try:
+            ml_paper.migrate_receipts(repo / "localdata")
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
+            print(f"::warning::autobets_ML receipt migration deferred; live lanes unchanged: {exc}")
     print(f"restore: compacting ticket receipts ({time.monotonic() - started:.2f}s)", flush=True)
     compacted = _compact_receipts(repo)
     print(f"restore: complete ({time.monotonic() - started:.2f}s)", flush=True)
@@ -1534,14 +1572,276 @@ def persist_localdata(
     return {"status": "not_persisted", "reason": reason}
 
 
+# Same operational evidence families as the reports upload, plus preserved
+# conflicts and cold archives. Raw scored candidates retain their separate lane.
+REPORT_ARTIFACT_PATTERNS = (
+    "localdata/*.txt", "localdata/*.json", "localdata/*.md",
+    "localdata/phase5_shadow/**", "localdata/phase5_activation/**",
+    "localdata/phase5_reconciliation/**", "localdata/autobets_ML_conflicts/**",
+    "localdata/archive/**",
+)
+
+
+def _published_artifact_reference(repo):
+    """Use a fetched/pushed remote ref, NEVER an unpublished local state commit.
+
+    If persist failed after committing locally, HEAD can be newer than origin.
+    Those bytes must ride the artifact, not a pointer to an unpushed commit.
+    With no known remote ref the safe fallback is a complete artifact.
+    """
+    branch = _run(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if branch.returncode != 0:
+        return None
+    reference = "refs/remotes/origin/" + _decode_output(branch.stdout)
+    result = _run(repo, "rev-parse", "--verify", reference + "^{commit}")
+    return _decode_output(result.stdout) if result.returncode == 0 else None
+
+
+def _artifact_file_identity(path, *, git_algorithm="sha1"):
+    size = path.stat().st_size
+    sha = hashlib.sha256()
+    git_sha = hashlib.new(git_algorithm, f"blob {size}\0".encode())
+    read = 0
+    with path.open("rb") as handle:
+        while chunk := handle.read(1024 * 1024):
+            sha.update(chunk)
+            git_sha.update(chunk)
+            read += len(chunk)
+    if read != size:
+        raise ValueError(f"artifact source changed while hashing: {path}")
+    return size, sha.hexdigest(), git_sha.hexdigest()
+
+
+def prepare_report_artifact(repo, output, *, run_id=None):
+    """Lossless thin recovery bundle; no evidence is deleted or rewritten.
+
+    Byte-identical historical Git files become pinned commit/blob references.
+    Cache-only shards, unpublished/changed files and damaged evidence remain
+    payloads. Identical payloads are stored once, with every original path in
+    the manifest. Large text is gzip level 1 ONCE; upload-artifact must use 0
+    rather than spending minutes deflating already compressed receipt shards.
+    This inventory attests storage, NOT receipt validity, parity or ROI.
+    """
+    import gzip
+    import re
+
+    repo, output = Path(repo).resolve(), Path(output).resolve()
+    if (output == repo or output.is_relative_to(repo / "localdata")
+            or output.is_relative_to(repo / ".git")):
+        raise ValueError("artifact output must be outside evidence and Git metadata")
+    # Refuse to mix a previous run's files/report with the new inventory.
+    output.mkdir(parents=True, exist_ok=False)
+    reference = _published_artifact_reference(repo)
+    tree = {}
+    if reference is not None:
+        result = _run(repo, "ls-tree", "-r", "-z", reference, "--", "localdata/")
+        if result.returncode != 0:
+            raise ValueError("could not verify published artifact reference")
+        for line in result.stdout.split(b"\0"):
+            if line:
+                meta, name = line.split(b"\t", 1)
+                mode, kind, oid = meta.split()
+                if kind == b"blob" and mode in (b"100644", b"100755"):
+                    tree[os.fsdecode(name)] = oid.decode()
+    object_format = _run(repo, "rev-parse", "--show-object-format")
+    algorithm = _decode_output(object_format.stdout) if object_format.returncode == 0 else "sha1"
+    files = sorted({p for pattern in REPORT_ARTIFACT_PATTERNS
+                    for p in repo.glob(pattern + "/*" if pattern.endswith("/**") else pattern)
+                    if not p.is_dir() and p.name != "replay_parity.json"})
+    entries, payloads, identities = [], {}, {}
+    totals = dict(files=0, original_bytes=0, git_bytes=0, duplicate_bytes=0,
+                  payload_files=0, payload_bytes=0)
+    for source in files:
+        relative = source.relative_to(repo).as_posix()
+        if source.is_symlink() or not source.is_file() or not source.resolve().is_relative_to(repo / "localdata"):
+            raise ValueError(f"artifact source must be a regular evidence file: {relative}")
+        size, sha, git_sha = _artifact_file_identity(source, git_algorithm=algorithm)
+        identities[relative] = (size, sha)
+        entry = dict(path=relative, size=size, sha256=sha)
+        totals["files"] += 1
+        totals["original_bytes"] += size
+        # Current root reports/financial snapshots stay directly inspectable,
+        # even when committed. Only verified historical/nested evidence is thin.
+        if source.parent != repo / "localdata" and tree.get(relative) == git_sha:
+            entry.update(source="git", commit=reference, blob=git_sha)
+            totals["git_bytes"] += size
+        elif sha in payloads:
+            entry.update(payloads[sha])
+            totals["duplicate_bytes"] += size
+        else:
+            compress = source.suffix in {".json", ".jsonl", ".txt", ".md"} and size >= 1024 * 1024
+            artifact_file = f"compressed/{sha}.gz" if compress else relative
+            destination = output / artifact_file
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            linked = False
+            if re.fullmatch(r".+\.part-[0-9a-f]{64}", source.name):
+                # Immutable content-addressed shards can be staged without a
+                # second multi-GB disk allocation. Writers replace, never edit,
+                # these blobs. Upload still contains real bytes, not symlinks.
+                try:
+                    os.link(source, destination)
+                    linked = True
+                except OSError:
+                    pass  # cross-device output: fall back to a verified copy
+            if not linked:
+                copied = hashlib.sha256()
+                with source.open("rb") as src, destination.open("wb") as dest:
+                    # Close/flush the gzip footer before upload.
+                    from contextlib import nullcontext
+                    with (gzip.GzipFile(filename="", mode="wb", fileobj=dest, mtime=0,
+                                        compresslevel=1) if compress else nullcontext(dest)) as stream:
+                        while chunk := src.read(1024 * 1024):
+                            copied.update(chunk)
+                            stream.write(chunk)
+                    dest.flush()
+                    os.fsync(dest.fileno())
+                if copied.hexdigest() != sha:
+                    raise ValueError(f"artifact source changed while copying: {relative}")
+            payload = dict(source="artifact", file=artifact_file,
+                           encoding="gzip" if compress else "identity")
+            entry.update(payload)
+            payloads[sha] = payload
+            totals["payload_files"] += 1
+            totals["payload_bytes"] += destination.stat().st_size
+        entries.append(entry)
+
+    # Missing historical shards must stay visible, not acquire a recovery claim
+    # just because their small committed manifest exists. All available parts,
+    # including orphaned/damaged ones, are retained by the family glob above.
+    unavailable = []
+    from edgefactory.util import _TICKET_RECEIPT_PARTS_MAGIC
+    for source in files:
+        if not source.name.endswith(".json.gz"):
+            continue
+        with source.open("rb") as handle:
+            header = handle.read(len(_TICKET_RECEIPT_PARTS_MAGIC))
+            if header != _TICKET_RECEIPT_PARTS_MAGIC:
+                continue
+            try:
+                raw = handle.read(1024 * 1024 + 1)
+                if len(raw) > 1024 * 1024:
+                    raise ValueError("oversized manifest")
+                parts = json.loads(raw)["parts"]
+                if not isinstance(parts, list) or not parts:
+                    raise ValueError("invalid parts")
+                for part in parts:
+                    sha, size = part["sha256"], part["size"]
+                    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{64}", sha):
+                        raise ValueError("invalid part hash")
+                    relative = source.with_name(source.name + ".part-" + sha).relative_to(repo).as_posix()
+                    if identities.get(relative) != (size, sha):
+                        unavailable.append(relative)
+            except (ValueError, KeyError, TypeError) as exc:
+                unavailable.append(f"{source.relative_to(repo)}: {exc}")
+    manifest = dict(schema="edgefactory_report_bundle_v1", run_id=run_id or os.environ.get("GITHUB_RUN_ID"),
+                    run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"), published_git_commit=reference,
+                    caveat="Byte-preserving storage inventory, not receipt validity or parity certification. "
+                           "Git entries require the pinned repository commit. No original evidence was deleted.",
+                    status="INCOMPLETE_DEPENDENCIES" if unavailable else "BYTES_INVENTORIED_NOT_AUDITED",
+                    totals=totals, unavailable_receipt_parts=sorted(set(unavailable)), files=entries)
+    _atomic_write(output / "recovery_manifest.json", json.dumps(manifest, indent=2, sort_keys=True).encode())
+    print("REPORT_ARTIFACT " + json.dumps(totals, sort_keys=True), flush=True)
+    if unavailable:
+        print(f"::warning::Report recovery remains incomplete: {len(set(unavailable))} missing/corrupt receipt dependencies")
+    if totals["payload_bytes"] > 2 * 1024**3:
+        # Visibility, NOT permission to throw evidence away or block money saves.
+        print("::warning::Report recovery payload exceeds 2 GiB; review retained growth. No evidence omitted by this warning.")
+    return manifest
+
+
+def restore_report_artifact(repo, bundle, destination):
+    """Verify and reconstruct a downloaded report into a NEW scratch directory.
+
+    Never restore over production/localdata or merge financial ledgers. The
+    reconstructed shard paths can then be supplied to the existing validated
+    receipt reader/restore. Missing dependencies remain explicitly missing.
+    """
+    import gzip
+    import re
+
+    repo, bundle, destination = Path(repo).resolve(), Path(bundle).resolve(), Path(destination).resolve()
+    if (destination == repo or destination.is_relative_to(repo / "localdata")
+            or destination.is_relative_to(repo / ".git") or destination.is_relative_to(bundle)):
+        raise ValueError("recovery destination must be a new scratch directory")
+    manifest = json.loads((bundle / "recovery_manifest.json").read_bytes())
+    if manifest.get("schema") != "edgefactory_report_bundle_v1" or not isinstance(manifest.get("files"), list):
+        raise ValueError("unsupported report recovery manifest")
+    planned = []
+    for entry in manifest["files"]:
+        relative = Path(entry["path"])
+        if relative.is_absolute() or ".." in relative.parts or relative.parts[:1] != ("localdata",):
+            raise ValueError("unsafe report recovery path")
+        if (type(entry.get("size")) is not int or entry["size"] < 0
+                or not isinstance(entry.get("sha256"), str)
+                or not re.fullmatch(r"[0-9a-f]{64}", entry["sha256"])):
+            raise ValueError("invalid report recovery content identity")
+        if entry.get("source") not in {"artifact", "git"}:
+            raise ValueError("unknown report recovery source")
+        if entry["source"] == "git" and any(
+                not isinstance(entry.get(k), str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", entry[k])
+                for k in ("commit", "blob")):
+            raise ValueError("invalid report recovery Git identity")
+        if entry["source"] == "artifact":
+            source = bundle / entry["file"]
+            if not source.resolve().is_relative_to(bundle) or source.is_symlink():
+                raise ValueError("unsafe report artifact payload path")
+            if entry.get("encoding") not in {"identity", "gzip"}:
+                raise ValueError("unknown report artifact encoding")
+        planned.append((entry, destination / relative))
+    if len({path for _, path in planned}) != len(planned):
+        raise ValueError("duplicate report recovery paths")
+    destination.mkdir(parents=True, exist_ok=False)
+    for entry, path in planned:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if entry["source"] == "git":
+            result = _run(repo, "show", f"{entry['commit']}:{entry['path']}")
+            if result.returncode != 0:
+                raise ValueError(f"pinned Git evidence unavailable: {entry['path']}")
+            raw = result.stdout
+            if len(raw) != entry["size"] or hashlib.sha256(raw).hexdigest() != entry["sha256"]:
+                raise ValueError(f"pinned Git evidence integrity mismatch: {entry['path']}")
+            algorithm = "sha1" if len(entry["blob"]) == 40 else "sha256"
+            if hashlib.new(algorithm, f"blob {len(raw)}\0".encode() + raw).hexdigest() != entry["blob"]:
+                raise ValueError(f"pinned Git blob mismatch: {entry['path']}")
+            _atomic_write(path, raw)
+        else:
+            source = bundle / entry["file"]
+            sha, size = hashlib.sha256(), 0
+            with (gzip.open(source, "rb") if entry["encoding"] == "gzip" else source.open("rb")) as src, path.open("xb") as dest:
+                while chunk := src.read(1024 * 1024):
+                    sha.update(chunk)
+                    size += len(chunk)
+                    if size > entry["size"]:
+                        raise ValueError(f"artifact evidence size mismatch: {entry['path']}")
+                    dest.write(chunk)
+            if size != entry["size"] or sha.hexdigest() != entry["sha256"]:
+                raise ValueError(f"artifact evidence integrity mismatch: {entry['path']}")
+    return manifest
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("restore", "persist", "history-prepare", "history-recover", "history-check"))
+    parser.add_argument("action", choices=("restore", "persist", "history-prepare", "history-recover", "history-check",
+                                                   "artifact-bundle", "artifact-recover"))
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--reference-hit", choices=("true", "false"), default="false")
+    parser.add_argument("--output", type=Path, help="new report bundle directory")
+    parser.add_argument("--bundle", type=Path, help="downloaded report bundle directory")
+    parser.add_argument("--destination", type=Path, help="NEW scratch recovery directory (never live localdata)")
     args = parser.parse_args(argv)
 
+    if args.action == "artifact-bundle":
+        prepare_report_artifact(args.repo, args.output or args.repo / ".cache/edgefactory-reports", run_id=args.run_id)
+        return 0
+    if args.action == "artifact-recover":
+        if args.bundle is None or args.destination is None:
+            parser.error("artifact-recover requires --bundle and --destination")
+        manifest = restore_report_artifact(args.repo, args.bundle, args.destination)
+        if manifest.get("unavailable_receipt_parts"):
+            print("::warning::Artifact bytes recovered, but required receipt dependencies remain missing/corrupt")
+            return 3
+        return 0
     if args.action.startswith("history-"):
         sys.path.insert(0, str(args.repo / "src"))
         from edgefactory import prediction_history as history
