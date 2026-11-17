@@ -828,7 +828,7 @@ def test_enhancements_with_the_flag_off_is_a_no_op_not_the_main_lane(monkeypatch
     AUTO TICKETS status block — so a daily step labelled "enhancement tickets"
     would report the main lane's performance and imply the enhancement lane was
     live while it was off. Enablement passes this flag (see
-    docs/operator/enhancement-lane.yml.proposed), so the flag-off path has to be
+    .github/workflows/daily.yml), so the flag-off path has to be
     inert and say why.
     """
     monkeypatch.delenv(at.ENH_BOARD_FLAG, raising=False)

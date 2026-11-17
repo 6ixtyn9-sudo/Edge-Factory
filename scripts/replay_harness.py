@@ -2553,7 +2553,7 @@ def cmd_kickoff_guard(universe, since=None, until=None, exclude: set | None = No
     print("is not 'better than default' either (0.3 s.e.). Do not quote")
     print("-0.0070 (in-season) or +0.0080 (whole archive) as a price.")
     print()
-    print("NORMALISATION RECOVERY (Task A; details in the HANDOVER addendum):")
+    print("NORMALISATION RECOVERY (Task A; see docs/operator/RESEARCH.md and --help):")
     print("the 'normalised' arm above is the LOWER bound — it resolves only")
     print("witnesses preserved in the archives (own zoned kickoff; the")
     print("scoutingstats starting_at string, which the odds adapter stores as")
@@ -4507,7 +4507,7 @@ def main():
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or earlier")
-    # legacy single-knob flags (kept: HANDOVER documents them)
+    # legacy single-knob flags (kept: the CLI --help documents them)
     ap.add_argument("--floor", type=float)
     ap.add_argument("--max-accas", type=int)
     ap.add_argument("--stake", type=float)

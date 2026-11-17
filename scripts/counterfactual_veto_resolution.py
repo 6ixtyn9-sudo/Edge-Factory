@@ -5,7 +5,7 @@ Answers: for every pick that was watchlisted/skipped because its context was
 UNKNOWN, what would the locked O1 (rule-pooled) / O2 (hierarchical fallback)
 resolution layer have decided — and would that have helped or hurt?
 
-Locked parameters (see HANDOVER.md Addendum 27 — veto re-mine locked decisions):
+Locked parameters (see docs/operator/RESEARCH.md, Veto-resolution precommitment):
   - pool key: (sport, league_key, market, side_role), rules pooled within,
     n-weighted unconditional w_roi (Q2)
   - gates (Scenario B, Q3): ALLOW n>=40, CAUTION n>=20, VETO n>=12
@@ -441,7 +441,7 @@ def main() -> int:
     elif dep_signal:
         gate_verdict = ("DEPRECATION SIGNAL — overlay fails G2 and G3 at n>=60 with ROI gap >= 2pp; "
                         "confirm at a second checkpoint >= 2 weeks later; if it persists, retire the "
-                        "overlay (flag stays OFF, code stays, decision recorded in HANDOVER)")
+                        "overlay (flag stays OFF, code stays, decision recorded in docs/operator/RESEARCH.md)")
     else:
         gate_verdict = "FLAG-OFF — keep shadow, keep accruing (not enough evidence to ship)"
     # Small-n honesty: FAIL today at n=15 is an insufficient-data state, not a
@@ -591,11 +591,11 @@ def main() -> int:
         "the 90% Wilson lower bound tightens as n grows, so G3 becomes meaningful only "
         "near n=30. Deprecation: at n>=60 with G2 AND G3 still failing and ROI gap >= 2pp, "
         "confirm at a second checkpoint >= 2 weeks apart, then retire (flag stays OFF, "
-        "code stays as audit record, decision recorded in HANDOVER).",
+        "code stays as audit record, decision recorded in docs/operator/RESEARCH.md).",
         "",
         "Deprecation rule: at >= 60 settled, if overlay ROI < bucket ROI - 2pp at "
         "two consecutive checkpoints (>= 2 weeks apart), retire the overlay "
-        "(flag stays OFF, code stays, decision recorded in HANDOVER). Current "
+        "(flag stays OFF, code stays, decision recorded in docs/operator/RESEARCH.md). Current "
         f"signal: {'YES' if dep_signal else 'no'}.",
     ]
 

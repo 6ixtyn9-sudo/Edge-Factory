@@ -7,7 +7,7 @@ status, JSON shape, event counts, market-name histogram, one trimmed sample
 event, and rate-limit headers. It never prints PINNAPI_KEY - URLs are
 sanitized before printing.
 
-Acceptance checks (HUNT-01 SOURCE-HUNT-2026-10 section 7.3):
+Acceptance checks (docs/operator/SOURCES.md#pinnapi):
   1. AUTH      - exercise the same contract the adapter uses: the key as an
                  ``x-portal-apikey`` request header, with the legacy ``key=``
                  query form retried only on HTTP 401 (``--auth`` pins one

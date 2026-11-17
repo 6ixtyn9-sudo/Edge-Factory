@@ -1,309 +1,133 @@
-# Operator handbook — single entry point
+# Operator handbook
 
-Everything an operator needs for the production lane starts here. Nothing in
-this tree was deleted during consolidation (OP-01 T3): deep-evidence documents
-moved to [`archive/`](archive/) and are linked below.
+[Project/setup](../../README.md) · [Sources](SOURCES.md) ·
+[Recovery](RECOVERY.md) · [Research](RESEARCH.md) · [Settlement](SETTLEMENT.md) ·
+[Evidence](DATED-CLAIMS.md)
 
-Latest reviewed decisions:
-[`DECISIONS-2026-10-09.md`](DECISIONS-2026-10-09.md) transfers D1–D5 with
-snapshot-bound evidence, corrected archive/price/provenance claims, the
-test-first Authorization repair, and explicit unresolved/deployment boundaries.
+This is the operating entry point. Source code and the
+[installed daily workflow](../../.github/workflows/daily.yml) determine the
+actual settings; old run receipts describe their own snapshots, not today's
+health, banks or permissions. No guide authorizes a merge or a production run.
 
-**Decision-record identity:** this repository's record is the **Edge-Factory
-transferred/re-reviewed D1–D5 record**, not the other workspace's independently
-written document with the same filename. Its existing §1 states that distinction.
-Use [the pinned repository record](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md)
-as the local D1–D5 reference for this proposal, within its explicit scope and
-operator-approval limits. Filename equality is not document identity.
+## Daily card ops
 
-The latest supplied follow-up identifies a separate, local-only record at
-`e489654` and reports a D1–D7 scheme. That record has not been retrieved or
-verified here; it is **not an interchangeable repository authority**. No D6/D7
-numbering or dispositions are adopted by this handbook: this repository records
-the Authorization work under D4 and Kladno under D5. References across workspaces
-must include repository/workspace, full revision when available, path, section
-and preferably content hash. Importing or reconciling the external record needs
-the actual document and an explicit decision; no source text is silently replaced.
+All card times are **Africa/Johannesburg (SAST, UTC+2)**. Building opens at
+06:00; the first qualifying run at/after **09:00** freezes that date. A late
+runner is still late: these hours are not a guarantee that a card exists.
 
-Open review proposal (documentation only; not approved for production):
-[`PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md`](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
-revision 4 incorporates [two independent reviews](REVIEW-SYNTHESIS-ML-CONSENSUS-2026-10-09.md)
-and requires sidecar-only provenance, distinct signal identities, and parity
-verification before any live routing, electorate, or representative change.
-The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
-separates conditional design approval from implementation and activation evidence.
-
----
-
-## 1. Daily card ops
-
-| phase | what happens | artifact |
-|---|---|---|
-| build window opens | `auto_tickets.py --today` starts building at `GENERATE_HOUR_START`; earlier runs print `NOT YET` | stdout |
-| draft | every run before the freeze hour regenerates the card | `localdata/auto_tickets_<date>.txt`, status line `⏳ DRAFT` |
-| freeze | the first run at/after `FREEZE_HOUR` on the card's own date locks the date **write-once** | slip footer + `frozen_by_date` entry |
-| frozen rerun | later runs re-print the saved slip byte-for-byte and re-upsert evidence only | same slip, unchanged |
-| settle | open slips settle independently against warehouse score facts | `auto_tickets_state.json`, `auto_tickets_performance.txt` |
-
-### The FROZEN footer
-
-A frozen slip ends with exactly one line:
-
-```
-FROZEN AT HH:MM - FINAL
-```
-
-That footer is the human-readable half of the lock. The machine half is a
-**write-once** entry inside the committed ticket state:
-
-```jsonc
-// localdata/auto_tickets_state.json
-"frozen_by_date": {
-  "2026-10-02": { "frozen_at": "2026-10-02T12:03:41+02:00",
-                  "final": true, "lock_source": "state" }
-}
-```
-
-Rules, enforced by `tests/test_ticket_freeze_lock.py`:
-
-- **Write-once.** Once a date is in `frozen_by_date` it can never be rewritten
-  — not by a later run, not by `--force`. `--force` may rebuild the card, but
-  the lock and its timestamp are immutable.
-- **Co-located with the state persist.** The lock is written in the *same*
-  `save_state` call that persists the slip, so a card can never be staked for
-  a date whose lock lands later (or not at all).
-- **Legacy compat.** Pre-2026-10-02 per-day sidecars
-  (`localdata/auto_tickets_<date>.frozen`) still lock their date on read and
-  their timestamp is adopted, not re-minted. **They are never deleted, and no
-  new ones are created.**
-- If the footer is missing, the card is a draft. Do not place a draft.
-
-**Operator reading of the lock:** the slip you hold is the bet. If a later run
-ever prints a different card for a frozen date, that is an incident — the
-write-once lock exists because a rotating "frozen" card put placed bets at
-risk in the experiment lane (see §3).
-
-### Abstention validity
-
-**A no-bet day is a valid, successful outcome.** `NO BET TODAY — n qualifying
-leg(s), need k` and `insufficient_voter_quorum` are results, not failures.
-Nothing may be relaxed — not price corroboration, not the kickoff guard, not
-the quorum — to manufacture a card. Bank stays unbet; the day is recorded.
-
----
-
-## 2. Source-health legend
-
-The same vocabulary is used across
-[`HISTORY-SOURCES.md`](HISTORY-SOURCES.md),
-[`CANDIDATE-SOURCES.md`](CANDIDATE-SOURCES.md) and the audit scripts.
-
-**Availability (`scripts/audit_source_availability.py`, coverage inventory):**
-
-| term | meaning |
+| State | Meaning / action |
 |---|---|
-| `committed` | rows exist in committed capture files; auditable and gradeable in-repo |
-| `cache-only` | rows exist only in the runner cache; one cold cache from gone |
-| `absent` | no rows in-repo for this source |
-| `alias/cache` | a view over another source, not an independent voice |
-| `internal gap` | a missing day *inside* an otherwise covered range — the only legal crawl candidate |
-| `stale since <date>` | fetch layer may be healthy, but persistence stopped at that date |
+| `NOT YET` / `DRAFT` | Not final. Do not place it. |
+| `FROZEN AT HH:MM - FINAL` | Human final marker, backed by immutable state/decision evidence. |
+| Frozen rerun | Reprints the saved recommendation; must not rotate the placed card. |
+| `NO BET` / insufficient quorum or eligible legs | Valid abstention. Do not loosen gates to manufacture a card. |
+| Missing card or inconsistent freeze artifacts | Not permission to bet; inspect the run and recovery evidence. |
 
-**Verification class (source triage / candidates):**
+Main and ENH are separate lanes with separate state. `autobets_ML` is a
+**PAPER** lane, not authority to place a real-money bet. Morning and later
+pick snapshots are distinct evidence; never substitute an intraday slate for
+the original morning decision.
 
-| term | meaning |
+A frozen date's `frozen_by_date` entry and timestamp are write-once, co-located
+with state persistence. Legacy `.frozen` sidecars still lock their date and are
+not disposable. **`--force` is not permission to rewrite a lock, frozen receipt,
+placed slip, bank or stake.** A different card for an already frozen date is an
+incident. Any unplaced replacement needs its own explicit approval and durable
+receipt; a historical reset approval does not extend to another date.
+
+### Current selection/staking boundaries
+
+Implementation: `scripts/auto_tickets.py` and its shared recipe/price gates.
+These are descriptions of the armed policy, not new tuning instructions:
+
+- Minimum leg odds **1.25** in both real-money lanes; existing upper-odds,
+  kickoff, fixture-reuse, context-veto and quote-admission checks still apply.
+- Main uses probability-ranked doubles without add-ons or a new probability
+  floor. Normally at most two accas; saturation can increase this to five
+  after the existing pool/drop checks. ENH retains at most three doubles,
+  cohort ordering and stored model probability **at least 60%**.
+- Existing total deployment remains **25% of free bank**, not 25% per acca.
+  A proposed reduction is subject to the existing manual 15-graded-bet-day
+  review, not an automatic ratchet. Never resize a previously booked stake.
+- A failed dependency, empty qualified pool or no valid pair means abstain.
+  A larger unpriced slate is not executable price coverage.
+
+The policy decision and its limited retrospective basis are preserved in
+[the diagnostic, §§21–23](../edge_loss_diagnostic_2026-11-15.md).
+Do not present that searched comparison as untouched forward validation.
+
+## Run modes and side effects
+
+The installed workflow exposes these modes. It is **dispatch-based**: the YAML
+has no cron schedule. External scheduling is separate; the workflow name alone
+does not prove a three-hour trigger is configured or healthy.
+
+| Mode | Intended use / boundary |
 |---|---|
-| `VERIFIED-from-relay` | robots + fetch receipt obtained through the sandbox relay |
-| `UNVERIFIED` | no current receipt; prior sample only. Never production-eligible |
-| `forward-only` | no proven dated archive; capture from today onward only |
-| `mineable-backfill candidate` | dated archive proven; still needs explicit operator promotion |
-| `shadow` / `zero weight` | runs and is logged, contributes **no** consensus vote weight |
-| `reject` | robots opt-out, non-cooperative, or unprovable settlement |
+| `auto` | One smart schedule iteration (`daily.py --auto-once`); can capture, settle, mine/activate, publish and notify. |
+| `official_morning` | Explicit full official pass (`daily.py --force-repick`); heavy and stateful, not a history-recovery shortcut. |
+| `forecast_refresh` | Forecast path, not a replacement for today's frozen ticket. Read its real run outputs. |
+| `clv_only` | Existing CLV path; may still spend provider quota. |
+| `remine_only` | Restored-cache warehouse + research miner; no `--activate`, source capture, new tickets, notifications, cache save or Git-state publication. Reports can still be uploaded. |
+| `recover_and_rebuild` | Narrow approved historical recovery/unplaced rebuild. **Not a general rerun.** Read [Recovery](RECOVERY.md#prediction-history-recovery) first. |
 
-**Live health signals:**
+Do not dispatch a mode without operator authorization. Do not use a full daily
+run as a probe. Local equivalents are equally stateful:
 
-| signal | meaning | operator action |
-|---|---|---|
-| `http=403 auth/plan-denied` | the account/plan cannot see this endpoint | do not retry harder; see the bzzoiro ticket in §5 |
-| `429` / `Retry-After` | politeness backoff engaged; single-flight + throttle in force | none; the runner cools off and exits zero |
-| `challenge` / source-freeze receipt | a crawl wrote a freeze receipt and stopped | none automatic; no alternate transport is permitted |
-| `zero-row done` | a day terminated with zero rows | only legitimate when the day was genuinely empty — not when it was a 403 |
-| tripwire fired | an expected signal stopped firing | read the diagnostics artifact before changing anything |
+```sh
+# Only for an authorized normal operational run:
+PYTHONPATH=src python3 scripts/daily.py --auto-once
 
-**Health-line role verdicts (T0):** the compact
-`Source health <date>: …` line judges each source against **its own role**, not
-an all-three check. `bzzoiro` is healthy at `fetch/vote` (it never prices);
-`bzzoiro_odds` and `betexplorer` are healthy at `fetch/price` (they never
-vote); full sources like `scoutingstats` still need `fetch/price/vote`. A
-source whose fetch or role capability fails prints `BLOCKED`. Shadow zero-row
-counters append a deterministic reason suffix, e.g.
-`betminer=bm_raw0/bm_scored0(auth403)` or
-`pinnapi=pa_raw0/pa_matched0(http400)` and
-`boggio=bg_raw0/bg_scored0(auth403)`; success and `not_run` are unsuffixed.
-The verdict is display-only: the per-day health contract in
-`source_health_YYYY-MM-DD.json` remains the authoritative record.
+# Research-only miner, on prepared local inputs (writes a research report):
+PYTHONPATH=src python3 scripts/mine_consensus.py
+```
 
-**Price evidence / quarantine buckets seen on legs:** `CERTIFIED_CLEAN`,
-`CAUTION`, `WATCHLIST_UNCORROBORATED_PRICE`, `WATCHLIST_UNKNOWN_CTX`,
-`SKIPPED_VETO`, `BETEXPLORER_RESCUE`, `SOURCE_FALLBACK`,
-`SCOUTINGSTATS_SOLE`. The 7% price-corroboration gate (PR #20) is what keeps
-the last three off production cards; the evidence for not adding an
-`edge >= 0` gate is in
-[`archive/EDGE-GATE-EVIDENCE.md`](archive/EDGE-GATE-EVIDENCE.md).
+No saved command here implies that it was run. Provider budgets, secrets and
+source permission still apply; adding a secret does not necessarily expose it
+to a job. Consult the installed workflow, not a copied proposal.
 
----
+## Source-health legend
 
-## 3. Experiments archive
+Read the dated `source_health` receipt and the active `PRICE POLICY:` line.
+Health is role-specific: prediction fetch/vote, price fetch/join/admission and
+shadow capture are different capabilities.
 
-| experiment | lane | verdict | record |
-|---|---|---|---|
-| 01 — ungated lane vs protected main | `arena/01a0f2b3-edge-factory` (PR #18, CLOSED) | **NOT PROVEN** on bet quality, **NEGATIVE** on operational safety | [`EXPERIMENT-01-LANE-CLOSEOUT.md`](EXPERIMENT-01-LANE-CLOSEOUT.md) |
+| Signal | Interpretation / action |
+|---|---|
+| `committed` | Bytes exist in the repository; not automatically eligible or certified. |
+| `cache-only` | Runtime bytes need the matching cache/artifact; a cold clone is incomplete. |
+| `absent`, stale, missing shard | Missing evidence, not zero performance or permission to regenerate a forecast. |
+| `alias/cache` / convergent | Not another independent vote or bookmaker family. |
+| `403`, auth/plan denial | Stop/escalate configuration or permission; do not retry harder. |
+| `429`, `Retry-After`, challenge/freeze | Respect backoff/freeze. No bypass or alternate-transport escalation. |
+| Raw/scored rows > 0, matched/admitted = 0 | Board exists but joins or policy reject it. Inspect reason counts; never loosen identity to inflate coverage. |
+| `not_run`, incomplete, unknown | Not a successful empty slate. |
 
-Experiment 01 in one line: +77.8 bank points on +2.8 points of hit rate, with
-51% of in-season ridden legs priced off a single unconfirmed source, a frozen
-card that could rotate under placed bets, a ghost leg in a frozen ACCA, and
-21.1% of capital staked a day early on a card that could never freeze. Its one
-transferable finding — freeze durability — is banked as the write-once lock in
-§1. Branch sha for operator deletion is in the closeout.
+Named bookmaker, average and fair prices must remain visibly different.
+See [Sources](SOURCES.md) for quote roles, independent schedule witnesses,
+collection bounds and the policy switches; older “primary/fallback” labels
+are not authority.
 
-Deep evidence retained in [`archive/`](archive/):
+## Verify a run
 
-- [`archive/EDGE-GATE-EVIDENCE.md`](archive/EDGE-GATE-EVIDENCE.md) — edge-gate
-  accounting and options; **no gate applied**.
-- [`archive/SOURCE-TRIAGE.md`](archive/SOURCE-TRIAGE.md) — committed-capture
-  audit TR-1…TR-4, independence matrix, new-source yardstick.
-- [`archive/SPORTYTRADER-SHADOW-BUILD.md`](archive/SPORTYTRADER-SHADOW-BUILD.md)
-  and [`archive/SPORTYTRADER-7PCT-REPORT.json`](archive/SPORTYTRADER-7PCT-REPORT.json)
-  — shadow corroborator build and its offline 7% evidence report.
-- [`archive/PR15-RED-TEAM.md`](archive/PR15-RED-TEAM.md) — PR #15 red-team pass.
-- [`archive/WO-8-PINNAPI-2026-10-06.md`](archive/WO-8-PINNAPI-2026-10-06.md) —
-  WO-8 Pinnacle relay request contract (CLOSED): outcome, the brief as issued,
-  and what stays unverified until a live run.
-- [`DATED-CLAIMS.md`](DATED-CLAIMS.md) — live ledger: every dated claim in a
-  code comment names what backs it, enforced by `tests/test_dated_claims_ledger.py`.
-- `../../HANDOVER.md` — the append-only repo-wide anti-drift log. It stays at
-  the repository root on purpose: ~10 source files, `README.md` and the daily
-  pipeline reference it by that path, so moving it would rot live references.
-  Treat it as the long-form archive behind every document here.
+1. Confirm the actual checkout, mode and attempt. Queued jobs resolve the
+   requested branch when they start; an earlier run may already have newer state.
+2. Read source health, history-completeness and financial conflict diagnostics.
+   Check the actual frozen slip and decision receipt, not just an annotation.
+3. Check **both** cache and Git persistence outcomes. A runner-local summary or
+   uploaded report is not proof that financial state was published.
+4. Reports/cache/Git are persisted before the final non-gating replay diagnostic.
+   That ordering protects saved state from a later audit timeout, not from a
+   kill before the durability barrier.
+5. Inspect the dedicated current-run replay report. `INCOMPLETE_TIME_BUDGET`,
+   `INCOMPLETE_INTERRUPTED`, missing or stale output are **not MATCH**. A green
+   overall job is neither full-history parity nor betting-performance evidence.
+6. Read stored bank/performance reports using [Settlement](SETTLEMENT.md).
+   Do not replace current finance with a historical example or report-derived
+   reconstruction.
 
----
-
-## 4. Source program
-
-- [`HISTORY-SOURCES.md`](HISTORY-SOURCES.md) — history-source hunt, decision
-  rules (vote archive vs price archive), per-source archive-crawl plans.
-- [`CANDIDATE-SOURCES.md`](CANDIDATE-SOURCES.md) — candidate ladder, locale /
-  one-publisher rules, shadow-first policy.
-- [`REMINE-PLAN.md`](REMINE-PLAN.md) — coverage inventory (B0) and the bounded
-  backfill state machine (B1): ≤10 BetExplorer gap requests per run,
-  `gap_fill_complete` → Football-Data proof → Legalbet sample. Ledger:
-  `localdata/backfill_ledger.jsonl`. Hist namespaces only; zero vote-weight
-  change. Regenerate the inventory with
-  `python3 scripts/coverage_inventory.py --append-plan docs/operator/REMINE-PLAN.md`.
-- [`PRICE-SOURCE-ROLES.md`](PRICE-SOURCE-ROLES.md) — the authoritative source
-  role table (named book / average-bookmaker donor / fair-price donor / vote
-  donor), the health-aware selection order that replaced the hard-coded
-  Bzzoiro-first path, independence families, the active donor policy and its
-  switches, and the repaired BetMiner and SharpAPI endpoint contracts.
-- [`JOIN-REPAIR-2026-10-03.md`](JOIN-REPAIR-2026-10-03.md) — why every donor
-  lane scored 0 matched on 2026-10-03 and what was repaired: the shared
-  canonicaliser's `mapped`/`unsupported`/`unknown` outcomes, Boggio's silent
-  drop, OddsPAPI's teamless `/odds` rows (all 414 mislabelled `1x2/home`),
-  `date_mismatch` vs `out_of_window`, the per-source (NOT systematic) kickoff
-  display offset census, and the deterministic zero-row reason tokens.
-- [`JOIN-REPAIR-ROUND-2.md`](JOIN-REPAIR-ROUND-2.md) — round 2: the OddsPAPI
-  `schema_version` generation marker that invalidates the 414 rows written by
-  the superseded parser (counted as `stale_schema`, never deleted); proof the
-  Bet Better vocabulary census works and why the 687 tokens still need a live
-  run; the statarea (UTC−5/−7) and zulubet (UTC+1) renderers behind the
-  kickoff offset families; and the two already-played fixtures the pre-match
-  lead guard admitted on 2026-10-03, now clamped one-directionally.
-- [`PHANTOM-1X2-2026-10-11.md`](PHANTOM-1X2-2026-10-11.md) — the Viking/Bayern
-  `away @ 2.06` that was never a 1x2 price (real quote 1.088; two more
-  Champions League legs and one placed accumulator from the same snapshot),
-  the three market groups recovered from the archived board, and the four
-  layers that now refuse or withhold such a quote: the provider-side
-  three-sides rule, the lined-1x2 refusal, the per-book coherent-trio gate
-  (with counters in `source_health`), and `line`/`raw_market` on every
-  archived quote so the next occurrence is diagnosable without the payload.
-- [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) — HUNT-01 exhaustive
-  hunt for free prediction/odds APIs ("like bzzoiro"): search log, 25-candidate
-  inventory, A–H scorecards, shortlist of 3 (**Betminer** voice winner /
-  PredictIQ echo-test / pinnapi Pinnacle prices) and operator probe plans.
-  Seed finding resolved against API-Football: free-plan seasons lag current
-  (2022–2024), so it is backfill-only. Shortlist draft tickets (c)–(e) are in
-  [`TICKETS-OPEN.md`](TICKETS-OPEN.md).
-- Runner: `scripts/remine_backfill.py`, invoked by `scripts/daily.py`. Sandbox
-  crawling is closed; the Actions runner is the only place bounded requests
-  may be made.
-
-Proposed workflow artifacts (paste-ready, never pushed by the App):
-[`daily.yml.proposed`](daily.yml.proposed),
-[`forebet-browser-diagnostic.yml.proposed`](forebet-browser-diagnostic.yml.proposed),
-[`daily-freeze-marker.patch`](daily-freeze-marker.patch),
-[`enable-manual-dispatch.patch`](enable-manual-dispatch.patch).
-
----
-
-## 5. OPERATOR ACTIONS checklist
-
-| # | action | status | detail |
-|---|---|---|---|
-| 1 | Apply [`daily-freeze-marker.patch`](daily-freeze-marker.patch) to the deployed `.github/workflows/daily.yml` | **PENDING** | Exempts the freeze-marker family from `git clean -fd localdata/`. Still pending as directed. Note: with the OP-01 T2 write-once lock, the authoritative lock now lives in the already-committed `auto_tickets_state.json`, so this patch protects legacy sidecars only — its urgency is reduced, not its status. Apply with `git apply --unidiff-zero`. |
-| 2 | Enable manual dispatch ([`enable-manual-dispatch.patch`](enable-manual-dispatch.patch)) | **NOT NEEDED** | The checked-in `daily.yml` already declares `workflow_dispatch` with its mode inputs. Applying it to a file that already has the key creates a duplicate YAML key. Retained only for an older deployed copy; validate first with `git apply --check`. |
-| 3 | Glance at the bzzoiro diagnostics dashboard after the next run | **PENDING** | PR #21 shipped bzzoiro diagnostics + tripwire. The tripwire currently reports `http=403` auth/plan-denied on 2026-10-02 and 2026-10-03 while the tips feed works — confirm whether the odds plan is actually entitled. Ticket: §5a below. |
-| 4 | Decide on deleting the closed experiment lane branch | **OPERATOR** | Branch + sha in [`EXPERIMENT-01-LANE-CLOSEOUT.md`](EXPERIMENT-01-LANE-CLOSEOUT.md). This repo never modifies or dispatches that branch. |
-| 5 | Promote (or decline) any production re-mine | **OPERATOR** | Required before any crawl beyond the bounded backfill already approved. |
-
-### 5a. Open small tickets
-
-- **bzzoiro_odds zero-row-done redo** — days whose terminal state was a
-  403/auth-zero must be retried on later runs instead of being treated as
-  done. See [`TICKETS-OPEN.md`](TICKETS-OPEN.md).
-- **soccervista restore-or-drop** — all transports including the relay fail;
-  recommendation and evidence in [`TICKETS-OPEN.md`](TICKETS-OPEN.md).
-  No code change shipped.
-- **HUNT-01 shortlist drafts (c)–(e)** — Betminer shadow voice, PredictIQ
-  echo-test voice, pinnapi Pinnacle price corroborator: operator registers
-  free key → probe → shadow (zero credit) → echo test → promotion only on
-  settled evidence. See [`TICKETS-OPEN.md`](TICKETS-OPEN.md) and
-  [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md).
-- **SHADOW-01 shipped (c), (e) + tagged (d)** — Betminer (voice shadow,
-  never a price donor: its odds carry no bookmaker identity), pinnapi_odds
-  (Pinnacle price shadow, corroboration default-off, same-day-only gate)
-  and keyless Bet Better (CC BY 4.0 benchmark board) now capture zero-credit
-  per-date ledgers in the nightly shadow lane; PredictIQ is
-  convergent-tagged at the registry level (`predictiq=echo/only`, zero
-  voice credit permanently). Keys are env-only
-  (`RAPIDAPI_KEY`/`PINNAPI_KEY` — see
-  `docs/operator/patches/daily-rapidapi-env.patch`); promotion requires the
-  echo/7%-gate evidence in tickets (f)/(g). See
-  [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) §10 for receipts and
-  the operator runbook.
-
----
-
-## 6. Guardrails on this handbook
-
-`tests/test_docs_links.py` walks every relative Markdown link in `README.md`,
-`docs/**` and this file and fails if a target does not exist. Links here
-cannot rot silently; move a document and the suite tells you.
-
-### Gate A design approved — C1 confirmed, no recorder authorization
-
-The [Gate A specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
-is draft 3 + C1: exact proposed ignore addition, complete isolated per-file/dry-run
-staging output and a [rerunnable control](controls/gate_a_c1_paths.py). A1–A4
-design approvals are complete; both supplied independent reviews confirm C1.
-The [reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md) preserves source
-scopes and prohibitions. No recorder, hooks, ignore/workflow edits, publisher or
-live routing is authorized. Steward/export resources remain missing.
-
-The operator separately authorized the fallback-origin boolean correction and
-failing qualifier/electorate tests. They were implemented **before** C1 publication:
-[execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md), commit
-`6c3699d`. Related regressions: 160 passed. New contract suite: six positive passes,
-**six intentional failures**, not skipped/xfail. Selection predicates remain
-unchanged; those defects are now exposed, not repaired. **The full suite is not
-green.** C1 confirmation does not authorize skipping/xfailing the six failures or
-implementing any recorder, publisher, routing or ignore/workflow change.
+Missing/corrupt evidence, conflicting finance or an unexpected frozen card:
+preserve both copies and stop the affected action. Follow [Recovery](RECOVERY.md),
+not blanket cache deletion, `git checkout -- localdata/`, a bank reset or a
+weakened guard. Automated tests belong in temporary roots; harness probes belong
+in the existing `scripts/replay_harness.py`.

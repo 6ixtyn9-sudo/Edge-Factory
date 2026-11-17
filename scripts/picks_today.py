@@ -1485,7 +1485,7 @@ def load_thresholds():
 # logit offset: it cannot reorder picks, it only shifts the probability SCALE.
 # The live `avg_p>=55` threshold has been sitting on that shifted scale for the
 # entire live record, and the resulting under-confidence (+5.2pp measured, see
-# HANDOVER checkpoint ⑫) is load-bearing conservatism.
+# docs/operator/RESEARCH.md, Incumbent train/serve and label contracts) is load-bearing conservatism.
 #
 # That conservatism is UNSTABLE: it survives only while nobody retrains,
 # refits, or changes the feature pipeline. One routine model refresh would
@@ -6902,7 +6902,7 @@ def main():
                 "Those features are 0 for every legitimate pre-kickoff "
                 "prediction; the avg_p threshold is calibrated against that "
                 "all-zero scale. Do not bet ml-meta legs until this is "
-                "explained. See HANDOVER checkpoint 12.",
+                "explained. See docs/operator/RESEARCH.md#incumbent-trainserve-and-label-contracts.",
                 file=sys.stderr,
             )
             try:

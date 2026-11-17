@@ -7,7 +7,7 @@ third-party feed** - expect death without notice; the adapter is disposable
 by design and fail-closed on anything unexpected.
 
 Hard role rules (until an explicit operator promotion after the promotion
-criteria in docs/operator/TICKETS-OPEN.md are met):
+criteria in docs/operator/SOURCES.md#pinnapi are met):
 
 - SHADOW ONLY: rows land in a per-date ledger; nothing in the pick path,
   consensus, or the price-corroboration stamp reads them. There is no flag
@@ -19,7 +19,7 @@ criteria in docs/operator/TICKETS-OPEN.md are met):
   ABSTAIN, and SCOUTINGSTATS_SOLE push=False behavior is unaffected while
   this source is down or stale.
 
-Verified vs unverified (HUNT-01 SOURCE-HUNT-2026-10 section 5.7):
+Verified vs unverified (docs/operator/SOURCES.md#pinnapi):
 - VERIFIED: free tier exists (100 REST requests/day, no card), endpoints
   /kit/v1/markets (bulk snapshot per sport), /kit/v1/details, /health.
 - KNOWN FROM THE VENDOR'S PANEL PLAYGROUND (supersedes this adapter's
@@ -1369,7 +1369,7 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
             "auth": (
                 f"{AUTH_HEADER} request header; the legacy key= query parameter is "
                 "retried only on HTTP 401 (stats.auth_mechanism records which answered)"),
-            "hunt": "docs/operator/SOURCE-HUNT-2026-10.md#57",
+            "hunt": "docs/operator/SOURCES.md#pinnapi",
             "unofficial_feed": "Pinnacle public API closed 2025-07-23; pinnapi is an independent relay - expect death without notice",
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         },

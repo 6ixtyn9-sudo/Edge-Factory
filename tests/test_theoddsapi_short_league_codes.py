@@ -44,8 +44,8 @@ from edgefactory.sources.theoddsapi import (  # noqa: E402
 #
 # `tests/data/theoddsapi_sports_2026-10-10.json` is the verbatim 48-sport
 # catalogue captured 2026-10-10T04:20:11Z that the alias mappings were
-# verified against (`docs/operator/DATED-CLAIMS.md`,
-# `docs/operator/PROVIDER-EVIDENCE-2026-10-10.md`). It is evidence and cannot
+# verified against (see `docs/operator/DATED-CLAIMS.md` and the retained
+# provider-catalogue fixture). It is evidence and cannot
 # move under the test. Live-catalogue drift is asserted as a PROPERTY below
 # (a short code may resolve to its mapped key or to None, never to a
 # different competition), never as an equality against today's churn.

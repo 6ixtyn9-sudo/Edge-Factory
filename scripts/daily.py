@@ -291,7 +291,7 @@ def checkpoint_eval_window_open(target_date: str, now: datetime | None = None) -
     at 00:00 SAST (it writes the official-run marker for the day), and letting
     it evaluate consumed the bootstrap checkpoint at 00:19 SAST on 2026-09-21
     (operator correction 2026-09-21; policy section 3, now held in
-    HANDOVER.md under 'ML-FADE RESEARCH GUARDRAIL').
+    docs/operator/RESEARCH.md under 'ML-FADE RESEARCH GUARDRAIL').
     A clock/parse failure must FAIL CLOSED — defer evaluation; settlement and
     monitoring still run, and --force-checkpoint remains the manual override.
     """
@@ -313,7 +313,7 @@ def ml_fade_research_cmd(target_date: str, *, official_run: bool) -> str:
     never "unfair", only late). Checkpoint EVALUATION anchors to the official
     09:00 SAST freeze — the same cut the auto-bets freeze on (operator
     direction 2026-09-20, gated by checkpoint_eval_window_open since
-    2026-09-21, HANDOVER.md 'ML-FADE RESEARCH GUARDRAIL' section 3): off-window runs get
+    2026-09-21, docs/operator/RESEARCH.md 'ML-FADE RESEARCH GUARDRAIL'): off-window runs get
     --settle-monitor-only so a due checkpoint defers to the freeze without
     consuming its due-ness.
     """

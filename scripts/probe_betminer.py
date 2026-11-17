@@ -48,7 +48,7 @@ BASE = "https://betminer.p.rapidapi.com"
 API_HOST = "betminer.p.rapidapi.com"
 KEY_ENV = "RAPIDAPI_KEY"
 
-# The three coverage claims to reconcile (see SOURCE-HUNT-2026-10 section 5.1.H).
+# The three coverage claims to reconcile (see the pre-cleanup source-hunt record in Git; current contract in docs/operator/SOURCES.md#betminer).
 LEAGUE_COUNT_CLAIMS = {"rapidapi_listing": "368+", "site_homepage": "1216", "docs_subtitle": "500+"}
 
 

@@ -45,7 +45,7 @@ LANES = {
 #
 # The report shows what was stored. Nothing here recomputes the bank: each
 # bet-day line carries its stored close. Bank breaks in the history are
-# documented in docs/operator/BANK-HISTORY-2026-10-16.md, not re-derived here.
+# documented in docs/operator/SETTLEMENT.md, not re-derived here.
 # ---------------------------------------------------------------------------
 
 def _close(h) -> float:
@@ -128,7 +128,7 @@ def render_lines(st, label, last, held, accas, wins, generated):
         add("")
     add("NOTES")
     add("  Stake, returned and net are % of capital. Bank is the stored close for each day.")
-    add("  Bank breaks in the history are documented in docs/operator/BANK-HISTORY-2026-10-16.md.")
+    add("  Bank breaks in the history are documented in docs/operator/SETTLEMENT.md.")
     add("  Bet-days recorded before leg detail was kept show the acca result only.")
     return [r.rstrip() for r in rows]
 

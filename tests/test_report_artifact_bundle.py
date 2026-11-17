@@ -8,7 +8,7 @@ import yaml
 
 from edgefactory import util
 from test_phase5_persistence_audit import (
-    MANUAL_WORKFLOW, _git, _large_decision_blob, _multipart_receipt_limits,
+    WORKFLOW, _git, _large_decision_blob, _multipart_receipt_limits,
     _persistence_module, _seed_repo,
 )
 
@@ -179,9 +179,9 @@ def test_bundle_cannot_be_mixed_with_old_output_or_restored_into_live_evidence(t
 
 
 def test_manual_workflow_has_full_fallback_and_preserves_the_durability_barrier():
-    # Deployment is an explicit operator step; this file tests the supplied
-    # replacement, not whether the live workflow has been manually updated.
-    steps = yaml.safe_load(MANUAL_WORKFLOW.read_text())["jobs"]["run-autonomous-agent"]["steps"]
+    # The manual deployment was applied; validate the installed workflow, not a
+    # duplicate proposal that can drift after the next operational change.
+    steps = yaml.safe_load(WORKFLOW.read_text())["jobs"]["run-autonomous-agent"]["steps"]
     names = [step["name"] for step in steps]
     normal = next(s for s in steps if s["name"] == "Upload Pick Ledgers & Reports as Artifacts")
     fallback = next(s for s in steps if s["name"] == "Upload full report recovery fallback")

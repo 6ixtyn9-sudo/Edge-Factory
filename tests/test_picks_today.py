@@ -2,8 +2,8 @@
 
 Contracts pinned here, all live-pipeline-critical:
 
-  1. merge_day_archive_rows append-only behaviour (HANDOVER
-     addendum 27.18; 2026-08-05 silent-coverage-loss fix).
+  1. merge_day_archive_rows append-only behaviour (docs/operator/RECOVERY.md;
+     historical 2026-08-05 silent-coverage-loss fix).
   2. collapse_final_operational_picks (the operational duplicate
      collapse; 2026-06-18 "AC Oulu vs IFK Mariehamn" leak).
   3. Registry -> operating floor (load_thresholds / _prefer_entry / thr_for):

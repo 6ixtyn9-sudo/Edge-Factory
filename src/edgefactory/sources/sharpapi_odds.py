@@ -770,5 +770,5 @@ def capture_day(day: str, *, localdata: Path | None = None,
 
 def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], *, localdata: Path | None = None) -> Path:
     root = localdata or LOCALDATA; root.mkdir(parents=True, exist_ok=True); path = _path(day, root)
-    payload = {"schema":1,"source":SOURCE,"date":day,"role":"named-book price source (never a vote; same-day freshness required)","provenance":{"api":BASE + endpoint(),"host":API_HOST,"hunt":"docs/operator/SOURCE-HUNT-2026-10.md#sharpapi","captured_at":datetime.now(timezone.utc).isoformat(timespec="seconds")},"stats":stats,"rows":rows}
+    payload = {"schema":1,"source":SOURCE,"date":day,"role":"named-book price source (never a vote; same-day freshness required)","provenance":{"api":BASE + endpoint(),"host":API_HOST,"hunt":"docs/operator/SOURCES.md#sharpapi","captured_at":datetime.now(timezone.utc).isoformat(timespec="seconds")},"stats":stats,"rows":rows}
     tmp = path.with_suffix(path.suffix + ".tmp"); tmp.write_text(json.dumps(payload, indent=2, sort_keys=True)); tmp.replace(path); return path
