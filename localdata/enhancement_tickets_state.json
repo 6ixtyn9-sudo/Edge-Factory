@@ -10018,253 +10018,94 @@
         {
           "legs": [
             {
-              "match": "JAPAN vs PARAGUAY",
+              "match": "MALAWI vs EGYPT",
               "pick": "over",
-              "prob": 0.798,
-              "odds": 1.28,
+              "prob": 0.8788,
+              "odds": 1.25,
               "result": null,
               "market": "match_over_15",
-              "price_book": "Stake.com",
-              "price_source": "betexplorer",
+              "price_book": "caesars",
+              "price_source": "oddspapi",
               "cohort_evidence": {
-                "rate": 0.798,
-                "n": 990,
+                "rate": 0.8788,
+                "n": 33,
                 "contract_id": "pfc_c33854a6f17eda6cca30d634",
                 "as_of_exclusive": "2026-11-17",
                 "market": "match_over_15",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 790,
-                "cohort_lower_bound": 0.7718392685583484,
+                "cohort_min_hits": 29,
+                "cohort_lower_bound": 0.7267449482892476,
                 "price_context": {
                   "contract_id": "pfc_c33854a6f17eda6cca30d634",
-                  "selection": "home",
-                  "league": "WNF",
-                  "book": "Stake.com",
-                  "source": "betexplorer",
-                  "price": 1.28,
-                  "captured_at": "2026-11-17T04:39:07.115522+00:00",
-                  "decision_at": "2026-11-17T06:40:41+02:00",
-                  "kickoff": "2026-11-17T13:10:00+00:00"
+                  "selection": "away",
+                  "league": "AFN",
+                  "book": "caesars",
+                  "source": "oddspapi",
+                  "price": 1.25,
+                  "captured_at": "2026-11-17T07:27:20.108872+00:00",
+                  "decision_at": "2026-11-17T09:28:06+02:00",
+                  "kickoff": "2026-11-17T13:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6222053336012451,
-              "ml_model_key": "4256945cc7730be8e4a2e6ae80e80495bf9c0eab6940296439309832e419f23a",
+              "ml_rank_probability": 0.815149504639755,
+              "ml_model_key": "216eab995fad8cbe7bb0592af7b4187094accf4fda6fb47196fdb480121107da",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 1.5 Goals",
               "floor": 1.7098167228314767,
               "floor_basis": "market",
-              "league": "WNF",
-              "price_at": "2026-11-17T04:39:07.115522+00:00",
-              "price_kickoff": "2026-11-17T13:10:00+00:00",
-              "price_provenance": {
-                "away": "Paraguay",
-                "bookmaker": "Stake.com",
-                "captured_at": "2026-11-17T04:39:07.115522+00:00",
-                "data_dt": [
-                  17,
-                  11,
-                  2026,
-                  14,
-                  10
-                ],
-                "decision_cutoff_utc": "2026-11-17T07:00:00+00:00",
-                "decision_day": "2026-11-17",
-                "home": "Japan",
-                "kickoff_utc": "2026-11-17T13:10:00+00:00",
-                "kind": "betexplorer_pre_cutoff_v1",
-                "ledger_file": "betexplorer_match_detail_2026-11-17.json",
-                "ledger_sha256": "c7b6b286aabe0cd9bd336411c3cd4867f7ad4a94d4104a47d100368bd8110e35",
-                "market": "ou_1.5",
-                "price": 1.28,
-                "quote_evidence": {
-                  "column_index": 0,
-                  "columns": [
-                    "Over",
-                    "Under"
-                  ],
-                  "market_slug": "ou",
-                  "row": {
-                    "best": true,
-                    "bookmaker": "Stake.com",
-                    "bookmaker_id": "1105",
-                    "created": [
-                      "2026-11-17T05:27",
-                      "2026-11-17T05:27"
-                    ],
-                    "line": "1.50",
-                    "movement": [
-                      null,
-                      "up"
-                    ],
-                    "odds": [
-                      1.28,
-                      3.6
-                    ],
-                    "pos": [
-                      "1",
-                      "2"
-                    ],
-                    "source": "all"
-                  },
-                  "row_index": 7,
-                  "row_sha256": "e6a56f84dd5f09280d5e7d84c75b6aa75690299d00502c5f46d924556bc24263"
-                },
-                "raw_kickoff": "14:10",
-                "resolution": {
-                  "interpretations": [
-                    "inferred_europe_prague",
-                    "inferred_fixed_utc_plus_1"
-                  ],
-                  "kickoff_utc": "2026-11-17T13:10:00+00:00",
-                  "late_witness_records": 0,
-                  "provenance": "witness_corroborated_aware_iso",
-                  "reason": "independent_pre_cutoff_schedule_witness",
-                  "status": "corroborated",
-                  "witnesses": [
-                    {
-                      "away": "Paraguay",
-                      "csv_data_row": 1901,
-                      "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "479064b5b2bc4b44ec855d04b83fba3e427ef9ffdab6f9e17051dfcd2547fdaf",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Japan",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-17T13:10:00+00:00",
-                      "league": "Friendly International",
-                      "observed_at_utc": "2026-11-16T22:12:40+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "a3c0b3110261666b90453d862a0d51a7e6c4c73b3a83f08c6e482ca420c372ca",
-                      "schedule_row": {
-                        "away": "Paraguay",
-                        "captured_at": "2026-11-16T22:12:40+00:00",
-                        "country": "World",
-                        "date": "2026-11-17",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Japan",
-                        "hs": "",
-                        "kickoff": "2026-11-17T13:10:00Z",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "Friendly International",
-                        "odd1": "1.6",
-                        "odd2": "5.0",
-                        "odd_gg": "1.9",
-                        "odd_ng": "1.8",
-                        "odd_o15": "1.28",
-                        "odd_o25": "1.9",
-                        "odd_o35": "3.25",
-                        "odd_u15": "3.5",
-                        "odd_u25": "1.9",
-                        "odd_u35": "1.33",
-                        "oddx": "3.75",
-                        "p1": "57.25016030044884",
-                        "p2": "18.32005129614363",
-                        "p_gg": "48.648648648648646",
-                        "p_ng": "51.35135135135135",
-                        "p_o15": "73.22175732217573",
-                        "p_o25": "50.0",
-                        "p_o35": "29.03930131004367",
-                        "px": "24.42978840340753",
-                        "schedule_history": "[]",
-                        "source": "scoutingstats",
-                        "status": "13:10"
-                      },
-                      "source": "scoutingstats"
-                    },
-                    {
-                      "away": "Paraguay",
-                      "csv_data_row": 8049,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "979e4d7e8864211f8791650b552a71bd4640ee1fd4a45a83294e5d51a8437d9d",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Japan",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-17T13:10:00+00:00",
-                      "league": "World: Friendlies",
-                      "observed_at_utc": "2026-11-16T22:12:02+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "74de53f1c012ccb456d48f9f42d1e625a0461901c3f2fabe6c9eddb123428599",
-                      "schedule_row": {
-                        "away": "Paraguay",
-                        "captured_at": "2026-11-16T22:12:02+00:00",
-                        "date": "2026-11-17",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Japan",
-                        "hs": "",
-                        "index": "",
-                        "kickoff": "2026-11-17T14:10:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "World: Friendlies",
-                        "p1": "",
-                        "p2": "",
-                        "pred_gs": "",
-                        "pred_hs": "",
-                        "px": "",
-                        "schedule_history": "[{\"away\": \"Paraguay\", \"captured_at\": \"2026-11-15T22:12:07+00:00\", \"date\": \"2026-11-17\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Japan\", \"kickoff\": \"2026-11-17T14:10:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
-                        "source": "vitibet",
-                        "status": "scheduled",
-                        "tip": ""
-                      },
-                      "source": "vitibet"
-                    },
-                    {
-                      "away": "Paraguay",
-                      "csv_data_row": 8049,
-                      "csv_history_index": 0,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "979e4d7e8864211f8791650b552a71bd4640ee1fd4a45a83294e5d51a8437d9d",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Japan",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-17T13:10:00+00:00",
-                      "league": null,
-                      "observed_at_utc": "2026-11-15T22:12:07+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "39176c6e3db20fa49e804d8ae3b6c978e6a4be1d6b4133c72001a6f1c95c65ab",
-                      "schedule_row": {
-                        "away": "Paraguay",
-                        "captured_at": "2026-11-15T22:12:07+00:00",
-                        "date": "2026-11-17",
-                        "fixture_identity_origin": "provider_participants",
-                        "home": "Japan",
-                        "kickoff": "2026-11-17T14:10:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "source": "vitibet"
-                      },
-                      "source": "vitibet"
-                    },
-                    {
-                      "away": "Paraguay",
-                      "board_fetched_at": "2026-11-17T04:34:36+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1000085176123776",
-                        "participant1Name": "Japan",
-                        "participant2Name": "Paraguay",
-                        "sportId": 10,
-                        "startTime": "2026-11-17T13:10:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "2f27ab6b69851c37b6dee9be4204c2536978093ff26b5cac113bb5580b60e5dd",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Japan",
-                      "json_pointer": "/boards/2026-11-17/fixtures/53",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-17T13:10:00+00:00",
-                      "observed_at_utc": "2026-11-17T04:34:36+00:00",
-                      "provider_event_id": "id1000085176123776",
-                      "row_sha256": "23ff45053bf9562501928402f70ac1ea3431639f328f876430eadcb903d9105b",
-                      "source": "oddspapi"
-                    }
-                  ]
-                },
-                "selection": "over",
-                "site_best": true
+              "league": "AFN",
+              "price_at": "2026-11-17T07:27:20.108872+00:00",
+              "price_kickoff": "2026-11-17T13:00:00.000Z",
+              "price_provenance": null,
+              "shadow": true,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-17",
+                "MALAWI",
+                "EGYPT"
+              ]
+            },
+            {
+              "match": "JAPAN vs PARAGUAY",
+              "pick": "away",
+              "prob": 0.7434,
+              "odds": 1.294,
+              "result": null,
+              "market": "away_under_15",
+              "price_book": "caesars",
+              "price_source": "oddspapi",
+              "cohort_evidence": {
+                "rate": 0.7434,
+                "n": 990,
+                "contract_id": "pfc_c33854a6f17eda6cca30d634",
+                "as_of_exclusive": "2026-11-17",
+                "market": "away_under_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 736,
+                "cohort_lower_bound": 0.7153245891838087,
+                "price_context": {
+                  "contract_id": "pfc_c33854a6f17eda6cca30d634",
+                  "selection": "home",
+                  "league": "WNF",
+                  "book": "caesars",
+                  "source": "oddspapi",
+                  "price": 1.294,
+                  "captured_at": "2026-11-17T07:27:12.075054+00:00",
+                  "decision_at": "2026-11-17T09:28:06+02:00",
+                  "kickoff": "2026-11-17T13:10:00+00:00"
+                }
               },
+              "ml_rank_probability": 0.8706605390738238,
+              "ml_model_key": "4256945cc7730be8e4a2e6ae80e80495bf9c0eab6940296439309832e419f23a",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Away Team Under 1.5 Goals",
+              "floor": 1.5529,
+              "floor_basis": "pick_evidence",
+              "league": "WNF",
+              "price_at": "2026-11-17T07:27:12.075054+00:00",
+              "price_kickoff": "2026-11-17T13:10:00.000Z",
+              "price_provenance": null,
               "shadow": true,
               "ml_ordering_active": false,
               "ranking_basis": "cohort",
@@ -10273,267 +10114,15 @@
                 "JAPAN",
                 "PARAGUAY"
               ]
-            },
-            {
-              "match": "Belize vs Sint Maarten",
-              "pick": "over",
-              "prob": 0.6037,
-              "odds": 1.65,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Stake.com",
-              "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.6037,
-                "n": 1345,
-                "contract_id": "pfc_f3616afc7fd184444cfa14d7",
-                "as_of_exclusive": "2026-11-17",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 812,
-                "cohort_lower_bound": 0.5773176241029871,
-                "price_context": {
-                  "contract_id": "pfc_f3616afc7fd184444cfa14d7",
-                  "selection": "home",
-                  "league": "CONCACAF Nations League",
-                  "book": "Stake.com",
-                  "source": "betexplorer",
-                  "price": 1.65,
-                  "captured_at": "2026-11-17T04:35:23.386461+00:00",
-                  "decision_at": "2026-11-17T06:40:41+02:00",
-                  "kickoff": "2026-11-17T19:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8060119312205953,
-              "ml_model_key": "d006126b1897378f6c55ec61aef74cc243696e8207b103ef8436d39deef8aaa9",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7218962262924373,
-              "floor_basis": "inherited",
-              "league": "CONCACAF Nations League",
-              "price_at": "2026-11-17T04:35:23.386461+00:00",
-              "price_kickoff": "2026-11-17T19:00:00+00:00",
-              "price_provenance": {
-                "away": "Sint Maarten",
-                "bookmaker": "Stake.com",
-                "captured_at": "2026-11-17T04:35:23.386461+00:00",
-                "data_dt": [
-                  17,
-                  11,
-                  2026,
-                  20,
-                  0
-                ],
-                "decision_cutoff_utc": "2026-11-17T07:00:00+00:00",
-                "decision_day": "2026-11-17",
-                "home": "Belize",
-                "kickoff_utc": "2026-11-17T19:00:00+00:00",
-                "kind": "betexplorer_pre_cutoff_v1",
-                "ledger_file": "betexplorer_match_detail_2026-11-17.json",
-                "ledger_sha256": "c7b6b286aabe0cd9bd336411c3cd4867f7ad4a94d4104a47d100368bd8110e35",
-                "market": "ou_2.5",
-                "price": 1.65,
-                "quote_evidence": {
-                  "column_index": 0,
-                  "columns": [
-                    "Over",
-                    "Under"
-                  ],
-                  "market_slug": "ou",
-                  "row": {
-                    "best": true,
-                    "bookmaker": "Stake.com",
-                    "bookmaker_id": "1089",
-                    "created": [
-                      "2026-11-17T04:51",
-                      "2026-11-17T04:51"
-                    ],
-                    "line": "2.50",
-                    "movement": [
-                      "up",
-                      "down"
-                    ],
-                    "odds": [
-                      1.65,
-                      2.02
-                    ],
-                    "pos": [
-                      "1",
-                      "2"
-                    ],
-                    "source": "all"
-                  },
-                  "row_index": 0,
-                  "row_sha256": "cb8a74cd98128d22583086c69fbb16f5c2947933f5cab8aa6855ed61e49b9330"
-                },
-                "raw_kickoff": "20:00",
-                "resolution": {
-                  "interpretations": [
-                    "inferred_europe_prague",
-                    "inferred_fixed_utc_plus_1"
-                  ],
-                  "kickoff_utc": "2026-11-17T19:00:00+00:00",
-                  "late_witness_records": 0,
-                  "provenance": "witness_corroborated_aware_iso",
-                  "reason": "independent_pre_cutoff_schedule_witness",
-                  "status": "corroborated",
-                  "witnesses": [
-                    {
-                      "away": "Sint Maarten",
-                      "csv_data_row": 1883,
-                      "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "479064b5b2bc4b44ec855d04b83fba3e427ef9ffdab6f9e17051dfcd2547fdaf",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Belize",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-17T19:00:00+00:00",
-                      "league": "CONCACAF Nations League",
-                      "observed_at_utc": "2026-11-16T22:12:40+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "da59c248ef8543be2ad750ec4707485eed9b38b7ff1284be78413bb0c58280cb",
-                      "schedule_row": {
-                        "away": "Sint Maarten",
-                        "captured_at": "2026-11-16T22:12:40+00:00",
-                        "country": "North & Central America",
-                        "date": "2026-11-17",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Belize",
-                        "hs": "",
-                        "kickoff": "2026-11-17T19:00:00Z",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "CONCACAF Nations League",
-                        "odd1": "1.75",
-                        "odd2": "4.1",
-                        "odd_gg": "1.61",
-                        "odd_ng": "2.2",
-                        "odd_o15": "1.2",
-                        "odd_o25": "1.66",
-                        "odd_o35": "2.62",
-                        "odd_u15": "4.33",
-                        "odd_u25": "2.15",
-                        "odd_u35": "1.44",
-                        "oddx": "3.6",
-                        "p1": "52.27335102003477",
-                        "p2": "22.312688683560516",
-                        "p_gg": "57.74278215223097",
-                        "p_ng": "42.257217847769034",
-                        "p_o15": "78.30018083182641",
-                        "p_o25": "56.43044619422572",
-                        "p_o35": "35.4679802955665",
-                        "px": "25.41396029640472",
-                        "schedule_history": "[]",
-                        "source": "scoutingstats",
-                        "status": "19:00"
-                      },
-                      "source": "scoutingstats"
-                    },
-                    {
-                      "away": "Sint Maarten",
-                      "csv_data_row": 7984,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "979e4d7e8864211f8791650b552a71bd4640ee1fd4a45a83294e5d51a8437d9d",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Belize",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-17T19:00:00+00:00",
-                      "league": "World: CONCACAF Nations League",
-                      "observed_at_utc": "2026-11-16T22:12:02+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "f31c7b2bcd80eff515e655ab8a47f3593f5f944b7358934fb020a3e9d34edad7",
-                      "schedule_row": {
-                        "away": "Sint Maarten",
-                        "captured_at": "2026-11-16T22:12:02+00:00",
-                        "date": "2026-11-17",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Belize",
-                        "hs": "",
-                        "index": "",
-                        "kickoff": "2026-11-17T20:00:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "World: CONCACAF Nations League",
-                        "p1": "",
-                        "p2": "",
-                        "pred_gs": "",
-                        "pred_hs": "",
-                        "px": "",
-                        "schedule_history": "[{\"away\": \"Sint Maarten\", \"captured_at\": \"2026-11-15T22:12:07+00:00\", \"date\": \"2026-11-17\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Belize\", \"kickoff\": \"2026-11-17T20:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
-                        "source": "vitibet",
-                        "status": "scheduled",
-                        "tip": ""
-                      },
-                      "source": "vitibet"
-                    },
-                    {
-                      "away": "Sint Maarten",
-                      "csv_data_row": 7984,
-                      "csv_history_index": 0,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "979e4d7e8864211f8791650b552a71bd4640ee1fd4a45a83294e5d51a8437d9d",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Belize",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-17T19:00:00+00:00",
-                      "league": null,
-                      "observed_at_utc": "2026-11-15T22:12:07+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "8a8c49cd4ebc98ba14f08b39f82547dcce5bbf29dfcf4709af0d0a98b4d3e98a",
-                      "schedule_row": {
-                        "away": "Sint Maarten",
-                        "captured_at": "2026-11-15T22:12:07+00:00",
-                        "date": "2026-11-17",
-                        "fixture_identity_origin": "provider_participants",
-                        "home": "Belize",
-                        "kickoff": "2026-11-17T20:00:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "source": "vitibet"
-                      },
-                      "source": "vitibet"
-                    },
-                    {
-                      "away": "Sint Maarten",
-                      "board_fetched_at": "2026-11-17T04:34:36+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1002742075468444",
-                        "participant1Name": "Belize",
-                        "participant2Name": "Sint Maarten",
-                        "sportId": 10,
-                        "startTime": "2026-11-17T19:00:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "2f27ab6b69851c37b6dee9be4204c2536978093ff26b5cac113bb5580b60e5dd",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Belize",
-                      "json_pointer": "/boards/2026-11-17/fixtures/112",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-17T19:00:00+00:00",
-                      "observed_at_utc": "2026-11-17T04:34:36+00:00",
-                      "provider_event_id": "id1002742075468444",
-                      "row_sha256": "985de7f7a1e8b89bc3e0952208110b86f3cf0d6c895397e95e859656f0e86daf",
-                      "source": "oddspapi"
-                    }
-                  ]
-                },
-                "selection": "over",
-                "site_best": true
-              },
-              "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-17",
-                "Belize",
-                "Sint Maarten"
-              ]
             }
           ],
-          "odds": 2.11,
-          "stake_pct": 2.0335
+          "odds": 1.62,
+          "stake_pct": 2.0335,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -10563,7 +10152,7 @@
                   "source": "theoddsapi",
                   "price": 2.61,
                   "captured_at": "2026-11-16T22:26:36.207714+00:00",
-                  "decision_at": "2026-11-17T06:40:41+02:00",
+                  "decision_at": "2026-11-17T09:28:06+02:00",
                   "kickoff": "2026-11-17T19:45:00+00:00"
                 }
               },
@@ -10612,7 +10201,7 @@
                   "source": "theoddsapi",
                   "price": 1.74,
                   "captured_at": "2026-11-16T22:26:36.275182+00:00",
-                  "decision_at": "2026-11-17T06:40:41+02:00",
+                  "decision_at": "2026-11-17T09:28:06+02:00",
                   "kickoff": "2026-11-17T19:45:00+00:00"
                 }
               },
@@ -10637,7 +10226,12 @@
             }
           ],
           "odds": 4.54,
-          "stake_pct": 2.0335
+          "stake_pct": 2.0335,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -10667,7 +10261,7 @@
                   "source": "theoddsapi",
                   "price": 1.5,
                   "captured_at": "2026-11-16T22:26:36.122175+00:00",
-                  "decision_at": "2026-11-17T06:40:41+02:00",
+                  "decision_at": "2026-11-17T09:28:06+02:00",
                   "kickoff": "2026-11-17T19:45:00+00:00"
                 }
               },
@@ -10716,7 +10310,7 @@
                   "source": "theoddsapi",
                   "price": 1.47,
                   "captured_at": "2026-11-16T22:26:36.453499+00:00",
-                  "decision_at": "2026-11-17T06:40:41+02:00",
+                  "decision_at": "2026-11-17T09:28:06+02:00",
                   "kickoff": "2026-11-17T19:45:00+00:00"
                 }
               },
@@ -10741,7 +10335,12 @@
             }
           ],
           "odds": 2.21,
-          "stake_pct": 2.0335
+          "stake_pct": 2.0335,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 6.1005
@@ -10895,6 +10494,11 @@
     },
     "2026-11-16": {
       "frozen_at": "2026-11-16T09:56:55+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-17": {
+      "frozen_at": "2026-11-17T10:18:55+02:00",
       "final": true,
       "lock_source": "state"
     }
