@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Decay monitor: nightly audit of certified edges (HANDOVER.md golden rule:
+"""Decay monitor: nightly audit of certified edges (docs/operator/RESEARCH.md golden rule:
 HEALTHY / WATCH / DECAYING / DEAD).
 
     python3 scripts/decay_monitor.py                 # 60-day recent window

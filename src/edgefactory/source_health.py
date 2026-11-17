@@ -117,7 +117,7 @@ DAILY_SOURCES = (
 # an independent voice: agreement with our price-corroborated consensus is
 # expected by construction, so it earns ZERO voice credit permanently and
 # NEVER corroborates a price. PredictIQ's ensemble includes devigged market
-# odds (ECHO-MED-HIGH, docs/operator/SOURCE-HUNT-2026-10.md section 5.5).
+# odds (ECHO-MED-HIGH, docs/operator/SOURCES.md#predictiq).
 # The tag is enforced fail-closed in build_daily_source_health: even if a
 # future adapter reports can_vote/can_price observations, the registry
 # refuses them. Fetching may be allowed later for echo testing only.
@@ -307,7 +307,7 @@ def build_daily_source_health(
             can_vote = False
             blocker = (
                 "convergent echo-candidate: zero voice credit permanently, "
-                "never corroborates (SOURCE-HUNT-2026-10 section 5.5)"
+                "never corroborates (docs/operator/SOURCES.md#predictiq)"
             )
         if not blocker and not can_fetch:
             blocker = "not reliably fetched/observed today"

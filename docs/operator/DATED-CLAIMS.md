@@ -21,6 +21,45 @@ the wrong number — it was that the wrong number looked settled.
 Writing a dated claim is now a two-line diff: the comment, and a row here
 stating whether an artifact exists or whether somebody simply said so.
 
+## Documentation retention
+
+Current operating rules live in [the handbook](README.md), [Sources](SOURCES.md),
+[Recovery](RECOVERY.md), [Research](RESEARCH.md) and [Settlement](SETTLEMENT.md).
+Superseded handovers, agent prompts, tickets, duplicate workflows and repeated
+review narratives were deleted, not copied into another archive. For an old
+work order, use the exact
+[pre-cleanup snapshot](https://github.com/6ixtyn9-sudo/Edge-Factory/tree/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e)
+or `git show 30e9372aab33e1e9444c1f5fd3b916df91ca7f0e:path` if that commit is
+available. A historical instruction is not a current approval.
+
+Deliberately retained outside the maintained guides:
+
+- [Findings](FINDINGS-2026-10-07.md): original Phase-5 pre-registration/sole
+  comparator amendment and the certifier's status-append target. Dated findings
+  are not a fresh certification verdict.
+- [Gate-A schema](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md): full historical
+  schema/approval contract. Its recorder was removed; the spec is not activation.
+- [Price-lane teardown](PRICE-LANE-TEARDOWN-2026-10-03.md) and
+  [Urawa identity audit](URAWA-LONG-FORM-FOLD-2026-10-07.md): report-backed claims
+  cited below. These are dated reports, not retained raw provider responses or
+  current source-status/configuration instructions.
+- [Edge-loss diagnostic](../edge_loss_diagnostic_2026-11-15.md): the original
+  policy decision and its later corrections, especially §§21–24. Opening
+  hypotheses do not supersede those corrections or establish current banks.
+- The two calibration/shadow-mover CSVs, JSON audit/recovery records, Gate-A
+  layout/environment controls and [withdrawn-ticket evidence](withdrawn-tickets/README.md)
+  retain their original bytes. They are evidence, not documentation clutter.
+- `handoff/` now contains only the retained JSON fixtures/provider pages,
+  original live-page excerpt and four cited identity/provenance proof outputs.
+  Probe boards are synthetic scratch comparisons, not live betting returns.
+  Repeated test logs, one-off proof scripts and obsolete agent instructions are
+  recoverable from Git, not maintained executable procedures.
+
+No `localdata/` evidence is deleted by documentation consolidation. Frozen
+receipts, financial state and source observations retain their own storage and
+validation rules. Historical Git links preserve report provenance, not a claim
+that expired caches/artifacts or previously purged raw bytes remain available.
+
 ## Retention purge (2026-11-14 lean baseline, ac66c942)
 
 The 2026-11-14 cleanup retired raw pick dumps, dated caches and
@@ -72,7 +111,7 @@ recollection.
 
 | `tests/test_betexplorer_row_join_guard.py` | committed 2026-10-12 odds cache holds the fixture key built from Forge and York United whose rows are Forge v INTER TORONTO 1.35/4.80/6.40, and separately caches Ludogorets-Arda 1.50/4.00/6.50 and Elfsborg-Halmstad 1.36/5.25/8.00 while the 2026-10-12 board published those legs with odds=None; the test's row fixtures are those cached rows verbatim, with only `captured_at` regenerated so the 24h freshness guard cannot time-rot them (cited bytes purged 2026-11-14; was `localdata/betexplorer_odds_cache_2026-10-12.json`) | `docs/operator/DATED-CLAIMS.md` |
 | `tests/test_betexplorer_match_detail.py` | the wrapper receipt carries the row-refusal census per the 2026-10-12 round-2 ruling: a refused row is a dropped price, and the receipt must name how many were refused and why (the 2026-10-12 Forge vs York United receipt lost rows with no trace) | OPERATOR-RELAYED |
-| `src/edgefactory/enh_pricing.py` | operator directive 2026-10-12: the retained BetExplorer detail prices the enhancement board and the registry floor, not EV, decides what is a bet; the reader's slot names (`ou_<line>`, `btts`, `dc`) are the ones `MARKET_PRICE_MAP` looks up, which the round-trip test pins against the capture's own ledger | `docs/operator/BETEXPLORER-LICENSING.md` |
+| `src/edgefactory/enh_pricing.py` | operator directive 2026-10-12: the retained BetExplorer detail prices the enhancement board and the registry floor, not EV, decides what is a bet; the reader's slot names (`ou_<line>`, `btts`, `dc`) are the ones `MARKET_PRICE_MAP` looks up, which the round-trip test pins against the capture's own ledger | `docs/operator/SOURCES.md` |
 
 | `scripts/auto_tickets.py` | operator selection 2026-10-31: widened-window fully graded controlled recipes; Main probability-ranked doubles without add-ons or an added probability floor; ENH cohort ranking, max three doubles, stored model probability at least 60%; preserve independent safeguards, stakes and frozen cards; retrospective comparison, not a validated optimum | OPERATOR-RELAYED |
 

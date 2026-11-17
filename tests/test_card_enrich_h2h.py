@@ -1,8 +1,7 @@
 """card_enrich lane: budget math, point-in-time discipline and zero-noise wiring.
 
 Offline only. Fixtures are the provider's DOCUMENTED /head-to-head contract and a
-fabricated card, so the pre-registered bars (docs/operator/
-SOURCE-INTERROGATION-MATRIX-2026-10-10.md) are exercised as *guards* - nothing in
+fabricated card, so the pre-registered bars (docs/operator/SOURCES.md#boggio-and-card-enrichment) are exercised as *guards* - nothing in
 this file registers a rule, activates a model, or touches the pick path.
 """
 import io

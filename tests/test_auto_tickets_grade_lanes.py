@@ -178,7 +178,7 @@ def test_main_report_layout_is_clean_and_flags_bank_breaks():
     # days run oldest first
     assert txt.index("2026-10-12") < txt.index("2026-10-13")
     # the bank-break history is pointed to, not re-derived
-    assert "docs/operator/BANK-HISTORY-2026-10-16.md" in txt
+    assert "docs/operator/SETTLEMENT.md" in txt
 
 
 def test_late_earlier_settlement_corrects_later_close():

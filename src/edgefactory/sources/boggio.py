@@ -382,7 +382,7 @@ def _sample(payload):
 
 def persist_shadow(day,rows,stats,*,localdata=None):
  root=localdata or LOCALDATA; root.mkdir(parents=True,exist_ok=True); path=_path(day,root)
- payload={"schema":1,"source":SOURCE,"date":day,"role":"approved average-bookmaker price donor (operator promotion 2026-10-03); NOT a named bookmaker, never counts as named-book corroboration","provenance":{"api":BASE+"/api/v2/predictions","hunt":"docs/operator/SOURCE-HUNT-2026-10.md#54","publication_lag":"free tier exposes predictions up to 12h ahead; published_at and captured_at are retained"},"stats":stats,"rows":rows}
+ payload={"schema":1,"source":SOURCE,"date":day,"role":"approved average-bookmaker price donor (operator promotion 2026-10-03); NOT a named bookmaker, never counts as named-book corroboration","provenance":{"api":BASE+"/api/v2/predictions","hunt":"docs/operator/SOURCES.md#boggio-and-card-enrichment","publication_lag":"free tier exposes predictions up to 12h ahead; published_at and captured_at are retained"},"stats":stats,"rows":rows}
  tmp=path.with_suffix(path.suffix+".tmp"); tmp.write_text(json.dumps(payload,indent=2,sort_keys=True)); tmp.replace(path); return path
 
 

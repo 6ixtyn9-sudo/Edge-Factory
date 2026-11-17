@@ -1,7 +1,7 @@
 """Veto re-mine resolution overlay (Phase 1/2). Read-only. OFF by default.
 
 Resolves ``UNKNOWN`` league purity verdicts at pick time via the locked O1/O2
-rules (see HANDOVER.md Addendum 27 — veto re-mine locked decisions):
+rules (see docs/operator/RESEARCH.md, Veto-resolution precommitment):
 
 - O1: rule-pooled league verdicts — pool key ``(sport, league_key, market,
   side_role)``, n-weighted unconditional w_roi (Q2), Scenario B gates

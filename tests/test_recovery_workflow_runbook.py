@@ -1,4 +1,4 @@
-"""Validate the complete copy/paste replacement without adding another workflow."""
+"""Validate the recovery behavior in the installed workflow."""
 import re
 import subprocess
 from pathlib import Path
@@ -9,10 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def workflow():
-    doc = (ROOT / 'docs/operator/POST-FOREBET-RECOVERY.md').read_text()
-    text = doc.split('```yaml\n', 1)[1].rsplit('\n```', 1)[0]
-    return yaml.safe_load(text)
-
+    return yaml.safe_load((ROOT / '.github/workflows/daily.yml').read_text())
 
 def test_reference_restore_exact_original_path_and_current_state_restored_even_on_failure():
     wf = workflow()
@@ -35,7 +32,7 @@ def test_reference_restore_exact_original_path_and_current_state_restored_even_o
     assert 'EDGE_FACTORY_ENH_COHORT_PARITY' in wf['jobs']['run-autonomous-agent']['env']
     for step in steps:
         if step.get('uses') == 'actions/cache/save@v4' or 'phase5_persistence.py persist' in step.get('run', ''):
-            assert step['if'].startswith('success()')
+            assert step['if'] == "always() && inputs.mode != 'remine_only'"
     ordinary = next(s for s in steps if s['name'] == 'Execute Autonomous Smart Schedule')
     assert ordinary['if'] == "inputs.mode != 'recover_and_rebuild'"
     checks = [s for s in steps if s.get('run') == 'python3 scripts/phase5_persistence.py history-check']

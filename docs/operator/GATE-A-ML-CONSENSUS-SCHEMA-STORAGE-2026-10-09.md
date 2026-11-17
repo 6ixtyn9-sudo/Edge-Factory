@@ -1,22 +1,28 @@
 # Gate A: ML/consensus sidecar schema and storage specification
 
+> **Historical specification, not installed functionality.** The temporary
+> recorder/hooks were removed from the release. See [Research](RESEARCH.md#mlconsensus-sidecar-proposal)
+> for the consolidated release boundary. The original schema and approval
+> text below are preserved; superseded work-order links point to the exact
+> pre-cleanup Git revision, not live instructions.
+
 **Date:** 2026-10-09 (SAST)<br>
 **Specification:** `mcp-audit/v1`, draft 3 + C1 — verbatim ignore addition and rerunnable layout receipt<br>
 **Status:** DESIGN APPROVED — A1–A4 approved; C1 independently confirmed against `d458128`. Audit implementation, ignore application and activation remain unauthorized; not implementation acceptance.<br>
-**Parent:** [revision-4 proposal](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md), [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md)<br>
+**Parent:** [revision-4 proposal](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e/docs/operator/PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md), [acceptance checklist](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e/docs/operator/CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md)<br>
 **Inspected code baseline:** `01f580c1f41b78883d7c807e354ba76903bbd026`; draft-2 review pin `49a83da64e1ff0ea103177abd69ce6cba5188d0c`.<br>
 **Gate A scope:** specification and isolated layout control only. No recorder, hooks, operational schema, storage integration, ignore/workflow changes or replay were implemented. Separately authorized fallback-origin correction and failing contract tests were committed first at `6c3699d`; they are not Gate A implementation (§10).
 
 > Implementation status update: the operator subsequently authorized the
 > default-OFF recorder/hooks/temporary-test package. The original Gate A scope
 > above is historical, not a renewed approval requirement. See the latest
-> [execution receipt](EXECUTION-AUDIT-IMPLEMENTATION-2026-10-09.md) for executed
+> [execution receipt](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e/docs/operator/EXECUTION-AUDIT-IMPLEMENTATION-2026-10-09.md) for executed
 > tests and the reproduced full-fallback receipt-capacity conflict. No v1
 > acceptance, production activation or publication permission is implied.
 
 ## 1. Approval boundary
 
-Approve the contract below before writing audit code. Approval would authorize a separately reviewed implementation and synthetic failure/parity controls, not acceptance of that implementation or live activation. Gates B–F remain unchecked. The repository's transferred/re-reviewed D1–D5 [decision record](DECISIONS-2026-10-09.md) is the local reference; this document does not import the independent external D1–D7 record.
+Approve the contract below before writing audit code. Approval would authorize a separately reviewed implementation and synthetic failure/parity controls, not acceptance of that implementation or live activation. Gates B–F remain unchecked. The repository's transferred/re-reviewed D1–D5 [decision record](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e/docs/operator/DECISIONS-2026-10-09.md) is the local reference; this document does not import the independent external D1–D7 record.
 
 Non-negotiable invariants:
 
@@ -361,7 +367,7 @@ Approve or amend explicitly:
 - **A3:** default-OFF fail-soft interface, resource/latency targets and residual-risk tests (§5).
 - **A4:** corrected cleanup claims; default >1 MiB references with named but unprovisioned input artifact/steward; separate compact-index publication boundary (not byte durability); refusal-only unexported retention, shared quota/liveness and exact export lifecycle (§6).
 
-**Current disposition:** A1–A4 design approval is complete and **C1 is satisfied** by both latest supplied confirmations against the published block/baseline at `d458128`. This confirms path/staging separation only, not publisher admission, concurrency, crash/commit coordination, export durability or implementation acceptance. The separately authorized fallback-origin fix and unsuppressed contract tests remain delivered at `6c3699d`: six positive controls pass, six negative certification assertions fail. **The full suite is not green**; prior 30/160/50 passing selections are scoped execution receipts, not a full-suite pass. Recorder, hooks, production ignore edits, index publication, workflow changes, live routing, operational schema migration and long-term retention remain explicitly **not authorized**. Bulk evidence export is blocked on no route/no steward. See the [attributed disposition record](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). No further C1 design revision is needed; further work requires explicit authorization of its own scope.
+**Current disposition:** A1–A4 design approval is complete and **C1 is satisfied** by both latest supplied confirmations against the published block/baseline at `d458128`. This confirms path/staging separation only, not publisher admission, concurrency, crash/commit coordination, export durability or implementation acceptance. The separately authorized fallback-origin fix and unsuppressed contract tests remain delivered at `6c3699d`: six positive controls pass, six negative certification assertions fail. **The full suite is not green**; prior 30/160/50 passing selections are scoped execution receipts, not a full-suite pass. Recorder, hooks, production ignore edits, index publication, workflow changes, live routing, operational schema migration and long-term retention remain explicitly **not authorized**. Bulk evidence export is blocked on no route/no steward. See the [attributed disposition record](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e/docs/operator/GATE-A-REVIEW-DISPOSITION-2026-10-09.md). No further C1 design revision is needed; further work requires explicit authorization of its own scope.
 
 ## 9. Worked preimages and illustrative calculations
 
@@ -549,4 +555,4 @@ SCOPE: layout only; no size admission, concurrency, crash recovery or commit bar
 
 **Limits:** verifies ignores and broad staging path separation, not size/count admission, concurrency, ninth-publisher refusal, index bootstrap commit, crash/restore coordination, retained-memory/latency bounds, export verification or replay acceptance. R1 commit-together and §7 items 6/7 remain implementation requirements.
 
-**Separate authorized work performed first:** commit `6c3699df50fb19efd7c52dc45c85117d4480e8ea` corrects the fallback-origin boolean without changing threshold/OU/BTTS return entries, and adds unsuppressed failing contract tests. See the [execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md). Its limited code/test authorization does not extend to Gate A recorder/storage implementation.
+**Separate authorized work performed first:** commit `6c3699df50fb19efd7c52dc45c85117d4480e8ea` corrects the fallback-origin boolean without changing threshold/OU/BTTS return entries, and adds unsuppressed failing contract tests. See the [execution receipt](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/30e9372aab33e1e9444c1f5fd3b916df91ca7f0e/docs/operator/EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md). Its limited code/test authorization does not extend to Gate A recorder/storage implementation.

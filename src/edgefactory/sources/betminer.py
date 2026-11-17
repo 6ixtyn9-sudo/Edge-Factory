@@ -1042,7 +1042,7 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
         "provenance": {
             "api": f"RapidAPI {API_HOST} {ENDPOINT_VALUE_BETS}/{{from}}/{{to}}",
             "docs": "https://betminer.co.uk/documentation/",
-            "hunt": "docs/operator/SOURCE-HUNT-2026-10.md#51",
+            "hunt": "docs/operator/SOURCES.md#betminer",
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         },
         "stats": stats,

@@ -17,8 +17,8 @@ predictor source, answer for the LIVE consensus sources:
 
 Data: committed capture files localdata/{forebet,zulubet,statarea}.csv.gz.
 Vitibet and scoutingstats have no committed prob series in-repo (scoutingstats
-capture went stale 2026-09-04 — see item-3 containment and its HANDOVER
-addendum); they are reported as absent, not audited.
+capture went stale 2026-09-04 — see the historical item-3 containment in Git and
+docs/operator/SOURCES.md for current source boundaries); they are reported as absent, not audited.
 
 Run: `python3 scripts/audit_source_independence.py` (markdown to stdout).
 """

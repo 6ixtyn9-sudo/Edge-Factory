@@ -14,7 +14,6 @@ from edgefactory.util import ticket_receipt_path, ticket_receipt_bytes, ticket_r
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOW = ROOT / ".github" / "workflows" / "daily.yml"
-MANUAL_WORKFLOW = ROOT / "docs" / "operator" / "daily-runtime-storage.yml"
 LEDGER = "localdata/phase5_shadow/rows.jsonl"
 ATTEMPTS = "localdata/phase5_shadow/attempts.jsonl"
 
@@ -204,11 +203,9 @@ def test_concurrent_append_conflict_is_unioned_rebased_and_pushed(tmp_path):
     assert _git(repo, "status", "--short").stdout.strip() == ""
 
 
-@pytest.mark.parametrize("workflow_path", [WORKFLOW, MANUAL_WORKFLOW])
-def test_upload_artifact_patterns_cover_nested_phase5_evidence(workflow_path):
-    # The live workflow is unchanged in this PR; also validate the supplied
-    # manual replacement without pretending it has already been deployed.
-    yaml = workflow_path.read_text(encoding="utf-8")
+def test_upload_artifact_patterns_cover_nested_phase5_evidence():
+    # The installed workflow is canonical; do not keep a second deployment copy.
+    yaml = WORKFLOW.read_text(encoding="utf-8")
     full_upload = ("Upload full report recovery fallback" if "- name: Upload full report recovery fallback" in yaml
                    else "Upload Pick Ledgers & Reports as Artifacts")
     upload = yaml.split("- name: " + full_upload, 1)[1]
@@ -416,13 +413,6 @@ def test_queued_workflow_resolves_requested_branch_before_cache_restore():
         for i, step in enumerate(steps):
             if step.get('uses') == 'actions/cache/restore@v4' or 'phase5_persistence.py restore' in step.get('run', ''):
                 assert checkout < i
-    # The copy/paste replacement must not reintroduce the old event-SHA race.
-    doc = (ROOT / 'docs/operator/POST-FOREBET-RECOVERY.md').read_text()
-    replacement = yaml.safe_load(doc.split('```yaml\n', 1)[1].rsplit('\n```', 1)[0])
-    for job_name in ('run-autonomous-agent', 'regression-tests'):
-        checkout = next(s for s in replacement['jobs'][job_name]['steps']
-                        if s.get('uses') == 'actions/checkout@v4')
-        assert checkout['with']['ref'] == '${{ github.ref }}'
 
 
 @pytest.mark.parametrize('relative', [
@@ -552,23 +542,16 @@ def test_divergent_frozen_decisions_are_quarantined_not_auto_merged(tmp_path):
 
 def test_documented_decision_report_step_preserves_existing_non_gating_contract(tmp_path):
     import yaml
-    # Keep the documented manual step aligned with the workflow command and
-    # its explicitly incomplete statuses, never infer MATCH from a green job.
-    doc = (ROOT / 'HANDOVER.md').read_text()
-    step = yaml.safe_load(doc.split('```yaml\n', 1)[1].split('\n```', 1)[0])[0]
-    proposed = yaml.safe_load(MANUAL_WORKFLOW.read_text())
-    proposed_step = next(s for s in proposed['jobs']['run-autonomous-agent']['steps']
-                         if s['name'] == step['name'])
-    # YAML at EOF can omit the final shell newline; command contents must agree.
-    assert {**proposed_step, 'run': proposed_step['run'].rstrip('\n')} == {
-        **step, 'run': step['run'].rstrip('\n')}
+    steps = yaml.safe_load(WORKFLOW.read_text())['jobs']['run-autonomous-agent']['steps']
+    step = next(s for s in steps
+                if s['name'] == 'Ticket decision replay parity (read-only, flag never gate)')
     # The audit is windowed and bounded (2026-11-08): full-history replay grew
     # without limit as retained receipts accumulated. The step stays non-gating.
     for fragment in ('scripts/replay_harness.py --decision-parity',
                      '--parity-window-days 7',
                      '--parity-time-budget 120',
                      '--parity-output localdata/replay_parity.json'):
-        assert fragment in step['run'], f'HANDOVER step lost {fragment}'
+        assert fragment in step['run'], f'workflow step lost {fragment}'
         assert fragment in WORKFLOW.read_text(), f'daily.yml lost {fragment}'
     assert step['continue-on-error'] is True
     assert step['timeout-minutes'] == 3
@@ -649,8 +632,7 @@ def test_cross_format_draft_upgrade_still_requires_independent_financial_freeze(
     assert bool(ticket_receipt_files(base, 'auto_tickets', conflicts=True)) is not authorized
 
 
-@pytest.mark.parametrize("workflow_path", [WORKFLOW, MANUAL_WORKFLOW])
-def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_paths(tmp_path, workflow_path):
+def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_paths(tmp_path):
     from fnmatch import fnmatch
     from edgefactory.util import write_ticket_receipt
     repo = tmp_path / 'repo'
@@ -670,7 +652,7 @@ def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_pat
     relative = path.relative_to(repo).as_posix()
     assert _git(repo, 'check-ignore', '--no-index', '-q', relative, check=False).returncode == 1
     import yaml
-    workflow = yaml.safe_load(workflow_path.read_text())
+    workflow = yaml.safe_load(WORKFLOW.read_text())
     steps = workflow['jobs']['pipeline']['steps'] if 'pipeline' in workflow['jobs'] else next(iter(workflow['jobs'].values()))['steps']
     report_steps = [s for s in steps if s.get('with', {}).get('name') == 'EdgeFactory-Reports']
     assert any(fnmatch(relative, pattern)

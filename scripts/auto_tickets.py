@@ -11,7 +11,7 @@ number ("% of capital", "% of free bank"); "bank" alone means total bank,
 "free bank" = total bank minus committed (open) stakes.
 
 THE RECIPE (constants carry their validation receipts — see
-TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
+docs/operator/README.md and docs/operator/SETTLEMENT.md):
   LEGS      all playable-bucket picks with a verified execution price; the
             explicit price_push_eligible safety bit is a data-integrity gate,
             not an edge/bucket filter.
@@ -175,7 +175,7 @@ PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 #    (naive "YYYY-MM-DD HH:MM" or an explicit-offset instant) are compared
 #    with parse_kickoff and drop when already started: the feeds render dated
 #    rows on a UTC+2 clock (Inter Miami's explicit +02:00 row; the wall-clock
-#    evidence in the 2026-09-06 HANDOVER addendum). That rendering is the
+#    historical 2026-09-06 evidence retained in Git). That rendering is the
 #    feed contract — tested, never re-guessed from a league table. No 4h
 #    lead buffer on the live path.
 # 2. AUDIT contract (kickoff_contract; replay_harness.py --kickoff-contract,
@@ -4504,8 +4504,9 @@ LEGACY_KEY_REFUSED: list[dict] = []
 #   * no open slip's stored fixture_key fails the current fold (grep the lane
 #     state files' fixture_key values; every one must be reproduced by
 #     source_team_key on its own day).
-# Reprint both checks: PYTHONPATH=src .venv/bin/python handoff/n1_persisted_keys.py
-# (churn section) and any settlement run log (summary line).
+# Historical key census: handoff/n1_persisted_keys.txt (churn section).
+# Recheck current open-slip fixture keys and the settlement run summary; the
+# retired one-off proof script is not a current operational procedure.
 
 
 def leg_lookup_keys(slip_date, leg) -> list[tuple]:

@@ -5,7 +5,8 @@ was written: Unicode normalization forms, homoglyphs, invisible
 characters, Turkish dotted I, real clubs whose names begin with a squad
 marker, the degenerate-key sentinel, kickoff sufficiency, epoch-boundary
 settlement shadowing, and the proof methodology itself. Findings table:
-docs/operator/FIXTURE-IDENTITY-SPLIT-2026-10-05.md section 12.
+the historical fixture-identity audit in Git (pre-cleanup snapshot).
+Current exact-identity boundaries are documented in docs/operator/SOURCES.md.
 """
 from __future__ import annotations
 

@@ -740,7 +740,7 @@ SHADOW_MAX_LINES = 12
 # dispatch log tracks both). Measured production cut (2026-08-04, received-
 # prefix reconstruction): ~1,415 encoded text chars ≈ ~1,500 full-URL chars.
 # Budget rule: encoded text <= ~0.78 x observed cut. The Addendum 25 estimate
-# ("~2k") was wrong; HANDOVER records the correction and the method.
+# ("~2k") was wrong; the correction and method remain in the pre-cleanup Git history.
 SHADOW_ENCODED_TEXT_BUDGET = 1100
 
 
