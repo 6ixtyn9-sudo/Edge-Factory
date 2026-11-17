@@ -1,5 +1,5 @@
 {
-  "attempted": 20,
+  "attempted": 21,
   "attempted_fixtures": [
     {
       "avg_p": 87.0,
@@ -62,6 +62,26 @@
       "w_score": 0.574
     },
     {
+      "avg_p": 74.0,
+      "away": "NORTH. IRELAND",
+      "date": "2026-11-17",
+      "home": "HUNGARY",
+      "league": "EUN",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 73.52317226513382,
+      "away": "Angola",
+      "date": "2026-11-17",
+      "home": "South Sudan",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7351
+    },
+    {
       "avg_p": 54.03803090010634,
       "away": "Northern Ireland",
       "date": "2026-11-17",
@@ -82,14 +102,14 @@
       "w_score": 0.592
     },
     {
-      "avg_p": 94.81556599252372,
-      "away": "Brazil",
+      "avg_p": 74.0,
+      "away": "ANGOLA",
       "date": "2026-11-17",
-      "home": "Singapore",
-      "league": "International Friendly Games",
+      "home": "SOUTH SUDAN",
+      "league": "AFN",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.7021
+      "w_score": 0.574
     },
     {
       "avg_p": 87.0,
@@ -172,16 +192,6 @@
       "w_score": 0.574
     },
     {
-      "avg_p": 73.0,
-      "away": "BRAZIL",
-      "date": "2026-11-17",
-      "home": "SINGAPORE",
-      "league": "WNF",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.574
-    },
-    {
       "avg_p": 56.92508015022442,
       "away": "Paraguay",
       "date": "2026-11-17",
@@ -208,21 +218,21 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 19,
-  "candidate_fixtures": 49,
-  "captured_at": "2026-11-17T07:27:27.189259+00:00",
+  "candidate_fixtures": 47,
+  "captured_at": "2026-11-17T10:41:00.023954+00:00",
   "date": "2026-11-17",
-  "deferred_fixtures": 29,
+  "deferred_fixtures": 26,
   "errors": [],
   "fixtures_with_rows": 18,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 1,
   "match_detail": {
-    "bookmakers": 152,
+    "bookmakers": 154,
     "challenge_pages": 0,
-    "fixtures": 12,
-    "market_rows": 353,
-    "markets": 64,
-    "named_rows": 353,
+    "fixtures": 13,
+    "market_rows": 355,
+    "markets": 65,
+    "named_rows": 355,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -231,7 +241,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 87.0,
@@ -274,6 +284,16 @@
       "w_score": 0.574
     },
     {
+      "avg_p": 73.52317226513382,
+      "away": "Angola",
+      "date": "2026-11-17",
+      "home": "South Sudan",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7351
+    },
+    {
       "avg_p": 54.03803090010634,
       "away": "Northern Ireland",
       "date": "2026-11-17",
@@ -294,14 +314,14 @@
       "w_score": 0.592
     },
     {
-      "avg_p": 94.81556599252372,
-      "away": "Brazil",
+      "avg_p": 74.0,
+      "away": "ANGOLA",
       "date": "2026-11-17",
-      "home": "Singapore",
-      "league": "International Friendly Games",
+      "home": "SOUTH SUDAN",
+      "league": "AFN",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.7021
+      "w_score": 0.574
     },
     {
       "avg_p": 87.0,
@@ -384,16 +404,6 @@
       "w_score": 0.574
     },
     {
-      "avg_p": 73.0,
-      "away": "BRAZIL",
-      "date": "2026-11-17",
-      "home": "SINGAPORE",
-      "league": "WNF",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.574
-    },
-    {
       "avg_p": 56.92508015022442,
       "away": "Paraguay",
       "date": "2026-11-17",
@@ -414,7 +424,7 @@
       "w_score": 0.5405
     }
   ],
-  "requests": 4,
+  "requests": 7,
   "rows": 54,
   "schema": 1,
   "status": "ok"
