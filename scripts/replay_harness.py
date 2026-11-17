@@ -69,6 +69,7 @@ Usage (from repo root):
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import csv
 import gzip
 import hashlib
@@ -4094,6 +4095,56 @@ def _receipt_filename_date(logical_name):
         return None
 
 
+class _ParityBudgetExpired(BaseException):
+    """Incomplete diagnostic, never swallowed by a planner's data-error handler."""
+
+
+@contextmanager
+def _parity_deadline(seconds):
+    """Interrupt even one expensive receipt/result load on the CI main thread.
+
+    Between-receipt checks alone cannot bound a giant receipt. POSIX alarms
+    interrupt Python/I/O without a worker retaining another multi-GB graph.
+    Leave an existing timer/handler alone; callers still perform elapsed checks
+    and the workflow's external timeout remains the final safety net.
+    """
+    if seconds is None:
+        yield
+        return
+    if seconds <= 0:
+        raise _ParityBudgetExpired()
+    import signal
+    import threading
+    usable = (hasattr(signal, "setitimer")
+              and threading.current_thread() is threading.main_thread()
+              and signal.getitimer(signal.ITIMER_REAL) == (0.0, 0.0))
+    if not usable:
+        yield
+        return
+    previous = signal.getsignal(signal.SIGALRM)
+    def expired(_signum, _frame):
+        raise _ParityBudgetExpired()
+    signal.signal(signal.SIGALRM, expired)
+    try:
+        signal.setitimer(signal.ITIMER_REAL, seconds)
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+
+
+def _write_parity_report(target, report):
+    """Atomic publication of this invocation's status, including interruption."""
+    target = Path(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.name + ".tmp")
+    with tmp.open("w", encoding="utf-8") as handle:
+        handle.write(json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp, target)
+
+
 def decision_parity_report(root=None, *, window_days=None, reference=None,
                            time_budget_seconds=None):
     """Read-only current-code replay of actual decision receipts, both lanes.
@@ -4117,11 +4168,15 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
     Receipts whose filename carries no parseable date are always audited and
     listed in ``scope["undated_receipts"]`` — never silently dropped.
 
-    ``time_budget_seconds`` stops cleanly mid-audit. An exhausted budget is
-    reported as ``INCOMPLETE_TIME_BUDGET`` (CLI exit 3), never as ``PASS``:
+    ``time_budget_seconds`` interrupts even one expensive receipt/result load
+    on the POSIX main thread; elapsed checks also cover the final receipt.
+    The workflow has an external process deadline as a final safety net.
+    An exhausted budget is ``INCOMPLETE_TIME_BUDGET`` (CLI exit 3), never ``PASS``:
     a partial audit must not look like a parity MATCH. Full history stays the
     default; nothing here weakens a per-receipt check.
     """
+    if time_budget_seconds is not None and (not math.isfinite(time_budget_seconds) or time_budget_seconds < 0):
+        raise ValueError("parity time budget must be finite and nonnegative")
     base = (root or at.ROOT) / "localdata"
     started = time.perf_counter()
     if reference is None:
@@ -4185,112 +4240,125 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
             item = dict(file=str(path.relative_to(base)), status="INVALID", ledger="UNAVAILABLE", settlement="UNAVAILABLE")
             lane_report["receipts"].append(item)
             try:
-                payload = read_ticket_receipt(path)
-                digest = payload.pop("sha256")
-                if digest != at._decision_digest(payload):
-                    raise ValueError("receipt hash mismatch")
-                context = payload["context"]
-                day = context["date"]
-                if (payload["schema"] != 1 or context["lane"] != lane
-                        or path.name.removesuffix(".gz") != f"{prefix}_{day}_decision.json"
-                        or payload["boundary"] != report["boundary"]
-                        or payload["status"] not in ("frozen", "draft", "no_bet")):
-                    raise ValueError("receipt identity/schema/status mismatch")
-                logical_name = path.name.removesuffix(".gz")
-                if logical_name in storage_digests:
-                    if storage_digests[logical_name] != digest:
-                        raise ValueError("conflicting plain/compressed receipt copies")
-                    lane_report["duplicate_storage_copies"].append(item["file"])
-                    lane_report["receipts"].pop()  # identical evidence, not a second decision
-                    continue
-                storage_digests[logical_name] = digest
-                when = datetime.fromisoformat(context["build_at"])
-                if payload["status"] == "no_bet" and payload["plan"]:
-                    raise ValueError("no-bet receipt contains a ticket")
-                if payload["status"] in ("draft", "frozen") and not payload["plan"]:
-                    raise ValueError("ticket receipt contains no plan")
-                if when.tzinfo is None or not math.isfinite(context["bank_eff"]) or context["bank_eff"] < 0:
-                    raise ValueError("unproven build time or bank")
-                if (context.get("bank_total") is not None and
-                        (not math.isfinite(context["bank_total"]) or context["bank_total"] < context["bank_eff"])):
-                    raise ValueError("invalid total/free bank context")
-                prepared = at.prepare_ticket_pool(context)
-                plan = at.plan_ticket_decision(context, prepared=prepared)
-                actual = at.ticket_card_identity(plan, prepared["pool"])
-                expected = at.ticket_card_identity(payload["plan"], prepared["pool"])
-                # Validate expected plan AND its separately retained complete
-                # execution identity. A changed market/book at equal odds matters.
-                same = (at._decision_digest(actual) == at._decision_digest(expected)
-                        == at._decision_digest(payload["card_identity"]))
-                item.update(date=day, status="MATCH" if same else "DIFF",
-                            decision_status=payload["status"], accas=len(plan),
-                            execution_provenance=payload.get("execution_provenance"),
-                            engine_changed=payload.get("engine_sha256") != hashlib.sha256(Path(at.__file__).read_bytes()).hexdigest(),
-                            bank_total=context.get("bank_total"), free_bank=context["bank_eff"],
-                            committed_excluding_target=(context["bank_total"] - context["bank_eff"]
-                                                       if context.get("bank_total") is not None else None))
-                snapshot = context.get("bank_state")
-                item["bank_reconciliation"] = "UNAVAILABLE"
-                if snapshot is not None:
-                    slip_totals_match = all(abs(float(slip["staked_pct"]) - sum(
-                        float(a["stake_pct"]) for a in slip["accas"])) <= .0002
-                        for slip in snapshot.get("open_slips", []))
-                    item["bank_reconciliation"] = ("MATCH" if slip_totals_match
-                        and snapshot["bank"] == context["bank_total"]
-                        and abs(at.effective_bank(snapshot, exclude_date=day) - context["bank_eff"]) <= .0002
+                remaining = (None if time_budget_seconds is None else
+                             time_budget_seconds - (time.perf_counter() - started))
+                with _parity_deadline(remaining):
+                    payload = read_ticket_receipt(path)
+                    digest = payload.pop("sha256")
+                    if digest != at._decision_digest(payload):
+                        raise ValueError("receipt hash mismatch")
+                    context = payload["context"]
+                    day = context["date"]
+                    if (payload["schema"] != 1 or context["lane"] != lane
+                            or path.name.removesuffix(".gz") != f"{prefix}_{day}_decision.json"
+                            or payload["boundary"] != report["boundary"]
+                            or payload["status"] not in ("frozen", "draft", "no_bet")):
+                        raise ValueError("receipt identity/schema/status mismatch")
+                    logical_name = path.name.removesuffix(".gz")
+                    if logical_name in storage_digests:
+                        if storage_digests[logical_name] != digest:
+                            raise ValueError("conflicting plain/compressed receipt copies")
+                        lane_report["duplicate_storage_copies"].append(item["file"])
+                        lane_report["receipts"].pop()  # identical evidence, not a second decision
+                        continue
+                    storage_digests[logical_name] = digest
+                    when = datetime.fromisoformat(context["build_at"])
+                    if payload["status"] == "no_bet" and payload["plan"]:
+                        raise ValueError("no-bet receipt contains a ticket")
+                    if payload["status"] in ("draft", "frozen") and not payload["plan"]:
+                        raise ValueError("ticket receipt contains no plan")
+                    if when.tzinfo is None or not math.isfinite(context["bank_eff"]) or context["bank_eff"] < 0:
+                        raise ValueError("unproven build time or bank")
+                    if (context.get("bank_total") is not None and
+                            (not math.isfinite(context["bank_total"]) or context["bank_total"] < context["bank_eff"])):
+                        raise ValueError("invalid total/free bank context")
+                    prepared = at.prepare_ticket_pool(context)
+                    plan = at.plan_ticket_decision(context, prepared=prepared)
+                    actual = at.ticket_card_identity(plan, prepared["pool"])
+                    expected = at.ticket_card_identity(payload["plan"], prepared["pool"])
+                    # Validate expected plan AND its separately retained complete
+                    # execution identity. A changed market/book at equal odds matters.
+                    same = (at._decision_digest(actual) == at._decision_digest(expected)
+                            == at._decision_digest(payload["card_identity"]))
+                    item.update(date=day, status="MATCH" if same else "DIFF",
+                                decision_status=payload["status"], accas=len(plan),
+                                execution_provenance=payload.get("execution_provenance"),
+                                engine_changed=payload.get("engine_sha256") != hashlib.sha256(Path(at.__file__).read_bytes()).hexdigest(),
+                                bank_total=context.get("bank_total"), free_bank=context["bank_eff"],
+                                committed_excluding_target=(context["bank_total"] - context["bank_eff"]
+                                                           if context.get("bank_total") is not None else None))
+                    snapshot = context.get("bank_state")
+                    item["bank_reconciliation"] = "UNAVAILABLE"
+                    if snapshot is not None:
+                        slip_totals_match = all(abs(float(slip["staked_pct"]) - sum(
+                            float(a["stake_pct"]) for a in slip["accas"])) <= .0002
+                            for slip in snapshot.get("open_slips", []))
+                        item["bank_reconciliation"] = ("MATCH" if slip_totals_match
+                            and snapshot["bank"] == context["bank_total"]
+                            and abs(at.effective_bank(snapshot, exclude_date=day) - context["bank_eff"]) <= .0002
+                            else "DIFF")
+                    if lane == "enh":
+                        item["ml_comparison"] = enh_decision_comparison(context, prepared)
+                    seen.add(day)
+                    if payload["status"] != "frozen":
+                        item["ledger"] = "NOT_COMMITTED"
+                        continue
+                    # Only independently retained frozen financial positions count.
+                    if day not in (state.get(at.FROZEN_BOOK_KEY) or {}):
+                        item["ledger"] = "MISSING_FREEZE"
+                        continue
+                    item["freeze_time"] = ("MATCH" if freeze_timestamp_matches(
+                        state[at.FROZEN_BOOK_KEY][day].get("frozen_at"), context["build_at"])
                         else "DIFF")
-                if lane == "enh":
-                    item["ml_comparison"] = enh_decision_comparison(context, prepared)
-                seen.add(day)
-                if payload["status"] != "frozen":
-                    item["ledger"] = "NOT_COMMITTED"
-                    continue
-                # Only independently retained frozen financial positions count.
-                if day not in (state.get(at.FROZEN_BOOK_KEY) or {}):
-                    item["ledger"] = "MISSING_FREEZE"
-                    continue
-                item["freeze_time"] = ("MATCH" if freeze_timestamp_matches(
-                    state[at.FROZEN_BOOK_KEY][day].get("frozen_at"), context["build_at"])
-                    else "DIFF")
-                history = [h for h in state.get("history", []) if h.get("date") == day]
-                settled = [a for h in history for a in h.get("accas", [])]
-                opened = [a for h in state.get("open_slips", []) if h.get("date") == day
-                          for a in h.get("accas", [])]
-                try:
-                    item["ledger"] = ("MATCH" if _ledger_ticket_core(settled + opened, lane)
-                                      == _ledger_ticket_core(payload["plan"], lane) else "DIFF")
-                except (KeyError, TypeError, ValueError):
-                    item["ledger"] = "INCOMPLETE_IDENTITY"
-                if lane == "enh" and same and item["ledger"] == "MATCH" and item["freeze_time"] == "MATCH":
-                    if settled_facts is None:
-                        settled_facts = at.load_settled(root=root) if root is not None else at.load_settled()
-                    item["ml_comparison"] = enh_decision_comparison(
-                        context, prepared, history=history, allow_outcomes=True,
-                        settled=settled_facts)
-                # Reconcile retained payouts, not a guessed historical equity
-                # chain: settlement ordering and legacy closes remain untouched.
-                item["open_accas"] = len(opened)
-                if settled:
-                    stake = sum(a["stake_pct"] for a in settled)
-                    returned = sum(a["returned_pct"] for a in settled)
-                    totals_stake = sum(h["staked_pct"] for h in history)
-                    totals_returned = sum(h["returned_pct"] for h in history)
+                    history = [h for h in state.get("history", []) if h.get("date") == day]
+                    settled = [a for h in history for a in h.get("accas", [])]
+                    opened = [a for h in state.get("open_slips", []) if h.get("date") == day
+                              for a in h.get("accas", [])]
                     try:
-                        grades = [_graded_acca(a) for a in settled]
-                        expected_return = sum(a["stake_pct"] * odds if won else 0.
-                                              for a, (odds, won) in zip(settled, grades))
-                        outcomes_match = all(a.get("won") is won for a, (_, won) in zip(settled, grades))
-                        item["settlement"] = ("MATCH" if outcomes_match
-                                               and abs(stake - totals_stake) <= 0.0002
-                                               and abs(returned - totals_returned) <= 0.0002
-                                               and abs(expected_return - returned) <= 0.0002 else "DIFF")
-                    except ValueError:
-                        item["settlement"] = "INCOMPLETE_OUTCOME"
-                    item["settled_net"] = returned - stake
-                elif opened:
-                    item["settlement"] = "PENDING"
+                        item["ledger"] = ("MATCH" if _ledger_ticket_core(settled + opened, lane)
+                                          == _ledger_ticket_core(payload["plan"], lane) else "DIFF")
+                    except (KeyError, TypeError, ValueError):
+                        item["ledger"] = "INCOMPLETE_IDENTITY"
+                    if lane == "enh" and same and item["ledger"] == "MATCH" and item["freeze_time"] == "MATCH":
+                        if settled_facts is None:
+                            settled_facts = at.load_settled(root=root) if root is not None else at.load_settled()
+                        item["ml_comparison"] = enh_decision_comparison(
+                            context, prepared, history=history, allow_outcomes=True,
+                            settled=settled_facts)
+                    # Reconcile retained payouts, not a guessed historical equity
+                    # chain: settlement ordering and legacy closes remain untouched.
+                    item["open_accas"] = len(opened)
+                    if settled:
+                        stake = sum(a["stake_pct"] for a in settled)
+                        returned = sum(a["returned_pct"] for a in settled)
+                        totals_stake = sum(h["staked_pct"] for h in history)
+                        totals_returned = sum(h["returned_pct"] for h in history)
+                        try:
+                            grades = [_graded_acca(a) for a in settled]
+                            expected_return = sum(a["stake_pct"] * odds if won else 0.
+                                                  for a, (odds, won) in zip(settled, grades))
+                            outcomes_match = all(a.get("won") is won for a, (_, won) in zip(settled, grades))
+                            item["settlement"] = ("MATCH" if outcomes_match
+                                                   and abs(stake - totals_stake) <= 0.0002
+                                                   and abs(returned - totals_returned) <= 0.0002
+                                                   and abs(expected_return - returned) <= 0.0002 else "DIFF")
+                        except ValueError:
+                            item["settlement"] = "INCOMPLETE_OUTCOME"
+                        item["settled_net"] = returned - stake
+                    elif opened:
+                        item["settlement"] = "PENDING"
+            except _ParityBudgetExpired:
+                budget.update(exhausted=True, elapsed=round(time.perf_counter() - started, 3))
+                item.update(status=("DIFF" if item["status"] == "DIFF" else "NOT_AUDITED_TIME_BUDGET"),
+                            ledger=(item["ledger"] if item["ledger"] in {"DIFF", "MISSING_FREEZE"} else "UNAVAILABLE"),
+                            settlement=("DIFF" if item["settlement"] == "DIFF" else "UNAVAILABLE"),
+                            error="receipt audit interrupted by time budget; NOT a MATCH")
+                break
             except (OSError, EOFError, KeyError, TypeError, ValueError, IndexError, OverflowError, AttributeError, StopIteration) as exc:
                 item.update(status="INVALID", error=f"{type(exc).__name__}: {exc}")
+            finally:
+                # Release the previous expanded receipt BEFORE reading another.
+                payload = context = prepared = plan = actual = expected = snapshot = None
         if lane == "enh":
             lane_report["attributed_scores"] = _attributed_ml_scores(state.get("history", []))
         lane_report["missing_receipt_days"] = sorted(days - seen)
@@ -4306,7 +4374,10 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
                             or r.get("bank_reconciliation") == "UNAVAILABLE"
                             or r["settlement"] == "INCOMPLETE_OUTCOME"
                             for r in lane["receipts"]) for lane in report["lanes"].values())
-    budget["elapsed"] = round(time.perf_counter() - started, 3)
+    elapsed = time.perf_counter() - started
+    budget["elapsed"] = round(elapsed, 3)
+    if time_budget_seconds is not None and elapsed >= time_budget_seconds:
+        budget["exhausted"] = True  # includes the LAST receipt; no accidental PASS
     if budget["exhausted"] and not bad:
         # A stopped audit is not a verdict. It must never read as PASS, and it
         # must not masquerade as a mismatch either.
@@ -4457,8 +4528,8 @@ def main():
                     help="with --decision-parity: stop cleanly after this many seconds; "
                          "an exhausted budget reports INCOMPLETE_TIME_BUDGET (exit 3)")
     ap.add_argument("--parity-output", metavar="PATH",
-                    help="with --decision-parity: write the report atomically to PATH "
-                         "instead of stdout, so a killed run cannot leave truncated JSON")
+                    help="with --decision-parity: atomically write a current-invocation "
+                         "incomplete checkpoint first, then the final report to PATH")
     args = ap.parse_args()
     if args.drop_pending_days:
         globals()["_DROP_PENDING_DAYS"] = True
@@ -4469,22 +4540,25 @@ def main():
             reference = datetime.fromisoformat(args.parity_reference)
             if reference.tzinfo is None:
                 ap.error("--parity-reference must include an offset")
+        if args.parity_time_budget is not None and (not math.isfinite(args.parity_time_budget) or args.parity_time_budget < 0):
+            ap.error("--parity-time-budget must be finite and nonnegative")
+        execution = dict(started_at=datetime.now(timezone.utc).isoformat(),
+                         run_id=os.environ.get("GITHUB_RUN_ID"),
+                         run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"), pid=os.getpid())
+        if args.parity_output:
+            # Replace a cached PASS BEFORE doing any expensive work. Even a
+            # SIGKILL now leaves only this run's explicitly incomplete status.
+            _write_parity_report(args.parity_output, dict(
+                schema=1, status="INCOMPLETE_INTERRUPTED", execution=execution,
+                caveat="This invocation started but has not published a completed audit. NOT a parity MATCH."))
         report = decision_parity_report(window_days=args.parity_window_days,
                                         reference=reference,
                                         time_budget_seconds=args.parity_time_budget)
-        text = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
+        report["execution"] = execution
         if args.parity_output:
-            # Temp + rename: a SIGKILL leaves the previous report or none.
-            target = Path(args.parity_output)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            tmp = target.with_name(target.name + ".tmp")
-            with open(tmp, "w", encoding="utf-8") as handle:
-                handle.write(text)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(tmp, target)
+            _write_parity_report(args.parity_output, report)
         else:
-            sys.stdout.write(text)
+            sys.stdout.write(json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n")
         if report["status"] == "FAIL":
             return 1
         return 3 if report["status"] == "INCOMPLETE_TIME_BUDGET" else 0

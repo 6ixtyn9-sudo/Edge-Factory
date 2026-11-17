@@ -331,14 +331,14 @@ def test_archive_and_prune_preserves_ledger_cited_odds_cache(tmp_path):
     assert recent_capture.exists()
 
 
-def test_prunes_old_timestamped_ml_paper_receipts_and_retains_canonical(tmp_path):
+def test_preserves_all_ml_paper_receipts_as_capital_chain_evidence(tmp_path):
     import clean_localdata as cl
     root = tmp_path / "localdata"
     ml_dir = root / "phase5_reconciliation" / "ml_paper_receipts"
     ml_dir.mkdir(parents=True)
 
     today = date(2026, 11, 11)
-    # Old timestamped receipt (older than 30 days -> prune)
+    # Old timestamped receipt is required even beyond the telemetry window.
     old_ts = ml_dir / "autobets_ML_2026-10-01_20261001T120000000000Z.json"
     old_ts.write_text("{}")
     # Old canonical receipt (keep)
@@ -349,7 +349,7 @@ def test_prunes_old_timestamped_ml_paper_receipts_and_retains_canonical(tmp_path
     fresh_ts.write_text("{}")
 
     pruned = cl.clean_localdata(root, keep_days=30, today=today)
-    assert old_ts in pruned
-    assert not old_ts.exists()
+    assert old_ts not in pruned
+    assert old_ts.exists()
     assert old_canonical.exists()
     assert fresh_ts.exists()

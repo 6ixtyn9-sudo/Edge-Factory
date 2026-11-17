@@ -222,3 +222,62 @@ def test_reuse_republishes_refusal_inventories(tmp_path, monkeypatch):
     assert ("sentinel",) not in at.AMBIGUOUS_SETTLEMENT_KEYS, (
         "a reused load must republish its own refusal inventory, not inherit caller mutation")
 
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='CI uses POSIX interval timers')
+def test_budget_interrupts_one_expensive_receipt_instead_of_waiting_for_the_next(tmp_path, monkeypatch):
+    import signal
+    import time
+    _seed_window_receipts(tmp_path)
+    previous_handler = signal.getsignal(signal.SIGALRM)
+    def slow(_path):
+        try:
+            time.sleep(1)
+        except Exception:
+            raise AssertionError('ordinary data-error handlers must not swallow the deadline')
+    monkeypatch.setattr(rh, 'read_ticket_receipt', slow)
+    started = time.perf_counter()
+    report = rh.decision_parity_report(tmp_path, time_budget_seconds=.03)
+    assert time.perf_counter() - started < .8
+    assert report['status'] == 'INCOMPLETE_TIME_BUDGET'
+    assert report['budget']['exhausted'] is True
+    assert report['lanes']['main']['receipts'][0]['status'] == 'NOT_AUDITED_TIME_BUDGET'
+    assert signal.getsignal(signal.SIGALRM) is previous_handler
+    assert signal.getitimer(signal.ITIMER_REAL) == (0., 0.)
+
+
+def test_interrupted_cli_replaces_a_cached_pass_before_replay(tmp_path, monkeypatch):
+    path = tmp_path / 'replay.json'
+    path.write_text('{"status":"PASS","old_run":true}')
+    monkeypatch.setenv('GITHUB_RUN_ID', 'current-run')
+    monkeypatch.setenv('GITHUB_RUN_ATTEMPT', '2')
+    monkeypatch.setattr(sys, 'argv', ['replay_harness.py', '--decision-parity', '--parity-output', str(path)])
+    def killed(**kwargs):
+        report = json.loads(path.read_bytes())
+        assert report['status'] == 'INCOMPLETE_INTERRUPTED'
+        assert report['execution']['run_id'] == 'current-run'
+        raise RuntimeError('interrupted before completion')
+    monkeypatch.setattr(rh, 'decision_parity_report', killed)
+    with pytest.raises(RuntimeError, match='interrupted'):
+        rh.main()
+    report = json.loads(path.read_bytes())
+    assert report['status'] == 'INCOMPLETE_INTERRUPTED' and 'old_run' not in report
+
+
+def test_completed_cli_binds_the_final_report_to_this_invocation(tmp_path, monkeypatch):
+    path = tmp_path / 'replay.json'
+    monkeypatch.setenv('GITHUB_RUN_ID', 'new-run')
+    monkeypatch.setenv('GITHUB_RUN_ATTEMPT', '1')
+    monkeypatch.setattr(sys, 'argv', ['replay_harness.py', '--decision-parity', '--parity-output', str(path)])
+    monkeypatch.setattr(rh, 'decision_parity_report', lambda **kwargs: {'status': 'INCOMPLETE_TIME_BUDGET'})
+    assert rh.main() == 3
+    report = json.loads(path.read_bytes())
+    assert report['status'] == 'INCOMPLETE_TIME_BUDGET'
+    assert report['execution']['run_id'] == 'new-run'
+    assert report['execution']['run_attempt'] == '1'
+
+
+@pytest.mark.parametrize('seconds', [-1, float('inf'), float('nan')])
+def test_invalid_replay_budgets_cannot_silently_disable_the_deadline(tmp_path, seconds):
+    with pytest.raises(ValueError, match='finite and nonnegative'):
+        rh.decision_parity_report(tmp_path, time_budget_seconds=seconds)

@@ -139,16 +139,18 @@ def publish_ml_paper(*, write_empty=True):
     from edgefactory import ml_paper
     scores = at.load_settled_scores() if ml_paper.receipt_files(LOCALDATA) else {}
     lookup = at.ml_paper_score_lookup(scores)
-    card = ml_paper.latest_card(LOCALDATA)
-    # A sibling report with no paper evidence stays read-only, preserving the
-    # existing ENH no-state/no-write contract. Explicit paper reporting may
-    # publish its initial notional-bank report; this never creates live state.
-    if write_empty or card is not None:
-        report = ml_paper.publish(LOCALDATA, lookup)
-    else:
+    # An absent PAPER sibling stays completely read-only, including no lock
+    # file/directory creation. Still check an integrity block on an empty lane.
+    if not write_empty and not ml_paper.receipt_files(LOCALDATA) and not ml_paper.state_path(LOCALDATA).exists():
+        ml_paper.receipts(LOCALDATA)
         report = ml_paper.performance([], lookup)
-    if card is not None:
-        print("\n" + ml_paper.render_latest_card(LOCALDATA, report, card=card))
+    else:
+        with ml_paper.paper_run(LOCALDATA) as operation:
+            card = operation.latest_card()
+            report = (operation.publish(lookup) if write_empty or card is not None
+                      else ml_paper.performance([], lookup))
+            if card is not None:
+                print("\n" + operation.render_latest_card(report, card=card))
     print("\n" + ml_paper.render_performance(report))
     return report
 
