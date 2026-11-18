@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 1,
@@ -31,7 +31,7 @@
         "selection_unmapped": 17
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -59,7 +59,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-19\\/2026-11-19' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -171,21 +171,21 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 6,
+      "coherence_excluded_rows": 12,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 6
+        "withheld_mixed_events_one_x_two": 12
       },
-      "coherence_withheld_fixtures": 1,
+      "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 3,
       "join_miss_counts": {
-        "fixture_key_miss": 14207,
+        "fixture_key_miss": 14489,
         "no_pick_for_fixture": 52
       },
       "pa_matched": 3,
-      "pa_raw": 767,
-      "pa_scored": 14262,
+      "pa_raw": 782,
+      "pa_scored": 14544,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -262,9 +262,6 @@
           "unknown_market:team_clean_sheet": 3
         },
         "card_fixture_count": 3,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "player_prop": 123
@@ -275,16 +272,16 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 6
       },
-      "reason": null,
+      "reason": "cache_rows_pending_join",
       "sa_matched": 0,
-      "sa_raw": 1,
+      "sa_raw": 6,
       "sa_scored": 6,
-      "status": "ok"
+      "status": "cache_only"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

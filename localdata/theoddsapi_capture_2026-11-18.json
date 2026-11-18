@@ -1,52 +1,31 @@
 {
-  "added": 204,
-  "attempted": 3,
+  "added": 39,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Jamaica",
+      "away": "Mallorca",
       "date": "2026-11-18",
-      "home": "Mexico",
-      "kickoff": "2026-11-18T02:30:00Z",
-      "league": "CONCACAF Nations League"
-    },
-    {
-      "away": "CHAPECOENSE",
-      "date": "2026-11-18",
-      "home": "REMO",
-      "kickoff": "23:00",
-      "league": "BR1"
-    },
-    {
-      "away": "SANTOS",
-      "date": "2026-11-18",
-      "home": "CORITIBA",
-      "kickoff": "22:30",
-      "league": "BR1"
+      "home": "CD Alcoyano",
+      "kickoff": "2026-11-18T19:00:00Z",
+      "league": "Copa del Rey"
     }
   ],
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-17T22:38:24+00:00",
+  "captured_at": "2026-11-18T01:53:28+00:00",
   "date": "2026-11-18",
   "due_reasons": {
-    "first_at": 3
+    "scope_at": 1
   },
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 1,
   "kickoff_mismatch_detail": {},
   "quoted_fixtures": [
     {
-      "away": "Chapecoense",
+      "away": "Mallorca",
       "date": "2026-11-18",
-      "home": "Remo",
-      "kickoff": "2026-11-18T23:00:00Z",
-      "league": "BR1"
-    },
-    {
-      "away": "Santos",
-      "date": "2026-11-18",
-      "home": "Coritiba",
-      "kickoff": "2026-11-18T22:30:00Z",
-      "league": "BR1"
+      "home": "Alcoyano",
+      "kickoff": "2026-11-18T19:00:00Z",
+      "league": "Copa del Rey"
     }
   ],
   "requested_markets": [
@@ -58,13 +37,14 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 204,
+  "rows": 39,
   "schema": 1,
   "skip_reasons": {
-    "priced": 6,
-    "retry_cooldown": 6
+    "priced": 5,
+    "retry_cooldown": 9
   },
   "skipped": [
+    "Mexico|Jamaica (retry cooldown (6h after failed attempt))",
     "Deportiva Minera|FC Cartagena (priced)",
     "FLAMENGO|ATLETICO PR (retry cooldown (6h after failed attempt))",
     "Utebo FC|Sabadell (priced)",
@@ -74,16 +54,13 @@
     "Real Madrid W|Inter Milano W (retry cooldown (6h after failed attempt))",
     "El Salvador|Saint Martin (retry cooldown (6h after failed attempt))",
     "NICARAGUA|MONTSERRAT (retry cooldown (6h after failed attempt))",
+    "Remo|Chapecoense (retry cooldown (6h after failed attempt))",
     "CD Badajoz|CD Tenerife (priced)",
-    "ALCOYANO|MALLORCA (priced)",
+    "Coritiba|Santos (retry cooldown (6h after failed attempt))",
     "Al Adalah|Al-Orobah FC (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
   "status": "ok",
-  "unmatched": [
-    "Mexico vs Jamaica (league not covered: CONCACAF Nations League)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: CONCACAF Nations League": 1
-  }
+  "unmatched": [],
+  "unmatched_reasons": {}
 }

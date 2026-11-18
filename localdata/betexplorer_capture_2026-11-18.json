@@ -1,15 +1,105 @@
 {
-  "attempted": 2,
+  "attempted": 12,
   "attempted_fixtures": [
     {
-      "avg_p": 55.49999999999999,
-      "away": "CHAPECOENSE",
+      "avg_p": 76.0,
+      "away": "ATLETICO PR",
       "date": "2026-11-18",
-      "home": "REMO",
+      "home": "FLAMENGO",
       "league": "BR1",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.5716
+      "w_score": 0.574
+    },
+    {
+      "avg_p": 73.27582864001478,
+      "away": "OH Leuven W",
+      "date": "2026-11-18",
+      "home": "Juventus W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 71.25839793281654,
+      "away": "Inter Milano W",
+      "date": "2026-11-18",
+      "home": "Real Madrid W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 48.79589926036888,
+      "away": "Sabadell",
+      "date": "2026-11-18",
+      "home": "Utebo FC",
+      "league": "Copa Del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 43.04734848484848,
+      "away": "Santos",
+      "date": "2026-11-18",
+      "home": "Coritiba",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 41.83968097499776,
+      "away": "Al-Orobah FC",
+      "date": "2026-11-18",
+      "home": "Al Adalah",
+      "league": "Division 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 77.6500904159132,
+      "away": "FC Cartagena",
+      "date": "2026-11-18",
+      "home": "Deportiva Minera",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 73.11087866108787,
+      "away": "Mallorca",
+      "date": "2026-11-18",
+      "home": "Alcoyano",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 71.5,
+      "away": "Real Uni\u00f3n Club",
+      "date": "2026-11-18",
+      "home": "Portugalete",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 61.13249218823975,
+      "away": "Mallorca",
+      "date": "2026-11-18",
+      "home": "CD Alcoyano",
+      "league": "Copa del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.6534
     },
     {
       "avg_p": 59.46225952470765,
@@ -20,41 +110,142 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6534
+    },
+    {
+      "avg_p": 83.3633148404993,
+      "away": "Jamaica",
+      "date": "2026-11-18",
+      "home": "Mexico",
+      "league": "CONCACAF Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7021
     }
   ],
-  "be_429": 2,
+  "be_429": 0,
   "be_cached": 1,
-  "be_cooling_down": true,
+  "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 1,
-  "candidate_fixtures": 14,
-  "captured_at": "2026-11-17T22:25:21.852202+00:00",
+  "candidate_fixtures": 12,
+  "captured_at": "2026-11-18T01:31:45.477635+00:00",
   "date": "2026-11-18",
-  "deferred_fixtures": 12,
+  "deferred_fixtures": 0,
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 9,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 45,
   "match_detail": {
-    "bookmakers": 0,
+    "bookmakers": 161,
     "challenge_pages": 0,
-    "fixtures": 0,
-    "market_rows": 0,
-    "markets": 0,
-    "named_rows": 0,
+    "fixtures": 9,
+    "market_rows": 381,
+    "markets": 54,
+    "named_rows": 381,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
+  "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
-  "quoted_fixtures": [],
-  "requests": 5,
-  "rows": 0,
+  "network_attempted": 11,
+  "quoted_fixtures": [
+    {
+      "avg_p": 73.27582864001478,
+      "away": "OH Leuven W",
+      "date": "2026-11-18",
+      "home": "Juventus W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 71.25839793281654,
+      "away": "Inter Milano W",
+      "date": "2026-11-18",
+      "home": "Real Madrid W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 48.79589926036888,
+      "away": "Sabadell",
+      "date": "2026-11-18",
+      "home": "Utebo FC",
+      "league": "Copa Del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 43.04734848484848,
+      "away": "Santos",
+      "date": "2026-11-18",
+      "home": "Coritiba",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 77.6500904159132,
+      "away": "FC Cartagena",
+      "date": "2026-11-18",
+      "home": "Deportiva Minera",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 73.11087866108787,
+      "away": "Mallorca",
+      "date": "2026-11-18",
+      "home": "Alcoyano",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 71.5,
+      "away": "Real Uni\u00f3n Club",
+      "date": "2026-11-18",
+      "home": "Portugalete",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 61.13249218823975,
+      "away": "Mallorca",
+      "date": "2026-11-18",
+      "home": "CD Alcoyano",
+      "league": "Copa del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.6534
+    },
+    {
+      "avg_p": 83.3633148404993,
+      "away": "Jamaica",
+      "date": "2026-11-18",
+      "home": "Mexico",
+      "league": "CONCACAF Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7021
+    }
+  ],
+  "requests": 66,
+  "rows": 27,
   "schema": 1,
-  "status": "empty"
+  "status": "ok"
 }
