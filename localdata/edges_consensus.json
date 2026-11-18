@@ -3585,26 +3585,27 @@
     },
     {
       "activated_as_of": "2026-11-15",
+      "benched_at": "2026-11-18",
       "contract_id": "pfc_c33854a6f17eda6cca30d634",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.574,
+        "bench": true,
+        "bench_min_priced_n": 30,
+        "bench_reason": "recent_roi",
         "checked_at": "2026-11-18",
         "recent": {
-          "n": 43,
-          "wins": 30,
-          "n_priced": 40,
           "hit": 0.6977,
+          "n": 43,
+          "n_priced": 40,
+          "roi": -0.002,
           "wilson_lb": 0.5489,
-          "roi": -0.002
+          "wins": 30
         },
-        "baseline_lb": 0.574,
         "recent_lb": 0.5489,
         "recent_ub": 0.814,
-        "bench": true,
-        "bench_reason": "recent_roi",
-        "bench_min_priced_n": 30
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -3646,8 +3647,7 @@
         "wins": 399
       },
       "view": "pfc_c33854a6f17eda6cca30d634",
-      "where": "1=1",
-      "benched_at": "2026-11-18"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-11-03",
