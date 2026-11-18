@@ -1,52 +1,11 @@
 {
   "base_pct": 100.0,
-  "bank": 213.01911599999997,
+  "bank": 248.43355799999998,
   "cycle_base": 456.154568,
   "open_slips": [
     {
       "date": "2026-11-18",
       "accas": [
-        {
-          "legs": [
-            {
-              "match": "CD Alcoyano vs Mallorca",
-              "pick": "AWAY",
-              "prob": 0.6113249218823975,
-              "odds": 1.52,
-              "result": null,
-              "market": "1x2",
-              "price_book": "betexplorer_best",
-              "price_source": "betexplorer_odds",
-              "fixture_key": [
-                "2026-11-18",
-                "CD Alcoyano",
-                "Mallorca"
-              ]
-            },
-            {
-              "match": "Utebo FC vs Sabadell",
-              "pick": "AWAY",
-              "prob": 0.48795899260368875,
-              "odds": 1.53,
-              "result": null,
-              "market": "1x2",
-              "price_book": "betexplorer_best",
-              "price_source": "betexplorer_odds",
-              "fixture_key": [
-                "2026-11-18",
-                "Utebo FC",
-                "Sabadell"
-              ]
-            }
-          ],
-          "odds": 2.33,
-          "stake_pct": 26.6274,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
         {
           "legs": [
             {
@@ -84,12 +43,12 @@
           "stake_pct": 26.6274,
           "results": [
             null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 53.2548
+      "staked_pct": 26.6274
     }
   ],
   "history": [
@@ -2977,6 +2936,51 @@
       ],
       "bank_pct": 213.0191,
       "close_pct": 213.0191
+    },
+    {
+      "date": "2026-11-18",
+      "staked_pct": 26.6274,
+      "returned_pct": 62.0418,
+      "accas": [
+        {
+          "odds": 2.33,
+          "won": true,
+          "stake_pct": 26.6274,
+          "returned_pct": 62.0418,
+          "legs": [
+            {
+              "match": "CD Alcoyano vs Mallorca",
+              "pick": "AWAY",
+              "odds": 1.52,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-18",
+                "CD Alcoyano",
+                "Mallorca"
+              ]
+            },
+            {
+              "match": "Utebo FC vs Sabadell",
+              "pick": "AWAY",
+              "odds": 1.53,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-18",
+                "Utebo FC",
+                "Sabadell"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 248.4336,
+      "close_pct": 248.4335
     }
   ],
   "events": [

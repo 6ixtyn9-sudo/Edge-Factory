@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 22.795727999999997,
+  "bank": 19.946227999999998,
   "cycle_base": 100.0,
   "history": [
     {
@@ -10335,54 +10335,28 @@
       ],
       "bank_pct": 22.7957,
       "close_pct": 22.7957
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-11-18",
+      "staked_pct": 2.8495,
+      "returned_pct": 0.0,
       "accas": [
         {
+          "odds": 1.68,
+          "won": false,
+          "stake_pct": 2.8495,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "Utebo FC vs Sabadell",
               "pick": "over",
-              "prob": 0.7855,
               "odds": 1.29,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
               "market": "match_over_15",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.7855,
-                "n": 1035,
-                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-                "as_of_exclusive": "2026-11-18",
-                "market": "match_over_15",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 813,
-                "cohort_lower_bound": 0.7594685804853664,
-                "price_context": {
-                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
-                  "selection": "away",
-                  "league": "Copa Del Rey",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.29,
-                  "captured_at": "2026-11-18T01:33:26.650324+00:00",
-                  "decision_at": "2026-11-18T09:36:00+02:00",
-                  "kickoff": "2026-11-18T18:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.735850119979633,
-              "ml_model_key": "d0cf6c7392200d6fcb8c3e542f9f09501ccc18fbda6400e1c85f08b1c72530f5",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 1.5 Goals",
-              "floor": 1.682686084250592,
-              "floor_basis": "market",
-              "league": "Copa Del Rey",
               "price_at": "2026-11-18T01:33:26.650324+00:00",
-              "price_kickoff": "2026-11-18T18:00:00+00:00",
               "price_provenance": {
                 "away": "Sabadell",
                 "bookmaker": "bet365.us",
@@ -10585,54 +10559,54 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-18",
                 "Utebo FC",
                 "Sabadell"
-              ]
+              ],
+              "prob": 0.7855,
+              "cohort_evidence": {
+                "rate": 0.7855,
+                "n": 1035,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-18",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 813,
+                "cohort_lower_bound": 0.7594685804853664,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Copa Del Rey",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.29,
+                  "captured_at": "2026-11-18T01:33:26.650324+00:00",
+                  "decision_at": "2026-11-18T09:36:00+02:00",
+                  "kickoff": "2026-11-18T18:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.735850119979633,
+              "ml_model_key": "d0cf6c7392200d6fcb8c3e542f9f09501ccc18fbda6400e1c85f08b1c72530f5",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.682686084250592,
+              "floor_basis": "market",
+              "league": "Copa Del Rey",
+              "shadow": true,
+              "price_kickoff": "2026-11-18T18:00:00+00:00"
             },
             {
               "match": "Alcoyano vs Mallorca",
               "pick": "under",
-              "prob": 0.782,
               "odds": 1.3,
-              "result": null,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals",
               "market": "match_under_35",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.782,
-                "n": 1445,
-                "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
-                "as_of_exclusive": "2026-11-18",
-                "market": "match_under_35",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 1130,
-                "cohort_lower_bound": 0.7599860113307649,
-                "price_context": {
-                  "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
-                  "selection": "under",
-                  "league": "Copa Del Rey",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.3,
-                  "captured_at": "2026-11-18T01:36:04.078870+00:00",
-                  "decision_at": "2026-11-18T09:36:00+02:00",
-                  "kickoff": "2026-11-18T19:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.7804609209606972,
-              "ml_model_key": "77a1bc33a4290f7888bc28322b3cf1ebbfc6d96fd09c157c07f121c0eaf241cf",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 3.5 Goals",
-              "floor": 1.64,
-              "floor_basis": "inherited",
-              "league": "Copa Del Rey",
               "price_at": "2026-11-18T01:36:04.078870+00:00",
-              "price_kickoff": "2026-11-18T19:00:00+00:00",
               "price_provenance": {
                 "away": "Mallorca",
                 "bookmaker": "bet365.us",
@@ -10851,28 +10825,53 @@
                 "selection": "under",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-18",
                 "Alcoyano",
                 "Mallorca"
-              ]
+              ],
+              "prob": 0.782,
+              "cohort_evidence": {
+                "rate": 0.782,
+                "n": 1445,
+                "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
+                "as_of_exclusive": "2026-11-18",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1130,
+                "cohort_lower_bound": 0.7599860113307649,
+                "price_context": {
+                  "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
+                  "selection": "under",
+                  "league": "Copa Del Rey",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.3,
+                  "captured_at": "2026-11-18T01:36:04.078870+00:00",
+                  "decision_at": "2026-11-18T09:36:00+02:00",
+                  "kickoff": "2026-11-18T19:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7804609209606972,
+              "ml_model_key": "77a1bc33a4290f7888bc28322b3cf1ebbfc6d96fd09c157c07f121c0eaf241cf",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Copa Del Rey",
+              "shadow": true,
+              "price_kickoff": "2026-11-18T19:00:00+00:00"
             }
-          ],
-          "odds": 1.68,
-          "stake_pct": 2.8495,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 2.8495
+      "bank_pct": 19.9462,
+      "close_pct": 19.9462
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,

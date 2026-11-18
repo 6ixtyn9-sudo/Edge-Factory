@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-18T22:04:57",
+  "generated_at": "2026-11-19T01:25:00",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 22.795727999999997,
-  "multiple": 0.22795727999999996,
+  "bank_pct": 19.946227999999998,
+  "multiple": 0.19946228,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 31,
+  "bet_days": 32,
   "accas": {
     "wins": 25,
-    "losses": 37
+    "losses": 38
   },
-  "open_slips": [
-    {
-      "date": "2026-11-18",
-      "staked_pct": 2.8495
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -10352,6 +10347,539 @@
       ],
       "bank_pct": 22.7957,
       "close_pct": 22.7957
+    },
+    {
+      "date": "2026-11-18",
+      "staked_pct": 2.8495,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.68,
+          "won": false,
+          "stake_pct": 2.8495,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Utebo FC vs Sabadell",
+              "pick": "over",
+              "odds": 1.29,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
+              "market": "match_over_15",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-18T01:33:26.650324+00:00",
+              "price_provenance": {
+                "away": "Sabadell",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-18T01:33:26.650324+00:00",
+                "data_dt": [
+                  18,
+                  11,
+                  2026,
+                  19,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-18T07:00:00+00:00",
+                "decision_day": "2026-11-18",
+                "home": "Utebo FC",
+                "kickoff_utc": "2026-11-18T18:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-18.json",
+                "ledger_sha256": "ed5f8a1e059ee822e4d45f7b32f4d9c5be878619d5ec8d57550d1f4832ebb04a",
+                "market": "ou_1.5",
+                "price": 1.29,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-17T04:28",
+                      "2026-11-17T04:28"
+                    ],
+                    "line": "1.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      1.29,
+                      3.5
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 4,
+                  "row_sha256": "0f4ee4f63ec4e5679af3ec03b89251d0f10c197a01a254966cabf14919b3d299"
+                },
+                "raw_kickoff": "19:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-18T18:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Sabadell FC",
+                      "csv_data_row": 7970,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "0a95d5c4fbf7da13cfbb1f6cebd4bb9efd3fbe49da86619ad402ac831705b100",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Utebo FC",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-18T18:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-11-17T22:24:01.723460+00:00",
+                      "provider_commence_time": "2026-11-18T18:00:00Z",
+                      "provider_event_id": "2b6edd0ce77667187ed7df286abdbee1",
+                      "row_sha256": "9575bdc79e28025684770454c32607f2921268828dd8da4d88bb209de6bb53f2",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Sabadell",
+                      "csv_data_row": 1971,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "363ac200e94b653085a373b3a3c681ea0dc318b9b556fa77a2a32fc96b6c3ae6",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Utebo FC",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-18T18:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-11-17T22:12:46+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "94f351a1ca8362fd9bc203a906f15966ac5b514b8bb1ca374889f5e8df400dc6",
+                      "schedule_row": {
+                        "away": "Sabadell",
+                        "captured_at": "2026-11-17T22:12:46+00:00",
+                        "country": "Spain",
+                        "date": "2026-11-18",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Utebo FC",
+                        "hs": "",
+                        "kickoff": "2026-11-18T18:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Copa Del Rey",
+                        "odd1": "6.5",
+                        "odd2": "1.57",
+                        "odd_gg": "1.95",
+                        "odd_ng": "1.8",
+                        "odd_o15": "1.28",
+                        "odd_o25": "1.95",
+                        "odd_o35": "3.25",
+                        "odd_u15": "3.5",
+                        "odd_u25": "1.85",
+                        "odd_u35": "1.33",
+                        "oddx": "3.6",
+                        "p1": "14.399400805168055",
+                        "p2": "59.59179852073776",
+                        "p_gg": "48.00000000000001",
+                        "p_ng": "52.0",
+                        "p_o15": "73.22175732217573",
+                        "p_o25": "48.6842105263158",
+                        "p_o35": "29.03930131004367",
+                        "px": "26.008800674094186",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "18:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Sabadell",
+                      "csv_data_row": 8342,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "998735b39ac6f79a112fdf811640db14b5bbcd4d257a979a4ae5bb58f15d58ad",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Utebo",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-18T18:00:00+00:00",
+                      "league": "Spain: Copa del Rey",
+                      "observed_at_utc": "2026-11-17T22:12:25+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "93449a09e8929cdf1efc10bda54d8b182b143906846e37660a95133879f7ad88",
+                      "schedule_row": {
+                        "away": "Sabadell",
+                        "captured_at": "2026-11-17T22:12:25+00:00",
+                        "date": "2026-11-18",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Utebo",
+                        "hs": "",
+                        "index": "",
+                        "kickoff": "2026-11-18T19:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Spain: Copa del Rey",
+                        "p1": "",
+                        "p2": "",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "",
+                        "schedule_history": "[{\"away\": \"Sabadell\", \"captured_at\": \"2026-11-16T22:12:03+00:00\", \"date\": \"2026-11-18\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Utebo\", \"kickoff\": \"2026-11-18T19:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Sabadell",
+                      "csv_data_row": 8342,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "998735b39ac6f79a112fdf811640db14b5bbcd4d257a979a4ae5bb58f15d58ad",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Utebo",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-18T18:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-16T22:12:03+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "f930284974db5002e1b4b4626110763b85edc25f574e0ec71af38e93f04460db",
+                      "schedule_row": {
+                        "away": "Sabadell",
+                        "captured_at": "2026-11-16T22:12:03+00:00",
+                        "date": "2026-11-18",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Utebo",
+                        "kickoff": "2026-11-18T19:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-18",
+                "Utebo FC",
+                "Sabadell"
+              ],
+              "prob": 0.7855,
+              "cohort_evidence": {
+                "rate": 0.7855,
+                "n": 1035,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-18",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 813,
+                "cohort_lower_bound": 0.7594685804853664,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Copa Del Rey",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.29,
+                  "captured_at": "2026-11-18T01:33:26.650324+00:00",
+                  "decision_at": "2026-11-18T09:36:00+02:00",
+                  "kickoff": "2026-11-18T18:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.735850119979633,
+              "ml_model_key": "d0cf6c7392200d6fcb8c3e542f9f09501ccc18fbda6400e1c85f08b1c72530f5",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.682686084250592,
+              "floor_basis": "market",
+              "league": "Copa Del Rey",
+              "shadow": true,
+              "price_kickoff": "2026-11-18T18:00:00+00:00"
+            },
+            {
+              "match": "Alcoyano vs Mallorca",
+              "pick": "under",
+              "odds": 1.3,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals",
+              "market": "match_under_35",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-18T01:36:04.078870+00:00",
+              "price_provenance": {
+                "away": "Mallorca",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-18T01:36:04.078870+00:00",
+                "data_dt": [
+                  18,
+                  11,
+                  2026,
+                  20,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-18T07:00:00+00:00",
+                "decision_day": "2026-11-18",
+                "home": "Alcoyano",
+                "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-18.json",
+                "ledger_sha256": "ed5f8a1e059ee822e4d45f7b32f4d9c5be878619d5ec8d57550d1f4832ebb04a",
+                "market": "ou_3.5",
+                "price": 1.3,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-18T01:33",
+                      "2026-11-18T01:33"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      3.4,
+                      1.3
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 12,
+                  "row_sha256": "94fd631a8d25712a6f6918fe784d8e4dcb3d864b96873299dd4f36ea27e074a2"
+                },
+                "raw_kickoff": "20:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Mallorca",
+                      "csv_data_row": 8001,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "0a95d5c4fbf7da13cfbb1f6cebd4bb9efd3fbe49da86619ad402ac831705b100",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Alcoyano",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-11-17T22:24:01.857035+00:00",
+                      "provider_commence_time": "2026-11-18T19:00:00Z",
+                      "provider_event_id": "17a5dc0d57afe1e516da8356bb0c3949",
+                      "row_sha256": "7519d3da9f56bc00fca8b1975d79ad85081f8d9f9bb234dd82a05c7337d7b883",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Mallorca",
+                      "csv_data_row": 8002,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "0a95d5c4fbf7da13cfbb1f6cebd4bb9efd3fbe49da86619ad402ac831705b100",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Alcoyano",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                      "league": "Copa del Rey",
+                      "observed_at_utc": "2026-11-18T01:53:28.487207+00:00",
+                      "provider_commence_time": "2026-11-18T19:00:00Z",
+                      "provider_event_id": "17a5dc0d57afe1e516da8356bb0c3949",
+                      "row_sha256": "5fee32628457964eba2262a46ce3d92120a859dd5e24d181fdc0eff041a7c4ee",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Mallorca",
+                      "csv_data_row": 1942,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "363ac200e94b653085a373b3a3c681ea0dc318b9b556fa77a2a32fc96b6c3ae6",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Alcoyano",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-11-17T22:12:46+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "20e24897d7008dc46806fe04da40daedbde4683dec6108a7affc4d3e3ba26fd8",
+                      "schedule_row": {
+                        "away": "Mallorca",
+                        "captured_at": "2026-11-17T22:12:46+00:00",
+                        "country": "Spain",
+                        "date": "2026-11-18",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Alcoyano",
+                        "hs": "",
+                        "kickoff": "2026-11-18T19:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Copa Del Rey",
+                        "odd1": "6.5",
+                        "odd2": "1.53",
+                        "odd_gg": "2.05",
+                        "odd_ng": "1.7",
+                        "odd_o15": "1.3",
+                        "odd_o25": "2.0",
+                        "odd_o35": "3.5",
+                        "odd_u15": "3.4",
+                        "odd_u25": "1.8",
+                        "odd_u35": "1.28",
+                        "oddx": "4.0",
+                        "p1": "14.563014866016474",
+                        "p2": "61.76498437647949",
+                        "p_gg": "45.33333333333333",
+                        "p_ng": "54.666666666666664",
+                        "p_o15": "72.34042553191489",
+                        "p_o25": "47.368421052631575",
+                        "p_o35": "26.778242677824267",
+                        "px": "23.672000757504023",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "19:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Mallorca",
+                      "csv_data_row": 8181,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "998735b39ac6f79a112fdf811640db14b5bbcd4d257a979a4ae5bb58f15d58ad",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Alcoyano",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                      "league": "Spain: Copa del Rey",
+                      "observed_at_utc": "2026-11-17T22:12:25+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "c32b7681a34973fee515d733e42fe46ef79dd6cb9d59917cecdafaa7d0ea215a",
+                      "schedule_row": {
+                        "away": "Mallorca",
+                        "captured_at": "2026-11-17T22:12:25+00:00",
+                        "date": "2026-11-18",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Alcoyano",
+                        "hs": "",
+                        "index": "",
+                        "kickoff": "2026-11-18T20:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Spain: Copa del Rey",
+                        "p1": "",
+                        "p2": "",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "",
+                        "schedule_history": "[{\"away\": \"Mallorca\", \"captured_at\": \"2026-11-16T22:12:03+00:00\", \"date\": \"2026-11-18\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Alcoyano\", \"kickoff\": \"2026-11-18T20:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Mallorca",
+                      "csv_data_row": 8181,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "998735b39ac6f79a112fdf811640db14b5bbcd4d257a979a4ae5bb58f15d58ad",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Alcoyano",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-18T19:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-16T22:12:03+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "2d12ecc8c0d60d96bf60585fc312a316c4b8bbad45ac24cfc541b0f74f13259f",
+                      "schedule_row": {
+                        "away": "Mallorca",
+                        "captured_at": "2026-11-16T22:12:03+00:00",
+                        "date": "2026-11-18",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Alcoyano",
+                        "kickoff": "2026-11-18T20:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-18",
+                "Alcoyano",
+                "Mallorca"
+              ],
+              "prob": 0.782,
+              "cohort_evidence": {
+                "rate": 0.782,
+                "n": 1445,
+                "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
+                "as_of_exclusive": "2026-11-18",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1130,
+                "cohort_lower_bound": 0.7599860113307649,
+                "price_context": {
+                  "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
+                  "selection": "under",
+                  "league": "Copa Del Rey",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.3,
+                  "captured_at": "2026-11-18T01:36:04.078870+00:00",
+                  "decision_at": "2026-11-18T09:36:00+02:00",
+                  "kickoff": "2026-11-18T19:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7804609209606972,
+              "ml_model_key": "77a1bc33a4290f7888bc28322b3cf1ebbfc6d96fd09c157c07f121c0eaf241cf",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Copa Del Rey",
+              "shadow": true,
+              "price_kickoff": "2026-11-18T19:00:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 19.9462,
+      "close_pct": 19.9462
     }
   ]
 }

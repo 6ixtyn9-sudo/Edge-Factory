@@ -1,14 +1,14 @@
 autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
-BANK     59.9%   x0.599 of the initial base · 59.925 paper units
-CAPITAL  59.7% free / 0.3% reserved · 59.655 free / 0.270 reserved paper units
+BANK     59.7%   x0.597 of the initial base · 59.655 paper units
+CAPITAL  59.7% free / 0.0% reserved · 59.655 free / 0.000 reserved paper units
 
-RECORD   8W / 49L   (14.0% hit)   over 10 bet-days
-OPEN     2 held accas · 4 unresolved leg results
-PROFIT   -40.1% of capital · -40.075 paper units · ROI -60.7%
-DRAWDOWN 40.075 paper units / 40.1% (ticket-date marks; pending at cost)
-DAYS     10 bet / 6 no-bet · 0 missed freeze
+RECORD   8W / 51L   (13.6% hit)   over 10 bet-days
+OPEN     0 held accas · 1 unresolved leg results
+PROFIT   -40.3% of capital · -40.345 paper units · ROI -60.9%
+DRAWDOWN 40.345 paper units / 40.3% (ticket-date marks; pending at cost)
+DAYS     10 bet / 7 no-bet · 0 missed freeze
 
 BET-DAYS, oldest first (10 of 10)
   Staked/returned/net cover settled accas only; pending stakes are separate.
@@ -21,21 +21,10 @@ BET-DAYS, oldest first (10 of 10)
   2026-11-13   3W/2L   staked    0.2%   returned    0.2%   net   +0.0%   pending    0.0%   bank*   60.4%
   2026-11-14   1W/5L   staked    0.1%   returned    0.0%   net   -0.1%   pending    0.0%   bank*   60.3%
   2026-11-17   0W/1L   staked    0.4%   returned    0.0%   net   -0.4%   pending    0.0%   bank*   59.9%
-  2026-11-18   0W/0L   staked    0.0%   returned       —   net       —   pending    0.3%   bank*   59.9%
+  2026-11-18   0W/2L   staked    0.3%   returned    0.0%   net   -0.3%   pending    0.0%   bank*   59.7%
 
 HELD (not yet settled; stake counted as committed)
-  2026-11-18   ACCA #1 @55.555   stake 0.1% (0.113315 paper units)   HELD (not settled)
-      Receipt 20261117T223239688645Z / publication-local ticket 1
-      El Salvador vs Saint Martin · 2026-11-18 03:00 SAST
-         Draw (1X2) @5.000
-      Mexico vs Jamaica · 2026-11-18 04:30 SAST
-         Draw (1X2) @11.111
-  2026-11-18   ACCA #2 @85.466   stake 0.2% (0.156992 paper units)   HELD (not settled)
-      Receipt 20261117T223716185531Z / publication-local ticket 1
-      Mexico vs Jamaica · 2026-11-18 04:30 SAST
-         Draw (1X2) @11.111
-      NICARAGUA vs MONTSERRAT · 2026-11-18 05:00 SAST
-         Draw (1X2) @7.692
+  None.
 
 SUPERSEDED BEFORE KICKOFF — released, not wins or losses
   2026-11-13 @35.775 · released 0.097512 paper units
@@ -50,16 +39,16 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 83 resolved selected observations / 58 fixtures · pool 143 resolved fixtures
-LEARNING last decision: 143 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+EVIDENCE 87 resolved selected observations / 61 fixtures · pool 150 resolved fixtures
+LEARNING last decision: 150 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
-FORWARD POOL: Brier 0.2041 → 0.2058 · log loss 0.5920 → 0.5961 (base → adjusted)
-        adjusted worse on both metrics; 143 fixtures / 3027 observations
-FORWARD SELECTED: Brier 0.2190 → 0.2285 · log loss 0.6334 → 0.6512 (base → adjusted)
-        adjusted worse on both metrics; 58 fixtures / 83 observations
+FORWARD POOL: Brier 0.2042 → 0.2058 · log loss 0.5924 → 0.5964 (base → adjusted)
+        adjusted worse on both metrics; 150 fixtures / 3507 observations
+FORWARD SELECTED: Brier 0.2098 → 0.2189 · log loss 0.6117 → 0.6289 (base → adjusted)
+        adjusted worse on both metrics; 61 fixtures / 87 observations
         Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
-PAIRED   143 fixtures / 2951 observations · Brier model 0.2064 / source 0.2044
+PAIRED   150 fixtures / 3431 observations · Brier model 0.2064 / source 0.2045
 
 DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
              Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.

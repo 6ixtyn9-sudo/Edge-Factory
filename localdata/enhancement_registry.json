@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-18",
+ "generated_at": "2026-11-19",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -1167,10 +1167,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 20,
-   "inv_price_sum": 13.683475616527653,
+   "hits": 21,
+   "inv_price_sum": 14.483475616527654,
    "multi_n": 0,
-   "n": 26,
+   "n": 27,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -1197,9 +1197,10 @@
     "2026-11-08|Dallas vs Colorado Rapids|away_under_15@v1",
     "2026-11-09|CS Herediano vs Inter San Carlos|away_under_15@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|away_under_15@v1",
-    "2026-11-17|RUSSIA vs VENEZUELA|away_under_15@v1"
+    "2026-11-17|RUSSIA vs VENEZUELA|away_under_15@v1",
+    "2026-11-18|El Salvador vs Saint Martin|away_under_15@v1"
    ],
-   "profit": 25.111,
+   "profit": 25.361,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1892,6 +1893,35 @@
      },
      "recorded_at": "2026-11-17T22:42:56.040639+00:00",
      "rule": "pfc_c33854a6f17eda6cca30d634",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Saint Martin",
+     "away_key": "saintmartin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7819,
+     "date": "2026-11-18",
+     "hit": true,
+     "home": "El Salvador",
+     "home_key": "elsalvador",
+     "league": "CONCACAF Nations League",
+     "match": "El Salvador vs Saint Martin",
+     "multi_source": false,
+     "price": 1.25,
+     "price_context": {
+      "book": "1xbet",
+      "captured_at": "2026-11-17T22:24:42.396535+00:00",
+      "contract_id": "pfc_12c05e100bfd7667f5977355",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T01:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.25,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.920695+00:00",
+     "rule": "pfc_12c05e100bfd7667f5977355",
      "source": "oddspapi",
      "stated": null
     }
@@ -3713,10 +3743,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 14,
-   "inv_price_sum": 15.220586691612679,
+   "hits": 15,
+   "inv_price_sum": 15.850309613527036,
    "multi_n": 0,
-   "n": 25,
+   "n": 26,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3742,9 +3772,10 @@
     "2026-11-09|Universitario vs UCV Moquegua|home_over_15@v1",
     "2026-11-13|Llaneros vs Chico|home_over_15@v1",
     "2026-11-17|Canada vs Guatemala|home_over_15@v1",
-    "2026-11-17|Martinique vs Aruba|home_over_15@v1"
+    "2026-11-17|Martinique vs Aruba|home_over_15@v1",
+    "2026-11-18|El Salvador vs Saint Martin|home_over_15@v1"
    ],
-   "profit": -2.169,
+   "profit": -1.581,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -4467,6 +4498,35 @@
       "source": "oddspapi"
      },
      "recorded_at": "2026-11-17T22:42:55.936650+00:00",
+     "rule": "pfc_12c05e100bfd7667f5977355",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Saint Martin",
+     "away_key": "saintmartin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7257,
+     "date": "2026-11-18",
+     "hit": true,
+     "home": "El Salvador",
+     "home_key": "elsalvador",
+     "league": "CONCACAF Nations League",
+     "match": "El Salvador vs Saint Martin",
+     "multi_source": false,
+     "price": 1.588,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-17T22:24:42.396535+00:00",
+      "contract_id": "pfc_12c05e100bfd7667f5977355",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T01:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.588,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.900067+00:00",
      "rule": "pfc_12c05e100bfd7667f5977355",
      "source": "oddspapi",
      "stated": null
@@ -6025,10 +6085,10 @@
    "status_since": "2026-10-21"
   },
   "home_under_35@v1": {
-   "hits": 4,
-   "inv_price_sum": 4.542809151654177,
+   "hits": 5,
+   "inv_price_sum": 5.183014017211155,
    "multi_n": 0,
-   "n": 7,
+   "n": 8,
    "processed": [
     "2026-08-13|Ilves vs HNK Rijeka|home_under_35@v1",
     "2026-08-13|NSI Runavik vs FC Lugano|home_under_35@v1",
@@ -6110,9 +6170,10 @@
     "2026-11-05|CD Olimpia vs Juticalpa|home_under_35@v1",
     "2026-11-17|Canada vs Guatemala|home_under_35@v1",
     "2026-11-17|Trinidad and Tobago vs Antigua and Barbuda|home_under_35@v1",
-    "2026-11-17|Martinique vs Aruba|home_under_35@v1"
+    "2026-11-17|Martinique vs Aruba|home_under_35@v1",
+    "2026-11-18|Mexico vs Jamaica|home_under_35@v1"
    ],
-   "profit": 0.044,
+   "profit": 0.606,
    "records": [
     {
      "away": "Kudrivka",
@@ -6306,6 +6367,35 @@
      "rule": "pfc_12c05e100bfd7667f5977355",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Jamaica",
+     "away_key": "jamaica",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7365,
+     "date": "2026-11-18",
+     "hit": true,
+     "home": "Mexico",
+     "home_key": "mexico",
+     "league": "CONCACAF Nations League",
+     "match": "Mexico vs Jamaica",
+     "multi_source": false,
+     "price": 1.562,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-17T22:24:05.271705+00:00",
+      "contract_id": "pfc_12c05e100bfd7667f5977355",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T02:30:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.562,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.932996+00:00",
+     "rule": "pfc_12c05e100bfd7667f5977355",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -6314,10 +6404,10 @@
    "status_since": "2026-10-24"
   },
   "match_over_15@v1": {
-   "hits": 48,
-   "inv_price_sum": 50.74011826244918,
+   "hits": 49,
+   "inv_price_sum": 51.53000767793101,
    "multi_n": 11,
-   "n": 64,
+   "n": 65,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -6406,9 +6496,10 @@
     "2026-11-15|UD Ibiza vs FC Cartagena|match_over_15@v1",
     "2026-11-16|Switzerland vs Scotland|match_over_15@v1",
     "2026-11-17|Canada vs Guatemala|match_over_15@v1",
-    "2026-11-17|RUSSIA vs VENEZUELA|match_over_15@v1"
+    "2026-11-17|RUSSIA vs VENEZUELA|match_over_15@v1",
+    "2026-11-18|El Salvador vs Saint Martin|match_over_15@v1"
    ],
-   "profit": 0.467,
+   "profit": 0.733,
    "records": [
     {
      "away": "Aston Villa",
@@ -7456,6 +7547,35 @@
      "rule": "pfc_c33854a6f17eda6cca30d634",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Saint Martin",
+     "away_key": "saintmartin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.851,
+     "date": "2026-11-18",
+     "hit": true,
+     "home": "El Salvador",
+     "home_key": "elsalvador",
+     "league": "CONCACAF Nations League",
+     "match": "El Salvador vs Saint Martin",
+     "multi_source": false,
+     "price": 1.266,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-17T22:24:42.396535+00:00",
+      "contract_id": "pfc_12c05e100bfd7667f5977355",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T01:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.266,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.890850+00:00",
+     "rule": "pfc_12c05e100bfd7667f5977355",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -7464,11 +7584,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 358,
+   "hits": 360,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 355.91166708087,
+   "inv_price_sum": 357.67625890510004,
    "multi_n": 103,
-   "n": 548,
+   "n": 551,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -8261,9 +8381,12 @@
     "2026-11-17|Martinique vs Aruba|match_over_25@v1",
     "2026-11-17|Hungary vs Northern Ireland|match_over_25@v1",
     "2026-11-17|Bosnia & Herzegovina vs Romania|match_over_25@v1",
-    "2026-11-17|RWANDA vs MALI|match_over_25@v1"
+    "2026-11-17|RWANDA vs MALI|match_over_25@v1",
+    "2026-11-18|El Salvador vs Saint Martin|match_over_25@v1",
+    "2026-11-18|Mexico vs Jamaica|match_over_25@v1",
+    "2026-11-18|ALCOYANO vs MALLORCA|match_over_25@v1"
    ],
-   "profit": 4.277,
+   "profit": 5.046,
    "records": [
     {
      "away": "Spartak Varna",
@@ -17123,6 +17246,93 @@
      "recorded_at": "2026-11-17T22:42:56.028142+00:00",
      "rule": "pfc_c33854a6f17eda6cca30d634",
      "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Saint Martin",
+     "away_key": "saintmartin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6587,
+     "date": "2026-11-18",
+     "hit": true,
+     "home": "El Salvador",
+     "home_key": "elsalvador",
+     "league": "CONCACAF Nations League",
+     "match": "El Salvador vs Saint Martin",
+     "multi_source": false,
+     "price": 1.769,
+     "price_context": {
+      "book": "hardrockbet",
+      "captured_at": "2026-11-17T22:24:42.396535+00:00",
+      "contract_id": "pfc_12c05e100bfd7667f5977355",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T01:00:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.769,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.911984+00:00",
+     "rule": "pfc_12c05e100bfd7667f5977355",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Jamaica",
+     "away_key": "jamaica",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6587,
+     "date": "2026-11-18",
+     "hit": false,
+     "home": "Mexico",
+     "home_key": "mexico",
+     "league": "CONCACAF Nations League",
+     "match": "Mexico vs Jamaica",
+     "multi_source": false,
+     "price": 1.43,
+     "price_context": {
+      "book": "bet3000",
+      "captured_at": "2026-11-17T22:24:05.271705+00:00",
+      "contract_id": "pfc_12c05e100bfd7667f5977355",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T02:30:00+00:00",
+      "league": "CONCACAF Nations League",
+      "price": 1.43,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.941972+00:00",
+     "rule": "pfc_12c05e100bfd7667f5977355",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "MALLORCA",
+     "away_key": "realmallorca",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6027,
+     "date": "2026-11-18",
+     "hit": true,
+     "home": "ALCOYANO",
+     "home_key": "alcoyano",
+     "league": "ESC",
+     "match": "ALCOYANO vs MALLORCA",
+     "multi_source": false,
+     "price": 2.0,
+     "price_context": {
+      "book": "Pinnacle",
+      "captured_at": "2026-11-17T22:24:01.857035+00:00",
+      "contract_id": "pfc_31bc21e2ce9abe2bd19332e0",
+      "decision_at": "2026-11-18T00:26:05+02:00",
+      "kickoff": "2026-11-18T19:00:00+00:00",
+      "league": "ESC",
+      "price": 2.0,
+      "selection": "away",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-18T23:16:16.954278+00:00",
+     "rule": "pfc_31bc21e2ce9abe2bd19332e0",
+     "source": "theoddsapi",
      "stated": null
     }
    ],

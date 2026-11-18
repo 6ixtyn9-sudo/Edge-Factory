@@ -1,0 +1,65 @@
+{
+  "added": 106,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "INTERNACIONAL",
+      "date": "2026-11-19",
+      "home": "VASCO DA GAMA",
+      "kickoff": "22:30",
+      "league": "BR1"
+    }
+  ],
+  "candidate_fixtures": 14,
+  "captured_at": "2026-11-18T23:08:02+00:00",
+  "date": "2026-11-19",
+  "due_reasons": {
+    "first_at": 1
+  },
+  "errors": [],
+  "fixtures_with_rows": 1,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [
+    {
+      "away": "Internacional",
+      "date": "2026-11-19",
+      "home": "Vasco da Gama",
+      "kickoff": "2026-11-19T22:30:00Z",
+      "league": "BR1"
+    }
+  ],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 106,
+  "schema": 1,
+  "skip_reasons": {
+    "priced": 1,
+    "retry_cooldown": 12
+  },
+  "skipped": [
+    "Barcelona W|Servette Ch\u00eanois W (retry cooldown (6h after failed attempt))",
+    "Austria Wien W|Bayern Munich W (retry cooldown (6h after failed attempt))",
+    "Al Ain|Al Dhafra (retry cooldown (6h after failed attempt))",
+    "Al Wasl|Hatta (retry cooldown (6h after failed attempt))",
+    "BOSTON RIVER|MALDONADO (retry cooldown (6h after failed attempt))",
+    "Boston River|Deportivo Maldonado (retry cooldown (6h after failed attempt))",
+    "Pe\u00f1arol|Cerro Largo (retry cooldown (6h after failed attempt))",
+    "Lions|Wollongong Wolves (retry cooldown (6h after failed attempt))",
+    "Corinthians|Botafogo (retry cooldown (6h after failed attempt))",
+    "DOBRUDZHA 1919|FRATRIA (retry cooldown (6h after failed attempt))",
+    "Gr\u00eamio|Bahia (priced)",
+    "Vit\u00f3ria|Bragantino (retry cooldown (6h after failed attempt))",
+    "Amiens SC|Caen (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "ok",
+  "unmatched": [],
+  "unmatched_reasons": {}
+}
