@@ -1,33 +1,25 @@
 {
-  "added": 39,
+  "added": 0,
   "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Mallorca",
+      "away": "Jamaica",
       "date": "2026-11-18",
-      "home": "CD Alcoyano",
-      "kickoff": "2026-11-18T19:00:00Z",
-      "league": "Copa del Rey"
+      "home": "Mexico",
+      "kickoff": "2026-11-18T02:30:00Z",
+      "league": "CONCACAF Nations League"
     }
   ],
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-18T01:53:28+00:00",
+  "captured_at": "2026-11-18T04:43:46+00:00",
   "date": "2026-11-18",
   "due_reasons": {
-    "scope_at": 1
+    "first_at": 1
   },
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "Mallorca",
-      "date": "2026-11-18",
-      "home": "Alcoyano",
-      "kickoff": "2026-11-18T19:00:00Z",
-      "league": "Copa del Rey"
-    }
-  ],
+  "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
     "totals",
@@ -37,14 +29,13 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 39,
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 5,
-    "retry_cooldown": 9
+    "priced": 6,
+    "retry_cooldown": 8
   },
   "skipped": [
-    "Mexico|Jamaica (retry cooldown (6h after failed attempt))",
     "Deportiva Minera|FC Cartagena (priced)",
     "FLAMENGO|ATLETICO PR (retry cooldown (6h after failed attempt))",
     "Utebo FC|Sabadell (priced)",
@@ -54,13 +45,18 @@
     "Real Madrid W|Inter Milano W (retry cooldown (6h after failed attempt))",
     "El Salvador|Saint Martin (retry cooldown (6h after failed attempt))",
     "NICARAGUA|MONTSERRAT (retry cooldown (6h after failed attempt))",
+    "CD Alcoyano|Mallorca (priced)",
     "Remo|Chapecoense (retry cooldown (6h after failed attempt))",
     "CD Badajoz|CD Tenerife (priced)",
     "Coritiba|Santos (retry cooldown (6h after failed attempt))",
     "Al Adalah|Al-Orobah FC (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [],
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Mexico vs Jamaica (league not covered: CONCACAF Nations League)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: CONCACAF Nations League": 1
+  }
 }

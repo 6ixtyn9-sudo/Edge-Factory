@@ -1,13 +1,7 @@
 {
-  "added": 2125,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Tokyo Verdy Beleza",
-      "fixture_id": "id1003459072339094",
-      "home": "Mynavi Sendai Ladies"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-18",
     "keys": 3,
@@ -16,170 +10,16 @@
     "remaining_today": 0,
     "spent_today": 26
   },
-  "budget_deferred": 1,
-  "captured_at": "2026-11-18T01:31:45+00:00",
+  "captured_at": "2026-11-18T04:28:45+00:00",
   "date": "2026-11-18",
   "errors": [],
-  "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 5,
-  "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 169,
-  "future_slate_fixtures": 0,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 172,
-  "markets": {
-    "1x2": 432,
-    "btts": 136,
-    "dc": 396,
-    "dnb": 156,
-    "ou_0.5": 42,
-    "ou_1": 16,
-    "ou_1.25": 16,
-    "ou_1.5": 118,
-    "ou_1.75": 22,
-    "ou_2": 28,
-    "ou_2.25": 38,
-    "ou_2.5": 209,
-    "ou_2.75": 42,
-    "ou_3": 30,
-    "ou_3.25": 28,
-    "ou_3.5": 118,
-    "ou_3.75": 16,
-    "ou_4": 16,
-    "ou_4.5": 46,
-    "ou_5.5": 27,
-    "ou_6.5": 4,
-    "tt_away_0.5": 9,
-    "tt_away_1": 16,
-    "tt_away_1.5": 46,
-    "tt_away_1.75": 6,
-    "tt_away_2": 16,
-    "tt_away_2.5": 8,
-    "tt_away_3.5": 6,
-    "tt_home_0.5": 29,
-    "tt_home_0.75": 6,
-    "tt_home_1": 16,
-    "tt_home_1.5": 24,
-    "tt_home_2.5": 6,
-    "tt_home_3.5": 1
-  },
-  "markets_source": "cache",
-  "matched": 1,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 1,
-    "market_unsupported_clean_sheet": 22,
-    "market_unsupported_correct_score": 165,
-    "market_unsupported_early_payout": 2,
-    "market_unsupported_handicap": 300,
-    "market_unsupported_market_type": 316,
-    "market_unsupported_non_goal": 22,
-    "market_unsupported_odd_even": 112,
-    "market_unsupported_period": 1003,
-    "market_unsupported_win_to_nil": 28,
-    "outcome_inactive": 66
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 1,
-      "outcome_inactive": 66
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_clean_sheet": 22,
-      "market_unsupported_correct_score": 165,
-      "market_unsupported_early_payout": 2,
-      "market_unsupported_handicap": 300,
-      "market_unsupported_market_type": 316,
-      "market_unsupported_non_goal": 22,
-      "market_unsupported_odd_even": 112,
-      "market_unsupported_period": 1003,
-      "market_unsupported_win_to_nil": 28
-    }
-  },
-  "pending_fixtures": 2,
-  "quoted_fixtures": [
-    {
-      "away": "Tokyo Verdy Beleza",
-      "fixture_id": "id1003459072339094",
-      "home": "Mynavi Sendai Ladies"
-    }
-  ],
-  "reserved_requests": 0,
-  "rows": 2125,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 12,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
-  "slate_provider_overlap_fixtures": 1,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "FC Cartagena",
-      "home": "Deportiva Minera",
-      "league": "Copa Del Rey",
-      "normalized_pair": "cartagena|deportiva minera"
-    },
-    {
-      "away": "ATLETICO PR",
-      "home": "FLAMENGO",
-      "league": "BR1",
-      "normalized_pair": "atletico pr|flamengo"
-    },
-    {
-      "away": "Sabadell",
-      "home": "Utebo FC",
-      "league": "Copa Del Rey",
-      "normalized_pair": "sabadell|utebo"
-    },
-    {
-      "away": "OH Leuven W",
-      "home": "Juventus W",
-      "league": "UEFA Women's Champions League",
-      "normalized_pair": "juventus w|oh leuven w"
-    },
-    {
-      "away": "Mallorca",
-      "home": "Alcoyano",
-      "league": "Copa Del Rey",
-      "normalized_pair": "alcoyano|mallorca"
-    },
-    {
-      "away": "Real Uni\u00f3n Club",
-      "home": "Portugalete",
-      "league": "Copa Del Rey",
-      "normalized_pair": "portugalete|real union"
-    },
-    {
-      "away": "Inter Milano W",
-      "home": "Real Madrid W",
-      "league": "UEFA Women's Champions League",
-      "normalized_pair": "inter milano w|real madrid w"
-    },
-    {
-      "away": "Mallorca",
-      "home": "CD Alcoyano",
-      "league": "Copa del Rey",
-      "normalized_pair": "cd alcoyano|mallorca"
-    },
-    {
-      "away": "Chapecoense",
-      "home": "Remo",
-      "league": "Brasileir\u00e3o Serie A",
-      "normalized_pair": "chapecoense|remo"
-    },
-    {
-      "away": "Santos",
-      "home": "Coritiba",
-      "league": "Serie A",
-      "normalized_pair": "coritiba|santos"
-    },
-    {
-      "away": "Al-Orobah FC",
-      "home": "Al Adalah",
-      "league": "Division 1",
-      "normalized_pair": "al adalah|al-orobah"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }

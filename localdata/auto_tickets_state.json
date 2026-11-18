@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 213.01911599999997,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-18",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "CD Alcoyano vs Mallorca",
+              "pick": "AWAY",
+              "prob": 0.6113249218823975,
+              "odds": 1.52,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-18",
+                "CD Alcoyano",
+                "Mallorca"
+              ]
+            },
+            {
+              "match": "Utebo FC vs Sabadell",
+              "pick": "AWAY",
+              "prob": 0.48795899260368875,
+              "odds": 1.53,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-18",
+                "Utebo FC",
+                "Sabadell"
+              ]
+            }
+          ],
+          "odds": 2.33,
+          "stake_pct": 26.6274
+        },
+        {
+          "legs": [
+            {
+              "match": "Remo vs Chapecoense",
+              "pick": "HOME",
+              "prob": 0.5946225952470765,
+              "odds": 1.62,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-18",
+                "Remo",
+                "Chapecoense"
+              ]
+            },
+            {
+              "match": "CD Badajoz vs CD Tenerife",
+              "pick": "AWAY",
+              "prob": 0.5487001857872735,
+              "odds": 1.78,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-18",
+                "CD Badajoz",
+                "CD Tenerife"
+              ]
+            }
+          ],
+          "odds": 2.88,
+          "stake_pct": 26.6274
+        }
+      ],
+      "staked_pct": 53.2548
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

@@ -1,5 +1,5 @@
 {
-  "attempted": 12,
+  "attempted": 11,
   "attempted_fixtures": [
     {
       "avg_p": 76.0,
@@ -32,26 +32,6 @@
       "w_score": 0.7351
     },
     {
-      "avg_p": 48.79589926036888,
-      "away": "Sabadell",
-      "date": "2026-11-18",
-      "home": "Utebo FC",
-      "league": "Copa Del Rey",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 43.04734848484848,
-      "away": "Santos",
-      "date": "2026-11-18",
-      "home": "Coritiba",
-      "league": "Serie A",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
       "avg_p": 41.83968097499776,
       "away": "Al-Orobah FC",
       "date": "2026-11-18",
@@ -72,20 +52,40 @@
       "w_score": 0.7528
     },
     {
-      "avg_p": 73.11087866108787,
-      "away": "Mallorca",
+      "avg_p": 71.5,
+      "away": "Real Uni\u00f3n Club",
       "date": "2026-11-18",
-      "home": "Alcoyano",
+      "home": "Portugalete",
       "league": "Copa Del Rey",
       "market": "ou_3.5",
       "pick": "under",
       "w_score": 0.7528
     },
     {
-      "avg_p": 71.5,
-      "away": "Real Uni\u00f3n Club",
+      "avg_p": 59.46225952470765,
+      "away": "Chapecoense",
       "date": "2026-11-18",
-      "home": "Portugalete",
+      "home": "Remo",
+      "league": "Brasileir\u00e3o Serie A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6534
+    },
+    {
+      "avg_p": 73.48034934497817,
+      "away": "Sabadell",
+      "date": "2026-11-18",
+      "home": "Utebo FC",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 73.11087866108787,
+      "away": "Mallorca",
+      "date": "2026-11-18",
+      "home": "Alcoyano",
       "league": "Copa Del Rey",
       "market": "ou_3.5",
       "pick": "under",
@@ -102,40 +102,30 @@
       "w_score": 0.6534
     },
     {
-      "avg_p": 59.46225952470765,
-      "away": "Chapecoense",
+      "avg_p": 43.04734848484848,
+      "away": "Santos",
       "date": "2026-11-18",
-      "home": "Remo",
-      "league": "Brasileir\u00e3o Serie A",
+      "home": "Coritiba",
+      "league": "Serie A",
       "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6534
-    },
-    {
-      "avg_p": 83.3633148404993,
-      "away": "Jamaica",
-      "date": "2026-11-18",
-      "home": "Mexico",
-      "league": "CONCACAF Nations League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7021
+      "pick": "away",
+      "w_score": 0.5405
     }
   ],
   "be_429": 0,
-  "be_cached": 1,
+  "be_cached": 11,
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 1,
-  "candidate_fixtures": 12,
-  "captured_at": "2026-11-18T01:31:45.477635+00:00",
+  "cache_only": 11,
+  "candidate_fixtures": 11,
+  "captured_at": "2026-11-18T04:28:45.878186+00:00",
   "date": "2026-11-18",
   "deferred_fixtures": 0,
   "errors": [],
-  "fixtures_with_rows": 9,
+  "fixtures_with_rows": 8,
   "market_budget_stop": false,
-  "market_requests": 45,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 161,
     "challenge_pages": 0,
@@ -151,7 +141,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 11,
+  "network_attempted": 0,
   "quoted_fixtures": [
     {
       "avg_p": 73.27582864001478,
@@ -174,40 +164,10 @@
       "w_score": 0.7351
     },
     {
-      "avg_p": 48.79589926036888,
-      "away": "Sabadell",
-      "date": "2026-11-18",
-      "home": "Utebo FC",
-      "league": "Copa Del Rey",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 43.04734848484848,
-      "away": "Santos",
-      "date": "2026-11-18",
-      "home": "Coritiba",
-      "league": "Serie A",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
       "avg_p": 77.6500904159132,
       "away": "FC Cartagena",
       "date": "2026-11-18",
       "home": "Deportiva Minera",
-      "league": "Copa Del Rey",
-      "market": "ou_3.5",
-      "pick": "under",
-      "w_score": 0.7528
-    },
-    {
-      "avg_p": 73.11087866108787,
-      "away": "Mallorca",
-      "date": "2026-11-18",
-      "home": "Alcoyano",
       "league": "Copa Del Rey",
       "market": "ou_3.5",
       "pick": "under",
@@ -224,6 +184,26 @@
       "w_score": 0.7528
     },
     {
+      "avg_p": 73.48034934497817,
+      "away": "Sabadell",
+      "date": "2026-11-18",
+      "home": "Utebo FC",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
+      "avg_p": 73.11087866108787,
+      "away": "Mallorca",
+      "date": "2026-11-18",
+      "home": "Alcoyano",
+      "league": "Copa Del Rey",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7528
+    },
+    {
       "avg_p": 61.13249218823975,
       "away": "Mallorca",
       "date": "2026-11-18",
@@ -234,18 +214,18 @@
       "w_score": 0.6534
     },
     {
-      "avg_p": 83.3633148404993,
-      "away": "Jamaica",
+      "avg_p": 43.04734848484848,
+      "away": "Santos",
       "date": "2026-11-18",
-      "home": "Mexico",
-      "league": "CONCACAF Nations League",
+      "home": "Coritiba",
+      "league": "Serie A",
       "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7021
+      "pick": "away",
+      "w_score": 0.5405
     }
   ],
-  "requests": 66,
-  "rows": 27,
+  "requests": 0,
+  "rows": 24,
   "schema": 1,
   "status": "ok"
 }

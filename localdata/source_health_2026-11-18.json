@@ -45,7 +45,7 @@
     "betexplorer": {
       "be_matched": 10,
       "be_raw": 27,
-      "be_usable": 24,
+      "be_usable": 27,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -54,14 +54,14 @@
       "freshness_h": null,
       "join_matched_rows": 6,
       "join_miss_counts": {
-        "fixture_key_miss": 7,
+        "fixture_key_miss": 10,
         "no_pick_for_fixture": 11
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-18\\/2026-11-18' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -152,13 +152,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 226,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 32256,
-        "market_unsupported": 10478,
-        "no_pick_for_fixture": 5094
+        "fixture_key_miss": 37576,
+        "market_unsupported": 10478
       },
-      "op_matched": 3,
+      "op_matched": 0,
       "op_raw": 48054,
       "op_usable": 48054,
       "reason": null,
@@ -177,12 +176,12 @@
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 6,
+      "join_matched_rows": 5,
       "join_miss_counts": {
-        "fixture_key_miss": 13397,
-        "no_pick_for_fixture": 99
+        "fixture_key_miss": 13414,
+        "no_pick_for_fixture": 83
       },
-      "pa_matched": 15,
+      "pa_matched": 12,
       "pa_raw": 13502,
       "pa_scored": 13502,
       "reason": null,
@@ -320,14 +319,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 64,
+      "join_matched_rows": 73,
       "join_miss_counts": {
         "fixture_key_miss": 60,
-        "no_pick_for_fixture": 242
+        "no_pick_for_fixture": 272
       },
       "oa_matched": 11,
-      "oa_raw": 366,
-      "oa_usable": 366,
+      "oa_raw": 405,
+      "oa_usable": 405,
       "reason": null,
       "status": "cache_only"
     },
