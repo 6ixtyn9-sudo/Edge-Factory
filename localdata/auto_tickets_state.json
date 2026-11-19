@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 298.49307,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-19",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "BOSTON RIVER vs MALDONADO",
+              "pick": "HOME",
+              "prob": 0.74,
+              "odds": 4.19,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-19",
+                "BOSTON RIVER",
+                "MALDONADO"
+              ]
+            },
+            {
+              "match": "Amiens SC vs Caen",
+              "pick": "HOME",
+              "prob": 0.4130798138869005,
+              "odds": 2.3,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-19",
+                "Amiens SC",
+                "Caen"
+              ]
+            }
+          ],
+          "odds": 9.64,
+          "stake_pct": 37.3116
+        },
+        {
+          "legs": [
+            {
+              "match": "Pe\u00f1arol vs Cerro Largo",
+              "pick": "HOME",
+              "prob": 0.6297015878810002,
+              "odds": 1.4785,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-19",
+                "Pe\u00f1arol",
+                "Cerro Largo"
+              ]
+            },
+            {
+              "match": "VASCO DA GAMA vs INTERNACIONAL",
+              "pick": "HOME",
+              "prob": 0.435,
+              "odds": 1.69,
+              "result": null,
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-19",
+                "VASCO DA GAMA",
+                "INTERNACIONAL"
+              ]
+            }
+          ],
+          "odds": 2.5,
+          "stake_pct": 37.3116
+        }
+      ],
+      "staked_pct": 74.6232
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

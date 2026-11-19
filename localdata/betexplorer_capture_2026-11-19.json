@@ -1,5 +1,5 @@
 {
-  "attempted": 4,
+  "attempted": 5,
   "attempted_fixtures": [
     {
       "avg_p": 82.02488118535085,
@@ -40,19 +40,31 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7351
+    },
+    {
+      "avg_p": 75.58514144465806,
+      "away": "Hatta",
+      "date": "2026-11-19",
+      "home": "Al Wasl",
+      "league": "UAE Pro League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
     }
   ],
   "be_429": 2,
-  "be_cached": 2,
+  "be_cached": 4,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 2,
+  "cache_only": 4,
   "candidate_fixtures": 14,
-  "captured_at": "2026-11-19T01:37:58.707881+00:00",
+  "captured_at": "2026-11-19T04:22:57.280253+00:00",
   "date": "2026-11-19",
-  "deferred_fixtures": 10,
-  "errors": [],
+  "deferred_fixtures": 9,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
   "market_requests": 0,
@@ -71,7 +83,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 2,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 73.0,
@@ -84,7 +96,7 @@
       "w_score": 0.6134
     }
   ],
-  "requests": 6,
+  "requests": 2,
   "rows": 3,
   "schema": 1,
   "status": "ok"
