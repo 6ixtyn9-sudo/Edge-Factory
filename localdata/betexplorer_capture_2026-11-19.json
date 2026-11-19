@@ -1,5 +1,5 @@
 {
-  "attempted": 5,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 82.02488118535085,
@@ -32,16 +32,6 @@
       "w_score": 0.7351
     },
     {
-      "avg_p": 75.58514144465806,
-      "away": "Hatta",
-      "date": "2026-11-19",
-      "home": "Al Wasl",
-      "league": "UAE Pro League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7351
-    },
-    {
       "avg_p": 74.0,
       "away": "MALDONADO",
       "date": "2026-11-19",
@@ -53,28 +43,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 4,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 4,
-  "candidate_fixtures": 12,
-  "captured_at": "2026-11-19T10:27:02.817522+00:00",
+  "cache_only": 3,
+  "candidate_fixtures": 10,
+  "captured_at": "2026-11-19T13:39:31.108196+00:00",
   "date": "2026-11-19",
-  "deferred_fixtures": 7,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
+  "deferred_fixtures": 6,
+  "errors": [],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 8,
+    "bookmakers": 23,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 11,
-    "markets": 8,
-    "named_rows": 11,
+    "fixtures": 3,
+    "market_rows": 50,
+    "markets": 13,
+    "named_rows": 50,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -86,17 +74,17 @@
   "network_attempted": 1,
   "quoted_fixtures": [
     {
-      "avg_p": 75.58514144465806,
-      "away": "Hatta",
+      "avg_p": 74.0,
+      "away": "MALDONADO",
       "date": "2026-11-19",
-      "home": "Al Wasl",
-      "league": "UAE Pro League",
+      "home": "BOSTON RIVER",
+      "league": "UY1",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.7351
+      "w_score": 0.5734
     }
   ],
-  "requests": 2,
+  "requests": 10,
   "rows": 3,
   "schema": 1,
   "status": "ok"
