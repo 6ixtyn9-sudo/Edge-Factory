@@ -10,97 +10,16 @@
     "remaining_today": 0,
     "spent_today": 26
   },
-  "budget_deferred": 32,
-  "captured_at": "2026-11-19T07:36:09+00:00",
+  "captured_at": "2026-11-19T10:27:02+00:00",
   "date": "2026-11-19",
   "errors": [],
-  "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 0,
-  "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 85,
-  "future_slate_fixtures": 0,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 0,
   "markets": {},
-  "markets_source": "cache",
   "matched": 0,
-  "odds_vocabulary": "unchanged",
-  "parse_skips_classified": {
-    "expected": {},
-    "loss_or_diagnosis": {}
-  },
-  "pending_fixtures": 32,
   "quoted_fixtures": [],
-  "reserved_requests": 0,
   "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 11,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 1,
-  "slate_provider_overlap_fixtures": 1,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Servette Ch\u00eanois W",
-      "home": "Barcelona W",
-      "league": "UEFA Women's Champions League",
-      "normalized_pair": "barcelona w|servette chenois w"
-    },
-    {
-      "away": "Bayern Munich W",
-      "home": "Austria Wien W",
-      "league": "UEFA Women's Champions League",
-      "normalized_pair": "austria wien w|bayern munich w"
-    },
-    {
-      "away": "Al Dhafra",
-      "home": "Al Ain",
-      "league": "UAE Pro League",
-      "normalized_pair": "al ain|al dhafra"
-    },
-    {
-      "away": "MALDONADO",
-      "home": "BOSTON RIVER",
-      "league": "UY1",
-      "normalized_pair": "boston river|maldonado"
-    },
-    {
-      "away": "Deportivo Maldonado",
-      "home": "Boston River",
-      "league": "Primera Division",
-      "normalized_pair": "boston river|deportivo maldonado"
-    },
-    {
-      "away": "Cerro Largo",
-      "home": "Pe\u00f1arol",
-      "league": "Primera Division",
-      "normalized_pair": "cerro largo|penarol"
-    },
-    {
-      "away": "FRATRIA",
-      "home": "DOBRUDZHA 1919",
-      "league": "BG2",
-      "normalized_pair": "dobrudzha 1919|fratria"
-    },
-    {
-      "away": "Internacional",
-      "home": "Vasco da Gama",
-      "league": "Brasileir\u00e3o Serie A",
-      "normalized_pair": "internacional|vasco da gama"
-    },
-    {
-      "away": "Bragantino",
-      "home": "Vit\u00f3ria",
-      "league": "Serie A",
-      "normalized_pair": "bragantino|vitoria"
-    },
-    {
-      "away": "Caen",
-      "home": "Amiens SC",
-      "league": "Ligue 3",
-      "normalized_pair": "amiens|caen"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
