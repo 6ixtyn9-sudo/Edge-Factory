@@ -231,7 +231,7 @@ def test_month_spend_depletes_the_allowance_across_runs(tmp_path, monkeypatch):
     entries = [boggio.record_call([], day=CARD_DAY, fixture_key="f", endpoint=boggio.H2H_ENDPOINT,
                                   pool_index=0, key="pool-a", status=200, remaining=25, spent=True,
                                   what_bought="x") for _ in range(9)]
-    boggio.write_call_ledger(entries, tmp_path)
+    boggio.write_call_ledger(entries, tmp_path, today=NOW.date())
     spend = boggio.spend_by_key(boggio.read_call_ledger(tmp_path, month=boggio.family_month(CARD_DAY)))
     assert spend == {fingerprint: 9}
     plan = boggio.preflight(need_h2h=6, need_listing=0, localdata=tmp_path, day=CARD_DAY,
@@ -378,7 +378,7 @@ def test_paid_listing_is_not_repeated_on_the_same_date(tmp_path, monkeypatch):
     boggio.record_call(entries, day=CARD_DAY, fixture_key="listing",
                        endpoint=boggio.H2H_ENDPOINT + ":listing", pool_index=0, key="pool-a",
                        status=200, remaining=30, spent=True, what_bought="fixture-id resolution")
-    boggio.write_call_ledger(entries, localdata)
+    boggio.write_call_ledger(entries, localdata, today=NOW.date())
     repeated = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, bootstrap=boot, now=NOW)
     assert repeated["listing_used_today"] is True
     assert repeated["need_listing"] == 0 and repeated["need_h2h"] == 0

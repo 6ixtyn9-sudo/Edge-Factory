@@ -510,7 +510,10 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
         log(f"ledger=card_enrich fixture={item['fixture_key']} event_id={event_id} pool={index + 1} "
             f"http={code} family_remaining={remaining} encounters={len(snapshot['encounters'])} "
             f"usable={snapshot['usable']} features={sorted(snapshot['features'])}")
-    kept = boggio.write_call_ledger(entries, localdata)
+    # Retention is measured from the run's own clock: a pinned/replayed `now`
+    # must not have its ledger pruned by the wall clock (2027-03 time bomb).
+    kept = boggio.write_call_ledger(entries, localdata,
+                                    today=now.date() if now is not None else None)
     results["ledger_entries"] = kept
     return results
 

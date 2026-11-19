@@ -139,7 +139,7 @@ def test_a_free_production_listing_suppresses_the_paid_rebuy(tmp_path, monkeypat
     boggio.record_call(entries, day=CARD_DAY, fixture_key="", endpoint="boggio_production_listing",
                        pool_index=0, key="pool-a", status=200, remaining=25, spent=False,
                        what_bought="production_boggio_listing")
-    boggio.write_call_ledger(entries, localdata)
+    boggio.write_call_ledger(entries, localdata, today=NOW.date())
 
     def explode(req, timeout=None):
         raise AssertionError("the paid listing must not be re-bought")
@@ -177,7 +177,7 @@ def test_a_missing_day_shadow_keeps_the_paid_listing_with_a_named_reason(tmp_pat
     boggio.record_call(entries, day=CARD_DAY, fixture_key="", endpoint="boggio_production_listing",
                        pool_index=0, key="pool-a", status=200, remaining=25, spent=False,
                        what_bought="production_boggio_listing")
-    boggio.write_call_ledger(entries, localdata)
+    boggio.write_call_ledger(entries, localdata, today=NOW.date())
     h2h_doc = json.loads((FIXTURES / "boggio_head_to_head_documented.json").read_text(encoding="utf-8"))
     listing = {"data": [
         {"id": 424001, "home_team": "Real Sociedad", "away_team": "Barcelona", "status": "pending",

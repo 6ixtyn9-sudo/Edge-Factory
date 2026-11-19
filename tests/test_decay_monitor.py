@@ -185,3 +185,103 @@ def test_recent_stats_reports_an_unreadable_roi_as_unavailable():
     rec = dm.recent_stats(con, "v_nan", "1=1", "2026-01-01")
     assert rec["n"] == 1 and rec["n_priced"] == 1
     assert rec["roi"] is None      # NaN is unreadable, not a return
+
+
+# ---- audit date (--as-of) ----------------------------------------------
+# Regression: tests/test_post_forebet_serving.py hard-coded its forward rows on
+# 2026-10-19 while the monitor read date.today(); on 2026-11-19 the 30-day
+# window started at 2026-10-20 and the suite went red with no code change.
+# Every date the audit uses must come from one injectable audit date.
+
+import pytest  # noqa: E402
+
+FIXED = "2026-10-20"
+
+
+def _registry_on(tmp_path, monkeypatch, rows_by_day, activated="2026-10-10"):
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    db, reg = tmp_path / "warehouse.duckdb", tmp_path / "edges_consensus.json"
+    with duckdb.connect(str(db)) as con:
+        con.execute("CREATE TABLE v_test (date VARCHAR, pick VARCHAR, "
+                    "outcome VARCHAR, pick_odds DOUBLE)")
+        for day, n in rows_by_day.items():
+            con.executemany("INSERT INTO v_test VALUES (?, 'home', 'away', 1.7)",
+                            [(day,)] * n)
+    reg.write_text(json.dumps({"edges": [{
+        "rule": "pfc_test_contract", "market": "1x2", "view": "v_test",
+        "where": "1=1", "contract_schema": "post_forebet_v1",
+        "activated_as_of": activated, "status": "certified",
+        "valid": {"n": 443, "wins": 310, "hit": 0.6998, "wilson_lb": 0.655},
+    }]}))
+    monkeypatch.setattr(dm, "DB", db)
+    monkeypatch.setattr(dm, "REG", reg)
+    monkeypatch.setattr(dm, "recreate_views", lambda con, **kw: {"v_test"})
+    monkeypatch.setattr(cc, "recreate_contract_views", lambda *a, **kw: set())
+    return reg
+
+
+def test_as_of_fixes_the_window_regardless_of_wall_clock(tmp_path, monkeypatch, capsys):
+    reg = _registry_on(tmp_path, monkeypatch, {"2026-10-19": 30})
+    dm.main(["--as-of", FIXED])
+    edge = json.loads(reg.read_text())["edges"][0]
+    assert edge["decay"]["recent"]["n"] == 30
+    assert edge["decay"]["checked_at"] == FIXED
+    assert edge["status"] == "benched" and edge["benched_at"] == FIXED
+    out = capsys.readouterr().out
+    assert f"Decay audit {FIXED}, window" in out and "REPLAY" in out
+
+
+def test_as_of_excludes_rows_after_the_audit_date(tmp_path, monkeypatch):
+    """A replay must not see results that did not exist on that day."""
+    reg = _registry_on(tmp_path, monkeypatch, {"2026-10-19": 5, "2026-10-21": 30})
+    dm.main(["--as-of", FIXED])
+    edge = json.loads(reg.read_text())["edges"][0]
+    assert edge["decay"]["recent"]["n"] == 5
+    assert edge["status"] == "certified"
+
+
+def test_as_of_window_lower_bound_and_activation_floor(tmp_path, monkeypatch):
+    # window 30d from 2026-10-20 starts 2026-09-20; activation floor is 10-10.
+    reg = _registry_on(tmp_path / "floor", monkeypatch,
+                       {"2026-09-19": 7, "2026-10-09": 11, "2026-10-10": 3})
+    dm.main(["--as-of", FIXED, "--window", "30"])
+    assert json.loads(reg.read_text())["edges"][0]["decay"]["recent"]["n"] == 3
+    reg = _registry_on(tmp_path / "window", monkeypatch, {"2026-09-19": 7, "2026-09-20": 2},
+                       activated="2026-01-01")
+    dm.main(["--as-of", FIXED, "--window", "30"])
+    assert json.loads(reg.read_text())["edges"][0]["decay"]["recent"]["n"] == 2
+
+
+def test_default_audit_date_is_today(tmp_path, monkeypatch, capsys):
+    today = date.today()
+    reg = _registry_on(tmp_path, monkeypatch,
+                       {today.isoformat(): 4, (today - timedelta(days=1)).isoformat(): 2},
+                       activated=(today - timedelta(days=5)).isoformat())
+    dm.main([])
+    edge = json.loads(reg.read_text())["edges"][0]
+    assert edge["decay"]["checked_at"] == today.isoformat()
+    assert edge["decay"]["recent"]["n"] == 6      # today's settled rows still count
+    assert "REPLAY" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("bad", ["2026-13-01", "yesterday", "20261020"])
+def test_as_of_rejects_malformed_dates(bad):
+    with pytest.raises(SystemExit):
+        dm.main(["--as-of", bad])
+
+
+def test_as_of_rejects_future_dates(tmp_path, monkeypatch):
+    reg = _registry_on(tmp_path, monkeypatch, {"2026-10-19": 30})
+    before = reg.read_text()
+    with pytest.raises(SystemExit):
+        dm.main(["--as-of", (date.today() + timedelta(days=1)).isoformat()])
+    assert reg.read_text() == before            # nothing written
+
+
+def test_recent_stats_until_is_inclusive():
+    con = duckdb.connect()
+    con.execute("CREATE TABLE v (date VARCHAR, pick VARCHAR, outcome VARCHAR, pick_odds DOUBLE)")
+    con.execute("INSERT INTO v VALUES ('2026-10-19','h','h',2.0),('2026-10-20','h','h',2.0),"
+                "('2026-10-21','h','h',2.0)")
+    assert dm.recent_stats(con, "v", "1=1", "2026-10-19", until="2026-10-20")["n"] == 2
+    assert dm.recent_stats(con, "v", "1=1", "2026-10-19")["n"] == 3   # legacy: no upper bound

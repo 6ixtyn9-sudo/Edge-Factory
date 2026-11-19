@@ -18,6 +18,10 @@ from edgefactory import consensus_contracts as cc
 from edgefactory.warehouse import _src_view
 
 START, SPLIT, END, DAY = "2026-06-13", "2026-09-21", "2026-10-19", "2026-10-20"
+# Every decay audit here runs as of the first live day. Never let it default
+# to the wall clock: the forward rows are dated END, and a real-clock window
+# silently drops them once today > END + window (CI went red on 2026-11-19).
+AUDIT_ARGV = ["decay_monitor.py", "--as-of", DAY]
 
 
 def observation(day=DAY, name="Live Alpha", **extra):
@@ -198,7 +202,7 @@ def test_assay_is_exact_priced_and_decay_is_untouched_forward(prepared, monkeypa
     picks = picker.run_day(DAY, {}, None, None)[0]
     for pick in picks:
         assert picker.lookup_context(purity, pick)["league"] != "UNKNOWN"
-    monkeypatch.setattr(decay.sys, "argv", ["decay_monitor.py"])
+    monkeypatch.setattr(decay.sys, "argv", AUDIT_ARGV)
     decay.main()
     after = json.loads(prepared[1].read_text())
     for edge in after["edges"]:
@@ -341,7 +345,7 @@ def test_unpriced_forward_wins_cannot_earn_clean_health(prepared, monkeypatch):
                                         odd_gg=None) for i in range(40)])
         con.register("forward", frame)
         con.execute("INSERT INTO scoutingstats SELECT * FROM forward")
-    monkeypatch.setattr(decay.sys, "argv", ["decay_monitor.py"])
+    monkeypatch.setattr(decay.sys, "argv", AUDIT_ARGV)
     decay.main()
     after = json.loads(prepared[1].read_text())
     for edge in after["edges"]:

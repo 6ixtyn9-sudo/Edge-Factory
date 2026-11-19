@@ -8,6 +8,7 @@ whatever their capture stamps said. The 15 Oct card therefore priced from a
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -101,6 +102,10 @@ def test_refetched_rows_carry_their_own_fresh_stamps(monkeypatch, capture_env):
     rows, _stats = pa.capture_day(DAY, localdata=tmp_path)
     assert calls["fetch"] == 1
     assert rows, "documented fixture must yield rows"
-    assert all(str(r["captured_at"]).startswith("2026-") for r in rows)
+    # Fresh = stamped after the stale capture. Never pin the calendar year:
+    # a "2026-" prefix check fails on every run from 2027-01-01.
+    stale_at = datetime.fromisoformat("2026-10-13T22:20:27+00:00")
+    assert all(datetime.fromisoformat(str(r["captured_at"]).replace("Z", "+00:00")) > stale_at
+               for r in rows)
     assert not any(r.get("captured_at") == "2026-10-13T22:20:27+00:00" for r in rows)
     assert not any(r.get("odds") == 4.0 for r in rows)
