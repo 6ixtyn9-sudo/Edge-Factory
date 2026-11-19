@@ -22,16 +22,6 @@
       "w_score": 0.7351
     },
     {
-      "avg_p": 78.84368377407169,
-      "away": "Al Dhafra",
-      "date": "2026-11-19",
-      "home": "Al Ain",
-      "league": "UAE Pro League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7351
-    },
-    {
       "avg_p": 74.0,
       "away": "MALDONADO",
       "date": "2026-11-19",
@@ -40,6 +30,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5734
+    },
+    {
+      "avg_p": 72.0,
+      "away": "CERRO LARGO",
+      "date": "2026-11-19",
+      "home": "PENAROL",
+      "league": "UY1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5523
     }
   ],
   "be_429": 2,
@@ -48,21 +48,21 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 3,
-  "candidate_fixtures": 10,
-  "captured_at": "2026-11-19T13:39:31.108196+00:00",
+  "candidate_fixtures": 9,
+  "captured_at": "2026-11-19T16:24:31.735466+00:00",
   "date": "2026-11-19",
-  "deferred_fixtures": 6,
+  "deferred_fixtures": 5,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
   "market_requests": 5,
   "match_detail": {
-    "bookmakers": 23,
+    "bookmakers": 38,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 50,
-    "markets": 13,
-    "named_rows": 50,
+    "fixtures": 4,
+    "market_rows": 90,
+    "markets": 18,
+    "named_rows": 90,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -82,10 +82,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5734
+    },
+    {
+      "avg_p": 72.0,
+      "away": "CERRO LARGO",
+      "date": "2026-11-19",
+      "home": "PENAROL",
+      "league": "UY1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5523
     }
   ],
   "requests": 10,
-  "rows": 3,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
