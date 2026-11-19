@@ -1,28 +1,7 @@
 {
-  "added": 16380,
-  "attempted": 4,
-  "attempted_fixtures": [
-    {
-      "away": "Botafogo FR RJ",
-      "fixture_id": "id1000032566887164",
-      "home": "SC Corinthians SP"
-    },
-    {
-      "away": "EC Bahia BA",
-      "fixture_id": "id1000032566887170",
-      "home": "Gremio FB Porto Alegrense RS"
-    },
-    {
-      "away": "Udelas FC",
-      "fixture_id": "id1001949076875154",
-      "home": "Aguilas de la Universidad de Panama"
-    },
-    {
-      "away": "Tauro FC",
-      "fixture_id": "id1002710276822362",
-      "home": "CA Independiente de La Chorrera"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-19",
     "keys": 3,
@@ -31,149 +10,22 @@
     "remaining_today": 13,
     "spent_today": 12
   },
-  "captured_at": "2026-11-18T22:41:33+00:00",
+  "captured_at": "2026-11-19T01:37:58+00:00",
   "date": "2026-11-19",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 0,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 87,
-  "future_slate_fixtures": 2,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 569,
-  "markets": {
-    "1x2": 1642,
-    "btts": 872,
-    "dc": 1510,
-    "dnb": 767,
-    "ou_0.5": 617,
-    "ou_0.75": 58,
-    "ou_1": 76,
-    "ou_1.25": 72,
-    "ou_1.5": 825,
-    "ou_1.75": 128,
-    "ou_2": 274,
-    "ou_2.25": 390,
-    "ou_2.5": 949,
-    "ou_2.75": 436,
-    "ou_3": 428,
-    "ou_3.25": 372,
-    "ou_3.5": 872,
-    "ou_3.75": 212,
-    "ou_4": 172,
-    "ou_4.25": 98,
-    "ou_4.5": 702,
-    "ou_4.75": 72,
-    "ou_5": 58,
-    "ou_5.25": 72,
-    "ou_5.5": 491,
-    "ou_5.75": 42,
-    "ou_6": 24,
-    "ou_6.25": 24,
-    "ou_6.5": 218,
-    "ou_6.75": 12,
-    "ou_7": 12,
-    "ou_7.25": 12,
-    "ou_7.5": 35,
-    "ou_7.75": 12,
-    "ou_8": 12,
-    "ou_8.25": 12,
-    "ou_8.5": 30,
-    "tt_away_0.5": 490,
-    "tt_away_0.75": 4,
-    "tt_away_1": 26,
-    "tt_away_1.25": 10,
-    "tt_away_1.5": 542,
-    "tt_away_1.75": 4,
-    "tt_away_2": 18,
-    "tt_away_2.25": 2,
-    "tt_away_2.5": 447,
-    "tt_away_3.5": 214,
-    "tt_away_4.5": 24,
-    "tt_away_5.5": 7,
-    "tt_home_0.5": 456,
-    "tt_home_0.75": 4,
-    "tt_home_1": 20,
-    "tt_home_1.25": 10,
-    "tt_home_1.5": 544,
-    "tt_home_1.75": 10,
-    "tt_home_2": 20,
-    "tt_home_2.25": 4,
-    "tt_home_2.5": 468,
-    "tt_home_2.75": 4,
-    "tt_home_3.5": 312,
-    "tt_home_4.5": 123,
-    "tt_home_5.5": 7
-  },
-  "markets_source": "fetch",
-  "matched": 4,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 1,
-    "market_inactive": 3055,
-    "market_unsupported_cards": 3007,
-    "market_unsupported_clean_sheet": 354,
-    "market_unsupported_corners": 6364,
-    "market_unsupported_correct_score": 1202,
-    "market_unsupported_early_payout": 104,
-    "market_unsupported_handicap": 6620,
-    "market_unsupported_market_type": 3908,
-    "market_unsupported_non_goal": 207,
-    "market_unsupported_odd_even": 1086,
-    "market_unsupported_period": 24653,
-    "market_unsupported_win_to_nil": 704,
-    "outcome_inactive": 1252
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 1,
-      "market_inactive": 3055,
-      "outcome_inactive": 1252
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 3007,
-      "market_unsupported_clean_sheet": 354,
-      "market_unsupported_corners": 6364,
-      "market_unsupported_correct_score": 1202,
-      "market_unsupported_early_payout": 104,
-      "market_unsupported_handicap": 6620,
-      "market_unsupported_market_type": 3908,
-      "market_unsupported_non_goal": 207,
-      "market_unsupported_odd_even": 1086,
-      "market_unsupported_period": 24653,
-      "market_unsupported_win_to_nil": 704
-    }
-  },
-  "pending_fixtures": 4,
-  "quoted_fixtures": [
-    {
-      "away": "Botafogo FR RJ",
-      "fixture_id": "id1000032566887164",
-      "home": "SC Corinthians SP"
-    },
-    {
-      "away": "EC Bahia BA",
-      "fixture_id": "id1000032566887170",
-      "home": "Gremio FB Porto Alegrense RS"
-    },
-    {
-      "away": "Udelas FC",
-      "fixture_id": "id1001949076875154",
-      "home": "Aguilas de la Universidad de Panama"
-    },
-    {
-      "away": "Tauro FC",
-      "fixture_id": "id1002710276822362",
-      "home": "CA Independiente de La Chorrera"
-    }
-  ],
-  "reserved_requests": 2,
-  "rows": 16380,
+  "markets": {},
+  "matched": 0,
+  "pending_fixtures": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 14,
+  "slate_candidate_fixtures": 12,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
   "slate_provider_overlap_fixtures": 2,
   "slate_unmatched_fixtures": [
     {
@@ -213,22 +65,10 @@
       "normalized_pair": "cerro largo|penarol"
     },
     {
-      "away": "Botafogo",
-      "home": "Corinthians",
-      "league": "Serie A",
-      "normalized_pair": "botafogo|corinthians"
-    },
-    {
       "away": "FRATRIA",
       "home": "DOBRUDZHA 1919",
       "league": "BG2",
       "normalized_pair": "dobrudzha 1919|fratria"
-    },
-    {
-      "away": "Bahia",
-      "home": "Gr\u00eamio",
-      "league": "Serie A",
-      "normalized_pair": "bahia|gremio"
     },
     {
       "away": "Internacional",
@@ -249,5 +89,6 @@
       "normalized_pair": "amiens|caen"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "nothing_pending"
 }

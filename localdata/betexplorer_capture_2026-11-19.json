@@ -1,5 +1,5 @@
 {
-  "attempted": 3,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 82.02488118535085,
@@ -22,30 +22,40 @@
       "w_score": 0.6134
     },
     {
-      "avg_p": 54.82518739918398,
-      "away": "Botafogo",
+      "avg_p": 97.14671981557967,
+      "away": "Servette Ch\u00eanois W",
       "date": "2026-11-19",
-      "home": "Corinthians",
-      "league": "Brasileir\u00e3o Serie A",
+      "home": "Barcelona W",
+      "league": "UEFA Women's Champions League",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.5911
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 78.84368377407169,
+      "away": "Al Dhafra",
+      "date": "2026-11-19",
+      "home": "Al Ain",
+      "league": "UAE Pro League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 2,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 15,
-  "captured_at": "2026-11-18T22:41:33.178384+00:00",
+  "cache_only": 2,
+  "candidate_fixtures": 14,
+  "captured_at": "2026-11-19T01:37:58.707881+00:00",
   "date": "2026-11-19",
-  "deferred_fixtures": 12,
+  "deferred_fixtures": 10,
   "errors": [],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 6,
     "challenge_pages": 0,
@@ -59,9 +69,9 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
+  "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 3,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 73.0,
@@ -74,7 +84,7 @@
       "w_score": 0.6134
     }
   ],
-  "requests": 12,
+  "requests": 6,
   "rows": 3,
   "schema": 1,
   "status": "ok"

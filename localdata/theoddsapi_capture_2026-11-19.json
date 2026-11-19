@@ -1,33 +1,15 @@
 {
-  "added": 106,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "INTERNACIONAL",
-      "date": "2026-11-19",
-      "home": "VASCO DA GAMA",
-      "kickoff": "22:30",
-      "league": "BR1"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 14,
-  "captured_at": "2026-11-18T23:08:02+00:00",
+  "captured_at": "2026-11-19T02:02:31+00:00",
   "date": "2026-11-19",
-  "due_reasons": {
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "Internacional",
-      "date": "2026-11-19",
-      "home": "Vasco da Gama",
-      "kickoff": "2026-11-19T22:30:00Z",
-      "league": "BR1"
-    }
-  ],
+  "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
     "totals",
@@ -37,10 +19,10 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 106,
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 1,
+    "priced": 2,
     "retry_cooldown": 12
   },
   "skipped": [
@@ -56,10 +38,10 @@
     "DOBRUDZHA 1919|FRATRIA (retry cooldown (6h after failed attempt))",
     "Gr\u00eamio|Bahia (priced)",
     "Vit\u00f3ria|Bragantino (retry cooldown (6h after failed attempt))",
-    "Amiens SC|Caen (retry cooldown (6h after failed attempt))"
+    "Amiens SC|Caen (retry cooldown (6h after failed attempt))",
+    "VASCO DA GAMA|INTERNACIONAL (priced)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [],
+  "status": "not_due",
   "unmatched_reasons": {}
 }

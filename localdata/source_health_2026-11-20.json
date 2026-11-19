@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 2,
@@ -29,7 +29,7 @@
         "selection_unmapped": 19
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-20\\/2026-11-20' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -178,12 +178,12 @@
       "freshness_h": 0.0,
       "join_matched_rows": 15,
       "join_miss_counts": {
-        "fixture_key_miss": 13789,
+        "fixture_key_miss": 13850,
         "no_pick_for_fixture": 268
       },
       "pa_matched": 35,
-      "pa_raw": 755,
-      "pa_scored": 14072,
+      "pa_raw": 757,
+      "pa_scored": 14133,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -262,9 +262,6 @@
           "unsupported_market:asian_handicap": 6
         },
         "card_fixture_count": 28,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 94,
@@ -276,16 +273,16 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 4
       },
-      "reason": null,
+      "reason": "cache_rows_pending_join",
       "sa_matched": 0,
-      "sa_raw": 1,
+      "sa_raw": 4,
       "sa_scored": 4,
-      "status": "ok"
+      "status": "cache_only"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

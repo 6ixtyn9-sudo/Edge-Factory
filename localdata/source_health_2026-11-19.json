@@ -24,8 +24,8 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
+        "fixture_key_miss": 2,
         "market_unsupported": 2,
-        "no_pick_for_fixture": 2,
         "out_of_window": 3,
         "selection_unmapped": 17
       },
@@ -60,7 +60,7 @@
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-19\\/2026-11-19' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -151,12 +151,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 456,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 12154,
+        "fixture_key_miss": 12610,
         "market_unsupported": 3770
       },
-      "op_matched": 9,
+      "op_matched": 0,
       "op_raw": 16380,
       "op_usable": 16380,
       "reason": null,
@@ -177,12 +177,12 @@
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 19,
+      "join_matched_rows": 14,
       "join_miss_counts": {
-        "fixture_key_miss": 14373,
-        "no_pick_for_fixture": 152
+        "fixture_key_miss": 14395,
+        "no_pick_for_fixture": 135
       },
-      "pa_matched": 75,
+      "pa_matched": 56,
       "pa_raw": 14544,
       "pa_scored": 14544,
       "reason": null,
@@ -321,13 +321,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 37,
+      "join_matched_rows": 24,
       "join_miss_counts": {
-        "no_pick_for_fixture": 60
+        "fixture_key_miss": 97,
+        "no_pick_for_fixture": 82
       },
-      "oa_matched": 10,
-      "oa_raw": 97,
-      "oa_usable": 97,
+      "oa_matched": 20,
+      "oa_raw": 203,
+      "oa_usable": 203,
       "reason": null,
       "status": "cache_only"
     },
