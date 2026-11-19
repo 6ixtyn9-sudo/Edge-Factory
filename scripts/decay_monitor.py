@@ -2,9 +2,15 @@
 """Decay monitor: nightly audit of certified edges (docs/operator/RESEARCH.md golden rule:
 HEALTHY / WATCH / DECAYING / DEAD).
 
-    python3 scripts/decay_monitor.py                 # 60-day recent window
+    python3 scripts/decay_monitor.py                 # recent window from config
     python3 scripts/decay_monitor.py --window 90     # custom window
     python3 scripts/decay_monitor.py --dry-run       # report only, no writes
+    python3 scripts/decay_monitor.py --as-of 2026-10-20   # replay a past audit
+
+The audit date (``--as-of``, default: today UTC on the runner) defines the
+recent window ``as_of - window <= date <= as_of``. Every date the audit
+reasons about comes from it, never from the wall clock directly, so a replay
+or a test sees exactly the window that a run on that day would have seen.
 
 For every CERTIFIED edge in localdata/edges_consensus.json, re-evaluates the
 exact stored rule (`view` + `where`, scales already baked into the where
@@ -532,8 +538,10 @@ def recreate_views(
     return avail
 
 
-def recent_stats(con, view: str, where: str, since: str):
-    """Same accounting as mine_consensus.stats(), restricted to date >= since."""
+def recent_stats(con, view: str, where: str, since: str, until: str | None = None):
+    """Same accounting as mine_consensus.stats(), restricted to
+    since <= date (<= until, inclusive, when given)."""
+    upper = f" AND date <= '{until}'" if until is not None else ""
     q = f"""
         SELECT count(*) n,
                sum(CASE WHEN pick = outcome THEN 1 ELSE 0 END) wins,
@@ -541,7 +549,7 @@ def recent_stats(con, view: str, where: str, since: str):
                      CASE WHEN pick = outcome THEN pick_odds - 1 ELSE -1 END
                    ELSE 0 END) pnl,
                sum(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
-        FROM {view} WHERE ({where}) AND date >= '{since}'
+        FROM {view} WHERE ({where}) AND date >= '{since}'{upper}
     """
     n, wins, pnl, n_priced = con.sql(q).fetchone()
     n, wins, n_priced = int(n or 0), int(wins or 0), int(n_priced or 0)
@@ -558,13 +566,33 @@ def recent_stats(con, view: str, where: str, since: str):
     }
 
 
-def main():
+def _audit_date(value: str) -> date:
+    # Strict, as in mine_consensus.py: dates are compared as strings in SQL,
+    # so only the canonical YYYY-MM-DD form is accepted (not 20261020).
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError:
+        parsed = None
+    if parsed is None or parsed.isoformat() != value:
+        raise argparse.ArgumentTypeError(f"not an ISO date (YYYY-MM-DD): {value!r}")
+    return parsed
+
+
+def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--window", type=int, default=GATES.recent_window_days,
                     help="recent window in days (default from config)")
     ap.add_argument("--dry-run", action="store_true",
                     help="report only, do not update the registry")
-    args = ap.parse_args()
+    ap.add_argument("--as-of", type=_audit_date, default=None,
+                    help="audit date YYYY-MM-DD, inclusive end of the recent "
+                         "window (default: today). Use it to replay a past audit.")
+    args = ap.parse_args(argv)
+    real_today = date.today()
+    as_of = args.as_of or real_today
+    if as_of > real_today:
+        ap.error(f"--as-of {as_of} is in the future (today is {real_today}); "
+                 "an audit cannot see results that do not exist yet")
 
     if not REG.exists():
         print("No edges_consensus.json — nothing to audit. "
@@ -600,12 +628,15 @@ def main():
     )
     from edgefactory.consensus_contracts import recreate_contract_views
     avail.update(recreate_contract_views(con, certified))
-    since = (date.today() - timedelta(days=args.window)).isoformat()
-    today = date.today().isoformat()
+    since = (as_of - timedelta(days=args.window)).isoformat()
+    today = as_of.isoformat()
 
     hdr = (f"{'rule':42s} {'market':7s} {'baseline n/hit/LB':>20s} "
            f"{'recent n/hit/LB/roi':>24s}  verdict")
     print(f"Decay audit {today}, window {args.window}d (since {since})")
+    if as_of != real_today:
+        print(f"REPLAY: --as-of {today} (wall clock {real_today.isoformat()}); "
+              f"rows after {today} are ignored.")
     print(hdr)
     print("-" * len(hdr))
 
@@ -631,7 +662,7 @@ def main():
                 # No overlap with the locked validation baseline. Re-mining
                 # preserves this boundary; it cannot reset the decay clock.
                 recent_since = max(since, e["activated_as_of"])
-            rec = recent_stats(con, view, where, recent_since)
+            rec = recent_stats(con, view, where, recent_since, until=today)
         except Exception as ex:
             e["decay"] = {"verdict": "UNKNOWN", "window_days": args.window,
                           "checked_at": today, "bench": False,
