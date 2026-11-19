@@ -1,52 +1,11 @@
 {
   "base_pct": 100.0,
-  "bank": 298.49307,
+  "bank": 620.865294,
   "cycle_base": 456.154568,
   "open_slips": [
     {
       "date": "2026-11-19",
       "accas": [
-        {
-          "legs": [
-            {
-              "match": "BOSTON RIVER vs MALDONADO",
-              "pick": "HOME",
-              "prob": 0.74,
-              "odds": 4.19,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-19",
-                "BOSTON RIVER",
-                "MALDONADO"
-              ]
-            },
-            {
-              "match": "Amiens SC vs Caen",
-              "pick": "HOME",
-              "prob": 0.4130798138869005,
-              "odds": 2.3,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-19",
-                "Amiens SC",
-                "Caen"
-              ]
-            }
-          ],
-          "odds": 9.64,
-          "stake_pct": 37.3116,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
         {
           "legs": [
             {
@@ -83,13 +42,13 @@
           "odds": 2.5,
           "stake_pct": 37.3116,
           "results": [
-            null,
+            "win",
             null
           ],
           "won": null
         }
       ],
-      "staked_pct": 74.6232
+      "staked_pct": 37.3116
     }
   ],
   "history": [
@@ -3058,6 +3017,51 @@
       ],
       "bank_pct": 298.4931,
       "close_pct": 298.493
+    },
+    {
+      "date": "2026-11-19",
+      "staked_pct": 37.3116,
+      "returned_pct": 359.6838,
+      "accas": [
+        {
+          "odds": 9.64,
+          "won": true,
+          "stake_pct": 37.3116,
+          "returned_pct": 359.6838,
+          "legs": [
+            {
+              "match": "BOSTON RIVER vs MALDONADO",
+              "pick": "HOME",
+              "odds": 4.19,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-19",
+                "BOSTON RIVER",
+                "MALDONADO"
+              ]
+            },
+            {
+              "match": "Amiens SC vs Caen",
+              "pick": "HOME",
+              "odds": 2.3,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-19",
+                "Amiens SC",
+                "Caen"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 620.8653,
+      "close_pct": 620.8652
     }
   ],
   "events": [

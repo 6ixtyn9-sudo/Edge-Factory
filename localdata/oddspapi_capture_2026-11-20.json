@@ -1,0 +1,424 @@
+{
+  "added": 8657,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "FC Cincinnati",
+      "fixture_id": "id1000024276573128",
+      "home": "Orlando City SC"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-20",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 475,
+    "remaining_today": 19,
+    "spent_today": 6
+  },
+  "budget_deferred": 4,
+  "captured_at": "2026-11-19T22:37:27+00:00",
+  "date": "2026-11-20",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 3,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 334,
+  "future_slate_fixtures": 19,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 586,
+  "markets": {
+    "1x2": 698,
+    "btts": 418,
+    "dc": 625,
+    "dnb": 369,
+    "ou_0.5": 112,
+    "ou_0.75": 8,
+    "ou_1": 8,
+    "ou_1.25": 20,
+    "ou_1.5": 332,
+    "ou_1.75": 50,
+    "ou_2": 72,
+    "ou_2.25": 54,
+    "ou_2.5": 362,
+    "ou_2.75": 102,
+    "ou_3": 110,
+    "ou_3.25": 200,
+    "ou_3.5": 389,
+    "ou_3.75": 222,
+    "ou_4": 214,
+    "ou_4.25": 202,
+    "ou_4.5": 368,
+    "ou_4.75": 74,
+    "ou_5": 74,
+    "ou_5.25": 44,
+    "ou_5.5": 349,
+    "ou_5.75": 40,
+    "ou_6": 28,
+    "ou_6.25": 26,
+    "ou_6.5": 227,
+    "ou_6.75": 10,
+    "ou_7": 10,
+    "ou_7.25": 10,
+    "ou_7.5": 99,
+    "ou_7.75": 8,
+    "ou_8": 8,
+    "ou_8.25": 8,
+    "ou_8.5": 48,
+    "tt_away_0.5": 252,
+    "tt_away_0.75": 18,
+    "tt_away_1": 20,
+    "tt_away_1.25": 18,
+    "tt_away_1.5": 286,
+    "tt_away_1.75": 24,
+    "tt_away_2": 20,
+    "tt_away_2.25": 18,
+    "tt_away_2.5": 264,
+    "tt_away_2.75": 18,
+    "tt_away_3": 20,
+    "tt_away_3.25": 18,
+    "tt_away_3.5": 210,
+    "tt_away_4": 2,
+    "tt_away_4.5": 131,
+    "tt_away_5.5": 5,
+    "tt_home_0.5": 246,
+    "tt_home_0.75": 18,
+    "tt_home_1": 20,
+    "tt_home_1.25": 18,
+    "tt_home_1.5": 276,
+    "tt_home_1.75": 24,
+    "tt_home_2": 20,
+    "tt_home_2.25": 18,
+    "tt_home_2.5": 260,
+    "tt_home_2.75": 18,
+    "tt_home_3": 20,
+    "tt_home_3.25": 18,
+    "tt_home_3.5": 209,
+    "tt_home_4": 2,
+    "tt_home_4.5": 139,
+    "tt_home_5.5": 29
+  },
+  "markets_source": "fetch",
+  "matched": 1,
+  "odds_vocabulary": "written",
+  "parse_skips": {
+    "alt_line_skipped": 1,
+    "market_inactive": 74,
+    "market_unsupported_cards": 826,
+    "market_unsupported_clean_sheet": 164,
+    "market_unsupported_corners": 2664,
+    "market_unsupported_correct_score": 498,
+    "market_unsupported_early_payout": 46,
+    "market_unsupported_handicap": 2638,
+    "market_unsupported_market_type": 1714,
+    "market_unsupported_non_goal": 84,
+    "market_unsupported_odd_even": 486,
+    "market_unsupported_period": 10721,
+    "market_unsupported_win_to_nil": 304,
+    "outcome_inactive": 799
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 1,
+      "market_inactive": 74,
+      "outcome_inactive": 799
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 826,
+      "market_unsupported_clean_sheet": 164,
+      "market_unsupported_corners": 2664,
+      "market_unsupported_correct_score": 498,
+      "market_unsupported_early_payout": 46,
+      "market_unsupported_handicap": 2638,
+      "market_unsupported_market_type": 1714,
+      "market_unsupported_non_goal": 84,
+      "market_unsupported_odd_even": 486,
+      "market_unsupported_period": 10721,
+      "market_unsupported_win_to_nil": 304
+    }
+  },
+  "pending_fixtures": 5,
+  "quoted_fixtures": [
+    {
+      "away": "FC Cincinnati",
+      "fixture_id": "id1000024276573128",
+      "home": "Orlando City SC"
+    }
+  ],
+  "reserved_requests": 19,
+  "rows": 8657,
+  "schema": 1,
+  "slate_candidate_fixtures": 64,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 2,
+  "slate_provider_overlap_fixtures": 20,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Trefelin",
+      "home": "The New Saints",
+      "league": "Premier League",
+      "normalized_pair": "new saints|trefelin"
+    },
+    {
+      "away": "FC K\u00f6ln",
+      "home": "FC Bayern M\u00fcnchen",
+      "league": "Bundesliga",
+      "normalized_pair": "bayern munchen|koln"
+    },
+    {
+      "away": "H\u00e9rcules",
+      "home": "Teruel",
+      "league": "Primera Division RFEF: Group 2",
+      "normalized_pair": "hercules|teruel"
+    },
+    {
+      "away": "FK LVIV",
+      "home": "SACHTOR DONETSK",
+      "league": "UA1",
+      "normalized_pair": "lviv|sachtor donetsk"
+    },
+    {
+      "away": "Fluminense",
+      "home": "S\u00e3o Paulo",
+      "league": "Serie A",
+      "normalized_pair": "fluminense|sao paulo"
+    },
+    {
+      "away": "ESPANYOL",
+      "home": "ATHLETIC BILBAO",
+      "league": "ES1",
+      "normalized_pair": "athletic bilbao|espanyol"
+    },
+    {
+      "away": "JONG PSV",
+      "home": "HERACLES",
+      "league": "NL2",
+      "normalized_pair": "heracles|jong psv"
+    },
+    {
+      "away": "BOULOGNE",
+      "home": "METZ",
+      "league": "FR2",
+      "normalized_pair": "boulogne|metz"
+    },
+    {
+      "away": "FC VOLUNTARIS",
+      "home": "BOTOSANI",
+      "league": "RO1",
+      "normalized_pair": "botosani|voluntaris"
+    },
+    {
+      "away": "LOKEREN",
+      "home": "LIERSE",
+      "league": "BE2",
+      "normalized_pair": "lierse|lokeren"
+    },
+    {
+      "away": "UN. CALERA",
+      "home": "PALESTINO",
+      "league": "CL1",
+      "normalized_pair": "palestino|un. calera"
+    },
+    {
+      "away": "SHAMS AZAR QAZVIN",
+      "home": "ZOB AHAN",
+      "league": "IR1",
+      "normalized_pair": "shams azar qazvin|zob ahan"
+    },
+    {
+      "away": "Haverfordwest County",
+      "home": "Penybont",
+      "league": "Premier League",
+      "normalized_pair": "haverfordwest county|penybont"
+    },
+    {
+      "away": "VIRTON",
+      "home": "CLUB BRUGGE II",
+      "league": "BE2",
+      "normalized_pair": "brugge|virton"
+    },
+    {
+      "away": "QIZILQUM",
+      "home": "OLMALIQ",
+      "league": "UZ1",
+      "normalized_pair": "olmaliq|qizilqum"
+    },
+    {
+      "away": "Holywell",
+      "home": "Briton Ferry",
+      "league": "Premier League",
+      "normalized_pair": "briton ferry|holywell"
+    },
+    {
+      "away": "SHIMIZU",
+      "home": "KASHIMA",
+      "league": "JP1",
+      "normalized_pair": "kashima|shimizu"
+    },
+    {
+      "away": "Viktoria K\u00f6ln",
+      "home": "Havelse",
+      "league": "3. Liga",
+      "normalized_pair": "havelse|viktoria koln"
+    },
+    {
+      "away": "BELGRANO",
+      "home": "VELEZ SARSFIELD",
+      "league": "AR1",
+      "normalized_pair": "belgrano|velez sarsfield"
+    },
+    {
+      "away": "Espanyol",
+      "home": "Athletic Club",
+      "league": "La Liga",
+      "normalized_pair": "athletic|espanyol"
+    },
+    {
+      "away": "AYR UNITED",
+      "home": "INVERNESS",
+      "league": "SC1",
+      "normalized_pair": "ayr united|inverness"
+    },
+    {
+      "away": "Macar\u00e1",
+      "home": "Independiente del Valle",
+      "league": "LigaPro Serie A",
+      "normalized_pair": "independiente del valle|macara"
+    },
+    {
+      "away": "LEGANES",
+      "home": "FC ANDORRA",
+      "league": "ES2",
+      "normalized_pair": "andorra|leganes"
+    },
+    {
+      "away": "VOITSBERG",
+      "home": "ST. POLTEN",
+      "league": "AT2",
+      "normalized_pair": "st. polten|voitsberg"
+    },
+    {
+      "away": "\u015al\u0105sk Wroc\u0142aw",
+      "home": "Pogo\u0144 Szczecin",
+      "league": "Ekstraklasa",
+      "normalized_pair": "pogon szczecin|slask wroclaw"
+    },
+    {
+      "away": "Ayr United",
+      "home": "Inverness CT",
+      "league": "Championship",
+      "normalized_pair": "ayr united|inverness ct"
+    },
+    {
+      "away": "Jong Ajax",
+      "home": "FC Volendam",
+      "league": "Eerste Divisie",
+      "normalized_pair": "jong ajax|volendam"
+    },
+    {
+      "away": "GANDZASAR",
+      "home": "SHIRAK",
+      "league": "AM1",
+      "normalized_pair": "gandzasar|shirak"
+    },
+    {
+      "away": "KSC Lokeren",
+      "home": "Koninklijke Lierse Sportkring",
+      "league": "Challenger Pro League",
+      "normalized_pair": "koninklijke lierse sportkring|ksc lokeren"
+    },
+    {
+      "away": "Dijon",
+      "home": "Nancy",
+      "league": "Ligue 2",
+      "normalized_pair": "dijon|nancy"
+    },
+    {
+      "away": "Uni\u00f3n La Calera",
+      "home": "Palestino",
+      "league": "Primera Division",
+      "normalized_pair": "palestino|union la calera"
+    },
+    {
+      "away": "Hobro",
+      "home": "Aarhus Fremad",
+      "league": "First Division",
+      "normalized_pair": "aarhus fremad|hobro"
+    },
+    {
+      "away": "ADMIRA WACKER",
+      "home": "AUSTRIA SALZBURG",
+      "league": "AT2",
+      "normalized_pair": "admira wacker|austria salzburg"
+    },
+    {
+      "away": "Bod\u00f8 / Glimt",
+      "home": "Molde",
+      "league": "Eliteserien",
+      "normalized_pair": "bodo / glimt|molde"
+    },
+    {
+      "away": "CHADORMALU",
+      "home": "FAJR SEPASI",
+      "league": "IR1",
+      "normalized_pair": "chadormalu|fajr sepasi"
+    },
+    {
+      "away": "1. FC Heidenheim",
+      "home": "Darmstadt 98",
+      "league": "2. Bundesliga",
+      "normalized_pair": "1. heidenheim|darmstadt 98"
+    },
+    {
+      "away": "Al-Nassr",
+      "home": "Al-Ahli",
+      "league": "Saudi Pro League",
+      "normalized_pair": "al-ahli|al-nassr"
+    },
+    {
+      "away": "Santa Fe",
+      "home": "Independiente Medell\u00edn",
+      "league": "Liga BetPlay",
+      "normalized_pair": "independiente medellin|santa fe"
+    },
+    {
+      "away": "Cambrian & Clydach",
+      "home": "Flint Town United",
+      "league": "Premier League",
+      "normalized_pair": "cambrian & clydach|flint town united"
+    },
+    {
+      "away": "VVV-Venlo",
+      "home": "FC Den Bosch",
+      "league": "Eerste Divisie",
+      "normalized_pair": "den bosch|vvv-venlo"
+    },
+    {
+      "away": "Rodez",
+      "home": "Guingamp",
+      "league": "Ligue 2",
+      "normalized_pair": "guingamp|rodez"
+    },
+    {
+      "away": "DILA GORI",
+      "home": "FC GAGRA",
+      "league": "GE1",
+      "normalized_pair": "dila gori|gagra"
+    },
+    {
+      "away": "Al-Arabi SC",
+      "home": "Al Gharafa",
+      "league": "Stars League",
+      "normalized_pair": "al gharafa|al-arabi"
+    },
+    {
+      "away": "Salernitana",
+      "home": "Casertana",
+      "league": "Serie C: Girone C",
+      "normalized_pair": "casertana|salernitana"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}

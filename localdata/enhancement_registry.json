@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-19",
+ "generated_at": "2026-11-20",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
    "hits": 19,
-   "inv_price_sum": 17.241478102320016,
+   "inv_price_sum": 18.641472105799934,
    "multi_n": 0,
-   "n": 27,
+   "n": 29,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -87,9 +87,11 @@
     "2026-11-14|Ecuador vs Costa Rica|away_over_05@v1",
     "2026-11-15|UD Ibiza vs FC Cartagena|away_over_05@v1",
     "2026-11-17|RWANDA vs MALI|away_over_05@v1",
-    "2026-11-17|RUSSIA vs VENEZUELA|away_over_05@v1"
+    "2026-11-17|RUSSIA vs VENEZUELA|away_over_05@v1",
+    "2026-11-19|Gr\u00eamio vs Bahia|away_over_05@v1",
+    "2026-11-19|Corinthians vs Botafogo|away_over_05@v1"
    ],
-   "profit": 1.282,
+   "profit": -0.718,
    "records": [
     {
      "away": "Mixco",
@@ -861,6 +863,64 @@
      "rule": "pfc_c33854a6f17eda6cca30d634",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Bahia",
+     "away_key": "bahia",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6548,
+     "date": "2026-11-19",
+     "hit": false,
+     "home": "Gr\u00eamio",
+     "home_key": "gremio",
+     "league": "Serie A",
+     "match": "Gr\u00eamio vs Bahia",
+     "multi_source": false,
+     "price": 1.282,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-18T22:40:58.499474+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.282,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.444522+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Botafogo",
+     "away_key": "botafogo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7087,
+     "date": "2026-11-19",
+     "hit": false,
+     "home": "Corinthians",
+     "home_key": "corinthians",
+     "league": "Serie A",
+     "match": "Corinthians vs Botafogo",
+     "multi_source": false,
+     "price": 1.613,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-18T22:40:45.752671+00:00",
+      "contract_id": "pfc_142b7b762e570fa302940d6e",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.613,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.476218+00:00",
+     "rule": "pfc_142b7b762e570fa302940d6e",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -1167,10 +1227,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 21,
-   "inv_price_sum": 14.483475616527654,
+   "hits": 23,
+   "inv_price_sum": 15.837972111886373,
    "multi_n": 0,
-   "n": 27,
+   "n": 29,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -1198,9 +1258,11 @@
     "2026-11-09|CS Herediano vs Inter San Carlos|away_under_15@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|away_under_15@v1",
     "2026-11-17|RUSSIA vs VENEZUELA|away_under_15@v1",
-    "2026-11-18|El Salvador vs Saint Martin|away_under_15@v1"
+    "2026-11-18|El Salvador vs Saint Martin|away_under_15@v1",
+    "2026-11-19|Gr\u00eamio vs Bahia|away_under_15@v1",
+    "2026-11-19|Corinthians vs Botafogo|away_under_15@v1"
    ],
-   "profit": 25.361,
+   "profit": 26.364,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1922,6 +1984,64 @@
      },
      "recorded_at": "2026-11-18T23:16:16.920695+00:00",
      "rule": "pfc_12c05e100bfd7667f5977355",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Bahia",
+     "away_key": "bahia",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7094,
+     "date": "2026-11-19",
+     "hit": true,
+     "home": "Gr\u00eamio",
+     "home_key": "gremio",
+     "league": "Serie A",
+     "match": "Gr\u00eamio vs Bahia",
+     "multi_source": false,
+     "price": 1.695,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-18T22:40:58.499474+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.695,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.452593+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Botafogo",
+     "away_key": "botafogo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6772,
+     "date": "2026-11-19",
+     "hit": true,
+     "home": "Corinthians",
+     "home_key": "corinthians",
+     "league": "Serie A",
+     "match": "Corinthians vs Botafogo",
+     "multi_source": false,
+     "price": 1.308,
+     "price_context": {
+      "book": "hardrockbet",
+      "captured_at": "2026-11-18T22:40:45.752671+00:00",
+      "contract_id": "pfc_142b7b762e570fa302940d6e",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.308,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.467989+00:00",
+     "rule": "pfc_142b7b762e570fa302940d6e",
      "source": "oddspapi",
      "stated": null
     }
@@ -3743,10 +3863,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 15,
-   "inv_price_sum": 15.850309613527036,
+   "hits": 16,
+   "inv_price_sum": 16.368444328552943,
    "multi_n": 0,
-   "n": 26,
+   "n": 27,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3773,9 +3893,10 @@
     "2026-11-13|Llaneros vs Chico|home_over_15@v1",
     "2026-11-17|Canada vs Guatemala|home_over_15@v1",
     "2026-11-17|Martinique vs Aruba|home_over_15@v1",
-    "2026-11-18|El Salvador vs Saint Martin|home_over_15@v1"
+    "2026-11-18|El Salvador vs Saint Martin|home_over_15@v1",
+    "2026-11-19|Corinthians vs Botafogo|home_over_15@v1"
    ],
-   "profit": -1.581,
+   "profit": -0.651,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -4530,6 +4651,35 @@
      "rule": "pfc_12c05e100bfd7667f5977355",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Botafogo",
+     "away_key": "botafogo",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.6171,
+     "date": "2026-11-19",
+     "hit": true,
+     "home": "Corinthians",
+     "home_key": "corinthians",
+     "league": "Brasileir\u00e3o Serie A",
+     "match": "Corinthians vs Botafogo",
+     "multi_source": false,
+     "price": 1.93,
+     "price_context": {
+      "book": "20bet",
+      "captured_at": "2026-11-18T22:40:45.752671+00:00",
+      "contract_id": "pfc_f3616afc7fd184444cfa14d7",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Brasileir\u00e3o Serie A",
+      "price": 1.93,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.500134+00:00",
+     "rule": "pfc_f3616afc7fd184444cfa14d7",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -5052,10 +5202,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 22,
-   "inv_price_sum": 21.33198653075371,
+   "hits": 23,
+   "inv_price_sum": 22.882174077640432,
    "multi_n": 0,
-   "n": 33,
+   "n": 35,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -5129,9 +5279,11 @@
     "2026-11-09|CS Herediano vs Inter San Carlos|home_under_25@v1",
     "2026-11-09|Quer\u00e9taro vs Puebla|home_under_25@v1",
     "2026-11-14|Ecuador vs Costa Rica|home_under_25@v1",
-    "2026-11-17|RUSSIA vs VENEZUELA|home_under_25@v1"
+    "2026-11-17|RUSSIA vs VENEZUELA|home_under_25@v1",
+    "2026-11-19|Gr\u00eamio vs Bahia|home_under_25@v1",
+    "2026-11-19|Corinthians vs Botafogo|home_under_25@v1"
    ],
-   "profit": 0.163,
+   "profit": -0.587,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -6075,6 +6227,64 @@
      },
      "recorded_at": "2026-11-17T22:42:56.075710+00:00",
      "rule": "pfc_c33854a6f17eda6cca30d634",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Bahia",
+     "away_key": "bahia",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7257,
+     "date": "2026-11-19",
+     "hit": true,
+     "home": "Gr\u00eamio",
+     "home_key": "gremio",
+     "league": "Serie A",
+     "match": "Gr\u00eamio vs Bahia",
+     "multi_source": false,
+     "price": 1.25,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-18T22:40:58.499474+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.25,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.434912+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Botafogo",
+     "away_key": "botafogo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7795,
+     "date": "2026-11-19",
+     "hit": false,
+     "home": "Corinthians",
+     "home_key": "corinthians",
+     "league": "Serie A",
+     "match": "Corinthians vs Botafogo",
+     "multi_source": false,
+     "price": 1.333,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-18T22:40:45.752671+00:00",
+      "contract_id": "pfc_142b7b762e570fa302940d6e",
+      "decision_at": "2026-11-19T00:42:47+02:00",
+      "kickoff": "2026-11-19T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.333,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-19T23:16:13.484811+00:00",
+     "rule": "pfc_142b7b762e570fa302940d6e",
      "source": "oddspapi",
      "stated": null
     }
