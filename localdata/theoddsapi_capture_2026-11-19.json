@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 14,
-  "captured_at": "2026-11-19T04:37:54+00:00",
+  "captured_at": "2026-11-19T07:59:59+00:00",
   "date": "2026-11-19",
   "due_reasons": {},
   "errors": [],
@@ -22,8 +22,9 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "priced": 2,
-    "retry_cooldown": 12
+    "retry_cooldown": 11
   },
   "skipped": [
     "Barcelona W|Servette Ch\u00eanois W (retry cooldown (6h after failed attempt))",
@@ -33,7 +34,7 @@
     "BOSTON RIVER|MALDONADO (retry cooldown (6h after failed attempt))",
     "Boston River|Deportivo Maldonado (retry cooldown (6h after failed attempt))",
     "Pe\u00f1arol|Cerro Largo (retry cooldown (6h after failed attempt))",
-    "Lions|Wollongong Wolves (retry cooldown (6h after failed attempt))",
+    "Lions|Wollongong Wolves (kickoff already passed)",
     "Corinthians|Botafogo (retry cooldown (6h after failed attempt))",
     "DOBRUDZHA 1919|FRATRIA (retry cooldown (6h after failed attempt))",
     "Gr\u00eamio|Bahia (priced)",
