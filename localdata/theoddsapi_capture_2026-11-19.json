@@ -1,11 +1,91 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 11,
+  "attempted_fixtures": [
+    {
+      "away": "Servette Ch\u00eanois W",
+      "date": "2026-11-19",
+      "home": "Barcelona W",
+      "kickoff": "2026-11-19T20:00:00Z",
+      "league": "UEFA Women's Champions League"
+    },
+    {
+      "away": "Bayern Munich W",
+      "date": "2026-11-19",
+      "home": "Austria Wien W",
+      "kickoff": "2026-11-19T17:45:00Z",
+      "league": "UEFA Women's Champions League"
+    },
+    {
+      "away": "Al Dhafra",
+      "date": "2026-11-19",
+      "home": "Al Ain",
+      "kickoff": "2026-11-19T15:25:00Z",
+      "league": "UAE Pro League"
+    },
+    {
+      "away": "Hatta",
+      "date": "2026-11-19",
+      "home": "Al Wasl",
+      "kickoff": "2026-11-19T12:45:00Z",
+      "league": "UAE Pro League"
+    },
+    {
+      "away": "MALDONADO",
+      "date": "2026-11-19",
+      "home": "BOSTON RIVER",
+      "kickoff": "19:30",
+      "league": "UY1"
+    },
+    {
+      "away": "Deportivo Maldonado",
+      "date": "2026-11-19",
+      "home": "Boston River",
+      "kickoff": "2026-11-19T19:30:00Z",
+      "league": "Primera Division"
+    },
+    {
+      "away": "Cerro Largo",
+      "date": "2026-11-19",
+      "home": "Pe\u00f1arol",
+      "kickoff": "2026-11-19T19:30:00Z",
+      "league": "Primera Division"
+    },
+    {
+      "away": "Botafogo",
+      "date": "2026-11-19",
+      "home": "Corinthians",
+      "kickoff": "2026-11-19T00:30:00Z",
+      "league": "Serie A"
+    },
+    {
+      "away": "FRATRIA",
+      "date": "2026-11-19",
+      "home": "DOBRUDZHA 1919",
+      "kickoff": "15:00",
+      "league": "BG2"
+    },
+    {
+      "away": "Bragantino",
+      "date": "2026-11-19",
+      "home": "Vit\u00f3ria",
+      "kickoff": "2026-11-19T22:30:00Z",
+      "league": "Serie A"
+    },
+    {
+      "away": "Caen",
+      "date": "2026-11-19",
+      "home": "Amiens SC",
+      "kickoff": "2026-11-19T19:45:00Z",
+      "league": "Ligue 3"
+    }
+  ],
   "candidate_fixtures": 14,
-  "captured_at": "2026-11-19T16:40:35+00:00",
+  "captured_at": "2026-11-19T19:46:23+00:00",
   "date": "2026-11-19",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 11
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -23,26 +103,35 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "priced": 2,
-    "retry_cooldown": 11
+    "priced": 2
   },
   "skipped": [
-    "Barcelona W|Servette Ch\u00eanois W (retry cooldown (6h after failed attempt))",
-    "Austria Wien W|Bayern Munich W (retry cooldown (6h after failed attempt))",
-    "Al Ain|Al Dhafra (retry cooldown (6h after failed attempt))",
-    "Al Wasl|Hatta (retry cooldown (6h after failed attempt))",
-    "BOSTON RIVER|MALDONADO (retry cooldown (6h after failed attempt))",
-    "Boston River|Deportivo Maldonado (retry cooldown (6h after failed attempt))",
-    "Pe\u00f1arol|Cerro Largo (retry cooldown (6h after failed attempt))",
     "Lions|Wollongong Wolves (kickoff already passed)",
-    "Corinthians|Botafogo (retry cooldown (6h after failed attempt))",
-    "DOBRUDZHA 1919|FRATRIA (retry cooldown (6h after failed attempt))",
     "Gr\u00eamio|Bahia (priced)",
-    "Vit\u00f3ria|Bragantino (retry cooldown (6h after failed attempt))",
-    "Amiens SC|Caen (retry cooldown (6h after failed attempt))",
     "VASCO DA GAMA|INTERNACIONAL (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Barcelona W vs Servette Ch\u00eanois W (league not covered: UEFA Women's Champions League)",
+    "Austria Wien W vs Bayern Munich W (league not covered: UEFA Women's Champions League)",
+    "Al Ain vs Al Dhafra (league not covered: UAE Pro League)",
+    "Al Wasl vs Hatta (league not covered: UAE Pro League)",
+    "BOSTON RIVER vs MALDONADO (league not covered: UY1)",
+    "Boston River vs Deportivo Maldonado (league not covered: Primera Division)",
+    "Pe\u00f1arol vs Cerro Largo (league not covered: Primera Division)",
+    "Corinthians vs Botafogo (league not covered: Serie A)",
+    "DOBRUDZHA 1919 vs FRATRIA (league not covered: BG2)",
+    "Vit\u00f3ria vs Bragantino (league not covered: Serie A)",
+    "Amiens SC vs Caen (league not covered: Ligue 3)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: BG2": 1,
+    "league not covered: Ligue 3": 1,
+    "league not covered: Primera Division": 2,
+    "league not covered: Serie A": 2,
+    "league not covered: UAE Pro League": 2,
+    "league not covered: UEFA Women's Champions League": 2,
+    "league not covered: UY1": 1
+  }
 }
