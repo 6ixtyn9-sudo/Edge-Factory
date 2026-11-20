@@ -1,6 +1,16 @@
 {
-  "attempted": 3,
+  "attempted": 4,
   "attempted_fixtures": [
+    {
+      "avg_p": 69.0,
+      "away": "Torpedo Kutaisi",
+      "date": "2026-11-20",
+      "home": "Dinamo Tbilisi",
+      "league": "Georgia Erovnuli Liga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
     {
       "avg_p": 52.309309593711525,
       "away": "MVV Maastricht",
@@ -33,26 +43,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 2,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 2,
-  "candidate_fixtures": 64,
-  "captured_at": "2026-11-20T07:36:45.883784+00:00",
+  "cache_only": 3,
+  "candidate_fixtures": 55,
+  "captured_at": "2026-11-20T10:57:18.784467+00:00",
   "date": "2026-11-20",
-  "deferred_fixtures": 61,
+  "deferred_fixtures": 51,
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 4,
   "market_budget_stop": false,
   "market_requests": 2,
   "match_detail": {
-    "bookmakers": 26,
+    "bookmakers": 30,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 83,
-    "markets": 9,
-    "named_rows": 83,
+    "fixtures": 4,
+    "market_rows": 92,
+    "markets": 11,
+    "named_rows": 92,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -63,6 +73,16 @@
   "ml_refresh_attempted": 0,
   "network_attempted": 1,
   "quoted_fixtures": [
+    {
+      "avg_p": 69.0,
+      "away": "Torpedo Kutaisi",
+      "date": "2026-11-20",
+      "home": "Dinamo Tbilisi",
+      "league": "Georgia Erovnuli Liga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
     {
       "avg_p": 52.309309593711525,
       "away": "MVV Maastricht",
@@ -95,7 +115,7 @@
     }
   ],
   "requests": 7,
-  "rows": 9,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }
