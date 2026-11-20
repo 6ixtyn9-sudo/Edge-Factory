@@ -1,56 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 620.865294,
+  "bank": 676.832694,
   "cycle_base": 456.154568,
-  "open_slips": [
-    {
-      "date": "2026-11-19",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Pe\u00f1arol vs Cerro Largo",
-              "pick": "HOME",
-              "prob": 0.6297015878810002,
-              "odds": 1.4785,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-19",
-                "Pe\u00f1arol",
-                "Cerro Largo"
-              ]
-            },
-            {
-              "match": "VASCO DA GAMA vs INTERNACIONAL",
-              "pick": "HOME",
-              "prob": 0.435,
-              "odds": 1.69,
-              "result": null,
-              "market": "1x2",
-              "price_book": "1xBet",
-              "price_source": "theoddsapi",
-              "fixture_key": [
-                "2026-11-19",
-                "VASCO DA GAMA",
-                "INTERNACIONAL"
-              ]
-            }
-          ],
-          "odds": 2.5,
-          "stake_pct": 37.3116,
-          "results": [
-            "win",
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 37.3116
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -3020,8 +2972,8 @@
     },
     {
       "date": "2026-11-19",
-      "staked_pct": 37.3116,
-      "returned_pct": 359.6838,
+      "staked_pct": 74.6232,
+      "returned_pct": 452.9628,
       "accas": [
         {
           "odds": 9.64,
@@ -3058,10 +3010,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 2.5,
+          "won": true,
+          "stake_pct": 37.3116,
+          "returned_pct": 93.279,
+          "legs": [
+            {
+              "match": "Pe\u00f1arol vs Cerro Largo",
+              "pick": "HOME",
+              "odds": 1.4785,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-19",
+                "Pe\u00f1arol",
+                "Cerro Largo"
+              ]
+            },
+            {
+              "match": "VASCO DA GAMA vs INTERNACIONAL",
+              "pick": "HOME",
+              "odds": 1.69,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-19",
+                "VASCO DA GAMA",
+                "INTERNACIONAL"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 620.8653,
-      "close_pct": 620.8652
+      "bank_pct": 676.8327,
+      "close_pct": 676.8326
     }
   ],
   "events": [

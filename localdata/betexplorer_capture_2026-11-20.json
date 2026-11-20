@@ -18,29 +18,29 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 0,
-  "candidate_fixtures": 68,
-  "captured_at": "2026-11-19T22:37:27.502887+00:00",
+  "candidate_fixtures": 65,
+  "captured_at": "2026-11-20T01:33:13.425921+00:00",
   "date": "2026-11-20",
-  "deferred_fixtures": 67,
+  "deferred_fixtures": 64,
   "errors": [],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 1,
+  "market_requests": 3,
   "match_detail": {
-    "bookmakers": 3,
+    "bookmakers": 9,
     "challenge_pages": 0,
     "fixtures": 1,
-    "market_rows": 3,
-    "markets": 1,
-    "named_rows": 3,
+    "market_rows": 31,
+    "markets": 3,
+    "named_rows": 31,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
-  "ml_refresh_attempted": 0,
+  "ml_precutoff_active": true,
+  "ml_refresh_attempted": 1,
   "network_attempted": 1,
   "quoted_fixtures": [
     {
@@ -54,7 +54,7 @@
       "w_score": 0.5911
     }
   ],
-  "requests": 6,
+  "requests": 8,
   "rows": 3,
   "schema": 1,
   "status": "ok"
