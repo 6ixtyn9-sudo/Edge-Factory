@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-20
 ==============================================================
-CURRENT PAPER BANK (all dates): 59.655 units · free 59.587 / reserved 0.067
-1 paper accas · 1 ticket publications · 3 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 59.655 units · free 59.576 / reserved 0.079
+2 paper accas · 2 ticket publications · 4 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -12,6 +12,14 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    Nancy vs Dijon · KICKOFF 2026-11-20 21:00 SAST
       Match Under 2.5 Goals @2.190 · ML 45.8% · SKIPPED_VETO
+
+[PAPER ACCA #2] @24.206 — 0.011637 paper units — pinnacle
+   Published 2026-11-20 07:01:26 SAST · reference P5/1
+   Vissel Kobe vs Mito Hollyhock · KICKOFF 2026-11-20 12:00 SAST
+      Draw (1X2) @4.940 · ML 21.4% · SKIPPED_VETO
+
+   Molde vs Bodø / Glimt · KICKOFF 2026-11-20 20:00 SAST
+      Draw (1X2) @4.900 · ML 23.5% · SKIPPED_VETO
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -81,6 +89,45 @@ P4 · 2026-11-20 04:04:19 SAST · No additional tickets
    Coverage: candidate count: 3451; candidate fixtures: 10; slate rows: 322; status: inputs_available
    Rejections: data quality: 13; fixture date unproven: 2; outside rolling window or unproven kickoff: 261; quote identity unproven: 8; quote or probability unavailable: 3269
    Exact opportunity replay: 1 acca(s) not republished; 0.067174 units left idle, no refill
+   Learning: fitted_source_market_context
+
+P5 · 2026-11-20 07:01:26 SAST · ACCA #2
+   Receipt 20261120T050041553143Z · status paper_accas
+   Frozen at 2026-11-20T05:01:26.702590+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 2146842e8683e42564e859e447bc9d9d7634dfb00cae639b926bb422091469e6
+   Decision window 2026-11-20T05:00:41.553143+00:00 → 2026-11-21T05:00:41.553143+00:00
+   Bank at decision: 59.654701 paper units
+   Available at decision: 59.587452 paper units
+   Reserved at decision: 0.067249 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.982735 units per canonical fixture
+   Reservation 0.011637 → 0.011637 units · released/idle 0.000000; no refill
+   2026-11-20 molde vs bodoglimt: new 0.011637 + prior open 0.000000 · unused new budget 2.971098 units
+   2026-11-20 visselkobe vs mitohollyhock: new 0.011637 + prior open 0.000000 · unused new budget 2.971098 units
+   Coverage: candidate count: 3379; candidate fixtures: 14; slate rows: 267; status: inputs_available
+   Rejections: data quality: 26; fixture date unproven: 4; outside rolling window or unproven kickoff: 143; quote identity unproven: 16; quote or probability unavailable: 8747
+   Exact opportunity replay: 1 acca(s) not republished; 0.055536 units left idle, no refill
+   ACCA #2 / leg 1: source forecast 20.9% · gap +0.5 pp · quote age 0.35h at decision
+      base 20.9% → adjusted 21.4% · learning move +0.5 pp · price break-even 20.2% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 21.4% → partition-normalized 21.4% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · 1x2 / draw · bookmaker market line/29/2157/1640410878/3810834346/0/moneyline · outcome 102 · provider label Full Time Result · normalized row only; native payload unverified
+   ACCA #2 / leg 2: source forecast 23.1% · gap +0.4 pp · quote age 6.39h at decision
+      base 23.1% → adjusted 23.5% · learning move +0.4 pp · price break-even 20.4% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 23.5% → partition-normalized 23.5% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_context
+
+P6 · 2026-11-20 07:17:26 SAST · No additional tickets
+   Receipt 20261120T051642513698Z · status no_paper_bet
+   Frozen at 2026-11-20T05:17:26.848329+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 cbcbd070e5f3c9a3c162353a3b6fc9a9837abf3470eedbbf32e33593e947be1b
+   Decision window 2026-11-20T05:16:42.513698+00:00 → 2026-11-21T05:16:42.513698+00:00
+   Bank at decision: 59.654701 paper units
+   Available at decision: 59.575815 paper units
+   Reserved at decision: 0.078886 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.982735 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 3365; candidate fixtures: 13; slate rows: 322; status: inputs_available
+   Rejections: data quality: 13; fixture date unproven: 2; outside rolling window or unproven kickoff: 258; quote identity unproven: 8; quote or probability unavailable: 4748
+   Exact opportunity replay: 2 acca(s) not republished; 0.067160 units left idle, no refill
    Learning: fitted_source_market_context
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.

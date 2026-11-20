@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 59.654700590148,
   "paper_multiple": 0.59654700590148,
-  "paper_committed_units": 0.067249,
-  "paper_free_units": 59.58745159014801,
+  "paper_committed_units": 0.078886,
+  "paper_free_units": 59.575814590148006,
   "settled_stake_units": 66.271197,
   "receipt_days": 18,
-  "decision_receipts": 150,
+  "decision_receipts": 152,
   "bet_days": 11,
   "no_bet_days": 7,
   "missed_freeze_days": 0,
@@ -17,9 +17,9 @@
   "wins": 8,
   "losses": 51,
   "hit_rate": 0.13559322033898305,
-  "pending_accas": 1,
+  "pending_accas": 2,
   "superseded_tickets": 1,
-  "unresolved_result_legs": 3,
+  "unresolved_result_legs": 5,
   "resolved_result_legs": 80,
   "profit_units": -40.345299409852,
   "roi": -0.6087908659602451,
@@ -19523,6 +19523,319 @@
       "decision_id": "20261120T020340885722Z",
       "captured_at": "2026-11-20T02:03:40.885722+00:00",
       "frozen_at": "2026-11-20T02:04:19.442364+00:00"
+    },
+    {
+      "date": "2026-11-20",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 24.206000000000003,
+          "stake_units": 0.011637,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "8a012ce5ae5dceabff01440d7ede204e02d55e37055758d2bba37ae1a4d99827",
+                "fixtures": 118,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.206467305945,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.206467305945,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.20242914979757085,
+                "required_source_probability": 0.20242914979757085,
+                "source_probability": 0.20867559356889137,
+                "status": "eligible",
+                "wins": 30
+              },
+              "away": "Mito Hollyhock",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.6706737240605721
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.20867559356889137
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.12065068237053655
+                ]
+              ],
+              "base_probability": 0.20867559356889137,
+              "book": "pinnacle",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "bc5b4854008854bad47c27952580484594a48f7b7bb75fb7f25d690466fe0c2c",
+              "context": {
+                "as_of": "2026-11-20T05:00:41.553143+00:00",
+                "country": "Japan",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-20",
+                "form_values": {
+                  "away_form_btts": 0.2,
+                  "away_form_ga": 2.0,
+                  "away_form_gf": 1.0,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.5,
+                  "away_form_over35": 0.3,
+                  "home_form_btts": 0.5,
+                  "home_form_ga": 0.9,
+                  "home_form_gf": 1.6,
+                  "home_form_over15": 0.7,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.3
+                },
+                "league": "jp1",
+                "parent_confidence": 0.6688474481211442,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_0bce35ee539ba203bd9da447",
+              "date": "2026-11-20",
+              "fixture": [
+                "2026-11-20",
+                "visselkobe",
+                "mitohollyhock"
+              ],
+              "forecast_model_key": "c7a5994899386dedcfb0b3ad411ae5bf942c8a930b9254185b7c900e7fb70b57",
+              "home": "Vissel Kobe",
+              "kickoff_utc": "2026-11-20T10:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_0bce35ee539ba203bd9da447",
+                "fixture": [
+                  "2026-11-20",
+                  "visselkobe",
+                  "mitohollyhock",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.12065068237053655,
+                  "forecast_1x2_away_spread": 0.03,
+                  "forecast_1x2_draw_mean": 0.20867559356889137,
+                  "forecast_1x2_draw_spread": 0.01999999999999999,
+                  "forecast_1x2_home_mean": 0.6706737240605721,
+                  "forecast_1x2_home_spread": 0.015000000000000013,
+                  "forecast_btts_yes_mean": 0.4718333333333333,
+                  "forecast_btts_yes_spread": 0.010333333333333417,
+                  "forecast_ou_1.5_over_mean": 0.7997611749680716,
+                  "forecast_ou_1.5_over_spread": 0.10699999999999998,
+                  "forecast_ou_2.5_over_mean": 0.5620580474934037,
+                  "forecast_ou_2.5_over_spread": 0.05999999999999994,
+                  "forecast_ou_3.5_over_mean": 0.35844979919678716,
+                  "forecast_ou_3.5_over_spread": 0.05265060240963859,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.91,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 2.45,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "2d70bdc2c4afda6344996a0f3570ca67a81c0d777b20e3d5a80b0e463d6d7dbf",
+              "odds": 4.94,
+              "pre_normalized_probability": 0.2138477569315865,
+              "price_age_seconds_at_decision": 1250.578621,
+              "price_age_seconds_at_freeze": 1295.728068,
+              "price_at": "2026-11-20T04:39:50.974522+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Mito Hollyhock",
+                  "bookmaker": "pinnacle",
+                  "bookmaker_market_id": "line/29/2157/1640410878/3810834346/0/moneyline",
+                  "captured_at": "2026-11-20T04:39:50.974522+00:00",
+                  "date": "2026-11-20",
+                  "home": "Vissel Kobe",
+                  "kickoff": "2026-11-20T10:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "4.94",
+                  "outcome_key": "102",
+                  "provider_changed_at": "2026-11-20T04:34:06.440Z",
+                  "provider_fixture_id": "id1000019672149890",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-20T04:34:06.173Z",
+                  "schema_version": "4",
+                  "selection": "draw",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "d565aeae8c05976fa1677172bebee82abaca95e03572077ef63d52e7b1ae3288",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.2138477569315865,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            },
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "8a012ce5ae5dceabff01440d7ede204e02d55e37055758d2bba37ae1a4d99827",
+                "fixtures": 118,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.206467305945,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.206467305945,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.2040816326530612,
+                "required_source_probability": 0.2040816326530612,
+                "source_probability": 0.23123319228960978,
+                "status": "eligible",
+                "wins": 30
+              },
+              "away": "Bod\u00f8 / Glimt",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.27541031969910673
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.23123319228960978
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.4933564880112835
+                ]
+              ],
+              "base_probability": 0.23123319228960978,
+              "book": "Pinnacle",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "bd3fe1bc6f991b8ed9135e3aef070878e90cd438ffe353eb5ed113a51d797a4c",
+              "context": {
+                "as_of": "2026-11-20T05:00:41.553143+00:00",
+                "country": "Norway",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-20",
+                "form_values": {
+                  "away_form_btts": 0.5,
+                  "away_form_ga": 1.2,
+                  "away_form_gf": 2.1,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.5,
+                  "away_form_over35": 0.4,
+                  "home_form_btts": 0.8,
+                  "home_form_ga": 1.6,
+                  "home_form_gf": 3.6,
+                  "home_form_over15": 1.0,
+                  "home_form_over25": 1.0,
+                  "home_form_over35": 0.8
+                },
+                "league": "eliteserien",
+                "parent_confidence": 0.48121297602256713,
+                "parent_selection": "away",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-20",
+              "fixture": [
+                "2026-11-20",
+                "molde",
+                "bodoglimt"
+              ],
+              "forecast_model_key": "c7a5994899386dedcfb0b3ad411ae5bf942c8a930b9254185b7c900e7fb70b57",
+              "home": "Molde",
+              "kickoff_utc": "2026-11-20T18:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-20",
+                  "molde",
+                  "bodoglimt",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.4933564880112835,
+                  "forecast_1x2_away_spread": 0.08242595204513409,
+                  "forecast_1x2_draw_mean": 0.23123319228960978,
+                  "forecast_1x2_draw_spread": 0.05106723084156087,
+                  "forecast_1x2_home_mean": 0.27541031969910673,
+                  "forecast_1x2_home_spread": 0.03999999999999998,
+                  "forecast_btts_yes_mean": 0.7286087866108786,
+                  "forecast_btts_yes_spread": 0.007217573221757312,
+                  "forecast_ou_1.5_over_mean": 0.9163863773357445,
+                  "forecast_ou_1.5_over_spread": 0.05499999999999994,
+                  "forecast_ou_2.5_over_mean": 0.7826349206349206,
+                  "forecast_ou_2.5_over_spread": 0.07400000000000007,
+                  "forecast_ou_3.5_over_mean": 0.571001745200698,
+                  "forecast_ou_3.5_over_spread": 0.03500523560209434,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.83,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.85,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "b134aff7647793b7214e72d3fad648d259fbd05ca08c126e1c88aba4826415b8",
+              "odds": 4.9,
+              "pre_normalized_probability": 0.23529312530941413,
+              "price_age_seconds_at_decision": 23011.12166,
+              "price_age_seconds_at_freeze": 23056.271107,
+              "price_at": "2026-11-19T22:37:10.431483+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.23529312530941413,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261120T050041553143Z",
+      "captured_at": "2026-11-20T05:00:41.553143+00:00",
+      "frozen_at": "2026-11-20T05:01:26.702590+00:00"
+    },
+    {
+      "date": "2026-11-20",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261120T051642513698Z",
+      "captured_at": "2026-11-20T05:16:42.513698+00:00",
+      "frozen_at": "2026-11-20T05:17:26.848329+00:00"
     }
   ],
   "latest_learning": {
@@ -20367,7 +20680,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-20T02:03:40.885722+00:00",
+    "as_of": "2026-11-20T05:16:42.513698+00:00",
     "context_model": {
       "coef": [
         0.0003074905792156471,
@@ -25858,7 +26171,7 @@
     "fixtures": 151,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "3785e350b62c589045476bd525f8c12a516a381d7095498334527e628ba42cd9",
+    "model_key": "b8d87cffd40f50a23b841e15d5a87a283c5e37a85f8df5918ba065af967398ee",
     "observations": 509,
     "parameters": 1426,
     "power": 1.0,

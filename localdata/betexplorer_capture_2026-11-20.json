@@ -1,6 +1,16 @@
 {
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
+    {
+      "avg_p": 53.25402763417615,
+      "away": "Jong Ajax",
+      "date": "2026-11-20",
+      "home": "FC Volendam",
+      "league": "Eerste Divisie",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5911
+    },
     {
       "avg_p": 54.53898150678692,
       "away": "FC Voluntari",
@@ -13,26 +23,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 1,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 65,
-  "captured_at": "2026-11-20T01:33:13.425921+00:00",
+  "cache_only": 1,
+  "candidate_fixtures": 64,
+  "captured_at": "2026-11-20T04:40:00.221235+00:00",
   "date": "2026-11-20",
-  "deferred_fixtures": 64,
+  "deferred_fixtures": 62,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 4,
   "match_detail": {
-    "bookmakers": 9,
+    "bookmakers": 20,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 31,
-    "markets": 3,
-    "named_rows": 31,
+    "fixtures": 2,
+    "market_rows": 64,
+    "markets": 7,
+    "named_rows": 64,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -40,9 +50,19 @@
   },
   "max_fixtures": 12,
   "ml_precutoff_active": true,
-  "ml_refresh_attempted": 1,
+  "ml_refresh_attempted": 0,
   "network_attempted": 1,
   "quoted_fixtures": [
+    {
+      "avg_p": 53.25402763417615,
+      "away": "Jong Ajax",
+      "date": "2026-11-20",
+      "home": "FC Volendam",
+      "league": "Eerste Divisie",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5911
+    },
     {
       "avg_p": 54.53898150678692,
       "away": "FC Voluntari",
@@ -54,8 +74,8 @@
       "w_score": 0.5911
     }
   ],
-  "requests": 8,
-  "rows": 3,
+  "requests": 9,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }

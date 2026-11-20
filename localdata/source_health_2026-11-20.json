@@ -43,7 +43,7 @@
     },
     "betexplorer": {
       "be_matched": 7,
-      "be_raw": 3,
+      "be_raw": 6,
       "be_usable": 3,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
@@ -59,7 +59,7 @@
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-20\\/2026-11-20' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -150,15 +150,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 233,
+      "join_matched_rows": 316,
       "join_miss_counts": {
-        "fixture_key_miss": 5998,
-        "market_unsupported": 5327,
-        "no_pick_for_fixture": 5620
+        "fixture_key_miss": 11851,
+        "market_unsupported": 7392,
+        "no_pick_for_fixture": 5744
       },
-      "op_matched": 4,
-      "op_raw": 17178,
-      "op_usable": 17178,
+      "op_matched": 13,
+      "op_raw": 25303,
+      "op_usable": 25303,
       "reason": null,
       "status": "cache_only"
     },
@@ -177,12 +177,12 @@
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 51,
+      "join_matched_rows": 50,
       "join_miss_counts": {
-        "fixture_key_miss": 13423,
-        "no_pick_for_fixture": 659
+        "fixture_key_miss": 13440,
+        "no_pick_for_fixture": 643
       },
-      "pa_matched": 174,
+      "pa_matched": 170,
       "pa_raw": 14133,
       "pa_scored": 14133,
       "reason": null,
@@ -262,7 +262,7 @@
           "unknown_selection:tie_or_chapecoense": 1,
           "unsupported_market:asian_handicap": 6
         },
-        "card_fixture_count": 73,
+        "card_fixture_count": 72,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 94,
