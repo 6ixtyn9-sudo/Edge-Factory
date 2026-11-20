@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-20",
+ "generated_at": "2026-11-21",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -1228,9 +1228,9 @@
   },
   "away_under_15@v1": {
    "hits": 23,
-   "inv_price_sum": 15.837972111886373,
+   "inv_price_sum": 16.27656860311444,
    "multi_n": 0,
-   "n": 29,
+   "n": 30,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -1260,9 +1260,10 @@
     "2026-11-17|RUSSIA vs VENEZUELA|away_under_15@v1",
     "2026-11-18|El Salvador vs Saint Martin|away_under_15@v1",
     "2026-11-19|Gr\u00eamio vs Bahia|away_under_15@v1",
-    "2026-11-19|Corinthians vs Botafogo|away_under_15@v1"
+    "2026-11-19|Corinthians vs Botafogo|away_under_15@v1",
+    "2026-11-20|Orlando City SC vs FC Cincinnati|away_under_15@v1"
    ],
-   "profit": 26.364,
+   "profit": 25.364,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -2044,11 +2045,40 @@
      "rule": "pfc_142b7b762e570fa302940d6e",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "FC Cincinnati",
+     "away_key": "cincinnati",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7362,
+     "date": "2026-11-20",
+     "hit": false,
+     "home": "Orlando City SC",
+     "home_key": "orlandocity",
+     "league": "USA,Major League Soccer Playoffs",
+     "match": "Orlando City SC vs FC Cincinnati",
+     "multi_source": false,
+     "price": 2.28,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-11-19T22:37:18.216542+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-20T00:38:16+02:00",
+      "kickoff": "2026-11-20T00:30:00+00:00",
+      "league": "USA,Major League Soccer Playoffs",
+      "price": 2.28,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-20T23:12:26.074849+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
    "status": "PAPER",
-   "status_reason": "first priced outcome recorded",
+   "status_reason": "n=30 wilsonLB95=0.5907 >= mean breakeven 0.5426 but multi-source verification 0/8 not met",
    "status_since": "2026-10-16"
   },
   "away_under_25@v1": {
@@ -3864,9 +3894,9 @@
   },
   "home_over_15@v1": {
    "hits": 16,
-   "inv_price_sum": 16.368444328552943,
+   "inv_price_sum": 16.968324352548144,
    "multi_n": 0,
-   "n": 27,
+   "n": 28,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3894,9 +3924,10 @@
     "2026-11-17|Canada vs Guatemala|home_over_15@v1",
     "2026-11-17|Martinique vs Aruba|home_over_15@v1",
     "2026-11-18|El Salvador vs Saint Martin|home_over_15@v1",
-    "2026-11-19|Corinthians vs Botafogo|home_over_15@v1"
+    "2026-11-19|Corinthians vs Botafogo|home_over_15@v1",
+    "2026-11-20|Orlando City SC vs FC Cincinnati|home_over_15@v1"
    ],
-   "profit": -0.651,
+   "profit": -1.651,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -4680,6 +4711,35 @@
      "rule": "pfc_f3616afc7fd184444cfa14d7",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "FC Cincinnati",
+     "away_key": "cincinnati",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6415,
+     "date": "2026-11-20",
+     "hit": false,
+     "home": "Orlando City SC",
+     "home_key": "orlandocity",
+     "league": "USA,Major League Soccer Playoffs",
+     "match": "Orlando City SC vs FC Cincinnati",
+     "multi_source": false,
+     "price": 1.667,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-19T22:37:18.216542+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-20T00:38:16+02:00",
+      "kickoff": "2026-11-20T00:30:00+00:00",
+      "league": "USA,Major League Soccer Playoffs",
+      "price": 1.667,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-20T23:12:26.063365+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -5202,10 +5262,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 23,
-   "inv_price_sum": 22.882174077640432,
+   "hits": 24,
+   "inv_price_sum": 23.572305202554166,
    "multi_n": 0,
-   "n": 35,
+   "n": 36,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -5281,9 +5341,10 @@
     "2026-11-14|Ecuador vs Costa Rica|home_under_25@v1",
     "2026-11-17|RUSSIA vs VENEZUELA|home_under_25@v1",
     "2026-11-19|Gr\u00eamio vs Bahia|home_under_25@v1",
-    "2026-11-19|Corinthians vs Botafogo|home_under_25@v1"
+    "2026-11-19|Corinthians vs Botafogo|home_under_25@v1",
+    "2026-11-20|Orlando City SC vs FC Cincinnati|home_under_25@v1"
    ],
-   "profit": -0.587,
+   "profit": -0.138,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -6287,6 +6348,35 @@
      "rule": "pfc_142b7b762e570fa302940d6e",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "FC Cincinnati",
+     "away_key": "cincinnati",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6453,
+     "date": "2026-11-20",
+     "hit": true,
+     "home": "Orlando City SC",
+     "home_key": "orlandocity",
+     "league": "USA,Major League Soccer Playoffs",
+     "match": "Orlando City SC vs FC Cincinnati",
+     "multi_source": false,
+     "price": 1.449,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-19T22:37:18.216542+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-20T00:38:16+02:00",
+      "kickoff": "2026-11-20T00:30:00+00:00",
+      "league": "USA,Major League Soccer Playoffs",
+      "price": 1.449,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-20T23:12:26.069238+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -6614,10 +6704,10 @@
    "status_since": "2026-10-24"
   },
   "match_over_15@v1": {
-   "hits": 49,
-   "inv_price_sum": 51.53000767793101,
-   "multi_n": 11,
-   "n": 65,
+   "hits": 50,
+   "inv_price_sum": 52.05910820703154,
+   "multi_n": 12,
+   "n": 66,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -6707,9 +6797,10 @@
     "2026-11-16|Switzerland vs Scotland|match_over_15@v1",
     "2026-11-17|Canada vs Guatemala|match_over_15@v1",
     "2026-11-17|RUSSIA vs VENEZUELA|match_over_15@v1",
-    "2026-11-18|El Salvador vs Saint Martin|match_over_15@v1"
+    "2026-11-18|El Salvador vs Saint Martin|match_over_15@v1",
+    "2026-11-20|Orlando City SC vs FC Cincinnati|match_over_15@v1"
    ],
-   "profit": 0.733,
+   "profit": 1.623,
    "records": [
     {
      "away": "Aston Villa",
@@ -7786,6 +7877,25 @@
      "rule": "pfc_12c05e100bfd7667f5977355",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "FC Cincinnati",
+     "away_key": "cincinnati",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.8079,
+     "date": "2026-11-20",
+     "hit": true,
+     "home": "Orlando City SC",
+     "home_key": "orlandocity",
+     "league": "USA,Major League Soccer Playoffs",
+     "match": "Orlando City SC vs FC Cincinnati",
+     "multi_source": true,
+     "price": 1.89,
+     "price_context": {},
+     "recorded_at": "2026-11-20T23:12:26.086016+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -7794,11 +7904,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 360,
+   "hits": 361,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 357.67625890510004,
-   "multi_n": 103,
-   "n": 551,
+   "inv_price_sum": 358.363393408024,
+   "multi_n": 105,
+   "n": 553,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -8594,9 +8704,11 @@
     "2026-11-17|RWANDA vs MALI|match_over_25@v1",
     "2026-11-18|El Salvador vs Saint Martin|match_over_25@v1",
     "2026-11-18|Mexico vs Jamaica|match_over_25@v1",
-    "2026-11-18|ALCOYANO vs MALLORCA|match_over_25@v1"
+    "2026-11-18|ALCOYANO vs MALLORCA|match_over_25@v1",
+    "2026-11-20|Kashima Antlers vs Shimizu S-Pulse|match_over_25@v1",
+    "2026-11-20|Pogo\u0144 Szczecin vs \u015al\u0105sk Wroc\u0142aw|match_over_25@v1"
    ],
-   "profit": 5.046,
+   "profit": 4.846,
    "records": [
     {
      "away": "Spartak Varna",
@@ -17544,6 +17656,44 @@
      "rule": "pfc_31bc21e2ce9abe2bd19332e0",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Shimizu S-Pulse",
+     "away_key": "shimizuspulse",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6484,
+     "date": "2026-11-20",
+     "hit": false,
+     "home": "Kashima Antlers",
+     "home_key": "kashimaantlers",
+     "league": "J1 League",
+     "match": "Kashima Antlers vs Shimizu S-Pulse",
+     "multi_source": true,
+     "price": 7.6,
+     "price_context": {},
+     "recorded_at": "2026-11-20T23:12:26.091611+00:00",
+     "rule": "pfc_825c29fe41b13b2e5a30ccf9",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "\u015al\u0105sk Wroc\u0142aw",
+     "away_key": "slaskwroclaw",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6651,
+     "date": "2026-11-20",
+     "hit": true,
+     "home": "Pogo\u0144 Szczecin",
+     "home_key": "pogonszczecin",
+     "league": "Ekstraklasa",
+     "match": "Pogo\u0144 Szczecin vs \u015al\u0105sk Wroc\u0142aw",
+     "multi_source": true,
+     "price": 1.8,
+     "price_context": {},
+     "recorded_at": "2026-11-20T23:12:26.097185+00:00",
+     "rule": "pfc_c0b0989eed26d614ffd9cfaf",
+     "source": "scoutingstats",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -18615,9 +18765,9 @@
   },
   "match_under_35@v1": {
    "hits": 12,
-   "inv_price_sum": 14.748142404861978,
+   "inv_price_sum": 15.19818740936243,
    "multi_n": 0,
-   "n": 25,
+   "n": 26,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -18643,9 +18793,10 @@
     "2026-11-09|Quer\u00e9taro vs Puebla|match_under_35@v1",
     "2026-11-14|Guatemala vs Canada|match_under_35@v1",
     "2026-11-15|UD Ibiza vs FC Cartagena|match_under_35@v1",
-    "2026-11-17|RUSSIA vs VENEZUELA|match_under_35@v1"
+    "2026-11-17|RUSSIA vs VENEZUELA|match_under_35@v1",
+    "2026-11-20|Orlando City SC vs FC Cincinnati|match_under_35@v1"
    ],
-   "profit": -2.191,
+   "profit": -3.191,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -19371,6 +19522,35 @@
      "rule": "pfc_c33854a6f17eda6cca30d634",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "FC Cincinnati",
+     "away_key": "cincinnati",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6069,
+     "date": "2026-11-20",
+     "hit": false,
+     "home": "Orlando City SC",
+     "home_key": "orlandocity",
+     "league": "USA,Major League Soccer Playoffs",
+     "match": "Orlando City SC vs FC Cincinnati",
+     "multi_source": false,
+     "price": 2.222,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-19T22:37:18.216542+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-20T00:38:16+02:00",
+      "kickoff": "2026-11-20T00:30:00+00:00",
+      "league": "USA,Major League Soccer Playoffs",
+      "price": 2.222,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-20T23:12:26.080506+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -19378,10 +19558,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 34,
-   "inv_price_sum": 24.211732209183637,
+   "hits": 35,
+   "inv_price_sum": 24.86192726770119,
    "multi_n": 0,
-   "n": 39,
+   "n": 40,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -19421,9 +19601,10 @@
     "2026-11-08|Austin vs Portland Timbers|match_under_45@v1",
     "2026-11-17|Canada vs Guatemala|match_under_45@v1",
     "2026-11-17|Trinidad and Tobago vs Antigua and Barbuda|match_under_45@v1",
-    "2026-11-17|Martinique vs Aruba|match_under_45@v1"
+    "2026-11-17|Martinique vs Aruba|match_under_45@v1",
+    "2026-11-20|Orlando City SC vs FC Cincinnati|match_under_45@v1"
    ],
-   "profit": 16.669,
+   "profit": 17.207,
    "records": [
     {
      "away": "Atlante",
@@ -20513,10 +20694,39 @@
      "rule": "pfc_12c05e100bfd7667f5977355",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "FC Cincinnati",
+     "away_key": "cincinnati",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7644,
+     "date": "2026-11-20",
+     "hit": true,
+     "home": "Orlando City SC",
+     "home_key": "orlandocity",
+     "league": "USA,Major League Soccer Playoffs",
+     "match": "Orlando City SC vs FC Cincinnati",
+     "multi_source": false,
+     "price": 1.538,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-19T22:37:18.216542+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-20T00:38:16+02:00",
+      "kickoff": "2026-11-20T00:30:00+00:00",
+      "league": "USA,Major League Soccer Playoffs",
+      "price": 1.538,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-20T23:12:26.056947+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
-   "status_reason": "n=39 wilsonLB95=0.7329 >= mean breakeven 0.6208 but multi-source verification 0/10 not met",
+   "status_reason": "n=40 wilsonLB95=0.7389 >= mean breakeven 0.6215 but multi-source verification 0/10 not met",
    "status_since": "2026-10-22"
   }
  },

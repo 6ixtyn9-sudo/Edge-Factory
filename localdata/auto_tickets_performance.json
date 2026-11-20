@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-20T22:36:00",
+  "generated_at": "2026-11-21T01:15:29",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 676.832694,
-  "multiple": 6.76832694,
+  "bank_pct": 541.4662940000001,
+  "multiple": 5.41466294,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 79,
+  "bet_days": 80,
   "accas": {
     "wins": 92,
-    "losses": 70
+    "losses": 74
   },
   "open_slips": [
     {
       "date": "2026-11-20",
-      "staked_pct": 169.208
+      "staked_pct": 33.8416
     }
   ],
   "events": [
@@ -3081,6 +3081,159 @@
       ],
       "bank_pct": 676.8327,
       "close_pct": 676.8326
+    },
+    {
+      "date": "2026-11-20",
+      "staked_pct": 135.3664,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.68,
+          "won": false,
+          "stake_pct": 33.8416,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "HELLAS VERONA vs CESENA",
+              "pick": "HOME",
+              "odds": 1.72,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-20",
+                "HELLAS VERONA",
+                "CESENA"
+              ]
+            },
+            {
+              "match": "Kashiwa Reysol vs JEF United Chiba",
+              "pick": "HOME",
+              "odds": 1.5556,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-20",
+                "Kashiwa Reysol",
+                "JEF United Chiba"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 8.05,
+          "won": false,
+          "stake_pct": 33.8416,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "ATHLETIC BILBAO vs ESPANYOL",
+              "pick": "HOME",
+              "odds": 1.53,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-20",
+                "ATHLETIC BILBAO",
+                "ESPANYOL"
+              ]
+            },
+            {
+              "match": "INVERNESS vs AYR UNITED",
+              "pick": "AWAY",
+              "odds": 5.26,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-20",
+                "INVERNESS",
+                "AYR UNITED"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 3.28,
+          "won": false,
+          "stake_pct": 33.8416,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "METZ vs BOULOGNE",
+              "pick": "HOME",
+              "odds": 2.16,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-20",
+                "METZ",
+                "BOULOGNE"
+              ]
+            },
+            {
+              "match": "Kashima Antlers vs Shimizu S-Pulse",
+              "pick": "HOME",
+              "odds": 1.52,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-20",
+                "Kashima Antlers",
+                "Shimizu S-Pulse"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.06,
+          "won": false,
+          "stake_pct": 33.8416,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Vissel Kobe vs Mito Hollyhock",
+              "pick": "HOME",
+              "odds": 1.3922,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-20",
+                "Vissel Kobe",
+                "Mito Hollyhock"
+              ]
+            },
+            {
+              "match": "Havelse vs Viktoria K\u00f6ln",
+              "pick": "AWAY",
+              "odds": 1.4785,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-20",
+                "Havelse",
+                "Viktoria K\u00f6ln"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 541.4663,
+      "close_pct": 541.4662
     }
   ]
 }

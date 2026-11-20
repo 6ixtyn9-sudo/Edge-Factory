@@ -1,0 +1,450 @@
+{
+  "added": 6224,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Millonarios FC",
+      "fixture_id": "id1002707076838160",
+      "home": "Deportivo Cali"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-21",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 501,
+    "remaining_today": 19,
+    "spent_today": 6
+  },
+  "budget_deferred": 18,
+  "captured_at": "2026-11-20T22:36:19+00:00",
+  "date": "2026-11-21",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 39,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 1121,
+  "future_slate_fixtures": 52,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 458,
+  "markets": {
+    "1x2": 626,
+    "btts": 370,
+    "dc": 554,
+    "dnb": 327,
+    "ou_0.5": 202,
+    "ou_0.75": 26,
+    "ou_1": 50,
+    "ou_1.25": 70,
+    "ou_1.5": 322,
+    "ou_1.75": 182,
+    "ou_2": 220,
+    "ou_2.25": 190,
+    "ou_2.5": 321,
+    "ou_2.75": 136,
+    "ou_3": 88,
+    "ou_3.25": 26,
+    "ou_3.5": 296,
+    "ou_3.75": 26,
+    "ou_4": 32,
+    "ou_4.25": 10,
+    "ou_4.5": 158,
+    "ou_4.75": 10,
+    "ou_5": 10,
+    "ou_5.25": 10,
+    "ou_5.5": 123,
+    "ou_5.75": 4,
+    "ou_6": 4,
+    "ou_6.25": 4,
+    "ou_6.5": 57,
+    "ou_6.75": 4,
+    "ou_7": 4,
+    "ou_7.25": 4,
+    "ou_7.5": 8,
+    "ou_7.75": 4,
+    "ou_8": 4,
+    "ou_8.25": 4,
+    "ou_8.5": 6,
+    "tt_away_0.5": 262,
+    "tt_away_0.75": 18,
+    "tt_away_1": 24,
+    "tt_away_1.25": 24,
+    "tt_away_1.5": 246,
+    "tt_away_1.75": 18,
+    "tt_away_2": 18,
+    "tt_away_2.25": 16,
+    "tt_away_2.5": 151,
+    "tt_away_3.5": 73,
+    "tt_away_4.5": 5,
+    "tt_away_5.5": 1,
+    "tt_home_0.5": 240,
+    "tt_home_0.75": 18,
+    "tt_home_1": 24,
+    "tt_home_1.25": 24,
+    "tt_home_1.5": 270,
+    "tt_home_1.75": 18,
+    "tt_home_2": 18,
+    "tt_home_2.25": 18,
+    "tt_home_2.5": 162,
+    "tt_home_3.5": 77,
+    "tt_home_4.5": 6,
+    "tt_home_5.5": 1
+  },
+  "markets_source": "fetch",
+  "matched": 1,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "market_inactive": 137,
+    "market_unsupported_cards": 444,
+    "market_unsupported_clean_sheet": 132,
+    "market_unsupported_corners": 1627,
+    "market_unsupported_correct_score": 411,
+    "market_unsupported_early_payout": 16,
+    "market_unsupported_handicap": 1760,
+    "market_unsupported_market_type": 1445,
+    "market_unsupported_non_goal": 169,
+    "market_unsupported_odd_even": 388,
+    "market_unsupported_period": 6704,
+    "market_unsupported_win_to_nil": 254,
+    "outcome_inactive": 790
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "market_inactive": 137,
+      "outcome_inactive": 790
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 444,
+      "market_unsupported_clean_sheet": 132,
+      "market_unsupported_corners": 1627,
+      "market_unsupported_correct_score": 411,
+      "market_unsupported_early_payout": 16,
+      "market_unsupported_handicap": 1760,
+      "market_unsupported_market_type": 1445,
+      "market_unsupported_non_goal": 169,
+      "market_unsupported_odd_even": 388,
+      "market_unsupported_period": 6704,
+      "market_unsupported_win_to_nil": 254
+    }
+  },
+  "pending_fixtures": 19,
+  "quoted_fixtures": [
+    {
+      "away": "Millonarios FC",
+      "fixture_id": "id1002707076838160",
+      "home": "Deportivo Cali"
+    }
+  ],
+  "reserved_requests": 20,
+  "rows": 6224,
+  "schema": 1,
+  "slate_candidate_fixtures": 174,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 2,
+  "slate_provider_overlap_fixtures": 54,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "LA LOUVIERE",
+      "home": "GENK",
+      "league": "BE1",
+      "normalized_pair": "genk|la louviere"
+    },
+    {
+      "away": "PADERBORN",
+      "home": "LEVERKUSEN",
+      "league": "DE1",
+      "normalized_pair": "leverkusen|paderborn"
+    },
+    {
+      "away": "EXCELSIOR",
+      "home": "FEYENOORD",
+      "league": "NL1",
+      "normalized_pair": "excelsior|feyenoord"
+    },
+    {
+      "away": "St. Mirren",
+      "home": "Celtic",
+      "league": "Premiership",
+      "normalized_pair": "celtic|st. mirren"
+    },
+    {
+      "away": "Cavese",
+      "home": "Monopoli",
+      "league": "Serie C: Girone C",
+      "normalized_pair": "cavese|monopoli"
+    },
+    {
+      "away": "Pergolettese",
+      "home": "Treviso",
+      "league": "Serie C: Girone A",
+      "normalized_pair": "pergolettese|treviso"
+    },
+    {
+      "away": "NEA SALAMIS",
+      "home": "ARIS LIMASSOL",
+      "league": "CY1",
+      "normalized_pair": "aris limassol|nea salamis"
+    },
+    {
+      "away": "BOCA JUNIORS",
+      "home": "ATLETICO MG",
+      "league": "SAS",
+      "normalized_pair": "atletico mg|boca juniors"
+    },
+    {
+      "away": "LEEDS",
+      "home": "CHELSEA",
+      "league": "ENP",
+      "normalized_pair": "chelsea|leeds"
+    },
+    {
+      "away": "ATLANTE",
+      "home": "CLUB TIJUANA",
+      "league": "MX1",
+      "normalized_pair": "atlante|tijuana"
+    },
+    {
+      "away": "AKHMAT GROZNY",
+      "home": "CSKA MOSCOW",
+      "league": "RU1",
+      "normalized_pair": "akhmat grozny|cska moscow"
+    },
+    {
+      "away": "NAFTAN",
+      "home": "DINAMO BREST",
+      "league": "BY1",
+      "normalized_pair": "dinamo brest|naftan"
+    },
+    {
+      "away": "GYORI",
+      "home": "FERENCVAROSI",
+      "league": "HU1",
+      "normalized_pair": "ferencvarosi|gyori"
+    },
+    {
+      "away": "HARTBERG",
+      "home": "LASK LINZ",
+      "league": "AT1",
+      "normalized_pair": "hartberg|lask linz"
+    },
+    {
+      "away": "TOULOUSE",
+      "home": "LENS",
+      "league": "FR1",
+      "normalized_pair": "lens|toulouse"
+    },
+    {
+      "away": "MASHAL",
+      "home": "NASAF",
+      "league": "UZ1",
+      "normalized_pair": "mashal|nasaf"
+    },
+    {
+      "away": "TORPEDO MOSCOW",
+      "home": "NIZHNIY",
+      "league": "RU2",
+      "normalized_pair": "nizhniy|torpedo moscow"
+    },
+    {
+      "away": "CARDIFF",
+      "home": "NORWICH",
+      "league": "ENC",
+      "normalized_pair": "cardiff|norwich"
+    },
+    {
+      "away": "WYCOMBE",
+      "home": "OXFORD",
+      "league": "EN1",
+      "normalized_pair": "oxford|wycombe"
+    },
+    {
+      "away": "Virtus Entella",
+      "home": "Carrarese",
+      "league": "Serie B",
+      "normalized_pair": "carrarese|virtus entella"
+    },
+    {
+      "away": "Benevento",
+      "home": "Sampdoria",
+      "league": "Serie B",
+      "normalized_pair": "benevento|sampdoria"
+    },
+    {
+      "away": "ASTERAS TR. 2",
+      "home": "LARISA",
+      "league": "GR2",
+      "normalized_pair": "asteras tr. 2|larisa"
+    },
+    {
+      "away": "LECCE",
+      "home": "LAZIO",
+      "league": "IT1",
+      "normalized_pair": "lazio|lecce"
+    },
+    {
+      "away": "VAREN NAGASAKI",
+      "home": "MACHIDA ZELVIA",
+      "league": "JP1",
+      "normalized_pair": "machida zelvia|varen nagasaki"
+    },
+    {
+      "away": "CELTA VIGO",
+      "home": "REAL MADRID",
+      "league": "ES1",
+      "normalized_pair": "celta vigo|real madrid"
+    },
+    {
+      "away": "PRESTON",
+      "home": "WEST HAM",
+      "league": "ENC",
+      "normalized_pair": "preston|west ham"
+    },
+    {
+      "away": "DEP. LA CORUNA",
+      "home": "ALAVES",
+      "league": "ES1",
+      "normalized_pair": "alaves|dep. la coruna"
+    },
+    {
+      "away": "TONDELA",
+      "home": "AVES",
+      "league": "PTC",
+      "normalized_pair": "aves|tondela"
+    },
+    {
+      "away": "OTELUL",
+      "home": "CFR CLUJ",
+      "league": "RO1",
+      "normalized_pair": "cfr cluj|otelul"
+    },
+    {
+      "away": "PETROLUL",
+      "home": "DYNAMO BUC.",
+      "league": "RO1",
+      "normalized_pair": "dynamo buc.|petrolul"
+    },
+    {
+      "away": "PETERBOROUGH",
+      "home": "PLYMOUTH",
+      "league": "EN1",
+      "normalized_pair": "peterborough|plymouth"
+    },
+    {
+      "away": "SAINT ETIENNE",
+      "home": "REIMS",
+      "league": "FR2",
+      "normalized_pair": "reims|saint etienne"
+    },
+    {
+      "away": "MILSAMI",
+      "home": "SHERIFF",
+      "league": "MD1",
+      "normalized_pair": "milsami|sheriff"
+    },
+    {
+      "away": "GORNIK ZABRZE",
+      "home": "ZAGLEBIE",
+      "league": "PL1",
+      "normalized_pair": "gornik zabrze|zaglebie"
+    },
+    {
+      "away": "Mallorca",
+      "home": "Tenerife",
+      "league": "La Liga 2",
+      "normalized_pair": "mallorca|tenerife"
+    },
+    {
+      "away": "ROHDA Raalte",
+      "home": "Spakenburg",
+      "league": "Tweede Divisie",
+      "normalized_pair": "rohda raalte|spakenburg"
+    },
+    {
+      "away": "Granada",
+      "home": "Sabadell",
+      "league": "La Liga 2",
+      "normalized_pair": "granada|sabadell"
+    },
+    {
+      "away": "CARLISLE",
+      "home": "BARROW",
+      "league": "ENB",
+      "normalized_pair": "barrow|carlisle"
+    },
+    {
+      "away": "CAGLIARI",
+      "home": "COMO",
+      "league": "IT1",
+      "normalized_pair": "cagliari|como"
+    },
+    {
+      "away": "FELGUEIRAS",
+      "home": "ESTORIL",
+      "league": "PTC",
+      "normalized_pair": "estoril|felgueiras"
+    },
+    {
+      "away": "GRENOBLE",
+      "home": "NANTES",
+      "league": "FR2",
+      "normalized_pair": "grenoble|nantes"
+    },
+    {
+      "away": "IPSWICH",
+      "home": "TOTTENHAM",
+      "league": "ENP",
+      "normalized_pair": "ipswich|tottenham"
+    },
+    {
+      "away": "HOLSTEIN KIEL",
+      "home": "WOLFSBURG",
+      "league": "DE2",
+      "normalized_pair": "holstein kiel|wolfsburg"
+    },
+    {
+      "away": "CHARLTON",
+      "home": "WOLVERHAMPTON",
+      "league": "ENC",
+      "normalized_pair": "charlton|wolverhampton"
+    },
+    {
+      "away": "Lugo",
+      "home": "Pontevedra",
+      "league": "Primera Division RFEF: Group 1",
+      "normalized_pair": "lugo|pontevedra"
+    },
+    {
+      "away": "Corvinul Hunedoara",
+      "home": "Csikszereda",
+      "league": "Superliga",
+      "normalized_pair": "corvinul hunedoara|csikszereda"
+    },
+    {
+      "away": "Deportivo La Coru\u00f1a",
+      "home": "Deportivo Alav\u00e9s",
+      "league": "La Liga",
+      "normalized_pair": "deportivo alaves|deportivo la coruna"
+    },
+    {
+      "away": "BALTIKA",
+      "home": "GAZONIK ORENBURG",
+      "league": "RU1",
+      "normalized_pair": "baltika|gazonik orenburg"
+    },
+    {
+      "away": "WIMBLEDON",
+      "home": "LEYTON",
+      "league": "EN1",
+      "normalized_pair": "leyton|wimbledon"
+    },
+    {
+      "away": "ZLIN",
+      "home": "MLADA",
+      "league": "CZ1",
+      "normalized_pair": "mlada|zlin"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}
