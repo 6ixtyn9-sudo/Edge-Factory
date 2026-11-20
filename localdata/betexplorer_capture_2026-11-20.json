@@ -1,5 +1,5 @@
 {
-  "attempted": 5,
+  "attempted": 7,
   "attempted_fixtures": [
     {
       "avg_p": 52.309309593711525,
@@ -22,24 +22,44 @@
       "w_score": 0.5911
     },
     {
-      "avg_p": 69.0,
-      "away": "Torpedo Kutaisi",
+      "avg_p": 94.77790563866513,
+      "away": "Trefelin",
       "date": "2026-11-20",
-      "home": "Dinamo Tbilisi",
-      "league": "Georgia Erovnuli Liga",
+      "home": "The New Saints",
+      "league": "Premier League",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.6134
+      "w_score": 0.7351
     },
     {
-      "avg_p": 54.53898150678692,
-      "away": "FC Voluntari",
+      "avg_p": 82.04675572519085,
+      "away": "FC K\u00f6ln",
       "date": "2026-11-20",
-      "home": "FC Boto\u0219ani",
-      "league": "Superliga",
+      "home": "FC Bayern M\u00fcnchen",
+      "league": "Bundesliga",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.5911
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 77.0,
+      "away": "FC KOLN",
+      "date": "2026-11-20",
+      "home": "BAYERN MUNCHEN",
+      "league": "DE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
+    },
+    {
+      "avg_p": 75.0,
+      "away": "ESPANYOL",
+      "date": "2026-11-20",
+      "home": "ATHLETIC BILBAO",
+      "league": "ES1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
     },
     {
       "avg_p": 53.25402763417615,
@@ -53,19 +73,19 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 4,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 4,
-  "candidate_fixtures": 52,
-  "captured_at": "2026-11-20T13:36:37.669949+00:00",
+  "cache_only": 3,
+  "candidate_fixtures": 46,
+  "captured_at": "2026-11-20T16:57:15.064001+00:00",
   "date": "2026-11-20",
-  "deferred_fixtures": 47,
+  "deferred_fixtures": 39,
   "errors": [],
-  "fixtures_with_rows": 5,
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 44,
     "challenge_pages": 0,
@@ -81,7 +101,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 4,
   "quoted_fixtures": [
     {
       "avg_p": 52.309309593711525,
@@ -104,26 +124,6 @@
       "w_score": 0.5911
     },
     {
-      "avg_p": 69.0,
-      "away": "Torpedo Kutaisi",
-      "date": "2026-11-20",
-      "home": "Dinamo Tbilisi",
-      "league": "Georgia Erovnuli Liga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
-      "avg_p": 54.53898150678692,
-      "away": "FC Voluntari",
-      "date": "2026-11-20",
-      "home": "FC Boto\u0219ani",
-      "league": "Superliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5911
-    },
-    {
       "avg_p": 53.25402763417615,
       "away": "Jong Ajax",
       "date": "2026-11-20",
@@ -134,8 +134,8 @@
       "w_score": 0.5911
     }
   ],
-  "requests": 10,
-  "rows": 15,
+  "requests": 6,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }

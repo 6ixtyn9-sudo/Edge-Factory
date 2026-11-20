@@ -1161,6 +1161,33 @@
         "wins": 122
       }
     },
+    "pfc_4c5d026eb71411fc8d3e609a": {
+      "input_snapshot_id": "938954213a179e9439e792d42c6a21e721e3eb30f6db7c4521da790b5f1a830d",
+      "mining_window": {
+        "as_of_exclusive": "2026-11-20",
+        "split": "2026-10-23",
+        "start": "2026-06-13"
+      },
+      "status": "reproduced_at_revalidation",
+      "train": {
+        "avg_odds": 1.738,
+        "hit": 0.6197,
+        "n": 376,
+        "n_priced": 371,
+        "roi": -0.0108,
+        "wilson_lb": 0.5696,
+        "wins": 233
+      },
+      "valid": {
+        "avg_odds": 1.71,
+        "hit": 0.6254,
+        "n": 566,
+        "n_priced": 558,
+        "roi": 0.0036,
+        "wilson_lb": 0.5848,
+        "wins": 354
+      }
+    },
     "pfc_4cf3df8552488297d7ccf526": {
       "input_snapshot_id": "938954213a179e9439e792d42c6a21e721e3eb30f6db7c4521da790b5f1a830d",
       "mining_window": {
