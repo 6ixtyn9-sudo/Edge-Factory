@@ -1,16 +1,6 @@
 {
-  "attempted": 4,
+  "attempted": 5,
   "attempted_fixtures": [
-    {
-      "avg_p": 69.0,
-      "away": "Torpedo Kutaisi",
-      "date": "2026-11-20",
-      "home": "Dinamo Tbilisi",
-      "league": "Georgia Erovnuli Liga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
     {
       "avg_p": 52.309309593711525,
       "away": "MVV Maastricht",
@@ -20,6 +10,26 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5911
+    },
+    {
+      "avg_p": 45.650754432289695,
+      "away": "VVV-Venlo",
+      "date": "2026-11-20",
+      "home": "FC Den Bosch",
+      "league": "Eerste Divisie",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5911
+    },
+    {
+      "avg_p": 69.0,
+      "away": "Torpedo Kutaisi",
+      "date": "2026-11-20",
+      "home": "Dinamo Tbilisi",
+      "league": "Georgia Erovnuli Liga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
     },
     {
       "avg_p": 54.53898150678692,
@@ -43,26 +53,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 3,
+  "be_cached": 4,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 3,
-  "candidate_fixtures": 55,
-  "captured_at": "2026-11-20T10:57:18.784467+00:00",
+  "cache_only": 4,
+  "candidate_fixtures": 52,
+  "captured_at": "2026-11-20T13:36:37.669949+00:00",
   "date": "2026-11-20",
-  "deferred_fixtures": 51,
+  "deferred_fixtures": 47,
   "errors": [],
-  "fixtures_with_rows": 4,
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 30,
+    "bookmakers": 44,
     "challenge_pages": 0,
-    "fixtures": 4,
-    "market_rows": 92,
-    "markets": 11,
-    "named_rows": 92,
+    "fixtures": 5,
+    "market_rows": 130,
+    "markets": 16,
+    "named_rows": 130,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -74,16 +84,6 @@
   "network_attempted": 1,
   "quoted_fixtures": [
     {
-      "avg_p": 69.0,
-      "away": "Torpedo Kutaisi",
-      "date": "2026-11-20",
-      "home": "Dinamo Tbilisi",
-      "league": "Georgia Erovnuli Liga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 52.309309593711525,
       "away": "MVV Maastricht",
       "date": "2026-11-20",
@@ -92,6 +92,26 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5911
+    },
+    {
+      "avg_p": 45.650754432289695,
+      "away": "VVV-Venlo",
+      "date": "2026-11-20",
+      "home": "FC Den Bosch",
+      "league": "Eerste Divisie",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5911
+    },
+    {
+      "avg_p": 69.0,
+      "away": "Torpedo Kutaisi",
+      "date": "2026-11-20",
+      "home": "Dinamo Tbilisi",
+      "league": "Georgia Erovnuli Liga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
     },
     {
       "avg_p": 54.53898150678692,
@@ -114,8 +134,8 @@
       "w_score": 0.5911
     }
   ],
-  "requests": 7,
-  "rows": 12,
+  "requests": 10,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }

@@ -1,35 +1,20 @@
 {
   "added": 0,
-  "attempted": 3,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Dijon",
+      "away": "FC Voluntari",
       "date": "2026-11-20",
-      "home": "Nancy",
-      "kickoff": "2026-11-20T19:00:00Z",
-      "league": "Ligue 2"
-    },
-    {
-      "away": "FC Emmen",
-      "date": "2026-11-20",
-      "home": "Jong FC Utrecht",
-      "kickoff": "2026-11-20T19:00:00Z",
-      "league": "Eerste Divisie"
-    },
-    {
-      "away": "Rodez",
-      "date": "2026-11-20",
-      "home": "Guingamp",
-      "kickoff": "2026-11-20T19:00:00Z",
-      "league": "Ligue 2"
+      "home": "FC Boto\u0219ani",
+      "kickoff": "2026-11-20T15:30:00Z",
+      "league": "Superliga"
     }
   ],
   "candidate_fixtures": 62,
-  "captured_at": "2026-11-20T11:52:00+00:00",
+  "captured_at": "2026-11-20T14:14:45+00:00",
   "date": "2026-11-20",
   "due_reasons": {
-    "first_at": 1,
-    "scope_at": 2
+    "first_at": 1
   },
   "errors": [],
   "fixtures_with_rows": 0,
@@ -48,7 +33,7 @@
   "schema": 1,
   "skip_reasons": {
     "priced": 10,
-    "retry_cooldown": 49
+    "retry_cooldown": 51
   },
   "skipped": [
     "The New Saints|Trefelin (retry cooldown (6h after failed attempt))",
@@ -61,7 +46,6 @@
     "HELLAS VERONA|CESENA (priced)",
     "HERACLES|JONG PSV (retry cooldown (6h after failed attempt))",
     "METZ|BOULOGNE (priced)",
-    "BOTOSANI|FC VOLUNTARIS (retry cooldown (6h after failed attempt))",
     "LIERSE|LOKEREN (retry cooldown (6h after failed attempt))",
     "PALESTINO|UN. CALERA (retry cooldown (6h after failed attempt))",
     "ZOB AHAN|SHAMS AZAR QAZVIN (retry cooldown (6h after failed attempt))",
@@ -92,6 +76,7 @@
     "SHIRAK|GANDZASAR (retry cooldown (6h after failed attempt))",
     "De Graafschap|MVV Maastricht (retry cooldown (6h after failed attempt))",
     "Koninklijke Lierse Sportkring|KSC Lokeren (retry cooldown (6h after failed attempt))",
+    "Nancy|Dijon (retry cooldown (6h after failed attempt))",
     "TOP Oss|Roda JC Kerkrade (retry cooldown (6h after failed attempt))",
     "Orlando City SC|FC Cincinnati (priced)",
     "Palestino|Uni\u00f3n La Calera (retry cooldown (6h after failed attempt))",
@@ -101,10 +86,12 @@
     "Seattle Sounders FC|Real Salt Lake (retry cooldown (6h after failed attempt))",
     "FAJR SEPASI|CHADORMALU (retry cooldown (6h after failed attempt))",
     "Darmstadt 98|1. FC Heidenheim (retry cooldown (6h after failed attempt))",
+    "Jong FC Utrecht|FC Emmen (retry cooldown (6h after failed attempt))",
     "Al-Ahli|Al-Nassr (retry cooldown (6h after failed attempt))",
     "Independiente Medell\u00edn|Santa Fe (retry cooldown (6h after failed attempt))",
     "Flint Town United|Cambrian & Clydach (retry cooldown (6h after failed attempt))",
     "FC Den Bosch|VVV-Venlo (retry cooldown (6h after failed attempt))",
+    "Guingamp|Rodez (retry cooldown (6h after failed attempt))",
     "FC GAGRA|DILA GORI (retry cooldown (6h after failed attempt))",
     "Septemvri Sofia|Lokomotiv Plovdiv (retry cooldown (6h after failed attempt))",
     "Cobresal|Audax Italiano (retry cooldown (6h after failed attempt))",
@@ -114,12 +101,9 @@
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Nancy vs Dijon (league not covered: Ligue 2)",
-    "Jong FC Utrecht vs FC Emmen (league not covered: Eerste Divisie)",
-    "Guingamp vs Rodez (league not covered: Ligue 2)"
+    "FC Boto\u0219ani vs FC Voluntari (league not covered: Superliga)"
   ],
   "unmatched_reasons": {
-    "league not covered: Eerste Divisie": 1,
-    "league not covered: Ligue 2": 2
+    "league not covered: Superliga": 1
   }
 }
