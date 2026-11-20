@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 59.654700590148,
   "paper_multiple": 0.59654700590148,
-  "paper_committed_units": 0.078886,
-  "paper_free_units": 59.575814590148006,
+  "paper_committed_units": 0.213016,
+  "paper_free_units": 59.441684590148,
   "settled_stake_units": 66.271197,
   "receipt_days": 18,
-  "decision_receipts": 152,
+  "decision_receipts": 154,
   "bet_days": 11,
   "no_bet_days": 7,
   "missed_freeze_days": 0,
@@ -17,9 +17,9 @@
   "wins": 8,
   "losses": 51,
   "hit_rate": 0.13559322033898305,
-  "pending_accas": 2,
+  "pending_accas": 3,
   "superseded_tickets": 1,
-  "unresolved_result_legs": 5,
+  "unresolved_result_legs": 6,
   "resolved_result_legs": 80,
   "profit_units": -40.345299409852,
   "roi": -0.6087908659602451,
@@ -19836,6 +19836,310 @@
       "decision_id": "20261120T051642513698Z",
       "captured_at": "2026-11-20T05:16:42.513698+00:00",
       "frozen_at": "2026-11-20T05:17:26.848329+00:00"
+    },
+    {
+      "date": "2026-11-20",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 35.31,
+          "stake_units": 0.13413,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "b8d1467420d99e5121589c19cf5761bbfe1434f8089e90d9df1b610d7829b945",
+                "evidence_sha256": "8a012ce5ae5dceabff01440d7ede204e02d55e37055758d2bba37ae1a4d99827",
+                "fixtures": 66,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.116112785308,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.08126684525070775,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.06060606060606061,
+                "required_source_probability": 0.06060606060606061,
+                "source_probability": 0.08,
+                "status": "eligible",
+                "wins": 11
+              },
+              "away": "PAYKAN",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.22
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.08
+                ]
+              ],
+              "base_probability": 0.08,
+              "book": "1xbet",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "2d123d875a3382a63eed2936e2bab772a70a0e775b43aeb8c4e7cd8c4675df6f",
+              "context": {
+                "as_of": "2026-11-20T07:56:36.600065+00:00",
+                "country": null,
+                "country_sources": [],
+                "form_as_of_exclusive": "2026-11-20",
+                "form_values": {
+                  "away_form_btts": 0.5,
+                  "away_form_ga": 1.0,
+                  "away_form_gf": 1.1,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.2,
+                  "away_form_over35": 0.2,
+                  "home_form_btts": 0.3,
+                  "home_form_ga": 0.5,
+                  "home_form_gf": 1.5,
+                  "home_form_over15": 0.6,
+                  "home_form_over25": 0.4,
+                  "home_form_over35": 0.1
+                },
+                "league": "iran persian gulf pro league",
+                "parent_confidence": 0.77,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_0d72f28c85762f31e35144a9",
+              "date": "2026-11-20",
+              "fixture": [
+                "2026-11-20",
+                "persepolis",
+                "paykan"
+              ],
+              "forecast_model_key": "d0c3dd591fe67b9f6674470103977bb3e221ababce57ce35225af705bb2eb5eb",
+              "home": "PERSEPOLIS",
+              "kickoff_utc": "2026-11-20T12:45:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_0d72f28c85762f31e35144a9",
+                "fixture": [
+                  "2026-11-20",
+                  "persepolis",
+                  "paykan",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "prosoccer",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.08,
+                  "forecast_1x2_away_spread": 0.07999999999999999,
+                  "forecast_1x2_draw_mean": 0.22,
+                  "forecast_1x2_draw_spread": 0.06,
+                  "forecast_1x2_home_mean": 0.7,
+                  "forecast_1x2_home_spread": 0.14,
+                  "forecast_btts_yes_mean": null,
+                  "forecast_btts_yes_spread": null,
+                  "forecast_ou_1.5_over_mean": null,
+                  "forecast_ou_1.5_over_spread": null,
+                  "forecast_ou_2.5_over_mean": 0.49,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": null,
+                  "forecast_ou_3.5_over_spread": null,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "5560a38ae32270e43c047d10eeac2750887d38c3826da7b9b9666291bc538485",
+              "odds": 16.5,
+              "pre_normalized_probability": 0.08126684525070775,
+              "price_age_seconds_at_decision": 1208.868872,
+              "price_age_seconds_at_freeze": 1252.493475,
+              "price_at": "2026-11-20T07:36:27.731193+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Paykan FC",
+                  "bookmaker": "1xbet",
+                  "bookmaker_market_id": "1",
+                  "captured_at": "2026-11-20T07:36:27.731193+00:00",
+                  "date": "2026-11-20",
+                  "home": "Persepolis FC",
+                  "kickoff": "2026-11-20T12:45:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "16.5",
+                  "outcome_key": "103",
+                  "provider_changed_at": "2026-11-20T03:31:41.195Z",
+                  "provider_fixture_id": "id1000091576570798",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "away",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "b3949c25bb568b89c9539deefd9687d94539cbb6c29ec31d7457e3b17380e8dd",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.08126684525070775,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "away"
+            },
+            {
+              "admission": {
+                "cell": "19d8b8e028438813ab3d75ac425acb5a79f64a1996916f6d1e96b655143cbc15",
+                "evidence_sha256": "8a012ce5ae5dceabff01440d7ede204e02d55e37055758d2bba37ae1a4d99827",
+                "fixtures": 67,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.474033863766,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.474033863766,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.4672897196261682,
+                "required_source_probability": 0.4672897196261682,
+                "source_probability": 0.4651228070175438,
+                "status": "eligible",
+                "wins": 37
+              },
+              "away": "CESENA",
+              "base_partition": [
+                [
+                  "match_over_25",
+                  "over",
+                  0.5348771929824562
+                ],
+                [
+                  "match_under_25",
+                  "under",
+                  0.4651228070175438
+                ]
+              ],
+              "base_probability": 0.4651228070175438,
+              "book": "1xBet",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "8aaeaa62c2a28bc4cb7a3d551ece97f5d9b58798e6a7a57c614c6819bf3c918d",
+              "context": {
+                "as_of": "2026-11-20T07:56:36.600065+00:00",
+                "country": "Italy",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-20",
+                "form_values": {
+                  "away_form_btts": 0.7,
+                  "away_form_ga": 1.3,
+                  "away_form_gf": 1.1,
+                  "away_form_over15": 0.9,
+                  "away_form_over25": 0.4,
+                  "away_form_over35": 0.1,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.1,
+                  "home_form_gf": 2.0,
+                  "home_form_over15": 0.8,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.5
+                },
+                "league": "it2",
+                "parent_confidence": 0.75,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_0d72f28c85762f31e35144a9",
+              "date": "2026-11-20",
+              "fixture": [
+                "2026-11-20",
+                "hellasverona",
+                "cesena"
+              ],
+              "forecast_model_key": "d0c3dd591fe67b9f6674470103977bb3e221ababce57ce35225af705bb2eb5eb",
+              "home": "HELLAS VERONA",
+              "kickoff_utc": "2026-11-20T19:30:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_0d72f28c85762f31e35144a9",
+                "fixture": [
+                  "2026-11-20",
+                  "hellasverona",
+                  "cesena",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.16273665564478035,
+                  "forecast_1x2_away_spread": 0.15999999999999998,
+                  "forecast_1x2_draw_mean": 0.24184034010392064,
+                  "forecast_1x2_draw_spread": 0.06,
+                  "forecast_1x2_home_mean": 0.595423004251299,
+                  "forecast_1x2_home_spread": 0.21999999999999997,
+                  "forecast_btts_yes_mean": 0.5488333333333333,
+                  "forecast_btts_yes_spread": 0.004333333333333411,
+                  "forecast_ou_1.5_over_mean": 0.772500904159132,
+                  "forecast_ou_1.5_over_spread": 0.021001808318264037,
+                  "forecast_ou_2.5_over_mean": 0.5348771929824562,
+                  "forecast_ou_2.5_over_spread": 0.042631578947368465,
+                  "forecast_ou_3.5_over_mean": 0.3328399014778325,
+                  "forecast_ou_3.5_over_spread": 0.04367980295566498,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.19,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.36,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "489360e9ba94bcca35fb8b08a281b3d05b089bc2b3e22e99b0dbbec66684b30d",
+              "odds": 2.14,
+              "pre_normalized_probability": 0.4803937306618951,
+              "price_age_seconds_at_decision": 33568.086147,
+              "price_age_seconds_at_freeze": 33611.71075,
+              "price_at": "2026-11-19T22:37:08.513918+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.4803937306618951,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "under"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261120T075636600065Z",
+      "captured_at": "2026-11-20T07:56:36.600065+00:00",
+      "frozen_at": "2026-11-20T07:57:20.224668+00:00"
+    },
+    {
+      "date": "2026-11-20",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261120T081058133497Z",
+      "captured_at": "2026-11-20T08:10:58.133497+00:00",
+      "frozen_at": "2026-11-20T08:11:40.161432+00:00"
     }
   ],
   "latest_learning": {
@@ -20680,7 +20984,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-20T05:16:42.513698+00:00",
+    "as_of": "2026-11-20T08:10:58.133497+00:00",
     "context_model": {
       "coef": [
         0.0003074905792156471,
@@ -26171,7 +26475,7 @@
     "fixtures": 151,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "b8d87cffd40f50a23b841e15d5a87a283c5e37a85f8df5918ba065af967398ee",
+    "model_key": "d71a2109ca5d3ca98fc78147ca63614f4df75a1382477ab7b702da8ef2213865",
     "observations": 509,
     "parameters": 1426,
     "power": 1.0,
