@@ -18964,7 +18964,7 @@
     "over25_total": 996,
     "over25_wins": 545,
     "team_o15_total": 996,
-    "team_o15_wins": 576
+    "team_o15_wins": 577
   },
   "settled_ledger": [
     {
@@ -53607,21 +53607,21 @@
       "avg_p": 65.0,
       "date": "2026-11-20",
       "gs": 2,
-      "hs": 1,
+      "hs": 2,
       "market": "1x2",
       "match": "VELEZ SARSFIELD vs BELGRANO",
       "notes_audit": [],
       "odds": 2.23,
       "odds_match_method": "exact",
       "odds_source": "pinnapi_odds",
-      "outcome": "away",
+      "outcome": "draw",
       "parsed_stats": {
         "away_o15_expected": 0.262,
         "away_o15_hit": false,
         "btts_expected": 0.545,
         "btts_hit": true,
         "home_o15_expected": 0.5920000000000001,
-        "home_o15_hit": false,
+        "home_o15_hit": true,
         "over25_expected": 0.575,
         "over25_hit": true,
         "top_scores": []
@@ -53751,7 +53751,7 @@
     {
       "avg_p": 48.83395557214859,
       "date": "2026-11-20",
-      "gs": 0,
+      "gs": 1,
       "hs": 0,
       "market": "1x2",
       "match": "Palestino vs Uni\u00f3n La Calera",
@@ -53759,7 +53759,7 @@
       "odds": 1.885,
       "odds_match_method": "exact",
       "odds_source": "pinnapi_odds",
-      "outcome": "draw",
+      "outcome": "away",
       "parsed_stats": {
         "away_o15_expected": 0.29,
         "away_o15_hit": true,
@@ -54244,7 +54244,7 @@
     {
       "avg_p": 72.0,
       "date": "2026-11-20",
-      "gs": 0,
+      "gs": 1,
       "hs": 0,
       "market": "1x2",
       "match": "PALESTINO vs UN. CALERA",
@@ -54252,7 +54252,7 @@
       "odds": null,
       "odds_match_method": "none",
       "odds_source": "UNKNOWN",
-      "outcome": "draw",
+      "outcome": "away",
       "parsed_stats": {
         "away_o15_expected": 0.262,
         "away_o15_hit": true,
@@ -54652,9 +54652,9 @@
   "start": "2026-10-23",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.128305,
-      "mae": 1.439605,
-      "mean_actual": 2.987444,
+      "bias": -0.125614,
+      "mae": 1.438709,
+      "mean_actual": 2.990135,
       "mean_promised": 3.115749,
       "n": 1115
     },
@@ -54676,12 +54676,12 @@
         "realized": 0.52287
       },
       "home_o15": {
-        "brier": 0.223064,
-        "delta": -0.008875,
-        "hits": 568,
+        "brier": 0.222899,
+        "delta": -0.007978,
+        "hits": 569,
         "mean_promised": 0.518292,
         "n": 1115,
-        "realized": 0.509417
+        "realized": 0.510314
       },
       "over25": {
         "brier": 0.245784,
@@ -54731,13 +54731,13 @@
         "realized": 0.428571
       },
       {
-        "brier": 0.249309,
+        "brier": 0.24923,
         "bucket": "0.5-0.6",
-        "delta": -0.022866,
-        "hits": 1227,
+        "delta": -0.022434,
+        "hits": 1228,
         "mean_promised": 0.552658,
         "n": 2316,
-        "realized": 0.529793
+        "realized": 0.530225
       },
       {
         "brier": 0.245545,

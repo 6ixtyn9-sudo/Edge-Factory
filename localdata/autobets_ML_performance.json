@@ -9,7 +9,7 @@
   "paper_free_units": 59.346121753548,
   "settled_stake_units": 66.484213,
   "receipt_days": 19,
-  "decision_receipts": 164,
+  "decision_receipts": 166,
   "bet_days": 12,
   "no_bet_days": 7,
   "missed_freeze_days": 0,
@@ -20740,6 +20740,24 @@
       "decision_id": "20261121T021553132483Z",
       "captured_at": "2026-11-21T02:15:53.132483+00:00",
       "frozen_at": "2026-11-21T02:16:46.596354+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261121T045412529566Z",
+      "captured_at": "2026-11-21T04:54:12.529566+00:00",
+      "frozen_at": "2026-11-21T04:54:55.948707+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261121T050248922085Z",
+      "captured_at": "2026-11-21T05:02:48.922085+00:00",
+      "frozen_at": "2026-11-21T05:03:31.133578+00:00"
     }
   ],
   "latest_learning": {
@@ -21584,7 +21602,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-21T02:15:53.132483+00:00",
+    "as_of": "2026-11-21T05:02:48.922085+00:00",
     "context_model": {
       "coef": [
         0.0002710056542161876,
@@ -27505,7 +27523,7 @@
     "fixtures": 166,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "d5bc168f7735f6890c74648765785723732f2022ab4503035de9570f985509a0",
+    "model_key": "9107aa5c9158dd96ec4fcd256b43d9fe7796e6ad4ff0cd884caebd50dac9f8dc",
     "observations": 560,
     "parameters": 1532,
     "power": 1.0,

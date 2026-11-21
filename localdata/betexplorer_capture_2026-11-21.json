@@ -1,5 +1,5 @@
 {
-  "attempted": 1,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 65.0,
@@ -10,29 +10,59 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 59.0,
+      "away": "Bonner SC",
+      "date": "2026-11-21",
+      "home": "Borussia M'gladbach II",
+      "league": "Germany Regionalliga - West",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 57.99999999999999,
+      "away": "Sesvete",
+      "date": "2026-11-21",
+      "home": "Orijent 1919",
+      "league": "Croatia First NL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 87.0,
+      "away": "LA LOUVIERE",
+      "date": "2026-11-21",
+      "home": "GENK",
+      "league": "BE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 1,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 166,
-  "captured_at": "2026-11-21T01:43:06.909071+00:00",
+  "cache_only": 1,
+  "candidate_fixtures": 165,
+  "captured_at": "2026-11-21T04:34:33.957269+00:00",
   "date": "2026-11-21",
-  "deferred_fixtures": 165,
+  "deferred_fixtures": 161,
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 0,
+    "bookmakers": 10,
     "challenge_pages": 0,
-    "fixtures": 0,
-    "market_rows": 0,
-    "markets": 0,
-    "named_rows": 0,
+    "fixtures": 1,
+    "market_rows": 30,
+    "markets": 6,
+    "named_rows": 30,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -41,10 +71,21 @@
   "max_fixtures": 12,
   "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
-  "quoted_fixtures": [],
-  "requests": 4,
-  "rows": 0,
+  "network_attempted": 3,
+  "quoted_fixtures": [
+    {
+      "avg_p": 57.99999999999999,
+      "away": "Sesvete",
+      "date": "2026-11-21",
+      "home": "Orijent 1919",
+      "league": "Croatia First NL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    }
+  ],
+  "requests": 14,
+  "rows": 3,
   "schema": 1,
-  "status": "empty"
+  "status": "ok"
 }
