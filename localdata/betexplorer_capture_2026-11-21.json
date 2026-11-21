@@ -1,5 +1,5 @@
 {
-  "attempted": 4,
+  "attempted": 5,
   "attempted_fixtures": [
     {
       "avg_p": 65.0,
@@ -40,38 +40,48 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5848
+    },
+    {
+      "avg_p": 87.0,
+      "away": "PADERBORN",
+      "date": "2026-11-21",
+      "home": "LEVERKUSEN",
+      "league": "DE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
     }
   ],
   "be_429": 2,
-  "be_cached": 1,
+  "be_cached": 4,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 1,
-  "candidate_fixtures": 165,
-  "captured_at": "2026-11-21T04:34:33.957269+00:00",
+  "cache_only": 4,
+  "candidate_fixtures": 140,
+  "captured_at": "2026-11-21T07:48:43.487516+00:00",
   "date": "2026-11-21",
-  "deferred_fixtures": 161,
+  "deferred_fixtures": 135,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 3,
   "match_detail": {
-    "bookmakers": 10,
+    "bookmakers": 20,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 30,
-    "markets": 6,
-    "named_rows": 30,
+    "fixtures": 2,
+    "market_rows": 73,
+    "markets": 9,
+    "named_rows": 73,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": true,
+  "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 3,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 57.99999999999999,
@@ -82,10 +92,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 87.0,
+      "away": "PADERBORN",
+      "date": "2026-11-21",
+      "home": "LEVERKUSEN",
+      "league": "DE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
     }
   ],
-  "requests": 14,
-  "rows": 3,
+  "requests": 8,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }

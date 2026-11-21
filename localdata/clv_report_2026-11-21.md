@@ -3,13 +3,13 @@
 ## Overall
 
 - total unique picks: 1464
-- picks with at least two prices: 1301
+- picks with at least two prices: 1307
 - average raw odds delta: 0.000105
-- average implied-probability delta: -0.000244
-- beat-later-price rate: 0.047656
-- beat-later-price sample: 1301
+- average implied-probability delta: -0.000243
+- beat-later-price rate: 0.047437
+- beat-later-price sample: 1307
 - unmatched picks: 148
-- picks with fewer than two snapshots: 17
+- picks with fewer than two snapshots: 11
 
 ## By rule
 
@@ -38,7 +38,7 @@
 - `pfc_5a9d3d3426ee7a4e63461d75`: n=3, two_prices=2, avg_raw=-0.0298, avg_ip=0.018204, beat_rate=0.5
 - `pfc_642ac9053223500b638e3451`: n=4, two_prices=4, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_69dd4c8623d4d22d840da318`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
-- `pfc_6e307ecea6710c78870d27d2`: n=39, two_prices=23, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
+- `pfc_6e307ecea6710c78870d27d2`: n=39, two_prices=29, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_73b036a8ee8dd5a4dea48134`: n=47, two_prices=46, avg_raw=0.004783, avg_ip=-0.001058, beat_rate=0.021739
 - `pfc_761600158cf919ff30691f34`: n=6, two_prices=5, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_7e79a7652db874e451b269cb`: n=2, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
@@ -66,10 +66,10 @@
 
 ## By bucket
 
-- `CAUTION`: n=253, two_prices=245, avg_raw=-0.000571, avg_ip=0.00025, beat_rate=0.089796
+- `CAUTION`: n=253, two_prices=250, avg_raw=-0.000559, avg_ip=0.000245, beat_rate=0.088
 - `CERTIFIED_CLEAN`: n=51, two_prices=51, avg_raw=-0.000818, avg_ip=0.000442, beat_rate=0.019608
 - `SKIPPED_VETO`: n=873, two_prices=852, avg_raw=0.000385, avg_ip=-0.000409, beat_rate=0.034038
 - `WATCHLIST_NO_ODDS`: n=117, two_prices=4, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_SUSPECT_PRICE`: n=116, two_prices=96, avg_raw=-0.001667, avg_ip=0.000155, beat_rate=0.09375
-- `WATCHLIST_UNCORROBORATED_PRICE`: n=31, two_prices=30, avg_raw=0.005, avg_ip=-0.002275, beat_rate=0.033333
+- `WATCHLIST_UNCORROBORATED_PRICE`: n=31, two_prices=31, avg_raw=0.004839, avg_ip=-0.002201, beat_rate=0.032258
 - `WATCHLIST_UNKNOWN_CTX`: n=23, two_prices=23, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
