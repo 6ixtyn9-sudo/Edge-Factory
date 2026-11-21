@@ -1,71 +1,11 @@
 {
   "added": 0,
-  "attempted": 8,
-  "attempted_fixtures": [
-    {
-      "away": "SC Paderborn 07",
-      "date": "2026-11-21",
-      "home": "Bayer 04 Leverkusen",
-      "kickoff": "2026-11-21T14:30:00Z",
-      "league": "Bundesliga"
-    },
-    {
-      "away": "Cagliari",
-      "date": "2026-11-21",
-      "home": "Como",
-      "kickoff": "2026-11-21T14:00:00Z",
-      "league": "Serie A"
-    },
-    {
-      "away": "Torino",
-      "date": "2026-11-21",
-      "home": "SSC Napoli",
-      "kickoff": "2026-11-21T19:45:00Z",
-      "league": "Serie A"
-    },
-    {
-      "away": "Coritiba",
-      "date": "2026-11-21",
-      "home": "Bahia",
-      "kickoff": "2026-11-21T20:30:00Z",
-      "league": "Brasileir\u00e3o Serie A"
-    },
-    {
-      "away": "AEK Athens",
-      "date": "2026-11-21",
-      "home": "Kalamata",
-      "kickoff": "2026-11-21T17:30:00Z",
-      "league": "Super League"
-    },
-    {
-      "away": "Rangers",
-      "date": "2026-11-21",
-      "home": "Motherwell",
-      "kickoff": "2026-11-21T20:00:00Z",
-      "league": "Scottish Premiership"
-    },
-    {
-      "away": "Arsenal",
-      "date": "2026-11-21",
-      "home": "Newcastle United",
-      "kickoff": "2026-11-21T17:30:00Z",
-      "league": "Premier League"
-    },
-    {
-      "away": "Fenerbah\u00e7e",
-      "date": "2026-11-21",
-      "home": "Kocaelispor",
-      "kickoff": "2026-11-21T16:00:00Z",
-      "league": "Trendyol Super Lig"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 181,
-  "captured_at": "2026-11-20T23:07:28+00:00",
+  "captured_at": "2026-11-21T02:20:45+00:00",
   "date": "2026-11-21",
-  "due_reasons": {
-    "first_at": 3,
-    "scope_at": 5
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -83,7 +23,7 @@
   "schema": 1,
   "skip_reasons": {
     "priced": 48,
-    "retry_cooldown": 125
+    "retry_cooldown": 133
   },
   "skipped": [
     "GENK|LA LOUVIERE (retry cooldown (6h after failed attempt))",
@@ -138,6 +78,7 @@
     "Tenerife|Mallorca (priced)",
     "Ventforet Kofu|Vanraure Hachinohe (retry cooldown (6h after failed attempt))",
     "Spakenburg|ROHDA Raalte (retry cooldown (6h after failed attempt))",
+    "Bayer 04 Leverkusen|SC Paderborn 07 (retry cooldown (6h after failed attempt))",
     "Sabadell|Granada (retry cooldown (6h after failed attempt))",
     "Arbroath|Stenhousemuir (retry cooldown (6h after failed attempt))",
     "BARROW|CARLISLE (retry cooldown (6h after failed attempt))",
@@ -166,6 +107,7 @@
     "YOUNG BOYS|THUN (retry cooldown (6h after failed attempt))",
     "Chester|Macclesfield (retry cooldown (6h after failed attempt))",
     "Univ. Concepci\u00f3n|\u00d1ublense (retry cooldown (6h after failed attempt))",
+    "Como|Cagliari (retry cooldown (6h after failed attempt))",
     "La Roche|Concarneau (retry cooldown (6h after failed attempt))",
     "Billericay Town|Slough Town (retry cooldown (6h after failed attempt))",
     "Gangwon|Daejeon Citizen (priced)",
@@ -188,10 +130,8 @@
     "Liverpool W|Chelsea W (retry cooldown (6h after failed attempt))",
     "MANCHESTER CITY|FULHAM (retry cooldown (6h after failed attempt))",
     "GAMBA OSAKA|OKAYAMA (priced)",
-    "HAM KAM|FREDRIKSTAD (priced)",
     "KIDDERMINSTER|FYLDE (retry cooldown (6h after failed attempt))",
     "Zeljeznicar|Borac Banja Luka (retry cooldown (6h after failed attempt))",
-    "CHESTER|MACCLESFIELD (retry cooldown (6h after failed attempt))",
     "OLIMPIJA L.|NK RADOMLJE (retry cooldown (6h after failed attempt))",
     "STRANREAR|ELGIN (retry cooldown (6h after failed attempt))",
     "TRISTAN SUAREZ|GIMNASIA Y TIRO (retry cooldown (6h after failed attempt))",
@@ -202,7 +142,6 @@
     "HEREFORD|DARLINGTON (retry cooldown (6h after failed attempt))",
     "LUDOGOREST II|MAREK (retry cooldown (6h after failed attempt))",
     "RAITH ROVERS|PARTICK THISTLE (retry cooldown (6h after failed attempt))",
-    "SHINNIK YAROSLAVL|NEFTEKHIMIK (retry cooldown (6h after failed attempt))",
     "SOUTHPORT|BRACKLEY (retry cooldown (6h after failed attempt))",
     "TRENCIN|PODBREZOVA (retry cooldown (6h after failed attempt))",
     "UJPEST|KISVARDA (retry cooldown (6h after failed attempt))",
@@ -214,22 +153,26 @@
     "Barendrecht|Kloetinge (retry cooldown (6h after failed attempt))",
     "EINTRACHT FRANK|HOFFENHEIM (priced)",
     "MIDDLESBROUGH|BRISTOL CITY (retry cooldown (6h after failed attempt))",
+    "SSC Napoli|Torino (retry cooldown (6h after failed attempt))",
     "ARBROATH|STENHOUSEMUIR (retry cooldown (6h after failed attempt))",
     "GATESHEAD|HARTLEPOOL (retry cooldown (6h after failed attempt))",
     "MERANI|SHUKURA (retry cooldown (6h after failed attempt))",
     "CLYDE|STIRLING ALBION (retry cooldown (6h after failed attempt))",
     "CS Sfaxien|JS Omrane (retry cooldown (6h after failed attempt))",
+    "Bahia|Coritiba (retry cooldown (6h after failed attempt))",
+    "SHINNIK YAROSLAVL|NEFTEKHIMIK (retry cooldown (6h after failed attempt))",
     "V\u00e5lerenga IF|IK Start (priced)",
     "Tottenham Hotspur|Ipswich Town (retry cooldown (6h after failed attempt))",
     "Mlad\u00e1 Boleslav|FC Zl\u00edn (retry cooldown (6h after failed attempt))",
     "ATLETICO LISB.|CASA PIA (retry cooldown (6h after failed attempt))",
-    "LAVAL|MONTPELLIER (retry cooldown (6h after failed attempt))",
     "MIAMI FC|COLUMBUS (priced)",
-    "SCHALKE 04|STUTTGART (priced)",
-    "TENERIFE|MALLORCA (priced)",
     "RIVERS UNITED|NIGER TORNADOES (retry cooldown (6h after failed attempt))",
+    "Kalamata|AEK Athens (retry cooldown (6h after failed attempt))",
+    "Motherwell|Rangers (retry cooldown (6h after failed attempt))",
+    "Newcastle United|Arsenal (retry cooldown (6h after failed attempt))",
     "NICE|PARIS SG (retry cooldown (6h after failed attempt))",
     "Campobasso FC|Vis Pesaro (retry cooldown (6h after failed attempt))",
+    "Kocaelispor|Fenerbah\u00e7e (retry cooldown (6h after failed attempt))",
     "VfL Wolfsburg|Holstein Kiel (priced)",
     "Grimsby Town|Rotherham United (retry cooldown (6h after failed attempt))",
     "ANNAN|FORFAR (retry cooldown (6h after failed attempt))",
@@ -241,9 +184,14 @@
     "FATIH KARAGUMRUK|BOLUSPOR (retry cooldown (6h after failed attempt))",
     "RUBIN|ZENIT (priced)",
     "UNION BERLIN|RB LEIPZIG (priced)",
+    "HAM KAM|FREDRIKSTAD (priced)",
+    "SCHALKE 04|STUTTGART (priced)",
+    "CHESTER|MACCLESFIELD (retry cooldown (6h after failed attempt))",
     "GOMEL|BATE BORISOV (retry cooldown (6h after failed attempt))",
+    "LAVAL|MONTPELLIER (retry cooldown (6h after failed attempt))",
     "ASCOLI|VICENZA (priced)",
     "CHARLEROI|ST TRUIDEN (retry cooldown (6h after failed attempt))",
+    "TENERIFE|MALLORCA (priced)",
     "BRADFORD|DONCASTER (retry cooldown (6h after failed attempt))",
     "BOLTON|PORTSMOUTH (retry cooldown (6h after failed attempt))",
     "CATANZARO|PALERMO (retry cooldown (6h after failed attempt))",
@@ -261,24 +209,6 @@
     "BRISBANE ROAR|SYDNEY (priced)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Bayer 04 Leverkusen vs SC Paderborn 07 (league not covered: Bundesliga)",
-    "Como vs Cagliari (league not covered: Serie A)",
-    "SSC Napoli vs Torino (league not covered: Serie A)",
-    "Bahia vs Coritiba (league not covered: Brasileir\u00e3o Serie A)",
-    "Kalamata vs AEK Athens (league not covered: Super League)",
-    "Motherwell vs Rangers (league not covered: Scottish Premiership)",
-    "Newcastle United vs Arsenal (league not covered: Premier League)",
-    "Kocaelispor vs Fenerbah\u00e7e (league not covered: Trendyol Super Lig)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Brasileir\u00e3o Serie A": 1,
-    "league not covered: Bundesliga": 1,
-    "league not covered: Premier League": 1,
-    "league not covered: Scottish Premiership": 1,
-    "league not covered: Serie A": 2,
-    "league not covered: Super League": 1,
-    "league not covered: Trendyol Super Lig": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

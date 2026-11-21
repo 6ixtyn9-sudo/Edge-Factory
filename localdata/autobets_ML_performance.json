@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 59.756853753548,
   "paper_multiple": 0.59756853753548,
-  "paper_committed_units": 0.224325,
-  "paper_free_units": 59.532528753548,
+  "paper_committed_units": 0.410732,
+  "paper_free_units": 59.346121753548,
   "settled_stake_units": 66.484213,
   "receipt_days": 19,
-  "decision_receipts": 162,
+  "decision_receipts": 164,
   "bet_days": 12,
   "no_bet_days": 7,
   "missed_freeze_days": 0,
@@ -17,9 +17,9 @@
   "wins": 9,
   "losses": 53,
   "hit_rate": 0.14516129032258066,
-  "pending_accas": 1,
+  "pending_accas": 2,
   "superseded_tickets": 1,
-  "unresolved_result_legs": 3,
+  "unresolved_result_legs": 5,
   "resolved_result_legs": 85,
   "profit_units": -40.243146246452,
   "roi": -0.6053037921416322,
@@ -20466,6 +20466,280 @@
       "decision_id": "20261120T230341411183Z",
       "captured_at": "2026-11-20T23:03:41.411183+00:00",
       "frozen_at": "2026-11-20T23:04:19.296180+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 16.6155,
+          "stake_units": 0.186407,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "1edca8fb6a74517a57a2f7f963e3eaa3371e6a6c1852b9c2466229f7460b30f7",
+                "fixtures": 130,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.208194138525,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.16759336867370445,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.12578616352201258,
+                "required_source_probability": 0.12578616352201258,
+                "source_probability": 0.16304076019004748,
+                "status": "eligible",
+                "wins": 33
+              },
+              "away": "CELTA VIGO",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7656914228557139
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.16304076019004748
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.07126781695423856
+                ]
+              ],
+              "base_probability": 0.16304076019004748,
+              "book": "1xBet",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "667a2dee032a6103544038545e45c5dfe061a395459b9ed76520d6be630d5146",
+              "context": {
+                "as_of": "2026-11-21T02:04:53.644429+00:00",
+                "country": null,
+                "country_sources": [],
+                "form_as_of_exclusive": "2026-11-21",
+                "form_values": {
+                  "away_form_btts": 0.4,
+                  "away_form_ga": 0.9,
+                  "away_form_gf": 1.6,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.7,
+                  "away_form_over35": 0.2,
+                  "home_form_btts": 0.7,
+                  "home_form_ga": 1.2,
+                  "home_form_gf": 2.8,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.9,
+                  "home_form_over35": 0.5
+                },
+                "league": "es1",
+                "parent_confidence": 0.76,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_4c5d026eb71411fc8d3e609a",
+              "date": "2026-11-21",
+              "fixture": [
+                "2026-11-21",
+                "realmadrid",
+                "celtavigo"
+              ],
+              "forecast_model_key": "5d0b7f588668b1a2edec798d69fffdb5d99725764a5737a90dad0bff08ab5c09",
+              "home": "REAL MADRID",
+              "kickoff_utc": "2026-11-21T20:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_4c5d026eb71411fc8d3e609a",
+                "fixture": [
+                  "2026-11-21",
+                  "realmadrid",
+                  "celtavigo",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "prosoccer",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.07125000000000001,
+                  "forecast_1x2_away_spread": 0.039999999999999994,
+                  "forecast_1x2_draw_mean": 0.163,
+                  "forecast_1x2_draw_spread": 0.07800000000000001,
+                  "forecast_1x2_home_mean": 0.7655000000000001,
+                  "forecast_1x2_home_spread": 0.10200000000000009,
+                  "forecast_btts_yes_mean": 0.478,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8895000000000001,
+                  "forecast_ou_1.5_over_spread": 0.06099999999999994,
+                  "forecast_ou_2.5_over_mean": 0.669,
+                  "forecast_ou_2.5_over_spread": 0.16000000000000003,
+                  "forecast_ou_3.5_over_mean": 0.469,
+                  "forecast_ou_3.5_over_spread": 0.02200000000000002,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.95,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 2.18,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "51ebcf3c4cf8765f5558e847a30af42770c9097b9d3ff719815e807065f30e86",
+              "odds": 7.95,
+              "pre_normalized_probability": 0.16759336867370445,
+              "price_age_seconds_at_decision": 12553.282748,
+              "price_age_seconds_at_freeze": 12609.117604,
+              "price_at": "2026-11-20T22:35:40.361681+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.16759336867370445,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            },
+            {
+              "admission": {
+                "cell": "19d8b8e028438813ab3d75ac425acb5a79f64a1996916f6d1e96b655143cbc15",
+                "evidence_sha256": "1edca8fb6a74517a57a2f7f963e3eaa3371e6a6c1852b9c2466229f7460b30f7",
+                "fixtures": 78,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.478768556358,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.478768556358,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.47846889952153115,
+                "required_source_probability": 0.47846889952153115,
+                "source_probability": 0.49026315789473685,
+                "status": "eligible",
+                "wins": 43
+              },
+              "away": "VICENZA",
+              "base_partition": [
+                [
+                  "match_over_25",
+                  "over",
+                  0.5097368421052632
+                ],
+                [
+                  "match_under_25",
+                  "under",
+                  0.49026315789473685
+                ]
+              ],
+              "base_probability": 0.49026315789473685,
+              "book": "1xBet",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "f895a1c8ee81ee2c3d0bc3da3d8db9a029a0877d8e0cc18d4ff56d99749c3a60",
+              "context": {
+                "as_of": "2026-11-21T02:04:53.644429+00:00",
+                "country": "Italy",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-21",
+                "form_values": {
+                  "away_form_btts": 0.8,
+                  "away_form_ga": 2.1,
+                  "away_form_gf": 1.2,
+                  "away_form_over15": 1.0,
+                  "away_form_over25": 0.8,
+                  "away_form_over35": 0.4,
+                  "home_form_btts": 0.5,
+                  "home_form_ga": 0.6,
+                  "home_form_gf": 1.5,
+                  "home_form_over15": 0.6,
+                  "home_form_over25": 0.2,
+                  "home_form_over35": 0.2
+                },
+                "league": "it2",
+                "parent_confidence": 0.515,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_6e307ecea6710c78870d27d2",
+              "date": "2026-11-21",
+              "fixture": [
+                "2026-11-21",
+                "ascoli",
+                "vicenza"
+              ],
+              "forecast_model_key": "5d0b7f588668b1a2edec798d69fffdb5d99725764a5737a90dad0bff08ab5c09",
+              "home": "ASCOLI",
+              "kickoff_utc": "2026-11-21T14:00:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_6e307ecea6710c78870d27d2",
+                "fixture": [
+                  "2026-11-21",
+                  "ascoli",
+                  "vicenza",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "prosoccer",
+                  "scoutingstats",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.21175947517333582,
+                  "forecast_1x2_away_spread": 0.04000000000000001,
+                  "forecast_1x2_draw_mean": 0.2721621117433075,
+                  "forecast_1x2_draw_spread": 0.02999999999999997,
+                  "forecast_1x2_home_mean": 0.5160784130833567,
+                  "forecast_1x2_home_spread": 0.07000000000000006,
+                  "forecast_btts_yes_mean": 0.5466666666666666,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.7662835249042146,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.5097368421052632,
+                  "forecast_ou_2.5_over_spread": 0.059473684210526345,
+                  "forecast_ou_3.5_over_mean": 0.3373493975903614,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "5b096fb6155d4959a473bddb805dfbdb600a4f3abec75d3f2e598730e4dac415",
+              "odds": 2.09,
+              "pre_normalized_probability": 0.5052805372083572,
+              "price_age_seconds_at_decision": 12555.472399,
+              "price_age_seconds_at_freeze": 12611.307255,
+              "price_at": "2026-11-20T22:35:38.172030+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.5052805372083572,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "under"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261121T020453644429Z",
+      "captured_at": "2026-11-21T02:04:53.644429+00:00",
+      "frozen_at": "2026-11-21T02:05:49.479285+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261121T021553132483Z",
+      "captured_at": "2026-11-21T02:15:53.132483+00:00",
+      "frozen_at": "2026-11-21T02:16:46.596354+00:00"
     }
   ],
   "latest_learning": {
@@ -21310,7 +21584,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-20T23:03:41.411183+00:00",
+    "as_of": "2026-11-21T02:15:53.132483+00:00",
     "context_model": {
       "coef": [
         0.0002710056542161876,
@@ -27231,7 +27505,7 @@
     "fixtures": 166,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "52d65680e082d0eccfbfc3243bb967e8ef4612ab4ee5c442a9f723d122aec687",
+    "model_key": "d5bc168f7735f6890c74648765785723732f2022ab4503035de9570f985509a0",
     "observations": 560,
     "parameters": 1532,
     "power": 1.0,

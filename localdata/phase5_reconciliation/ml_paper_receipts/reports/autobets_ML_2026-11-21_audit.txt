@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-21
 ==============================================================
-CURRENT PAPER BANK (all dates): 59.757 units · free 59.533 / reserved 0.224
-1 paper accas · 1 ticket publications · 1 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 59.757 units · free 59.346 / reserved 0.411
+2 paper accas · 2 ticket publications · 2 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -12,6 +12,14 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    PUEBLA vs ATLETICO SAN LUIS · KICKOFF 2026-11-21 03:00 SAST
       Match Under 2.5 Goals @2.180 · ML 47.0% · SKIPPED_VETO
+
+[PAPER ACCA #2] @16.616 — 0.186407 paper units — 1xBet
+   Published 2026-11-21 04:05:49 SAST · reference P3/1
+   REAL MADRID vs CELTA VIGO · KICKOFF 2026-11-21 22:00 SAST
+      Draw (1X2) @7.950 · ML 16.8% · SKIPPED_VETO
+
+   ASCOLI vs VICENZA · KICKOFF 2026-11-21 16:00 SAST
+      Match Under 2.5 Goals @2.090 · ML 50.5% · SKIPPED_VETO
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -51,6 +59,43 @@ P2 · 2026-11-21 01:04:19 SAST · No additional tickets
    Coverage: candidate count: 4558; candidate fixtures: 31; slate rows: 318; status: inputs_available
    Rejections: data quality: 23; fixture date unproven: 2; outside rolling window or unproven kickoff: 171; quote identity unproven: 115; quote or probability unavailable: 3284
    Exact opportunity replay: 1 acca(s) not republished; 0.223483 units left idle, no refill
+   Learning: fitted_source_market_context
+
+P3 · 2026-11-21 04:05:49 SAST · ACCA #2
+   Receipt 20261121T020453644429Z · status paper_accas
+   Frozen at 2026-11-21T02:05:49.479285+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 ede57ac5d63fa77b96efa2716fd27eae4cf0411d9121d5e14488bb4b800e1a36
+   Decision window 2026-11-21T02:04:53.644429+00:00 → 2026-11-22T02:04:53.644429+00:00
+   Bank at decision: 59.756854 paper units
+   Available at decision: 59.532529 paper units
+   Reserved at decision: 0.224325 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.987842 units per canonical fixture
+   Reservation 0.186407 → 0.186407 units · released/idle 0.000000; no refill
+   2026-11-21 ascoli vs vicenza: new 0.186407 + prior open 0.000000 · unused new budget 2.801435 units
+   2026-11-21 realmadrid vs celtavigo: new 0.186407 + prior open 0.224325 · unused new budget 2.577110 units
+   Coverage: candidate count: 6755; candidate fixtures: 32; slate rows: 422; status: inputs_available
+   Rejections: data quality: 42; fixture date unproven: 6; outside rolling window or unproven kickoff: 126; quote identity unproven: 222; quote or probability unavailable: 9664
+   ACCA #2 / leg 1: source forecast 16.3% · gap +0.5 pp · quote age 3.49h at decision
+      base 16.3% → adjusted 16.8% · learning move +0.5 pp · price break-even 12.6% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 16.8% → partition-normalized 16.8% · includes unquoted outcomes; not proof of calibration
+   ACCA #2 / leg 2: source forecast 49.0% · gap +1.5 pp · quote age 3.49h at decision
+      base 49.0% → adjusted 50.5% · learning move +1.5 pp · price break-even 47.8% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 50.5% → partition-normalized 50.5% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_context
+
+P4 · 2026-11-21 04:16:46 SAST · No additional tickets
+   Receipt 20261121T021553132483Z · status no_paper_bet
+   Frozen at 2026-11-21T02:16:46.596354+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 b9abaafab568c4c34989868a60b930cab97934cff8e2c807a973b5c25ebf7c26
+   Decision window 2026-11-21T02:15:53.132483+00:00 → 2026-11-22T02:15:53.132483+00:00
+   Bank at decision: 59.756854 paper units
+   Available at decision: 59.346122 paper units
+   Reserved at decision: 0.410732 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.987842 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 6669; candidate fixtures: 32; slate rows: 298; status: inputs_available
+   Rejections: data quality: 23; fixture date unproven: 3; outside rolling window or unproven kickoff: 150; quote identity unproven: 115; quote or probability unavailable: 4719
+   Exact opportunity replay: 1 acca(s) not republished; 0.185824 units left idle, no refill
    Learning: fitted_source_market_context
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
