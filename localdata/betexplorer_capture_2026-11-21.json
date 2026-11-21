@@ -1,5 +1,5 @@
 {
-  "attempted": 15,
+  "attempted": 3,
   "attempted_fixtures": [
     {
       "avg_p": 77.0,
@@ -12,134 +12,14 @@
       "w_score": 0.5848
     },
     {
-      "avg_p": 77.0,
-      "away": "TOULOUSE",
+      "avg_p": 60.77728894731899,
+      "away": "Rangers",
       "date": "2026-11-21",
-      "home": "LENS",
-      "league": "FR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 76.0,
-      "away": "CELTA VIGO",
-      "date": "2026-11-21",
-      "home": "REAL MADRID",
-      "league": "ES1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 75.0,
-      "away": "SAINT ETIENNE",
-      "date": "2026-11-21",
-      "home": "REIMS",
-      "league": "FR2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 73.0,
-      "away": "BREST",
-      "date": "2026-11-21",
-      "home": "STRASBOURG",
-      "league": "FR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 70.0,
-      "away": "AUXERRE",
-      "date": "2026-11-21",
-      "home": "MONACO",
-      "league": "FR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5523
-    },
-    {
-      "avg_p": 69.5,
-      "away": "CORITIBA",
-      "date": "2026-11-21",
-      "home": "BAHIA",
-      "league": "BR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5523
-    },
-    {
-      "avg_p": 69.5,
-      "away": "TORINO",
-      "date": "2026-11-21",
-      "home": "NAPOLI",
-      "league": "IT1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5523
-    },
-    {
-      "avg_p": 68.87822134757755,
-      "away": "Grasshopper",
-      "date": "2026-11-21",
-      "home": "Lugano",
-      "league": "Super League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 67.43972455732428,
-      "away": "Ballymena United",
-      "date": "2026-11-21",
-      "home": "Larne",
-      "league": "Premiership",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 67.26400454201362,
-      "away": "Eldense",
-      "date": "2026-11-21",
-      "home": "Castell\u00f3n",
-      "league": "La Liga 2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 65.12620571101137,
-      "away": "Auxerre",
-      "date": "2026-11-21",
-      "home": "Monaco",
-      "league": "Ligue 1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 60.784014086721385,
-      "away": "AEK Athens",
-      "date": "2026-11-21",
-      "home": "Kalamata",
-      "league": "Super League",
+      "home": "Motherwell",
+      "league": "Scottish Premiership",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.6649
-    },
-    {
-      "avg_p": 81.84095614530396,
-      "away": "Excelsior",
-      "date": "2026-11-21",
-      "home": "Feyenoord",
-      "league": "Eredivisie",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
+      "w_score": 0.7021
     },
     {
       "avg_p": 62.82399924826161,
@@ -152,20 +32,22 @@
       "w_score": 0.7021
     }
   ],
-  "be_429": 1,
-  "be_cached": 3,
-  "be_cooling_down": false,
+  "be_429": 2,
+  "be_cached": 2,
+  "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 3,
-  "candidate_fixtures": 23,
-  "captured_at": "2026-11-21T16:48:05.125129+00:00",
+  "cache_only": 2,
+  "candidate_fixtures": 4,
+  "captured_at": "2026-11-21T19:42:54.908442+00:00",
   "date": "2026-11-21",
-  "deferred_fixtures": 8,
-  "errors": [],
-  "fixtures_with_rows": 14,
+  "deferred_fixtures": 1,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 55,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 232,
     "challenge_pages": 0,
@@ -181,7 +63,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 12,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 77.0,
@@ -194,126 +76,6 @@
       "w_score": 0.5848
     },
     {
-      "avg_p": 77.0,
-      "away": "TOULOUSE",
-      "date": "2026-11-21",
-      "home": "LENS",
-      "league": "FR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 76.0,
-      "away": "CELTA VIGO",
-      "date": "2026-11-21",
-      "home": "REAL MADRID",
-      "league": "ES1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 73.0,
-      "away": "BREST",
-      "date": "2026-11-21",
-      "home": "STRASBOURG",
-      "league": "FR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
-      "avg_p": 70.0,
-      "away": "AUXERRE",
-      "date": "2026-11-21",
-      "home": "MONACO",
-      "league": "FR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5523
-    },
-    {
-      "avg_p": 69.5,
-      "away": "CORITIBA",
-      "date": "2026-11-21",
-      "home": "BAHIA",
-      "league": "BR1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5523
-    },
-    {
-      "avg_p": 69.5,
-      "away": "TORINO",
-      "date": "2026-11-21",
-      "home": "NAPOLI",
-      "league": "IT1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5523
-    },
-    {
-      "avg_p": 68.87822134757755,
-      "away": "Grasshopper",
-      "date": "2026-11-21",
-      "home": "Lugano",
-      "league": "Super League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 67.43972455732428,
-      "away": "Ballymena United",
-      "date": "2026-11-21",
-      "home": "Larne",
-      "league": "Premiership",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 67.26400454201362,
-      "away": "Eldense",
-      "date": "2026-11-21",
-      "home": "Castell\u00f3n",
-      "league": "La Liga 2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 65.12620571101137,
-      "away": "Auxerre",
-      "date": "2026-11-21",
-      "home": "Monaco",
-      "league": "Ligue 1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
-      "avg_p": 60.784014086721385,
-      "away": "AEK Athens",
-      "date": "2026-11-21",
-      "home": "Kalamata",
-      "league": "Super League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6649
-    },
-    {
-      "avg_p": 81.84095614530396,
-      "away": "Excelsior",
-      "date": "2026-11-21",
-      "home": "Feyenoord",
-      "league": "Eredivisie",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7092
-    },
-    {
       "avg_p": 62.82399924826161,
       "away": "Coritiba",
       "date": "2026-11-21",
@@ -324,8 +86,8 @@
       "w_score": 0.7021
     }
   ],
-  "requests": 81,
-  "rows": 42,
+  "requests": 2,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
