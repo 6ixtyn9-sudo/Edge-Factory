@@ -2,23 +2,23 @@
 
 ## Overall
 
-- total unique picks: 1464
+- total unique picks: 1467
 - picks with at least two prices: 1307
 - average raw odds delta: 0.000105
 - average implied-probability delta: -0.000243
 - beat-later-price rate: 0.047437
 - beat-later-price sample: 1307
 - unmatched picks: 148
-- picks with fewer than two snapshots: 11
+- picks with fewer than two snapshots: 14
 
 ## By rule
 
 - `pfc_0187397f26c1f84f6c3a9883`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_0ad08cd1b2e75a2c9051189e`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_0b290b623e2a54ea7df3006c`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
-- `pfc_0bce35ee539ba203bd9da447`: n=10, two_prices=10, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
+- `pfc_0bce35ee539ba203bd9da447`: n=12, two_prices=10, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_0d72f28c85762f31e35144a9`: n=55, two_prices=33, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
-- `pfc_12c05e100bfd7667f5977355`: n=29, two_prices=28, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
+- `pfc_12c05e100bfd7667f5977355`: n=30, two_prices=28, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_142b7b762e570fa302940d6e`: n=5, two_prices=5, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_1607fec83282d02c5254c2bf`: n=49, two_prices=19, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_226efd387e217a9d58a11f79`: n=18, two_prices=17, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
@@ -68,7 +68,7 @@
 
 - `CAUTION`: n=253, two_prices=250, avg_raw=-0.000559, avg_ip=0.000245, beat_rate=0.088
 - `CERTIFIED_CLEAN`: n=51, two_prices=51, avg_raw=-0.000818, avg_ip=0.000442, beat_rate=0.019608
-- `SKIPPED_VETO`: n=873, two_prices=852, avg_raw=0.000385, avg_ip=-0.000409, beat_rate=0.034038
+- `SKIPPED_VETO`: n=876, two_prices=852, avg_raw=0.000385, avg_ip=-0.000409, beat_rate=0.034038
 - `WATCHLIST_NO_ODDS`: n=117, two_prices=4, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_SUSPECT_PRICE`: n=116, two_prices=96, avg_raw=-0.001667, avg_ip=0.000155, beat_rate=0.09375
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=31, two_prices=31, avg_raw=0.004839, avg_ip=-0.002201, beat_rate=0.032258

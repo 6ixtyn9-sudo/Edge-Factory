@@ -1,5 +1,5 @@
 {
-  "attempted": 5,
+  "attempted": 7,
   "attempted_fixtures": [
     {
       "avg_p": 65.0,
@@ -17,16 +17,6 @@
       "date": "2026-11-21",
       "home": "Borussia M'gladbach II",
       "league": "Germany Regionalliga - West",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
-      "avg_p": 57.99999999999999,
-      "away": "Sesvete",
-      "date": "2026-11-21",
-      "home": "Orijent 1919",
-      "league": "Croatia First NL",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
@@ -50,29 +40,59 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5848
+    },
+    {
+      "avg_p": 86.0,
+      "away": "EXCELSIOR",
+      "date": "2026-11-21",
+      "home": "FEYENOORD",
+      "league": "NL1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
+    },
+    {
+      "avg_p": 78.41352963101006,
+      "away": "Limavady United",
+      "date": "2026-11-21",
+      "home": "Linfield",
+      "league": "Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 81.84095614530396,
+      "away": "Excelsior",
+      "date": "2026-11-21",
+      "home": "Feyenoord",
+      "league": "Eredivisie",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7092
     }
   ],
   "be_429": 2,
-  "be_cached": 4,
+  "be_cached": 5,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 4,
-  "candidate_fixtures": 140,
-  "captured_at": "2026-11-21T07:48:43.487516+00:00",
+  "cache_only": 5,
+  "candidate_fixtures": 124,
+  "captured_at": "2026-11-21T10:39:53.199489+00:00",
   "date": "2026-11-21",
-  "deferred_fixtures": 135,
+  "deferred_fixtures": 117,
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 4,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 6,
   "match_detail": {
-    "bookmakers": 20,
+    "bookmakers": 40,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 73,
-    "markets": 9,
-    "named_rows": 73,
+    "fixtures": 4,
+    "market_rows": 123,
+    "markets": 16,
+    "named_rows": 123,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -81,18 +101,8 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
-    {
-      "avg_p": 57.99999999999999,
-      "away": "Sesvete",
-      "date": "2026-11-21",
-      "home": "Orijent 1919",
-      "league": "Croatia First NL",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
     {
       "avg_p": 87.0,
       "away": "PADERBORN",
@@ -102,10 +112,40 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5848
+    },
+    {
+      "avg_p": 86.0,
+      "away": "EXCELSIOR",
+      "date": "2026-11-21",
+      "home": "FEYENOORD",
+      "league": "NL1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
+    },
+    {
+      "avg_p": 78.41352963101006,
+      "away": "Limavady United",
+      "date": "2026-11-21",
+      "home": "Linfield",
+      "league": "Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
+    },
+    {
+      "avg_p": 81.84095614530396,
+      "away": "Excelsior",
+      "date": "2026-11-21",
+      "home": "Feyenoord",
+      "league": "Eredivisie",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7092
     }
   ],
-  "requests": 8,
-  "rows": 6,
+  "requests": 13,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }
