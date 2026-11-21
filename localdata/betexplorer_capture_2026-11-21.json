@@ -1,26 +1,6 @@
 {
-  "attempted": 7,
+  "attempted": 6,
   "attempted_fixtures": [
-    {
-      "avg_p": 65.0,
-      "away": "Kloetinge",
-      "date": "2026-11-21",
-      "home": "Barendrecht",
-      "league": "Netherlands Tweede Divisie",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
-      "avg_p": 59.0,
-      "away": "Bonner SC",
-      "date": "2026-11-21",
-      "home": "Borussia M'gladbach II",
-      "league": "Germany Regionalliga - West",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
     {
       "avg_p": 87.0,
       "away": "LA LOUVIERE",
@@ -32,16 +12,6 @@
       "w_score": 0.5848
     },
     {
-      "avg_p": 87.0,
-      "away": "PADERBORN",
-      "date": "2026-11-21",
-      "home": "LEVERKUSEN",
-      "league": "DE1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
       "avg_p": 86.0,
       "away": "EXCELSIOR",
       "date": "2026-11-21",
@@ -52,14 +22,24 @@
       "w_score": 0.5848
     },
     {
-      "avg_p": 78.41352963101006,
-      "away": "Limavady United",
+      "avg_p": 78.15027829313543,
+      "away": "FC Cajamarca",
       "date": "2026-11-21",
-      "home": "Linfield",
-      "league": "Premiership",
+      "home": "Alianza Lima",
+      "league": "Primera Division",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7351
+    },
+    {
+      "avg_p": 77.0,
+      "away": "NEA SALAMIS",
+      "date": "2026-11-21",
+      "home": "ARIS LIMASSOL",
+      "league": "CY1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
     },
     {
       "avg_p": 81.84095614530396,
@@ -70,29 +50,39 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7092
+    },
+    {
+      "avg_p": 78.41352963101006,
+      "away": "Limavady United",
+      "date": "2026-11-21",
+      "home": "Linfield",
+      "league": "Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
     }
   ],
   "be_429": 2,
-  "be_cached": 5,
+  "be_cached": 4,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 5,
-  "candidate_fixtures": 124,
-  "captured_at": "2026-11-21T10:39:53.199489+00:00",
+  "cache_only": 4,
+  "candidate_fixtures": 64,
+  "captured_at": "2026-11-21T13:41:45.081863+00:00",
   "date": "2026-11-21",
-  "deferred_fixtures": 117,
+  "deferred_fixtures": 58,
   "errors": [],
-  "fixtures_with_rows": 4,
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
   "market_requests": 6,
   "match_detail": {
-    "bookmakers": 40,
+    "bookmakers": 48,
     "challenge_pages": 0,
-    "fixtures": 4,
-    "market_rows": 123,
-    "markets": 16,
-    "named_rows": 123,
+    "fixtures": 6,
+    "market_rows": 146,
+    "markets": 23,
+    "named_rows": 146,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -104,16 +94,6 @@
   "network_attempted": 2,
   "quoted_fixtures": [
     {
-      "avg_p": 87.0,
-      "away": "PADERBORN",
-      "date": "2026-11-21",
-      "home": "LEVERKUSEN",
-      "league": "DE1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5848
-    },
-    {
       "avg_p": 86.0,
       "away": "EXCELSIOR",
       "date": "2026-11-21",
@@ -124,14 +104,24 @@
       "w_score": 0.5848
     },
     {
-      "avg_p": 78.41352963101006,
-      "away": "Limavady United",
+      "avg_p": 78.15027829313543,
+      "away": "FC Cajamarca",
       "date": "2026-11-21",
-      "home": "Linfield",
-      "league": "Premiership",
+      "home": "Alianza Lima",
+      "league": "Primera Division",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7351
+    },
+    {
+      "avg_p": 77.0,
+      "away": "NEA SALAMIS",
+      "date": "2026-11-21",
+      "home": "ARIS LIMASSOL",
+      "league": "CY1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5848
     },
     {
       "avg_p": 81.84095614530396,
@@ -142,10 +132,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7092
+    },
+    {
+      "avg_p": 78.41352963101006,
+      "away": "Limavady United",
+      "date": "2026-11-21",
+      "home": "Linfield",
+      "league": "Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7351
     }
   ],
   "requests": 13,
-  "rows": 12,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }

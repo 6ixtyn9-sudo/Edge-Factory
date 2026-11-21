@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 59.756853753548,
   "paper_multiple": 0.59756853753548,
-  "paper_committed_units": 0.6234999999999999,
-  "paper_free_units": 59.133353753548,
+  "paper_committed_units": 0.860171,
+  "paper_free_units": 58.896682753548,
   "settled_stake_units": 66.484213,
   "receipt_days": 19,
-  "decision_receipts": 170,
+  "decision_receipts": 172,
   "bet_days": 12,
   "no_bet_days": 7,
   "missed_freeze_days": 0,
@@ -17,9 +17,9 @@
   "wins": 9,
   "losses": 53,
   "hit_rate": 0.14516129032258066,
-  "pending_accas": 3,
+  "pending_accas": 5,
   "superseded_tickets": 1,
-  "unresolved_result_legs": 7,
+  "unresolved_result_legs": 11,
   "resolved_result_legs": 85,
   "profit_units": -40.243146246452,
   "roi": -0.6053037921416322,
@@ -21115,6 +21115,623 @@
       "decision_id": "20261121T111150394222Z",
       "captured_at": "2026-11-21T11:11:50.394222+00:00",
       "frozen_at": "2026-11-21T11:12:39.272056+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 89.7156,
+          "stake_units": 0.154766,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "1edca8fb6a74517a57a2f7f963e3eaa3371e6a6c1852b9c2466229f7460b30f7",
+                "fixtures": 130,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.208194138525,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.13877765677688722,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.07122507122507123,
+                "required_source_probability": 0.07122507122507123,
+                "source_probability": 0.1347894148341409,
+                "status": "eligible",
+                "wins": 33
+              },
+              "away": "Limavady United",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7841352963101006
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.1347894148341409
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.08107528885575849
+                ]
+              ],
+              "base_probability": 0.1347894148341409,
+              "book": "pinnacle",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "21d02846d171d7c4ce8a1891a223397e10539bdb4a603a5893450079e9a7d545",
+              "context": {
+                "as_of": "2026-11-21T14:01:25.399805+00:00",
+                "country": "Northern Ireland",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-21",
+                "form_values": {
+                  "away_form_btts": 0.8,
+                  "away_form_ga": 1.9,
+                  "away_form_gf": 1.6,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.5,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 0.7,
+                  "home_form_gf": 2.0,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.6,
+                  "home_form_over35": 0.2
+                },
+                "league": "scotland premiership",
+                "parent_confidence": 0.7841352963101006,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+              "date": "2026-11-21",
+              "fixture": [
+                "2026-11-21",
+                "linfield",
+                "limavadyunited"
+              ],
+              "forecast_model_key": "1ece8d11ab54a3c26541b972ee3f9224bc8b51239b5d33a14c8af57d94aa19e2",
+              "home": "Linfield",
+              "kickoff_utc": "2026-11-21T15:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "fixture": [
+                  "2026-11-21",
+                  "linfield",
+                  "limavadyunited",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.08107528885575849,
+                  "forecast_1x2_away_spread": 0.03784942228848305,
+                  "forecast_1x2_draw_mean": 0.1347894148341409,
+                  "forecast_1x2_draw_spread": 0.05042117033171824,
+                  "forecast_1x2_home_mean": 0.7841352963101006,
+                  "forecast_1x2_home_spread": 0.0882705926202012,
+                  "forecast_btts_yes_mean": 0.42257217847769035,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8552631578947368,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.6880733944954129,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": null,
+                  "forecast_ou_3.5_over_spread": null,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "eee09166d0138013e190f8d785c2355b2e629fe97a9a70a6d25875c422ac92c5",
+              "odds": 14.04,
+              "pre_normalized_probability": 0.13877765677688722,
+              "price_age_seconds_at_decision": 12118.17704,
+              "price_age_seconds_at_freeze": 12168.347975,
+              "price_at": "2026-11-21T10:39:27.222765+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Limavady United FC",
+                  "bookmaker": "pinnacle",
+                  "bookmaker_market_id": "line/29/2259/1640459857/3812184137/0/moneyline",
+                  "captured_at": "2026-11-21T10:39:27.222765+00:00",
+                  "date": "2026-11-21",
+                  "home": "Linfield FC",
+                  "kickoff": "2026-11-21T15:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "14.04",
+                  "outcome_key": "102",
+                  "provider_changed_at": "2026-11-21T08:45:01.446Z",
+                  "provider_fixture_id": "id1000020072346430",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-21T08:45:01.053Z",
+                  "schema_version": "4",
+                  "selection": "draw",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "187335421ded1e40cd24e47f1b8f561452697bfe0b243f202613b966cc005e99",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.13877765677688722,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            },
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "1edca8fb6a74517a57a2f7f963e3eaa3371e6a6c1852b9c2466229f7460b30f7",
+                "fixtures": 130,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.208194138525,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.18887773657453957,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.1564945226917058,
+                "required_source_probability": 0.1564945226917058,
+                "source_probability": 0.18227257580806397,
+                "status": "eligible",
+                "wins": 33
+              },
+              "away": "LOKOMOTIV SOFIA",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7100966344551816
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.18227257580806397
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.10763078973675443
+                ]
+              ],
+              "base_probability": 0.18227257580806397,
+              "book": "Pinnacle",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "2884a8c00985d4f44d26fe4212302d8cc932c0f0e9de0f911e137525f07e6000",
+              "context": {
+                "as_of": "2026-11-21T14:01:25.399805+00:00",
+                "country": null,
+                "country_sources": [],
+                "form_as_of_exclusive": null,
+                "form_values": {},
+                "league": "bulgaria first league",
+                "parent_confidence": 0.685,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_6e307ecea6710c78870d27d2",
+              "date": "2026-11-22",
+              "fixture": [
+                "2026-11-22",
+                "levskisofia",
+                "lokomotivsofia"
+              ],
+              "forecast_model_key": "1ece8d11ab54a3c26541b972ee3f9224bc8b51239b5d33a14c8af57d94aa19e2",
+              "home": "LEVSKI SOFIA",
+              "kickoff_utc": "2026-11-22T13:30:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_6e307ecea6710c78870d27d2",
+                "fixture": [
+                  "2026-11-22",
+                  "levskisofia",
+                  "lokomotivsofia",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "prosoccer",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.10766666666666667,
+                  "forecast_1x2_away_spread": 0.08,
+                  "forecast_1x2_draw_mean": 0.18233333333333332,
+                  "forecast_1x2_draw_spread": 0.09,
+                  "forecast_1x2_home_mean": 0.7103333333333333,
+                  "forecast_1x2_home_spread": 0.17000000000000004,
+                  "forecast_btts_yes_mean": 0.43799999999999994,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.795,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.596,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": 0.35200000000000004,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.7,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.98,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "1e27e2d4ad800881e73337a8f23415c46c1ad0ef8416d40e0fb8684584c785d4",
+              "odds": 6.39,
+              "pre_normalized_probability": 0.18887773657453957,
+              "price_age_seconds_at_decision": 42886.399805,
+              "price_age_seconds_at_freeze": 42936.57074,
+              "price_at": "2026-11-21T02:06:39+00:00",
+              "price_provenance": null,
+              "price_source": "pinnapi_odds",
+              "probability": 0.18887773657453957,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261121T140125399805Z",
+      "captured_at": "2026-11-21T14:01:25.399805+00:00",
+      "frozen_at": "2026-11-21T14:02:15.570740+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 68.60000000000001,
+          "stake_units": 0.081905,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "1edca8fb6a74517a57a2f7f963e3eaa3371e6a6c1852b9c2466229f7460b30f7",
+                "fixtures": 130,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.208194138525,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.14448459311262066,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.14285714285714285,
+                "required_source_probability": 0.14285714285714285,
+                "source_probability": 0.14134242709313266,
+                "status": "eligible",
+                "wins": 33
+              },
+              "away": "Preston North End",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7729012229539041
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.14134242709313266
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.0857563499529633
+                ]
+              ],
+              "base_probability": 0.14134242709313266,
+              "book": "tigergaming",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "6e521620f5f22b215c10691e128edbffb37ce007f1b89ba929374403a617175f",
+              "context": {
+                "as_of": "2026-11-21T14:12:13.056815+00:00",
+                "country": "England",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-21",
+                "form_values": {
+                  "away_form_btts": 0.5,
+                  "away_form_ga": 2.0,
+                  "away_form_gf": 0.8,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.5,
+                  "away_form_over35": 0.4,
+                  "home_form_btts": 0.7,
+                  "home_form_ga": 1.7,
+                  "home_form_gf": 2.5,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.8,
+                  "home_form_over35": 0.7
+                },
+                "league": "england championship",
+                "parent_confidence": 0.7729012229539041,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_12c05e100bfd7667f5977355",
+              "date": "2026-11-21",
+              "fixture": [
+                "2026-11-21",
+                "westhamunited",
+                "prestonnorthend"
+              ],
+              "forecast_model_key": "4ed8671c328be40d40cae96246d4797e1d245b47c112eadef5b0624a4192173b",
+              "home": "West Ham United",
+              "kickoff_utc": "2026-11-21T15:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_12c05e100bfd7667f5977355",
+                "fixture": [
+                  "2026-11-21",
+                  "westhamunited",
+                  "prestonnorthend",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.0857563499529633,
+                  "forecast_1x2_away_spread": 0.00048730009407337016,
+                  "forecast_1x2_draw_mean": 0.14134242709313266,
+                  "forecast_1x2_draw_spread": 0.006684854186265299,
+                  "forecast_1x2_home_mean": 0.7729012229539041,
+                  "forecast_1x2_home_spread": 0.006197554092191804,
+                  "forecast_btts_yes_mean": 0.506,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8488483146067416,
+                  "forecast_ou_1.5_over_spread": 0.012303370786516665,
+                  "forecast_ou_2.5_over_mean": 0.6706622911694511,
+                  "forecast_ou_2.5_over_spread": 0.028675417661097824,
+                  "forecast_ou_3.5_over_mean": 0.45163089005235596,
+                  "forecast_ou_3.5_over_spread": 0.0027382198952879966,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.05,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.96,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "81690be7788e78ef023127075bc6b1786cf6e866c1e84665927302bbab2b55db",
+              "odds": 7.0,
+              "pre_normalized_probability": 0.14448459311262066,
+              "price_age_seconds_at_decision": 12757.138547,
+              "price_age_seconds_at_freeze": 12812.323554,
+              "price_at": "2026-11-21T10:39:35.918268+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Preston North End",
+                  "bookmaker": "tigergaming",
+                  "bookmaker_market_id": "MoneyLine",
+                  "captured_at": "2026-11-21T10:39:35.918268+00:00",
+                  "date": "2026-11-21",
+                  "home": "West Ham United",
+                  "kickoff": "2026-11-21T15:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "7.0",
+                  "outcome_key": "102",
+                  "provider_changed_at": "2026-11-21T09:22:45.383Z",
+                  "provider_fixture_id": "id1000001872340052",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "draw",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "9cbb0f4580a3831f0afd3b9228ac7c7a6a1350c2383e5e1e50eab7342366ccce",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.14448459311262066,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            },
+            {
+              "admission": {
+                "cell": "617439add20607a4341ca018eb998e38b33816a38aeb08f7df85b951b60cd834",
+                "evidence_sha256": "1edca8fb6a74517a57a2f7f963e3eaa3371e6a6c1852b9c2466229f7460b30f7",
+                "fixtures": 130,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.208194138525,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.13877765677688722,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.1020408163265306,
+                "required_source_probability": 0.1020408163265306,
+                "source_probability": 0.1347894148341409,
+                "status": "eligible",
+                "wins": 33
+              },
+              "away": "Limavady United",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7841352963101006
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.1347894148341409
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.08107528885575849
+                ]
+              ],
+              "base_probability": 0.1347894148341409,
+              "book": "tigergaming",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "8503a8ba458d5e51cb896a68d2422cc44189203fb0fc4f3849c44277ffa11226",
+              "context": {
+                "as_of": "2026-11-21T14:12:13.056815+00:00",
+                "country": "Northern Ireland",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-21",
+                "form_values": {
+                  "away_form_btts": 0.8,
+                  "away_form_ga": 1.9,
+                  "away_form_gf": 1.6,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.5,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 0.7,
+                  "home_form_gf": 2.0,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.6,
+                  "home_form_over35": 0.2
+                },
+                "league": "scotland premiership",
+                "parent_confidence": 0.7841352963101006,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+              "date": "2026-11-21",
+              "fixture": [
+                "2026-11-21",
+                "linfield",
+                "limavadyunited"
+              ],
+              "forecast_model_key": "4ed8671c328be40d40cae96246d4797e1d245b47c112eadef5b0624a4192173b",
+              "home": "Linfield",
+              "kickoff_utc": "2026-11-21T15:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "fixture": [
+                  "2026-11-21",
+                  "linfield",
+                  "limavadyunited",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.08107528885575849,
+                  "forecast_1x2_away_spread": 0.03784942228848305,
+                  "forecast_1x2_draw_mean": 0.1347894148341409,
+                  "forecast_1x2_draw_spread": 0.05042117033171824,
+                  "forecast_1x2_home_mean": 0.7841352963101006,
+                  "forecast_1x2_home_spread": 0.0882705926202012,
+                  "forecast_btts_yes_mean": 0.42257217847769035,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8552631578947368,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.6880733944954129,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": null,
+                  "forecast_ou_3.5_over_spread": null,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "6469be1c55c70c8048249a513f7fecd9687ba4eebb7c328ce020064ca0ab89d5",
+              "odds": 9.8,
+              "pre_normalized_probability": 0.13877765677688722,
+              "price_age_seconds_at_decision": 12765.83405,
+              "price_age_seconds_at_freeze": 12821.019057,
+              "price_at": "2026-11-21T10:39:27.222765+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Limavady United FC",
+                  "bookmaker": "tigergaming",
+                  "bookmaker_market_id": "MoneyLine",
+                  "captured_at": "2026-11-21T10:39:27.222765+00:00",
+                  "date": "2026-11-21",
+                  "home": "Linfield FC",
+                  "kickoff": "2026-11-21T15:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "9.8",
+                  "outcome_key": "102",
+                  "provider_changed_at": "2026-11-21T10:28:08.143Z",
+                  "provider_fixture_id": "id1000020072346430",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "draw",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "dc4e6984f87f8c71356a210d366784659503a281e46f5bec9ae021d74e042310",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.13877765677688722,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261121T141213056815Z",
+      "captured_at": "2026-11-21T14:12:13.056815+00:00",
+      "frozen_at": "2026-11-21T14:13:08.241822+00:00"
     }
   ],
   "latest_learning": {
@@ -21959,7 +22576,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-21T11:11:50.394222+00:00",
+    "as_of": "2026-11-21T14:12:13.056815+00:00",
     "context_model": {
       "coef": [
         0.0002710056542161876,
@@ -27880,7 +28497,7 @@
     "fixtures": 166,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "5ab9d5f78c046ffd58f6ee328a2b50d969099a35a3a606a3a1607611dd8c1299",
+    "model_key": "4ed8671c328be40d40cae96246d4797e1d245b47c112eadef5b0624a4192173b",
     "observations": 560,
     "parameters": 1532,
     "power": 1.0,

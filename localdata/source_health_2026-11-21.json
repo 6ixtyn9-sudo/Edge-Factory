@@ -43,19 +43,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 9,
-      "be_raw": 12,
-      "be_usable": 12,
+      "be_matched": 12,
+      "be_raw": 18,
+      "be_usable": 15,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 3,
+      "join_matched_rows": 4,
       "join_miss_counts": {
         "fixture_key_miss": 5,
-        "no_pick_for_fixture": 4
+        "no_pick_for_fixture": 6
       },
       "reason": null,
       "status": "cache_only"
@@ -152,13 +152,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1074,
+      "join_matched_rows": 397,
       "join_miss_counts": {
-        "fixture_key_miss": 17920,
+        "fixture_key_miss": 34372,
         "market_unsupported": 15886,
-        "no_pick_for_fixture": 24224
+        "no_pick_for_fixture": 8449
       },
-      "op_matched": 13,
+      "op_matched": 3,
       "op_raw": 59104,
       "op_usable": 59104,
       "reason": null,
@@ -179,12 +179,12 @@
       "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 86,
+      "join_matched_rows": 49,
       "join_miss_counts": {
-        "fixture_key_miss": 17361,
-        "no_pick_for_fixture": 1457
+        "fixture_key_miss": 17985,
+        "no_pick_for_fixture": 870
       },
-      "pa_matched": 155,
+      "pa_matched": 94,
       "pa_raw": 18904,
       "pa_scored": 18904,
       "reason": null,
@@ -263,7 +263,7 @@
           "unknown_market:1st_half_asian_total_goals": 6,
           "unknown_market:1st_half_correct_score": 8
         },
-        "card_fixture_count": 186,
+        "card_fixture_count": 185,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 182
@@ -324,15 +324,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 581,
+      "join_matched_rows": 364,
       "join_miss_counts": {
-        "fixture_key_miss": 1157,
+        "fixture_key_miss": 2068,
         "market_unsupported": 2,
-        "no_pick_for_fixture": 1630
+        "no_pick_for_fixture": 1014
       },
-      "oa_matched": 53,
-      "oa_raw": 3370,
-      "oa_usable": 3370,
+      "oa_matched": 34,
+      "oa_raw": 3448,
+      "oa_usable": 3448,
       "reason": null,
       "status": "cache_only"
     },

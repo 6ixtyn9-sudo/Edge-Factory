@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-21
 ==============================================================
-CURRENT PAPER BANK (all dates): 59.757 units · free 59.133 / reserved 0.623
-3 paper accas · 3 ticket publications · 7 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 59.757 units · free 58.897 / reserved 0.860
+5 paper accas · 5 ticket publications · 7 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -28,6 +28,22 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    Linfield vs Limavady United · KICKOFF 2026-11-21 17:00 SAST
       Draw (1X2) @12.500 · ML 13.9% · SKIPPED_VETO
+
+[PAPER ACCA #4] @89.716 — 0.154766 paper units — pinnacle
+   Published 2026-11-21 16:02:15 SAST · reference P11/1
+   Linfield vs Limavady United · KICKOFF 2026-11-21 17:00 SAST
+      Draw (1X2) @14.040 · ML 13.9% · SKIPPED_VETO
+
+   LEVSKI SOFIA vs LOKOMOTIV SOFIA · KICKOFF 2026-11-22 15:30 SAST
+      Draw (1X2) @6.390 · ML 18.9% · SKIPPED_VETO
+
+[PAPER ACCA #5] @68.600 — 0.081905 paper units — tigergaming
+   Published 2026-11-21 16:13:08 SAST · reference P12/1
+   West Ham United vs Preston North End · KICKOFF 2026-11-21 17:00 SAST
+      Draw (1X2) @7.000 · ML 14.4% · SKIPPED_VETO
+
+   Linfield vs Limavady United · KICKOFF 2026-11-21 17:00 SAST
+      Draw (1X2) @9.800 · ML 13.9% · SKIPPED_VETO
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -203,6 +219,53 @@ P10 · 2026-11-21 13:12:39 SAST · No additional tickets
    Coverage: candidate count: 9723; candidate fixtures: 5; slate rows: 298; status: inputs_available
    Rejections: data quality: 20; fixture date unproven: 3; outside rolling window or unproven kickoff: 166; quote identity unproven: 4073; quote or probability unavailable: 14228
    Exact opportunity replay: 1 acca(s) not republished; 0.212005 units left idle, no refill
+   Learning: fitted_source_market_context
+
+P11 · 2026-11-21 16:02:15 SAST · ACCA #4
+   Receipt 20261121T140125399805Z · status paper_accas
+   Frozen at 2026-11-21T14:02:15.570740+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 c38917c0ca7d85e0c04a084c75501ad4bc48f3d6e3dc9e931c0b17cc69062c50
+   Decision window 2026-11-21T14:01:25.399805+00:00 → 2026-11-22T14:01:25.399805+00:00
+   Bank at decision: 59.756854 paper units
+   Available at decision: 59.133354 paper units
+   Reserved at decision: 0.623500 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.987842 units per canonical fixture
+   Reservation 0.154766 → 0.154766 units · released/idle 0.000000; no refill
+   2026-11-21 linfield vs limavadyunited: new 0.154766 + prior open 0.212768 · unused new budget 2.620308 units
+   2026-11-22 levskisofia vs lokomotivsofia: new 0.154766 + prior open 0.000000 · unused new budget 2.833076 units
+   Coverage: candidate count: 4397; candidate fixtures: 20; slate rows: 307; status: inputs_available
+   Rejections: data quality: 17; fixture date unproven: 6; outside rolling window or unproven kickoff: 140; quote identity unproven: 3990; quote or probability unavailable: 14472
+   ACCA #4 / leg 1: source forecast 13.5% · gap +0.4 pp · quote age 3.37h at decision
+      base 13.5% → adjusted 13.9% · learning move +0.4 pp · price break-even 7.1% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 13.9% → partition-normalized 13.9% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · 1x2 / draw · bookmaker market line/29/2259/1640459857/3812184137/0/moneyline · outcome 102 · provider label Full Time Result · normalized row only; native payload unverified
+   ACCA #4 / leg 2: source forecast 18.2% · gap +0.7 pp · quote age 11.91h at decision
+      base 18.2% → adjusted 18.9% · learning move +0.7 pp · price break-even 15.6% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 18.9% → partition-normalized 18.9% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_context
+
+P12 · 2026-11-21 16:13:08 SAST · ACCA #5
+   Receipt 20261121T141213056815Z · status paper_accas
+   Frozen at 2026-11-21T14:13:08.241822+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 ade40574d1ce2a73af5e874fd8442c760b02e3e2eb34c57fbdd8dd0d6c8e6951
+   Decision window 2026-11-21T14:12:13.056815+00:00 → 2026-11-22T14:12:13.056815+00:00
+   Bank at decision: 59.756854 paper units
+   Available at decision: 58.978588 paper units
+   Reserved at decision: 0.778266 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.987842 units per canonical fixture
+   Reservation 0.081905 → 0.081905 units · released/idle 0.000000; no refill
+   2026-11-21 linfield vs limavadyunited: new 0.081905 + prior open 0.367534 · unused new budget 2.538403 units
+   2026-11-21 westhamunited vs prestonnorthend: new 0.081905 + prior open 0.000000 · unused new budget 2.905937 units
+   Coverage: candidate count: 4349; candidate fixtures: 2; slate rows: 298; status: inputs_available
+   Rejections: data quality: 17; fixture date unproven: 3; outside rolling window or unproven kickoff: 174; quote identity unproven: 3990; quote or probability unavailable: 7154
+   ACCA #5 / leg 1: source forecast 14.1% · gap +0.3 pp · quote age 3.54h at decision
+      base 14.1% → adjusted 14.4% · learning move +0.3 pp · price break-even 14.3% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 14.4% → partition-normalized 14.4% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · 1x2 / draw · bookmaker market MoneyLine · outcome 102 · provider label Full Time Result · normalized row only; native payload unverified
+   ACCA #5 / leg 2: source forecast 13.5% · gap +0.4 pp · quote age 3.55h at decision
+      base 13.5% → adjusted 13.9% · learning move +0.4 pp · price break-even 10.2% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 13.9% → partition-normalized 13.9% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · 1x2 / draw · bookmaker market MoneyLine · outcome 102 · provider label Full Time Result · normalized row only; native payload unverified
    Learning: fitted_source_market_context
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
