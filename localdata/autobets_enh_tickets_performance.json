@@ -1,21 +1,25 @@
 {
-  "generated_at": "2026-11-21T22:33:53",
+  "generated_at": "2026-11-22T01:37:23",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 21.741404,
-  "multiple": 0.21741404,
+  "bank_pct": 22.756012,
+  "multiple": 0.22756011999999998,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 33,
+  "bet_days": 34,
   "accas": {
-    "wins": 26,
+    "wins": 27,
     "losses": 38
   },
   "open_slips": [
     {
       "date": "2026-11-21",
-      "staked_pct": 5.4354
+      "staked_pct": 3.6236
+    },
+    {
+      "date": "2026-11-22",
+      "staked_pct": 4.7831
     }
   ],
   "events": [],
@@ -11062,6 +11066,152 @@
       ],
       "bank_pct": 21.7414,
       "close_pct": 21.7414
+    },
+    {
+      "date": "2026-11-21",
+      "staked_pct": 1.8118,
+      "returned_pct": 2.8264,
+      "accas": [
+        {
+          "odds": 1.56,
+          "won": true,
+          "stake_pct": 1.8118,
+          "returned_pct": 2.8264,
+          "legs": [
+            {
+              "match": "SOUTHAMPTON vs DERBY COUNTY",
+              "pick": "home",
+              "odds": 1.25,
+              "result": "win",
+              "label": "Home Team Under 3.5 Goals",
+              "market": "home_under_35",
+              "price_book": "pokerstars.ro",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-21T07:48:22.099881+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-21",
+                "SOUTHAMPTON",
+                "DERBY COUNTY"
+              ],
+              "prob": 0.8608,
+              "cohort_evidence": {
+                "rate": 0.8608,
+                "n": 905,
+                "contract_id": "pfc_4c5d026eb71411fc8d3e609a",
+                "as_of_exclusive": "2026-11-21",
+                "market": "home_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 779,
+                "cohort_lower_bound": 0.8366903993114313,
+                "price_context": {
+                  "contract_id": "pfc_4c5d026eb71411fc8d3e609a",
+                  "selection": "home",
+                  "league": "ENC",
+                  "book": "pokerstars.ro",
+                  "source": "oddspapi",
+                  "price": 1.25,
+                  "captured_at": "2026-11-21T07:48:22.099881+00:00",
+                  "decision_at": "2026-11-21T09:49:42+02:00",
+                  "kickoff": "2026-11-21T12:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.9342276030622102,
+              "ml_model_key": "f7667e212b37bd498a5bcf00d04980ad37faf68d19130c83e8259223373d654c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 2.1345,
+              "floor_basis": "pick_evidence",
+              "league": "ENC",
+              "shadow": false,
+              "price_kickoff": "2026-11-21T12:30:00.000Z"
+            },
+            {
+              "match": "READING vs BROMLEY",
+              "pick": "under",
+              "odds": 1.25,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "pokerstars.ro",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-21T07:48:33.725327+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Bromley FC",
+                  "bookmaker": "pokerstars.ro",
+                  "bookmaker_market_id": "501.190746763",
+                  "captured_at": "2026-11-21T07:48:33.725327+00:00",
+                  "date": "2026-11-21",
+                  "home": "Reading FC",
+                  "kickoff": "2026-11-21T12:30:00.000Z",
+                  "league": "",
+                  "market": "ou_4.5",
+                  "odds": "1.25",
+                  "outcome_key": "1015",
+                  "provider_changed_at": "2026-11-21T00:11:41.011Z",
+                  "provider_fixture_id": "id1000002472341404",
+                  "provider_market_id": "1014",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "under",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "ac1f483021e3aaa97d4ba24d340c8a3284bc8bcaa18aeae5b55d0d41e2c56c66",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "fixture_key": [
+                "2026-11-21",
+                "READING",
+                "BROMLEY"
+              ],
+              "prob": 0.8081,
+              "cohort_evidence": {
+                "rate": 0.8081,
+                "n": 615,
+                "contract_id": "pfc_6e307ecea6710c78870d27d2",
+                "as_of_exclusive": "2026-11-21",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 497,
+                "cohort_lower_bound": 0.7751341235227648,
+                "price_context": {
+                  "contract_id": "pfc_6e307ecea6710c78870d27d2",
+                  "selection": "home",
+                  "league": "EN1",
+                  "book": "pokerstars.ro",
+                  "source": "oddspapi",
+                  "price": 1.25,
+                  "captured_at": "2026-11-21T07:48:33.725327+00:00",
+                  "decision_at": "2026-11-21T09:49:42+02:00",
+                  "kickoff": "2026-11-21T12:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8108787599915418,
+              "ml_model_key": "94dbe32fd50d3e56daa4c1875c94637ef39779410e6972ae52e42dd50866c605",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "EN1",
+              "shadow": true,
+              "price_kickoff": "2026-11-21T12:30:00.000Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 22.756,
+      "close_pct": 22.756
     }
   ]
 }

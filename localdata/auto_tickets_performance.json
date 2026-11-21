@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-21T22:30:25",
+  "generated_at": "2026-11-22T01:32:58",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 507.6246940000001,
-  "multiple": 5.076246940000001,
+  "bank_pct": 380.7186940000002,
+  "multiple": 3.807186940000002,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 80,
+  "bet_days": 81,
   "accas": {
     "wins": 92,
-    "losses": 75
+    "losses": 80
   },
-  "open_slips": [
-    {
-      "date": "2026-11-21",
-      "staked_pct": 126.906
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -3270,6 +3265,195 @@
       ],
       "bank_pct": 507.6247,
       "close_pct": 507.6246
+    },
+    {
+      "date": "2026-11-21",
+      "staked_pct": 126.906,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.84,
+          "won": false,
+          "stake_pct": 25.3812,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "West Ham United vs Preston North End",
+              "pick": "HOME",
+              "odds": 1.27,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Matchbook",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-21",
+                "West Ham United",
+                "Preston North End"
+              ]
+            },
+            {
+              "match": "LAZIO vs LECCE",
+              "pick": "HOME",
+              "odds": 1.45,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-21",
+                "LAZIO",
+                "LECCE"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 7.1,
+          "won": false,
+          "stake_pct": 25.3812,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "EMPOLI vs PISA",
+              "pick": "HOME",
+              "odds": 4.2,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-21",
+                "EMPOLI",
+                "PISA"
+              ]
+            },
+            {
+              "match": "MODENA vs JUVE STABIA",
+              "pick": "HOME",
+              "odds": 1.69,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-21",
+                "MODENA",
+                "JUVE STABIA"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 3.24,
+          "won": false,
+          "stake_pct": 25.3812,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "LIEFERING vs WACKER INNSBRUCK",
+              "pick": "HOME",
+              "odds": 2.54,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-21",
+                "LIEFERING",
+                "WACKER INNSBRUCK"
+              ]
+            },
+            {
+              "match": "LASK LINZ vs HARTBERG",
+              "pick": "HOME",
+              "odds": 1.2755,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-21",
+                "LASK LINZ",
+                "HARTBERG"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.91,
+          "won": false,
+          "stake_pct": 25.3812,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "LENS vs TOULOUSE",
+              "pick": "HOME",
+              "odds": 1.8929,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-21",
+                "LENS",
+                "TOULOUSE"
+              ]
+            },
+            {
+              "match": "ARIS LIMASSOL vs NEA SALAMIS",
+              "pick": "HOME",
+              "odds": 1.5376,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-21",
+                "ARIS LIMASSOL",
+                "NEA SALAMIS"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 3.16,
+          "won": false,
+          "stake_pct": 25.3812,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "CSKA MOSCOW vs AKHMAT GROZNY",
+              "pick": "HOME",
+              "odds": 1.78,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-21",
+                "CSKA MOSCOW",
+                "AKHMAT GROZNY"
+              ]
+            },
+            {
+              "match": "ASTON VILLA vs SUNDERLAND",
+              "pick": "HOME",
+              "odds": 1.7752,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-21",
+                "ASTON VILLA",
+                "SUNDERLAND"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 380.7187,
+      "close_pct": 380.7186
     }
   ]
 }
