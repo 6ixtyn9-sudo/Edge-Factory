@@ -1,43 +1,11 @@
 {
   "added": 0,
-  "attempted": 4,
-  "attempted_fixtures": [
-    {
-      "away": "Willem II",
-      "date": "2026-11-22",
-      "home": "FC Twente",
-      "kickoff": "2026-11-22T11:15:00Z",
-      "league": "Eredivisie"
-    },
-    {
-      "away": "Ey\u00fcpspor",
-      "date": "2026-11-22",
-      "home": "Trabzonspor",
-      "kickoff": "2026-11-22T16:00:00Z",
-      "league": "Super Lig"
-    },
-    {
-      "away": "Lokomotiv Sofia",
-      "date": "2026-11-22",
-      "home": "Levski Sofia",
-      "kickoff": "2026-11-22T13:30:00Z",
-      "league": "Parva Liga"
-    },
-    {
-      "away": "ANGERS",
-      "date": "2026-11-22",
-      "home": "PARIS FC",
-      "kickoff": "14:00",
-      "league": "FR1"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 108,
-  "captured_at": "2026-11-22T14:04:00+00:00",
+  "captured_at": "2026-11-22T17:17:03+00:00",
   "date": "2026-11-22",
-  "due_reasons": {
-    "first_at": 2,
-    "scope_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -56,14 +24,16 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 1,
     "priced": 33,
-    "priced_close_window_not_open": 1,
-    "retry_cooldown": 69
+    "retry_cooldown": 73
   },
   "skipped": [
+    "FC Twente|Willem II (retry cooldown (6h after failed attempt))",
     "AJAX AMSTERDAM|DEN HAAG (retry cooldown (6h after failed attempt))",
+    "Trabzonspor|Ey\u00fcpspor (retry cooldown (6h after failed attempt))",
+    "Levski Sofia|Lokomotiv Sofia (retry cooldown (6h after failed attempt))",
     "Arsenal W|West Ham W (retry cooldown (6h after failed attempt))",
     "Ajax|ADO Den Haag (priced)",
     "ATLETICO PR|REMO (retry cooldown (6h after failed attempt))",
@@ -82,7 +52,7 @@
     "RAKOW CRESTOCHOWA|WIDZEW LODZ (retry cooldown (6h after failed attempt))",
     "SARAJEVO|SIROKI (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Hull City|Brighton: pick legacy display says 14:00 SAST, captured rows say 16:00 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Hull City|Brighton (priced, close window not open)",
+    "Hull City|Brighton (kickoff already passed)",
     "ATLETICO GO|VILA NOVA (priced)",
     "OLYMPIAKOS|IRAKLIS (priced)",
     "Dinamo Zagreb|Istra 1961 (retry cooldown (6h after failed attempt))",
@@ -143,6 +113,7 @@
     "RODINA MOSCOW|LOKOMOTIV MOS (retry cooldown (6h after failed attempt))",
     "SANGJU|JEJU (retry cooldown (6h after failed attempt))",
     "KASIMPASA|ALANYASPOR (priced)",
+    "PARIS FC|ANGERS (retry cooldown (6h after failed attempt))",
     "Batman Petrolspor|Mu\u011flaspor (retry cooldown (6h after failed attempt))",
     "Viborg FF|Randers FC (retry cooldown (6h after failed attempt))",
     "LIVERPOOL|MANCHESTER UNITED (retry cooldown (6h after failed attempt))",
@@ -170,15 +141,6 @@
     "ZURICH|ST GALLEN (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Trabzonspor vs Ey\u00fcpspor (league not covered: Super Lig)",
-    "Levski Sofia vs Lokomotiv Sofia (league not covered: Parva Liga)",
-    "FC Twente vs Willem II (keys exhausted)"
-  ],
-  "unmatched_reasons": {
-    "keys exhausted": 1,
-    "league not covered: Parva Liga": 1,
-    "league not covered: Super Lig": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
