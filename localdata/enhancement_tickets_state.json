@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 20.944211999999997,
+  "bank": 22.474731,
   "cycle_base": 100.0,
   "history": [
     {
@@ -11297,139 +11297,35 @@
       ],
       "bank_pct": 20.9442,
       "close_pct": 20.9442
-    }
-  ],
-  "events": [],
-  "open_slips": [
-    {
-      "date": "2026-11-21",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Celtic vs St. Mirren",
-              "pick": "over",
-              "prob": 0.6811,
-              "odds": 1.27,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Betsson",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6811,
-                "n": 417,
-                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
-                "as_of_exclusive": "2026-11-21",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 284,
-                "cohort_lower_bound": 0.6348433480700901,
-                "price_context": {
-                  "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
-                  "selection": "home",
-                  "league": "Premiership",
-                  "book": "Betsson",
-                  "source": "theoddsapi",
-                  "price": 1.27,
-                  "captured_at": "2026-11-20T22:35:36.230889+00:00",
-                  "decision_at": "2026-11-21T09:49:42+02:00",
-                  "kickoff": "2026-11-21T15:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.7842537957410709,
-              "ml_model_key": "7b0c972530dfb3c327976a057923e37fbf4d284cb244011ae2f68547c2a2954c",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7334732418214307,
-              "floor_basis": "market",
-              "league": "Premiership",
-              "price_at": "2026-11-20T22:35:36.230889+00:00",
-              "price_kickoff": "2026-11-21T15:00:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-21",
-                "Celtic",
-                "St. Mirren"
-              ]
-            },
-            {
-              "match": "V\u00e5lerenga IF vs IK Start",
-              "pick": "over",
-              "prob": 0.6526,
-              "odds": 1.35,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Betsson",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6526,
-                "n": 475,
-                "contract_id": "pfc_12c05e100bfd7667f5977355",
-                "as_of_exclusive": "2026-11-21",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 310,
-                "cohort_lower_bound": 0.6087432250735895,
-                "price_context": {
-                  "contract_id": "pfc_12c05e100bfd7667f5977355",
-                  "selection": "home",
-                  "league": "Eliteserien",
-                  "book": "Betsson",
-                  "source": "theoddsapi",
-                  "price": 1.35,
-                  "captured_at": "2026-11-20T22:35:39.175096+00:00",
-                  "decision_at": "2026-11-21T09:49:42+02:00",
-                  "kickoff": "2026-11-21T17:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.7314845726043567,
-              "ml_model_key": "86c629db0cd7fe7e5358357f3c6a9a0fdbee5ecf202b217f8169cfa349be912a",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7334732418214307,
-              "floor_basis": "inherited",
-              "league": "Eliteserien",
-              "price_at": "2026-11-20T22:35:39.175096+00:00",
-              "price_kickoff": "2026-11-21T17:00:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-21",
-                "V\u00e5lerenga IF",
-                "IK Start"
-              ]
-            }
-          ],
-          "odds": 1.71,
-          "stake_pct": 1.8118,
-          "results": [
-            "win",
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 1.8118
     },
     {
       "date": "2026-11-22",
+      "staked_pct": 4.7831,
+      "returned_pct": 6.3136,
       "accas": [
         {
+          "odds": 1.91,
+          "won": true,
+          "stake_pct": 1.5944,
+          "returned_pct": 3.0453,
           "legs": [
             {
               "match": "FC Barcelona vs Villarreal",
               "pick": "away",
-              "prob": 0.8788,
               "odds": 1.5,
-              "result": null,
+              "result": "win",
+              "label": "Away Team Over 0.5 Goals",
               "market": "away_over_05",
               "price_book": "admiralbet.ba",
               "price_source": "oddspapi",
+              "price_at": "2026-11-22T07:47:52.014813+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-22",
+                "FC Barcelona",
+                "Villarreal"
+              ],
+              "prob": 0.8788,
               "cohort_evidence": {
                 "rate": 0.8788,
                 "n": 33,
@@ -11454,61 +11350,24 @@
               "ml_rank_probability": 0.8956520310099877,
               "ml_model_key": "0e656819183f692271b67264933e6a6dd2fd8b6c13f8ed2ec61c0b38bf7da18a",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Away Team Over 0.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": null,
               "floor_basis": "inherited",
               "league": "La Liga",
-              "price_at": "2026-11-22T07:47:52.014813+00:00",
-              "price_kickoff": "2026-11-22T13:00:00.000Z",
-              "price_provenance": null,
               "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-22",
-                "FC Barcelona",
-                "Villarreal"
-              ]
+              "price_kickoff": "2026-11-22T13:00:00.000Z"
             },
             {
               "match": "Esenler Erokspor vs Antalyaspor",
               "pick": "home",
-              "prob": 0.8174,
               "odds": 1.27,
-              "result": null,
+              "result": "win",
+              "label": "Home Team Under 2.5 Goals",
               "market": "home_under_25",
               "price_book": "admiralbet.ba",
               "price_source": "oddspapi",
-              "cohort_evidence": {
-                "rate": 0.8174,
-                "n": 1424,
-                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
-                "as_of_exclusive": "2026-11-22",
-                "market": "home_under_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 1164,
-                "cohort_lower_bound": 0.79650524933954,
-                "price_context": {
-                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
-                  "selection": "under",
-                  "league": "Trendyol 1. Lig",
-                  "book": "admiralbet.ba",
-                  "source": "oddspapi",
-                  "price": 1.27,
-                  "captured_at": "2026-11-22T07:47:38.014741+00:00",
-                  "decision_at": "2026-11-22T09:49:31+02:00",
-                  "kickoff": "2026-11-22T13:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8023328795649617,
-              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Home Team Under 2.5 Goals",
-              "floor": 1.2296,
-              "floor_basis": "pick_evidence",
-              "league": "Trendyol 1. Lig",
               "price_at": "2026-11-22T07:47:38.014741+00:00",
-              "price_kickoff": "2026-11-22T13:00:00.000Z",
               "price_provenance": {
                 "archive": "oddspapi_odds_2026-11.csv.gz",
                 "evidence_scope": "normalized_archive_row_not_native_provider_payload",
@@ -11541,35 +11400,69 @@
                 "row_sha256": "f10a1a89c0409a58c66f17674e068082101c8806588769c563c8d940a10d4339",
                 "schema": "normalized_odds_quote_v1"
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-22",
                 "Esenler Erokspor",
                 "Antalyaspor"
-              ]
+              ],
+              "prob": 0.8174,
+              "cohort_evidence": {
+                "rate": 0.8174,
+                "n": 1424,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "as_of_exclusive": "2026-11-22",
+                "market": "home_under_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1164,
+                "cohort_lower_bound": 0.79650524933954,
+                "price_context": {
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "under",
+                  "league": "Trendyol 1. Lig",
+                  "book": "admiralbet.ba",
+                  "source": "oddspapi",
+                  "price": 1.27,
+                  "captured_at": "2026-11-22T07:47:38.014741+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T13:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8023328795649617,
+              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.2296,
+              "floor_basis": "pick_evidence",
+              "league": "Trendyol 1. Lig",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T13:00:00.000Z"
             }
-          ],
-          "odds": 1.91,
-          "stake_pct": 1.5944,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         },
         {
+          "odds": 2.98,
+          "won": false,
+          "stake_pct": 1.5944,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "Atalanta vs Inter",
               "pick": "away",
-              "prob": 0.8518,
               "odds": 1.61,
-              "result": null,
+              "result": "loss",
+              "label": "Away Team Under 2.5 Goals",
               "market": "away_under_25",
               "price_book": "MyBookie.ag",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-21T22:45:43.600530+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-22",
+                "Atalanta",
+                "Inter"
+              ],
+              "prob": 0.8518,
               "cohort_evidence": {
                 "rate": 0.8518,
                 "n": 1424,
@@ -11594,31 +11487,31 @@
               "ml_rank_probability": 0.682563095288332,
               "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Away Team Under 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": null,
               "floor_basis": "none",
               "league": "Serie A",
-              "price_at": "2026-11-21T22:45:43.600530+00:00",
-              "price_kickoff": "2026-11-22T19:45:00Z",
-              "price_provenance": null,
               "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-22",
-                "Atalanta",
-                "Inter"
-              ]
+              "price_kickoff": "2026-11-22T19:45:00Z"
             },
             {
               "match": "BOLOGNA vs UDINESE",
               "pick": "over",
-              "prob": 0.6083,
               "odds": 1.85,
-              "result": null,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "MyBookie.ag",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-21T22:45:43.540117+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-22",
+                "BOLOGNA",
+                "UDINESE"
+              ],
+              "prob": 0.6083,
               "cohort_evidence": {
                 "rate": 0.6083,
                 "n": 605,
@@ -11643,72 +11536,32 @@
               "ml_rank_probability": 0.6334807122594512,
               "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7435164034671629,
               "floor_basis": "market",
               "league": "IT1",
-              "price_at": "2026-11-21T22:45:43.540117+00:00",
-              "price_kickoff": "2026-11-22T14:00:00Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-22",
-                "BOLOGNA",
-                "UDINESE"
-              ]
+              "price_kickoff": "2026-11-22T14:00:00Z"
             }
-          ],
-          "odds": 2.98,
-          "stake_pct": 1.5944,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         },
         {
+          "odds": 2.05,
+          "won": true,
+          "stake_pct": 1.5943,
+          "returned_pct": 3.2683,
           "legs": [
             {
               "match": "Liverpool FC vs Manchester United",
               "pick": "under",
-              "prob": 0.8504,
               "odds": 1.26,
-              "result": null,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
               "market": "match_under_45",
               "price_book": "Stake.com",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.8504,
-                "n": 1424,
-                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
-                "as_of_exclusive": "2026-11-22",
-                "market": "match_under_45",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 1211,
-                "cohort_lower_bound": 0.8309550693416442,
-                "price_context": {
-                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
-                  "selection": "under",
-                  "league": "Premier League",
-                  "book": "Stake.com",
-                  "source": "betexplorer",
-                  "price": 1.26,
-                  "captured_at": "2026-11-22T01:38:48.764392+00:00",
-                  "decision_at": "2026-11-22T09:49:31+02:00",
-                  "kickoff": "2026-11-22T16:30:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8803203138255764,
-              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 4.5 Goals",
-              "floor": null,
-              "floor_basis": "inherited",
-              "league": "Premier League",
               "price_at": "2026-11-22T01:38:48.764392+00:00",
-              "price_kickoff": "2026-11-22T16:30:00+00:00",
               "price_provenance": {
                 "away": "Manchester Utd",
                 "bookmaker": "Stake.com",
@@ -11868,54 +11721,54 @@
                 "selection": "under",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-22",
                 "Liverpool FC",
                 "Manchester United"
-              ]
+              ],
+              "prob": 0.8504,
+              "cohort_evidence": {
+                "rate": 0.8504,
+                "n": 1424,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1211,
+                "cohort_lower_bound": 0.8309550693416442,
+                "price_context": {
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "under",
+                  "league": "Premier League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.26,
+                  "captured_at": "2026-11-22T01:38:48.764392+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T16:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8803203138255764,
+              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Premier League",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T16:30:00+00:00"
             },
             {
               "match": "VIBORG vs RANDERS",
               "pick": "under",
-              "prob": 0.6364,
               "odds": 1.63,
-              "result": null,
+              "result": "win",
+              "label": "Match Under 3.5 Goals",
               "market": "match_under_35",
               "price_book": "Stake.com",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.6364,
-                "n": 605,
-                "contract_id": "pfc_71a63d281a3dff22aa75f744",
-                "as_of_exclusive": "2026-11-22",
-                "market": "match_under_35",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 385,
-                "cohort_lower_bound": 0.5972831064919808,
-                "price_context": {
-                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
-                  "selection": "home",
-                  "league": "DK1",
-                  "book": "Stake.com",
-                  "source": "betexplorer",
-                  "price": 1.63,
-                  "captured_at": "2026-11-22T04:43:29.064395+00:00",
-                  "decision_at": "2026-11-22T09:49:31+02:00",
-                  "kickoff": "2026-11-22T13:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8529509560737331,
-              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 3.5 Goals",
-              "floor": 1.64,
-              "floor_basis": "inherited",
-              "league": "DK1",
               "price_at": "2026-11-22T04:43:29.064395+00:00",
-              "price_kickoff": "2026-11-22T13:00:00+00:00",
               "price_provenance": {
                 "away": "Randers FC",
                 "bookmaker": "Stake.com",
@@ -12075,26 +11928,167 @@
                 "selection": "under",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-22",
                 "VIBORG",
                 "RANDERS"
+              ],
+              "prob": 0.6364,
+              "cohort_evidence": {
+                "rate": 0.6364,
+                "n": 605,
+                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 385,
+                "cohort_lower_bound": 0.5972831064919808,
+                "price_context": {
+                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                  "selection": "home",
+                  "league": "DK1",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.63,
+                  "captured_at": "2026-11-22T04:43:29.064395+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T13:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8529509560737331,
+              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "DK1",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T13:00:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 22.4747,
+      "close_pct": 22.4747
+    }
+  ],
+  "events": [],
+  "open_slips": [
+    {
+      "date": "2026-11-21",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Celtic vs St. Mirren",
+              "pick": "over",
+              "prob": 0.6811,
+              "odds": 1.27,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "cohort_evidence": {
+                "rate": 0.6811,
+                "n": 417,
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "as_of_exclusive": "2026-11-21",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 284,
+                "cohort_lower_bound": 0.6348433480700901,
+                "price_context": {
+                  "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                  "selection": "home",
+                  "league": "Premiership",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.27,
+                  "captured_at": "2026-11-20T22:35:36.230889+00:00",
+                  "decision_at": "2026-11-21T09:49:42+02:00",
+                  "kickoff": "2026-11-21T15:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7842537957410709,
+              "ml_model_key": "7b0c972530dfb3c327976a057923e37fbf4d284cb244011ae2f68547c2a2954c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7334732418214307,
+              "floor_basis": "market",
+              "league": "Premiership",
+              "price_at": "2026-11-20T22:35:36.230889+00:00",
+              "price_kickoff": "2026-11-21T15:00:00Z",
+              "price_provenance": null,
+              "shadow": true,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-21",
+                "Celtic",
+                "St. Mirren"
+              ]
+            },
+            {
+              "match": "V\u00e5lerenga IF vs IK Start",
+              "pick": "over",
+              "prob": 0.6526,
+              "odds": 1.35,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "cohort_evidence": {
+                "rate": 0.6526,
+                "n": 475,
+                "contract_id": "pfc_12c05e100bfd7667f5977355",
+                "as_of_exclusive": "2026-11-21",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 310,
+                "cohort_lower_bound": 0.6087432250735895,
+                "price_context": {
+                  "contract_id": "pfc_12c05e100bfd7667f5977355",
+                  "selection": "home",
+                  "league": "Eliteserien",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.35,
+                  "captured_at": "2026-11-20T22:35:39.175096+00:00",
+                  "decision_at": "2026-11-21T09:49:42+02:00",
+                  "kickoff": "2026-11-21T17:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7314845726043567,
+              "ml_model_key": "86c629db0cd7fe7e5358357f3c6a9a0fdbee5ecf202b217f8169cfa349be912a",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7334732418214307,
+              "floor_basis": "inherited",
+              "league": "Eliteserien",
+              "price_at": "2026-11-20T22:35:39.175096+00:00",
+              "price_kickoff": "2026-11-21T17:00:00Z",
+              "price_provenance": null,
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-21",
+                "V\u00e5lerenga IF",
+                "IK Start"
               ]
             }
           ],
-          "odds": 2.05,
-          "stake_pct": 1.5943,
+          "odds": 1.71,
+          "stake_pct": 1.8118,
           "results": [
-            null,
+            "win",
             null
           ],
           "won": null
         }
       ],
-      "staked_pct": 4.7831
+      "staked_pct": 1.8118
     }
   ],
   "frozen_by_date": {

@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-22T21:53:37",
+  "generated_at": "2026-11-23T01:29:30",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 380.7186940000002,
-  "multiple": 3.807186940000002,
+  "bank_pct": 329.3217640000001,
+  "multiple": 3.293217640000001,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 81,
+  "bet_days": 82,
   "accas": {
-    "wins": 92,
-    "losses": 80
+    "wins": 93,
+    "losses": 84
   },
-  "open_slips": [
-    {
-      "date": "2026-11-22",
-      "staked_pct": 95.1795
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -3459,6 +3454,195 @@
       ],
       "bank_pct": 380.7187,
       "close_pct": 380.7186
+    },
+    {
+      "date": "2026-11-22",
+      "staked_pct": 95.1795,
+      "returned_pct": 43.7826,
+      "accas": [
+        {
+          "odds": 2.85,
+          "won": false,
+          "stake_pct": 19.0359,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Hull City vs Brighton",
+              "pick": "AWAY",
+              "odds": 1.5181,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-22",
+                "Hull City",
+                "Brighton"
+              ]
+            },
+            {
+              "match": "OSASUNA vs MALAGA",
+              "pick": "HOME",
+              "odds": 1.88,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-22",
+                "OSASUNA",
+                "MALAGA"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.82,
+          "won": false,
+          "stake_pct": 19.0359,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "MARSEILLE vs LE MANS",
+              "pick": "HOME",
+              "odds": 1.49,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-22",
+                "MARSEILLE",
+                "LE MANS"
+              ]
+            },
+            {
+              "match": "GIRONA vs EIBAR",
+              "pick": "HOME",
+              "odds": 1.89,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-22",
+                "GIRONA",
+                "EIBAR"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.66,
+          "won": false,
+          "stake_pct": 19.0359,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "MAMELODI SUNDOWNS vs KAIZER CHIEFS",
+              "pick": "HOME",
+              "odds": 1.641,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-22",
+                "MAMELODI SUNDOWNS",
+                "KAIZER CHIEFS"
+              ]
+            },
+            {
+              "match": "AC MILAN vs FROSINONE",
+              "pick": "HOME",
+              "odds": 1.62,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-22",
+                "AC MILAN",
+                "FROSINONE"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.3,
+          "won": true,
+          "stake_pct": 19.0359,
+          "returned_pct": 43.7826,
+          "legs": [
+            {
+              "match": "PAOK vs KIFISIA",
+              "pick": "HOME",
+              "odds": 1.37,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-22",
+                "PAOK",
+                "KIFISIA"
+              ]
+            },
+            {
+              "match": "WERDER BREMEN vs HAMBURGER SV",
+              "pick": "HOME",
+              "odds": 1.68,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "GTbets",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-22",
+                "WERDER BREMEN",
+                "HAMBURGER SV"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 3.12,
+          "won": false,
+          "stake_pct": 19.0359,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "MARIBOR vs NAFTA",
+              "pick": "HOME",
+              "odds": 1.44,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-22",
+                "MARIBOR",
+                "NAFTA"
+              ]
+            },
+            {
+              "match": "KAISERSLAUTERN vs DYNAMO DRESDEN",
+              "pick": "HOME",
+              "odds": 2.17,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-22",
+                "KAISERSLAUTERN",
+                "DYNAMO DRESDEN"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 329.3218,
+      "close_pct": 329.3217
     }
   ]
 }

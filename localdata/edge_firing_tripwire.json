@@ -2,14 +2,14 @@
   "ceilings": [],
   "edge_silent_days": 14,
   "edges": [],
-  "generated_at": "2026-11-22T21:53:55",
+  "generated_at": "2026-11-23T01:30:12",
   "ignored_non_operational_rules": [
     "pfc_1607fec83282d02c5254c2bf",
     "pfc_2a4f2be544cd9d59f3cb7098",
-    "pfc_4a3e5fbac72b2ebef11632f0",
-    "pfc_71a63d281a3dff22aa75f744",
-    "pfc_ba85936207b4b393ab7ffecb",
-    "pfc_bb7457f5848fd6b0f1f65fe4"
+    "pfc_68b634f28f5ef3e8beb682ba",
+    "pfc_bb7457f5848fd6b0f1f65fe4",
+    "pfc_bdce95a736d6cc8667f7ac31",
+    "pfc_e77bf223b29de6d117f3d8f5"
   ],
   "retired_captures": 1,
   "source_stale_days": 7,
@@ -24,7 +24,7 @@
     },
     {
       "name": "statarea",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "statarea_2026-11.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -32,7 +32,7 @@
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "scoutingstats_2026-11.csv.gz",
       "retired": null,
       "role": "voter_and_price",
@@ -40,7 +40,7 @@
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-24",
       "newest_file": "vitibet_2026-11.csv.gz",
       "retired": null,
       "role": "thin_voter",
@@ -48,7 +48,7 @@
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "zulubet_2026-11.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -56,7 +56,7 @@
     },
     {
       "name": "predictz",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "predictz_2026-11.csv.gz",
       "retired": null,
       "role": "shadow",
@@ -72,7 +72,7 @@
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "afootballreport_2026-11.csv.gz",
       "retired": null,
       "role": "research",
@@ -80,7 +80,7 @@
     },
     {
       "name": "betclan",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "betclan_2026-11.csv.gz",
       "retired": null,
       "role": "partial_voter",
@@ -92,11 +92,11 @@
       "newest_file": "freesupertips_2026-11.csv.gz",
       "retired": null,
       "role": "not_ready",
-      "stale": false
+      "stale": true
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-11-22",
+      "newest_date": "2026-11-23",
       "newest_file": "bettingclosed_2026-11.csv.gz",
       "retired": null,
       "role": "confirmation_results",
@@ -104,12 +104,12 @@
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-11-28",
+      "newest_date": "2026-11-29",
       "newest_file": "bzzoiro_2026-11.csv.gz",
       "retired": null,
       "role": "model_voter",
       "stale": false
     }
   ],
-  "warn_count": 0
+  "warn_count": 1
 }

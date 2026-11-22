@@ -1,25 +1,21 @@
 {
-  "generated_at": "2026-11-22T21:56:17",
+  "generated_at": "2026-11-23T01:33:54",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 20.944211999999997,
-  "multiple": 0.20944211999999995,
+  "bank_pct": 22.474731,
+  "multiple": 0.22474730999999998,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 34,
+  "bet_days": 35,
   "accas": {
-    "wins": 27,
-    "losses": 39
+    "wins": 29,
+    "losses": 40
   },
   "open_slips": [
     {
       "date": "2026-11-21",
       "staked_pct": 1.8118
-    },
-    {
-      "date": "2026-11-22",
-      "staked_pct": 4.7831
     }
   ],
   "events": [],
@@ -11318,6 +11314,680 @@
       ],
       "bank_pct": 20.9442,
       "close_pct": 20.9442
+    },
+    {
+      "date": "2026-11-22",
+      "staked_pct": 4.7831,
+      "returned_pct": 6.3136,
+      "accas": [
+        {
+          "odds": 1.91,
+          "won": true,
+          "stake_pct": 1.5944,
+          "returned_pct": 3.0453,
+          "legs": [
+            {
+              "match": "FC Barcelona vs Villarreal",
+              "pick": "away",
+              "odds": 1.5,
+              "result": "win",
+              "label": "Away Team Over 0.5 Goals",
+              "market": "away_over_05",
+              "price_book": "admiralbet.ba",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-22T07:47:52.014813+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-22",
+                "FC Barcelona",
+                "Villarreal"
+              ],
+              "prob": 0.8788,
+              "cohort_evidence": {
+                "rate": 0.8788,
+                "n": 33,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "as_of_exclusive": "2026-11-22",
+                "market": "away_over_05",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 29,
+                "cohort_lower_bound": 0.7267449482892476,
+                "price_context": {
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "over",
+                  "league": "La Liga",
+                  "book": "admiralbet.ba",
+                  "source": "oddspapi",
+                  "price": 1.5,
+                  "captured_at": "2026-11-22T07:47:52.014813+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T13:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8956520310099877,
+              "ml_model_key": "0e656819183f692271b67264933e6a6dd2fd8b6c13f8ed2ec61c0b38bf7da18a",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "La Liga",
+              "shadow": false,
+              "price_kickoff": "2026-11-22T13:00:00.000Z"
+            },
+            {
+              "match": "Esenler Erokspor vs Antalyaspor",
+              "pick": "home",
+              "odds": 1.27,
+              "result": "win",
+              "label": "Home Team Under 2.5 Goals",
+              "market": "home_under_25",
+              "price_book": "admiralbet.ba",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-22T07:47:38.014741+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Antalyaspor",
+                  "bookmaker": "admiralbet.ba",
+                  "bookmaker_market_id": "648122096",
+                  "captured_at": "2026-11-22T07:47:38.014741+00:00",
+                  "date": "2026-11-22",
+                  "home": "Esenler Erokspor",
+                  "kickoff": "2026-11-22T13:00:00.000Z",
+                  "league": "",
+                  "market": "tt_home_2.5",
+                  "odds": "1.27",
+                  "outcome_key": "10229",
+                  "provider_changed_at": "2026-11-21T10:07:13.819Z",
+                  "provider_fixture_id": "id1000009872735918",
+                  "provider_market_id": "10228",
+                  "provider_market_name": "Over Under Team 1",
+                  "provider_market_type": "teamtotals-team1",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "under",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "f10a1a89c0409a58c66f17674e068082101c8806588769c563c8d940a10d4339",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "fixture_key": [
+                "2026-11-22",
+                "Esenler Erokspor",
+                "Antalyaspor"
+              ],
+              "prob": 0.8174,
+              "cohort_evidence": {
+                "rate": 0.8174,
+                "n": 1424,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "as_of_exclusive": "2026-11-22",
+                "market": "home_under_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1164,
+                "cohort_lower_bound": 0.79650524933954,
+                "price_context": {
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "under",
+                  "league": "Trendyol 1. Lig",
+                  "book": "admiralbet.ba",
+                  "source": "oddspapi",
+                  "price": 1.27,
+                  "captured_at": "2026-11-22T07:47:38.014741+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T13:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8023328795649617,
+              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.2296,
+              "floor_basis": "pick_evidence",
+              "league": "Trendyol 1. Lig",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T13:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "odds": 2.98,
+          "won": false,
+          "stake_pct": 1.5944,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Atalanta vs Inter",
+              "pick": "away",
+              "odds": 1.61,
+              "result": "loss",
+              "label": "Away Team Under 2.5 Goals",
+              "market": "away_under_25",
+              "price_book": "MyBookie.ag",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-21T22:45:43.600530+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-22",
+                "Atalanta",
+                "Inter"
+              ],
+              "prob": 0.8518,
+              "cohort_evidence": {
+                "rate": 0.8518,
+                "n": 1424,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "as_of_exclusive": "2026-11-22",
+                "market": "away_under_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1213,
+                "cohort_lower_bound": 0.8324273570264421,
+                "price_context": {
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "under",
+                  "league": "Serie A",
+                  "book": "MyBookie.ag",
+                  "source": "theoddsapi",
+                  "price": 1.61,
+                  "captured_at": "2026-11-21T22:45:43.600530+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.682563095288332,
+              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "none",
+              "league": "Serie A",
+              "shadow": false,
+              "price_kickoff": "2026-11-22T19:45:00Z"
+            },
+            {
+              "match": "BOLOGNA vs UDINESE",
+              "pick": "over",
+              "odds": 1.85,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "MyBookie.ag",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-21T22:45:43.540117+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-22",
+                "BOLOGNA",
+                "UDINESE"
+              ],
+              "prob": 0.6083,
+              "cohort_evidence": {
+                "rate": 0.6083,
+                "n": 605,
+                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 368,
+                "cohort_lower_bound": 0.5688015273172454,
+                "price_context": {
+                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                  "selection": "home",
+                  "league": "IT1",
+                  "book": "MyBookie.ag",
+                  "source": "theoddsapi",
+                  "price": 1.85,
+                  "captured_at": "2026-11-21T22:45:43.540117+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T14:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6334807122594512,
+              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7435164034671629,
+              "floor_basis": "market",
+              "league": "IT1",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T14:00:00Z"
+            }
+          ]
+        },
+        {
+          "odds": 2.05,
+          "won": true,
+          "stake_pct": 1.5943,
+          "returned_pct": 3.2683,
+          "legs": [
+            {
+              "match": "Liverpool FC vs Manchester United",
+              "pick": "under",
+              "odds": 1.26,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-22T01:38:48.764392+00:00",
+              "price_provenance": {
+                "away": "Manchester Utd",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-11-22T01:38:48.764392+00:00",
+                "data_dt": [
+                  22,
+                  11,
+                  2026,
+                  17,
+                  30
+                ],
+                "decision_cutoff_utc": "2026-11-22T07:00:00+00:00",
+                "decision_day": "2026-11-22",
+                "home": "Liverpool",
+                "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-22.json",
+                "ledger_sha256": "f1862b65c7149c35c6a4e58ed366815baf54b12cb5178fbe7b8648e8565bbc55",
+                "market": "ou_4.5",
+                "price": 1.26,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-22T01:49",
+                      "2026-11-22T01:49"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      3.6,
+                      1.26
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 21,
+                  "row_sha256": "4348811d4aef2099c5c2551a347c0ed490fa6e1ddc5b81bf748ed5a0a4aa2b10"
+                },
+                "raw_kickoff": "17:30",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                  "late_witness_records": 1,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Manchester United",
+                      "csv_data_row": 2624,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "7e2d67b342e735ea158c04864f3b65850b4403c9c7a378b38783cb11ee855a0d",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Liverpool",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                      "league": "Premier League",
+                      "observed_at_utc": "2026-11-21T22:24:44+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "38c301c49424877ccb432b17da8f28ecbdd6f2c29091afe63ea115d61ee44bd3",
+                      "schedule_row": {
+                        "away": "Manchester United",
+                        "captured_at": "2026-11-21T22:24:44+00:00",
+                        "country": "England",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Liverpool",
+                        "hs": "",
+                        "kickoff": "2026-11-22T16:30:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Premier League",
+                        "odd1": "1.7",
+                        "odd2": "4.5",
+                        "odd_gg": "1.53",
+                        "odd_ng": "2.37",
+                        "odd_o15": "1.14",
+                        "odd_o25": "1.5",
+                        "odd_o35": "2.2",
+                        "odd_u15": "5.5",
+                        "odd_u25": "2.62",
+                        "odd_u35": "1.66",
+                        "oddx": "4.2",
+                        "p1": "56.09918931807344",
+                        "p2": "21.192179303767286",
+                        "p_gg": "60.769230769230774",
+                        "p_ng": "39.23076923076923",
+                        "p_o15": "82.83132530120481",
+                        "p_o25": "63.59223300970874",
+                        "p_o35": "43.005181347150256",
+                        "px": "22.708631378159275",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "16:30"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Manchester United FC",
+                      "csv_data_row": 10659,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "fc0feac67d93b5ce1cbd8b775600b319c6a83e5d3b0cdd9782e951859b3ba421",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Liverpool",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                      "league": "England: Premier League",
+                      "observed_at_utc": "2026-11-20T22:13:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "e6e1b523569c969b87b49d94bdb614880aa910fdb2846a9f0abec421a6b2eb31",
+                      "schedule_row": {
+                        "away": "Manchester United FC",
+                        "captured_at": "2026-11-20T22:13:54+00:00",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Liverpool",
+                        "hs": "",
+                        "index": "1.2",
+                        "kickoff": "2026-11-22T17:30:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "England: Premier League",
+                        "p1": "51.0",
+                        "p2": "24.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "25.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-22",
+                "Liverpool FC",
+                "Manchester United"
+              ],
+              "prob": 0.8504,
+              "cohort_evidence": {
+                "rate": 0.8504,
+                "n": 1424,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1211,
+                "cohort_lower_bound": 0.8309550693416442,
+                "price_context": {
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "under",
+                  "league": "Premier League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.26,
+                  "captured_at": "2026-11-22T01:38:48.764392+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T16:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8803203138255764,
+              "ml_model_key": "6258b5f7eec61a790d6ad31a8a4fff98265f8d366f93ba8a19b2bac69bc43df6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Premier League",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T16:30:00+00:00"
+            },
+            {
+              "match": "VIBORG vs RANDERS",
+              "pick": "under",
+              "odds": 1.63,
+              "result": "win",
+              "label": "Match Under 3.5 Goals",
+              "market": "match_under_35",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-22T04:43:29.064395+00:00",
+              "price_provenance": {
+                "away": "Randers FC",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-11-22T04:43:29.064395+00:00",
+                "data_dt": [
+                  22,
+                  11,
+                  2026,
+                  14,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-22T07:00:00+00:00",
+                "decision_day": "2026-11-22",
+                "home": "Viborg",
+                "kickoff_utc": "2026-11-22T13:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-22.json",
+                "ledger_sha256": "f1862b65c7149c35c6a4e58ed366815baf54b12cb5178fbe7b8648e8565bbc55",
+                "market": "ou_3.5",
+                "price": 1.63,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-19T12:31",
+                      "2026-11-19T12:31"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      2.15,
+                      1.63
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 16,
+                  "row_sha256": "5f7ec09c88daf667177b93e63a27f12915d925e1b55b8f49c3bba258de35f1ae"
+                },
+                "raw_kickoff": "14:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-22T13:00:00+00:00",
+                  "late_witness_records": 1,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Randers FC",
+                      "csv_data_row": 2711,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "7e2d67b342e735ea158c04864f3b65850b4403c9c7a378b38783cb11ee855a0d",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Viborg FF",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T13:00:00+00:00",
+                      "league": "Superliga",
+                      "observed_at_utc": "2026-11-21T22:24:44+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "7ab5c10cf45ddf6beb0e6a2f5139005046f45121d0300068088a590ab59abd5d",
+                      "schedule_row": {
+                        "away": "Randers FC",
+                        "captured_at": "2026-11-21T22:24:44+00:00",
+                        "country": "Denmark",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Viborg FF",
+                        "hs": "",
+                        "kickoff": "2026-11-22T13:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Superliga",
+                        "odd1": "1.57",
+                        "odd2": "5.0",
+                        "odd_gg": "1.57",
+                        "odd_ng": "2.25",
+                        "odd_o15": "1.14",
+                        "odd_o25": "1.5",
+                        "odd_o35": "2.2",
+                        "odd_u15": "5.5",
+                        "odd_u25": "2.5",
+                        "odd_u35": "1.61",
+                        "oddx": "4.33",
+                        "p1": "59.63646584840252",
+                        "p2": "18.738873793685002",
+                        "p_gg": "58.90052356020943",
+                        "p_ng": "41.09947643979058",
+                        "p_o15": "82.83132530120481",
+                        "p_o25": "62.5",
+                        "p_o35": "42.257217847769034",
+                        "px": "21.62466035791249",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "13:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Randers FC",
+                      "csv_data_row": 11064,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "fc0feac67d93b5ce1cbd8b775600b319c6a83e5d3b0cdd9782e951859b3ba421",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Viborg",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T13:00:00+00:00",
+                      "league": "Denmark: Superliga",
+                      "observed_at_utc": "2026-11-20T22:13:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "d9e6a2a2ef925c194b40b496787b590d04ed11152d2927cf0d72dac4e28fc9b4",
+                      "schedule_row": {
+                        "away": "Randers FC",
+                        "captured_at": "2026-11-20T22:13:54+00:00",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Viborg",
+                        "hs": "",
+                        "index": "2.19",
+                        "kickoff": "2026-11-22T14:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Denmark: Superliga",
+                        "p1": "63.0",
+                        "p2": "17.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "20.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-22",
+                "VIBORG",
+                "RANDERS"
+              ],
+              "prob": 0.6364,
+              "cohort_evidence": {
+                "rate": 0.6364,
+                "n": 605,
+                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 385,
+                "cohort_lower_bound": 0.5972831064919808,
+                "price_context": {
+                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                  "selection": "home",
+                  "league": "DK1",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.63,
+                  "captured_at": "2026-11-22T04:43:29.064395+00:00",
+                  "decision_at": "2026-11-22T09:49:31+02:00",
+                  "kickoff": "2026-11-22T13:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8529509560737331,
+              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "DK1",
+              "shadow": true,
+              "price_kickoff": "2026-11-22T13:00:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 22.4747,
+      "close_pct": 22.4747
     }
   ]
 }
