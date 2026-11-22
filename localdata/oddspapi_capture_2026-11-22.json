@@ -1,33 +1,23 @@
 {
-  "added": 20972,
-  "attempted": 3,
+  "added": 6541,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Eyupspor",
-      "fixture_id": "id1000005272723322",
-      "home": "Trabzonspor"
-    },
-    {
-      "away": "Sivasspor",
-      "fixture_id": "id1000009872735912",
-      "home": "Bursaspor"
-    },
-    {
-      "away": "Legia Warszawa",
-      "fixture_id": "id1000020272043342",
-      "home": "Wisla Plock"
+      "away": "PFC CSKA Sofia",
+      "fixture_id": "id1000024771998274",
+      "home": "Botev Plovdiv"
     }
   ],
   "budget": {
     "day": "2026-11-22",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 545,
-    "remaining_today": 1,
-    "spent_today": 24
+    "month_spent": 547,
+    "remaining_today": 0,
+    "spent_today": 26
   },
-  "budget_deferred": 197,
-  "captured_at": "2026-11-22T10:37:29+00:00",
+  "budget_deferred": 199,
+  "captured_at": "2026-11-22T13:36:22+00:00",
   "date": "2026-11-22",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
@@ -37,177 +27,131 @@
   "future_slate_fixtures": 2,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 611,
+  "market_census_distinct": 431,
   "markets": {
-    "1x2": 1948,
-    "btts": 1170,
-    "dc": 1627,
-    "dnb": 884,
-    "ou_0.5": 453,
-    "ou_0.75": 66,
-    "ou_1": 84,
-    "ou_1.25": 90,
-    "ou_1.5": 884,
-    "ou_1.75": 178,
-    "ou_2": 264,
-    "ou_2.25": 334,
-    "ou_2.5": 1020,
-    "ou_2.75": 406,
-    "ou_3": 442,
-    "ou_3.25": 510,
-    "ou_3.5": 1034,
-    "ou_3.75": 338,
-    "ou_4": 346,
-    "ou_4.25": 250,
-    "ou_4.5": 938,
-    "ou_4.75": 114,
-    "ou_5": 162,
-    "ou_5.25": 74,
-    "ou_5.5": 661,
-    "ou_5.75": 40,
-    "ou_6": 84,
-    "ou_6.25": 40,
-    "ou_6.5": 345,
-    "ou_6.75": 20,
-    "ou_7": 20,
-    "ou_7.25": 20,
-    "ou_7.5": 102,
-    "ou_7.75": 16,
-    "ou_8": 16,
-    "ou_8.25": 16,
-    "ou_8.5": 72,
-    "tt_away_0.5": 794,
-    "tt_away_0.75": 60,
-    "tt_away_1": 64,
-    "tt_away_1.25": 60,
-    "tt_away_1.5": 663,
-    "tt_away_1.75": 50,
-    "tt_away_2": 28,
+    "1x2": 633,
+    "btts": 384,
+    "dc": 582,
+    "dnb": 327,
+    "ou_0.5": 181,
+    "ou_0.75": 8,
+    "ou_1": 26,
+    "ou_1.25": 26,
+    "ou_1.5": 306,
+    "ou_1.75": 30,
+    "ou_2": 76,
+    "ou_2.25": 158,
+    "ou_2.5": 338,
+    "ou_2.75": 192,
+    "ou_3": 178,
+    "ou_3.25": 158,
+    "ou_3.5": 324,
+    "ou_3.75": 58,
+    "ou_4": 66,
+    "ou_4.25": 28,
+    "ou_4.5": 282,
+    "ou_4.75": 26,
+    "ou_5": 28,
+    "ou_5.25": 10,
+    "ou_5.5": 140,
+    "ou_5.75": 8,
+    "ou_6": 8,
+    "ou_6.25": 8,
+    "ou_6.5": 79,
+    "ou_6.75": 4,
+    "ou_7": 4,
+    "ou_7.25": 4,
+    "ou_7.5": 22,
+    "ou_7.75": 4,
+    "ou_8": 4,
+    "ou_8.25": 4,
+    "ou_8.5": 5,
+    "tt_away_0.5": 224,
+    "tt_away_0.75": 18,
+    "tt_away_1": 18,
+    "tt_away_1.25": 18,
+    "tt_away_1.5": 268,
+    "tt_away_1.75": 24,
+    "tt_away_2": 18,
     "tt_away_2.25": 18,
-    "tt_away_2.5": 503,
-    "tt_away_3": 3,
-    "tt_away_3.5": 164,
-    "tt_away_4": 2,
-    "tt_away_4.5": 66,
-    "tt_away_5.5": 3,
-    "tt_home_0.5": 487,
-    "tt_home_0.75": 18,
-    "tt_home_1": 48,
-    "tt_home_1.25": 26,
-    "tt_home_1.5": 730,
-    "tt_home_1.75": 38,
-    "tt_home_2": 64,
-    "tt_home_2.25": 36,
-    "tt_home_2.5": 714,
-    "tt_home_2.75": 42,
-    "tt_home_3": 46,
-    "tt_home_3.25": 36,
-    "tt_home_3.5": 561,
-    "tt_home_3.75": 20,
-    "tt_home_4": 39,
-    "tt_home_4.5": 343,
-    "tt_home_5": 18,
-    "tt_home_5.5": 138,
-    "tt_home_6.5": 22
+    "tt_away_2.5": 232,
+    "tt_away_2.75": 2,
+    "tt_away_3": 18,
+    "tt_away_3.25": 2,
+    "tt_away_3.5": 119,
+    "tt_away_4.5": 47,
+    "tt_away_5.5": 4,
+    "tt_home_0.5": 262,
+    "tt_home_0.75": 24,
+    "tt_home_1": 18,
+    "tt_home_1.25": 18,
+    "tt_home_1.5": 242,
+    "tt_home_1.75": 18,
+    "tt_home_2": 16,
+    "tt_home_2.25": 16,
+    "tt_home_2.5": 123,
+    "tt_home_3.5": 52,
+    "tt_home_4.5": 2,
+    "tt_home_5.5": 1
   },
   "markets_source": "cache",
-  "matched": 3,
+  "matched": 1,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "market_inactive": 112,
-    "market_unsupported_cards": 557,
-    "market_unsupported_clean_sheet": 390,
-    "market_unsupported_corners": 4166,
-    "market_unsupported_correct_score": 1261,
-    "market_unsupported_early_payout": 92,
-    "market_unsupported_handicap": 5774,
-    "market_unsupported_market_type": 4335,
-    "market_unsupported_non_goal": 341,
-    "market_unsupported_odd_even": 1161,
-    "market_unsupported_period": 21469,
-    "market_unsupported_win_to_nil": 732,
-    "outcome_inactive": 1425
+    "market_inactive": 54,
+    "market_unsupported_cards": 227,
+    "market_unsupported_clean_sheet": 136,
+    "market_unsupported_corners": 1200,
+    "market_unsupported_correct_score": 411,
+    "market_unsupported_early_payout": 14,
+    "market_unsupported_handicap": 1871,
+    "market_unsupported_market_type": 1436,
+    "market_unsupported_non_goal": 74,
+    "market_unsupported_odd_even": 342,
+    "market_unsupported_period": 6628,
+    "market_unsupported_win_to_nil": 284,
+    "outcome_inactive": 366
   },
   "parse_skips_classified": {
     "expected": {
-      "market_inactive": 112,
-      "outcome_inactive": 1425
+      "market_inactive": 54,
+      "outcome_inactive": 366
     },
     "loss_or_diagnosis": {
-      "market_unsupported_cards": 557,
-      "market_unsupported_clean_sheet": 390,
-      "market_unsupported_corners": 4166,
-      "market_unsupported_correct_score": 1261,
-      "market_unsupported_early_payout": 92,
-      "market_unsupported_handicap": 5774,
-      "market_unsupported_market_type": 4335,
-      "market_unsupported_non_goal": 341,
-      "market_unsupported_odd_even": 1161,
-      "market_unsupported_period": 21469,
-      "market_unsupported_win_to_nil": 732
+      "market_unsupported_cards": 227,
+      "market_unsupported_clean_sheet": 136,
+      "market_unsupported_corners": 1200,
+      "market_unsupported_correct_score": 411,
+      "market_unsupported_early_payout": 14,
+      "market_unsupported_handicap": 1871,
+      "market_unsupported_market_type": 1436,
+      "market_unsupported_non_goal": 74,
+      "market_unsupported_odd_even": 342,
+      "market_unsupported_period": 6628,
+      "market_unsupported_win_to_nil": 284
     }
   },
-  "pending_fixtures": 618,
+  "pending_fixtures": 304,
   "quoted_fixtures": [
     {
-      "away": "Eyupspor",
-      "fixture_id": "id1000005272723322",
-      "home": "Trabzonspor"
-    },
-    {
-      "away": "Sivasspor",
-      "fixture_id": "id1000009872735912",
-      "home": "Bursaspor"
-    },
-    {
-      "away": "Legia Warszawa",
-      "fixture_id": "id1000020272043342",
-      "home": "Wisla Plock"
+      "away": "PFC CSKA Sofia",
+      "fixture_id": "id1000024771998274",
+      "home": "Botev Plovdiv"
     }
   ],
-  "reserved_requests": 1,
-  "rows": 20972,
+  "reserved_requests": 0,
+  "rows": 6541,
   "schema": 1,
-  "slate_candidate_fixtures": 55,
+  "slate_candidate_fixtures": 27,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 11,
-  "slate_provider_overlap_fixtures": 17,
+  "slate_priority_fixtures": 4,
+  "slate_provider_overlap_fixtures": 9,
   "slate_unmatched_fixtures": [
-    {
-      "away": "Willem II",
-      "home": "FC Twente",
-      "league": "Eredivisie",
-      "normalized_pair": "twente|willem"
-    },
-    {
-      "away": "Lokomotiv Sofia",
-      "home": "Levski Sofia",
-      "league": "Bulgaria First League",
-      "normalized_pair": "levski sofia|lokomotiv sofia"
-    },
     {
       "away": "West Ham W",
       "home": "Arsenal W",
       "league": "Women's Super League",
       "normalized_pair": "arsenal w|west ham w"
-    },
-    {
-      "away": "ADO Den Haag",
-      "home": "Ajax",
-      "league": "Eredivisie",
-      "normalized_pair": "ado den haag|ajax"
-    },
-    {
-      "away": "Gubbio",
-      "home": "Pianese",
-      "league": "Serie C, Girone B",
-      "normalized_pair": "gubbio|pianese"
-    },
-    {
-      "away": "Brighton",
-      "home": "Hull City",
-      "league": "England Premier League",
-      "normalized_pair": "brighton|hull city"
     },
     {
       "away": "Istra 1961",
@@ -234,28 +178,10 @@
       "normalized_pair": "le mans|marseille"
     },
     {
-      "away": "Casarano",
-      "home": "Team Altamura",
-      "league": "Serie C, Girone C",
-      "normalized_pair": "casarano|team altamura"
-    },
-    {
       "away": "Kom\u00e1rno",
       "home": "Dunajsk\u00e1 Streda",
       "league": "Nik\u00e9 Liga",
       "normalized_pair": "dunajska streda|komarno"
-    },
-    {
-      "away": "Novara",
-      "home": "Pro Vercelli",
-      "league": "Serie C, Girone A",
-      "normalized_pair": "novara|pro vercelli"
-    },
-    {
-      "away": "Alanyaspor",
-      "home": "Kas\u0131mpa\u015fa",
-      "league": "Trendyol Super Lig",
-      "normalized_pair": "alanyaspor|kasimpasa"
     },
     {
       "away": "Genoa",
@@ -276,12 +202,6 @@
       "normalized_pair": "bologna|udinese"
     },
     {
-      "away": "Foggia",
-      "home": "Scafatese",
-      "league": "Serie C, Girone C",
-      "normalized_pair": "foggia|scafatese"
-    },
-    {
       "away": "KIFISIA",
       "home": "PAOK",
       "league": "GR1",
@@ -294,34 +214,16 @@
       "normalized_pair": "slovan liberec|sparta praha"
     },
     {
-      "away": "NAFTA",
-      "home": "MARIBOR",
-      "league": "SI1",
-      "normalized_pair": "maribor|nafta"
-    },
-    {
       "away": "Perugia",
       "home": "Sambenedettese",
       "league": "Serie C, Girone B",
       "normalized_pair": "perugia|sambenedettese"
     },
     {
-      "away": "Pendikspor",
-      "home": "Manisa FK",
-      "league": "Trendyol 1. Lig",
-      "normalized_pair": "manisa|pendikspor"
-    },
-    {
       "away": "FC K\u00f8benhavn",
       "home": "FC Nordsj\u00e6lland",
       "league": "Danish Superliga",
       "normalized_pair": "kobenhavn|nordsjaelland"
-    },
-    {
-      "away": "Widzew \u0141\u00f3d\u017a",
-      "home": "Rak\u00f3w Cz\u0119stochowa",
-      "league": "Ekstraklasa",
-      "normalized_pair": "rakow czestochowa|widzew lodz"
     },
     {
       "away": "FROSINONE",
@@ -336,18 +238,6 @@
       "normalized_pair": "eibar|girona"
     },
     {
-      "away": "ANGERS",
-      "home": "PARIS FC",
-      "league": "FR1",
-      "normalized_pair": "angers|paris"
-    },
-    {
-      "away": "BESIKTAS",
-      "home": "KONYASPOR",
-      "league": "TR1",
-      "normalized_pair": "besiktas|konyaspor"
-    },
-    {
       "away": "ROSENBORG",
       "home": "AALESUND",
       "league": "NO1",
@@ -360,48 +250,12 @@
       "normalized_pair": "atalanta|inter"
     },
     {
-      "away": "LUZERN",
-      "home": "BASEL",
-      "league": "CH1",
-      "normalized_pair": "basel|luzern"
-    },
-    {
-      "away": "FEIRENSE",
-      "home": "VIZELA",
-      "league": "PT2",
-      "normalized_pair": "feirense|vizela"
-    },
-    {
-      "away": "MANTOVA",
-      "home": "AVELLINO",
-      "league": "IT2",
-      "normalized_pair": "avellino|mantova"
-    },
-    {
-      "away": "REAL SOCIEDAD",
-      "home": "RACING SANTANDER",
-      "league": "ES1",
-      "normalized_pair": "racing santander|real sociedad"
-    },
-    {
       "away": "ALBACETE",
       "home": "BURGOS",
       "league": "ES2",
       "normalized_pair": "albacete|burgos"
-    },
-    {
-      "away": "HALMSTAD",
-      "home": "BROMMAPOJKARNA",
-      "league": "SE1",
-      "normalized_pair": "brommapojkarna|halmstad"
-    },
-    {
-      "away": "ST GALLEN",
-      "home": "ZURICH",
-      "league": "CH1",
-      "normalized_pair": "st gallen|zurich"
     }
   ],
   "source": "oddspapi_odds",
-  "status": "reserved"
+  "status": "budget"
 }

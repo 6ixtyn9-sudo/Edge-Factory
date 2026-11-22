@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 58.896682753548,
   "paper_multiple": 0.58896682753548,
-  "paper_committed_units": 4.011007,
-  "paper_free_units": 54.885675753548,
+  "paper_committed_units": 5.119981,
+  "paper_free_units": 53.776701753548,
   "settled_stake_units": 67.344384,
   "receipt_days": 20,
-  "decision_receipts": 182,
+  "decision_receipts": 184,
   "bet_days": 13,
   "no_bet_days": 7,
   "missed_freeze_days": 0,
@@ -17,9 +17,9 @@
   "wins": 9,
   "losses": 58,
   "hit_rate": 0.13432835820895522,
-  "pending_accas": 11,
+  "pending_accas": 12,
   "superseded_tickets": 1,
-  "unresolved_result_legs": 14,
+  "unresolved_result_legs": 16,
   "resolved_result_legs": 94,
   "profit_units": -41.103317246452,
   "roi": -0.6103451365217328,
@@ -25509,6 +25509,345 @@
       "decision_id": "20261122T110345430981Z",
       "captured_at": "2026-11-22T11:03:45.430981+00:00",
       "frozen_at": "2026-11-22T11:04:51.726394+00:00"
+    },
+    {
+      "date": "2026-11-22",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 19.41,
+          "stake_units": 1.108974,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "b7e939ce6f2774bb25a385897b4e5e2ddd72b5e5b7b3b39a201b077df19c4eb8",
+                "evidence_sha256": "c8c5a82e1806e0e851b717c9e03efb42b690d310d85d6054beaaf2dd0e73862f",
+                "fixtures": 81,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.794271067927,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.7855615833302965,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.7727975270479134,
+                "required_source_probability": 0.7727975270479134,
+                "source_probability": 0.7820945083014049,
+                "status": "eligible",
+                "wins": 69
+              },
+              "away": "Legia Warszawa",
+              "base_partition": [
+                [
+                  "match_over_15",
+                  "over",
+                  0.7820945083014049
+                ],
+                [
+                  "match_under_15",
+                  "under",
+                  0.21790549169859508
+                ]
+              ],
+              "base_probability": 0.7820945083014049,
+              "book": "williamhill-nj",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "0597872cd52cc226d3e649e06725664e0cb6db4b898d8aa7b8c943234d722d48",
+              "context": {
+                "as_of": "2026-11-22T13:49:32.394988+00:00",
+                "country": "Poland",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-22",
+                "form_values": {
+                  "away_form_btts": 0.8,
+                  "away_form_ga": 1.4,
+                  "away_form_gf": 2.2,
+                  "away_form_over15": 0.9,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.5,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.3,
+                  "home_form_gf": 1.6,
+                  "home_form_over15": 0.8,
+                  "home_form_over25": 0.6,
+                  "home_form_over35": 0.4
+                },
+                "league": "poland ekstraklasa",
+                "parent_confidence": 0.6758835341365461,
+                "parent_selection": null,
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+              "date": "2026-11-22",
+              "fixture": [
+                "2026-11-22",
+                "wislaplock",
+                "legiawarsaw"
+              ],
+              "forecast_model_key": "db7e3045d378ed1c6e56ad0bbda1a31e0a64240754e9f0f44abd522409c6e6c9",
+              "home": "Wis\u0142a P\u0142ock",
+              "kickoff_utc": "2026-11-22T16:30:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                "fixture": [
+                  "2026-11-22",
+                  "wislaplock",
+                  "legiawarsaw",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.41303142619465755,
+                  "forecast_1x2_away_spread": 0.02009427858397267,
+                  "forecast_1x2_draw_mean": 0.28061219459592696,
+                  "forecast_1x2_draw_spread": 0.02999999999999997,
+                  "forecast_1x2_home_mean": 0.30635637920941555,
+                  "forecast_1x2_home_spread": 0.01100000000000001,
+                  "forecast_btts_yes_mean": 0.5797139107611549,
+                  "forecast_btts_yes_spread": 0.004572178477690314,
+                  "forecast_ou_1.5_over_mean": 0.7820945083014049,
+                  "forecast_ou_1.5_over_spread": 0.04371647509578547,
+                  "forecast_ou_2.5_over_mean": 0.5430580474934037,
+                  "forecast_ou_2.5_over_spread": 0.006174142480211087,
+                  "forecast_ou_3.5_over_mean": 0.32411646586345383,
+                  "forecast_ou_3.5_over_spread": 0.027349397590361424,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.53,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.32,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "930fbcdb6b56c12face0681cf8c9fea9f86b3dc4819062ee1c20220460c6a394",
+              "odds": 1.294,
+              "pre_normalized_probability": 0.7855615833302965,
+              "price_age_seconds_at_decision": 11533.138823,
+              "price_age_seconds_at_freeze": 11600.669203,
+              "price_at": "2026-11-22T10:37:19.256165+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Legia Warszawa",
+                  "bookmaker": "williamhill-nj",
+                  "bookmaker_market_id": "2b9ba744-3781-39ca-bf0f-aa5f0f6e770a",
+                  "captured_at": "2026-11-22T10:37:19.256165+00:00",
+                  "date": "2026-11-22",
+                  "home": "Wisla Plock",
+                  "kickoff": "2026-11-22T16:30:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.294",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-22T09:39:56.975Z",
+                  "provider_fixture_id": "id1000020272043342",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "03fa6025004c1d7b031850373d71c5218b21678374a93de0ad84e0bbbb7fbb42",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.7855615833302965,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            },
+            {
+              "admission": {
+                "cell": "b8d1467420d99e5121589c19cf5761bbfe1434f8089e90d9df1b610d7829b945",
+                "evidence_sha256": "c8c5a82e1806e0e851b717c9e03efb42b690d310d85d6054beaaf2dd0e73862f",
+                "fixtures": 102,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.177038240606,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.177038240606,
+                "reason": "positive_conservative_edge",
+                "required_model_probability": 0.06666666666666667,
+                "required_source_probability": 0.06666666666666667,
+                "source_probability": 0.18936931216931216,
+                "status": "eligible",
+                "wins": 23
+              },
+              "away": "Sivasspor",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.6301701149425287
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.18046057288815912
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.18936931216931216
+                ]
+              ],
+              "base_probability": 0.18936931216931216,
+              "book": "williamhill-nj",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "e641f3e7cc99abdcfe78be4f5c39ac55a20e75c4dbabb70bed41a80b807e73fa",
+              "context": {
+                "as_of": "2026-11-22T13:49:32.394988+00:00",
+                "country": "Turkey",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-22",
+                "form_values": {
+                  "away_form_btts": 0.9,
+                  "away_form_ga": 1.7,
+                  "away_form_gf": 1.4,
+                  "away_form_over15": 1.0,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.4,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 0.9,
+                  "home_form_gf": 2.4,
+                  "home_form_over15": 1.0,
+                  "home_form_over25": 0.8,
+                  "home_form_over35": 0.3
+                },
+                "league": "1 lig",
+                "parent_confidence": 0.7394252873563218,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+              "date": "2026-11-22",
+              "fixture": [
+                "2026-11-22",
+                "bursaspor",
+                "sivasspor"
+              ],
+              "forecast_model_key": "db7e3045d378ed1c6e56ad0bbda1a31e0a64240754e9f0f44abd522409c6e6c9",
+              "home": "Bursaspor",
+              "kickoff_utc": "2026-11-22T16:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "fixture": [
+                  "2026-11-22",
+                  "bursaspor",
+                  "sivasspor",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.18936931216931216,
+                  "forecast_1x2_away_spread": 0.5291534391534392,
+                  "forecast_1x2_draw_mean": 0.18046057288815912,
+                  "forecast_1x2_draw_spread": 0.11969713555920453,
+                  "forecast_1x2_home_mean": 0.6301701149425287,
+                  "forecast_1x2_home_spread": 0.6488505747126436,
+                  "forecast_btts_yes_mean": 0.4347860892388452,
+                  "forecast_btts_yes_spread": 0.024427821522309656,
+                  "forecast_ou_1.5_over_mean": 0.8277710843373494,
+                  "forecast_ou_1.5_over_spread": 0.0050000000000000044,
+                  "forecast_ou_2.5_over_mean": 0.6007051597051597,
+                  "forecast_ou_2.5_over_spread": 0.11882063882063887,
+                  "forecast_ou_3.5_over_mean": 0.40882978723404256,
+                  "forecast_ou_3.5_over_spread": 0.07148936170212766,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.72,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 2.29,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "c02edd11c22c4dc3b1fc6b5c64638fb57a0d98828dcbd1a5821f595eea1acced",
+              "odds": 15.0,
+              "pre_normalized_probability": 0.19773309957655938,
+              "price_age_seconds_at_decision": 11544.582457,
+              "price_age_seconds_at_freeze": 11612.112837,
+              "price_at": "2026-11-22T10:37:07.812531+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Sivasspor",
+                  "bookmaker": "williamhill-nj",
+                  "bookmaker_market_id": "c0da2783-7796-334e-b469-142e7d8180d0",
+                  "captured_at": "2026-11-22T10:37:07.812531+00:00",
+                  "date": "2026-11-22",
+                  "home": "Bursaspor",
+                  "kickoff": "2026-11-22T16:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "15.0",
+                  "outcome_key": "103",
+                  "provider_changed_at": "2026-11-21T00:29:24.200Z",
+                  "provider_fixture_id": "id1000009872735912",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "away",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "6e66134fb52643290fcf99d2b560bf05569d189fd5f010d92bed9cd6ed0a3cce",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.19773309957655938,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "away"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261122T134932394988Z",
+      "captured_at": "2026-11-22T13:49:32.394988+00:00",
+      "frozen_at": "2026-11-22T13:50:39.925368+00:00"
+    },
+    {
+      "date": "2026-11-22",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261122T135941822636Z",
+      "captured_at": "2026-11-22T13:59:41.822636+00:00",
+      "frozen_at": "2026-11-22T14:00:41.609762+00:00"
     }
   ],
   "latest_learning": {
@@ -26353,7 +26692,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-22T11:03:45.430981+00:00",
+    "as_of": "2026-11-22T13:59:41.822636+00:00",
     "context_model": {
       "coef": [
         0.000340635016397698,
@@ -33024,7 +33363,7 @@
     "fixtures": 205,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "694ae3cf7e11e8e6a1a899a42a02766cc8405596c675625cc0a807e96af8282c",
+    "model_key": "dd8402709af327175c759b47ece352d5eaab1a7f662414ddc9bd698c5980eb21",
     "observations": 655,
     "parameters": 1678,
     "power": 1.0,
