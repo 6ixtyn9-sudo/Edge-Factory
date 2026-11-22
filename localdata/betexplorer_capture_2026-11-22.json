@@ -1,5 +1,5 @@
 {
-  "attempted": 14,
+  "attempted": 15,
   "attempted_fixtures": [
     {
       "avg_p": 85.0,
@@ -17,26 +17,6 @@
       "date": "2026-11-22",
       "home": "APOLLON LIMASSOL",
       "league": "CY1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5873
-    },
-    {
-      "avg_p": 68.5,
-      "away": "KAIZER CHIEFS",
-      "date": "2026-11-22",
-      "home": "MAMELODI SUNDOWNS",
-      "league": "ZAC",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5873
-    },
-    {
-      "avg_p": 65.5,
-      "away": "DYNAMO DRESDEN",
-      "date": "2026-11-22",
-      "home": "KAISERSLAUTERN",
-      "league": "DE2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
@@ -67,6 +47,36 @@
       "date": "2026-11-22",
       "home": "HACKEN",
       "league": "SE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
+      "avg_p": 48.5,
+      "away": "CINCINNATI",
+      "date": "2026-11-22",
+      "home": "NASHVILLE",
+      "league": "US1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
+      "avg_p": 46.5,
+      "away": "HALMSTAD",
+      "date": "2026-11-22",
+      "home": "BROMMAPOJKARNA",
+      "league": "SE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
+      "avg_p": 68.5,
+      "away": "KAIZER CHIEFS",
+      "date": "2026-11-22",
+      "home": "MAMELODI SUNDOWNS",
+      "league": "ZAC",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
@@ -143,26 +153,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 12,
+  "be_cached": 13,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 12,
-  "candidate_fixtures": 40,
-  "captured_at": "2026-11-22T07:48:05.211952+00:00",
+  "cache_only": 13,
+  "candidate_fixtures": 37,
+  "captured_at": "2026-11-22T10:37:29.794650+00:00",
   "date": "2026-11-22",
-  "deferred_fixtures": 26,
+  "deferred_fixtures": 22,
   "errors": [],
-  "fixtures_with_rows": 12,
+  "fixtures_with_rows": 13,
   "market_budget_stop": false,
-  "market_requests": 7,
+  "market_requests": 6,
   "match_detail": {
-    "bookmakers": 174,
+    "bookmakers": 196,
     "challenge_pages": 0,
-    "fixtures": 13,
-    "market_rows": 424,
-    "markets": 67,
-    "named_rows": 424,
+    "fixtures": 15,
+    "market_rows": 475,
+    "markets": 74,
+    "named_rows": 475,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -179,16 +189,6 @@
       "date": "2026-11-22",
       "home": "APOLLON LIMASSOL",
       "league": "CY1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5873
-    },
-    {
-      "avg_p": 65.5,
-      "away": "DYNAMO DRESDEN",
-      "date": "2026-11-22",
-      "home": "KAISERSLAUTERN",
-      "league": "DE2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
@@ -218,6 +218,26 @@
       "away": "ELFSBORG",
       "date": "2026-11-22",
       "home": "HACKEN",
+      "league": "SE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
+      "avg_p": 48.5,
+      "away": "CINCINNATI",
+      "date": "2026-11-22",
+      "home": "NASHVILLE",
+      "league": "US1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
+      "avg_p": 46.5,
+      "away": "HALMSTAD",
+      "date": "2026-11-22",
+      "home": "BROMMAPOJKARNA",
       "league": "SE1",
       "market": "1x2",
       "pick": "home",
@@ -294,8 +314,8 @@
       "w_score": 0.5873
     }
   ],
-  "requests": 14,
-  "rows": 36,
+  "requests": 13,
+  "rows": 39,
   "schema": 1,
   "status": "ok"
 }

@@ -225,52 +225,71 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 6,
+        "board_fixtures": 7,
         "board_league_count": 3,
         "board_leagues": {
-          "hong_kong_-_premier_league": 30,
-          "korea_-_k2_league": 166,
-          "taiwan_-_football_premier_league": 4
+          "azerbaijan_-_premier": 21,
+          "czech_republic_-_fnl": 71,
+          "turkey_-_tff_2_lig": 108
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 151,
+        "board_priced_rows": 10,
         "board_rows": 200,
-        "board_team_count": 10,
+        "board_team_count": 14,
         "board_team_names": {
-          "Cheonan City": 122,
-          "Cheonan City FC": 20,
-          "Chungnam Asan FC": 24,
-          "Eastern AA": 26,
-          "Eastern Football Team": 4,
-          "Hang Yuan": 4,
-          "Paju Citizen": 142,
-          "Seoul E-Land FC": 24,
-          "Shatin SA": 30,
-          "Taichung Futuro": 4
+          "Adana 1954": 33,
+          "Araz Naxcivan": 21,
+          "Elazigspor": 16,
+          "Fethiyespor": 28,
+          "Gebzespor": 31,
+          "Kahramanmaras Istiklal": 33,
+          "Kirklarelispor": 28,
+          "Neftchi Baku": 21,
+          "Opava": 28,
+          "SFC Opava": 43,
+          "Sebat Genclik Spor": 31,
+          "Somaspor": 16,
+          "Viktoria Zizkov": 28,
+          "Zizkov": 43
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_asian_total_goals": 6,
+          "unknown_market:1st_half_moneyline": 3,
+          "unknown_market:1st_half_total_goals": 2,
+          "unknown_market:asian_total_goals": 10,
+          "unknown_market:team_to_score_goal_4_3_way": 3,
+          "unknown_selection:tie_or_opava": 1,
+          "unknown_selection:viktoria_zizkov_or_opava": 1,
+          "unknown_selection:viktoria_zizkov_or_tie": 1,
+          "unsupported_market:asian_handicap": 12
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 151
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 10
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 1,
+      "sa_scored": 10,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
