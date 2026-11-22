@@ -2,14 +2,14 @@
 
 ## Overall
 
-- total unique picks: 1541
+- total unique picks: 1542
 - picks with at least two prices: 1350
-- average raw odds delta: 8.6e-05
+- average raw odds delta: 8.5e-05
 - average implied-probability delta: -0.000225
-- beat-later-price rate: 0.046667
+- beat-later-price rate: 0.047407
 - beat-later-price sample: 1350
 - unmatched picks: 180
-- picks with fewer than two snapshots: 13
+- picks with fewer than two snapshots: 14
 
 ## By rule
 
@@ -36,7 +36,7 @@
 - `pfc_642ac9053223500b638e3451`: n=4, two_prices=4, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_69dd4c8623d4d22d840da318`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_6e307ecea6710c78870d27d2`: n=44, two_prices=29, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
-- `pfc_71a63d281a3dff22aa75f744`: n=30, two_prices=28, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
+- `pfc_71a63d281a3dff22aa75f744`: n=31, two_prices=28, avg_raw=-5e-05, avg_ip=2e-05, beat_rate=0.035714
 - `pfc_73b036a8ee8dd5a4dea48134`: n=47, two_prices=46, avg_raw=0.004783, avg_ip=-0.001058, beat_rate=0.021739
 - `pfc_761600158cf919ff30691f34`: n=6, two_prices=5, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_7e79a7652db874e451b269cb`: n=2, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
@@ -66,9 +66,9 @@
 
 ## By bucket
 
-- `CAUTION`: n=255, two_prices=252, avg_raw=-0.000555, avg_ip=0.000243, beat_rate=0.087302
+- `CAUTION`: n=256, two_prices=252, avg_raw=-0.000555, avg_ip=0.000243, beat_rate=0.087302
 - `CERTIFIED_CLEAN`: n=50, two_prices=50, avg_raw=-0.000834, avg_ip=0.00045, beat_rate=0.02
-- `SKIPPED_VETO`: n=898, two_prices=875, avg_raw=0.000352, avg_ip=-0.000382, beat_rate=0.034286
+- `SKIPPED_VETO`: n=898, two_prices=875, avg_raw=0.000351, avg_ip=-0.000382, beat_rate=0.035429
 - `WATCHLIST_NO_ODDS`: n=155, two_prices=12, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_SUSPECT_PRICE`: n=123, two_prices=101, avg_raw=-0.001584, avg_ip=0.000147, beat_rate=0.089109
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=35, two_prices=35, avg_raw=0.004286, avg_ip=-0.00195, beat_rate=0.028571

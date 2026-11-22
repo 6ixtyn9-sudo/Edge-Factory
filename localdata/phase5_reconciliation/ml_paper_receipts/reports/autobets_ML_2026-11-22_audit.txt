@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-22
 ==============================================================
-CURRENT PAPER BANK (all dates): 58.897 units · free 56.624 / reserved 2.273
-7 paper accas · 6 ticket publications · 0 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 58.897 units · free 56.102 / reserved 2.794
+10 paper accas · 8 ticket publications · 0 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -57,6 +57,36 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
    Published 2026-11-22 07:10:43 SAST · reference P6/1
    OSASUNA vs MALAGA · KICKOFF 2026-11-22 19:30 SAST
       Match Under 2.5 Goals @1.890 · ML 53.6% · SKIPPED_VETO
+
+   TRABZONSPOR vs EYUPSPOR · KICKOFF 2026-11-22 18:00 SAST
+      Draw (1X2) @10.800 · ML 14.0% · WATCHLIST_UNKNOWN_CTX
+
+[PAPER ACCA #8] @12.096 — 0.475552 paper units — orbitx
+   Published 2026-11-22 10:10:27 SAST · reference P7/1
+   BARCELONA vs VILLARREAL · KICKOFF 2026-11-22 15:00 SAST
+      Draw (1X2) @9.600 · ML 16.2% · SKIPPED_VETO
+
+   Esenler Erokspor vs Antalyaspor · KICKOFF 2026-11-22 15:00 SAST
+      Match Over 1.5 Goals @1.260 · ML 82.8% · SKIPPED_VETO
+
+[PAPER ACCA #9] @222.912 — 0.023018 paper units — 1xbet
+   Published 2026-11-22 10:10:27 SAST · reference P7/2
+   MAMELODI SUNDOWNS vs KAIZER CHIEFS · KICKOFF 2026-11-22 15:30 SAST
+      Match Over 1.5 Goals @1.290 · ML 84.3% · SKIPPED_VETO
+
+   Ajax vs ADO Den Haag · KICKOFF 2026-11-22 15:30 SAST
+      Away Win (1X2) @16.000 · ML 9.2% · SKIPPED_VETO
+
+   Trabzonspor vs Eyüpspor · KICKOFF 2026-11-22 18:00 SAST
+      Draw (1X2) @10.800 · ML 14.0% · SKIPPED_VETO
+
+[PAPER ACCA #10] @222.912 — 0.022731 paper units — 1xbet
+   Published 2026-11-22 10:22:39 SAST · reference P8/1
+   MAMELODI SUNDOWNS vs KAIZER CHIEFS · KICKOFF 2026-11-22 15:30 SAST
+      Match Over 1.5 Goals @1.290 · ML 84.3% · SKIPPED_VETO
+
+   Ajax vs ADO Den Haag · KICKOFF 2026-11-22 15:30 SAST
+      Away Win (1X2) @16.000 · ML 9.2% · SKIPPED_VETO
 
    TRABZONSPOR vs EYUPSPOR · KICKOFF 2026-11-22 18:00 SAST
       Draw (1X2) @10.800 · ML 14.0% · WATCHLIST_UNKNOWN_CTX
@@ -203,6 +233,71 @@ P6 · 2026-11-22 07:10:43 SAST · ACCA #7
       base 51.5% → adjusted 53.6% · learning move +2.1 pp · price break-even 52.9% (1/odds, not a fair probability or proof of value)
       Scalar adjustment 53.6% → partition-normalized 53.6% · includes unquoted outcomes; not proof of calibration
    ACCA #7 / leg 2: source forecast 13.6% · gap +0.5 pp · quote age 6.40h at decision
+      base 13.6% → adjusted 14.0% · learning move +0.5 pp · price break-even 9.3% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 14.0% → partition-normalized 14.0% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_context
+
+P7 · 2026-11-22 10:10:27 SAST · ACCA #8–#9
+   Receipt 20261122T080853243379Z · status paper_accas
+   Frozen at 2026-11-22T08:10:27.811097+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 d5861c47cfd57299e4efc898980b8955f56e9ee0e335ac2add103fded81170dd
+   Decision window 2026-11-22T08:08:53.243379+00:00 → 2026-11-23T08:08:53.243379+00:00
+   Bank at decision: 58.896683 paper units
+   Available at decision: 56.623736 paper units
+   Reserved at decision: 2.272947 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.944834 units per canonical fixture
+   Reservation 0.498570 → 0.498570 units · released/idle 0.000000; no refill
+   2026-11-22 ajax vs adodenhaag: new 0.023018 + prior open 0.000000 · unused new budget 2.921816 units
+   2026-11-22 barcelona vs villarreal: new 0.475552 + prior open 0.000000 · unused new budget 2.469282 units
+   2026-11-22 esenlererokspor vs antalyaspor: new 0.475552 + prior open 0.000000 · unused new budget 2.469282 units
+   2026-11-22 mamelodisundowns vs kaizerchiefs: new 0.023018 + prior open 0.000000 · unused new budget 2.921816 units
+   2026-11-22 trabzonspor vs eyupspor: new 0.023018 + prior open 2.225587 · unused new budget 0.696229 units
+   Coverage: candidate count: 6957; candidate fixtures: 22; slate rows: 177; status: inputs_available
+   Rejections: data quality: 28; fixture date unproven: 1; outside rolling window or unproven kickoff: 27; previously settled fixture: 3; quote identity unproven: 16; quote or probability unavailable: 13882
+   ACCA #8 / leg 1: source forecast 15.6% · gap +0.6 pp · quote age 0.35h at decision
+      base 15.6% → adjusted 16.2% · learning move +0.6 pp · price break-even 10.4% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 16.2% → partition-normalized 16.2% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · 1x2 / draw · bookmaker market 1.265269357 · outcome 102 · provider label Full Time Result · normalized row only; native payload unverified
+   ACCA #8 / leg 2: source forecast 82.5% · gap +0.3 pp · quote age 0.35h at decision
+      base 82.5% → adjusted 82.8% · learning move +0.3 pp · price break-even 79.4% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 82.8% → partition-normalized 82.8% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market 1.265762430 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   ACCA #9 / leg 1: source forecast 84.0% · gap +0.3 pp · quote age 0.36h at decision
+      base 84.0% → adjusted 84.3% · learning move +0.3 pp · price break-even 77.5% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 84.3% → partition-normalized 84.3% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market 17 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   ACCA #9 / leg 2: source forecast 8.7% · gap +0.5 pp · quote age 9.39h at decision
+      base 8.7% → adjusted 9.2% · learning move +0.5 pp · price break-even 6.2% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 9.2% → partition-normalized 9.2% · includes unquoted outcomes; not proof of calibration
+   ACCA #9 / leg 3: source forecast 13.6% · gap +0.5 pp · quote age 9.39h at decision
+      base 13.6% → adjusted 14.0% · learning move +0.5 pp · price break-even 9.3% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 14.0% → partition-normalized 14.0% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_context
+
+P8 · 2026-11-22 10:22:39 SAST · ACCA #10
+   Receipt 20261122T082107084536Z · status paper_accas
+   Frozen at 2026-11-22T08:22:39.533202+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 c608abc89dbfa3db54d4f4b2a3189e2420bd216eb992c2719390817f5f74220c
+   Decision window 2026-11-22T08:21:07.084536+00:00 → 2026-11-23T08:21:07.084536+00:00
+   Bank at decision: 58.896683 paper units
+   Available at decision: 56.125166 paper units
+   Reserved at decision: 2.771517 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.944834 units per canonical fixture
+   Reservation 0.022731 → 0.022731 units · released/idle 0.000000; no refill
+   2026-11-22 ajax vs adodenhaag: new 0.022731 + prior open 0.023018 · unused new budget 2.899085 units
+   2026-11-22 mamelodisundowns vs kaizerchiefs: new 0.022731 + prior open 0.023018 · unused new budget 2.899085 units
+   2026-11-22 trabzonspor vs eyupspor: new 0.022731 + prior open 2.248605 · unused new budget 0.673498 units
+   Coverage: candidate count: 6957; candidate fixtures: 22; slate rows: 109; status: inputs_available
+   Rejections: data quality: 21; fixture date unproven: 1; outside rolling window or unproven kickoff: 27; previously settled fixture: 1; quote identity unproven: 8; quote or probability unavailable: 7142
+   Exact opportunity replay: 1 acca(s) not republished; 0.470553 units left idle, no refill
+   ACCA #10 / leg 1: source forecast 84.0% · gap +0.3 pp · quote age 0.56h at decision
+      base 84.0% → adjusted 84.3% · learning move +0.3 pp · price break-even 77.5% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 84.3% → partition-normalized 84.3% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market 17 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   ACCA #10 / leg 2: source forecast 8.7% · gap +0.5 pp · quote age 9.59h at decision
+      base 8.7% → adjusted 9.2% · learning move +0.5 pp · price break-even 6.2% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 9.2% → partition-normalized 9.2% · includes unquoted outcomes; not proof of calibration
+   ACCA #10 / leg 3: source forecast 13.6% · gap +0.5 pp · quote age 9.59h at decision
       base 13.6% → adjusted 14.0% · learning move +0.5 pp · price break-even 9.3% (1/odds, not a fair probability or proof of value)
       Scalar adjustment 14.0% → partition-normalized 14.0% · includes unquoted outcomes; not proof of calibration
    Learning: fitted_source_market_context

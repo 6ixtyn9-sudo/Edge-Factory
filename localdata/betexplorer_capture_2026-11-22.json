@@ -1,15 +1,15 @@
 {
-  "attempted": 12,
+  "attempted": 14,
   "attempted_fixtures": [
     {
-      "avg_p": 80.85,
+      "avg_p": 85.0,
       "away": "Lokomotiv Sofia",
       "date": "2026-11-22",
       "home": "Levski Sofia",
-      "league": "Parva Liga",
+      "league": "Bulgaria First League",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.5987
+      "w_score": 0.6134
     },
     {
       "avg_p": 69.0,
@@ -42,6 +42,16 @@
       "w_score": 0.5873
     },
     {
+      "avg_p": 59.5,
+      "away": "ANGERS",
+      "date": "2026-11-22",
+      "home": "PARIS FC",
+      "league": "FR1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
       "avg_p": 54.49999999999999,
       "away": "NIGER TORNADOES",
       "date": "2026-11-22",
@@ -52,11 +62,11 @@
       "w_score": 0.5873
     },
     {
-      "avg_p": 50.0,
-      "away": "RANDERS",
+      "avg_p": 48.5,
+      "away": "ELFSBORG",
       "date": "2026-11-22",
-      "home": "VIBORG",
-      "league": "DK1",
+      "home": "HACKEN",
+      "league": "SE1",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
@@ -120,38 +130,48 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
+    },
+    {
+      "avg_p": 50.0,
+      "away": "RANDERS",
+      "date": "2026-11-22",
+      "home": "VIBORG",
+      "league": "DK1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
     }
   ],
   "be_429": 2,
-  "be_cached": 11,
+  "be_cached": 12,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 11,
-  "candidate_fixtures": 67,
-  "captured_at": "2026-11-22T04:42:36.181515+00:00",
+  "cache_only": 12,
+  "candidate_fixtures": 40,
+  "captured_at": "2026-11-22T07:48:05.211952+00:00",
   "date": "2026-11-22",
-  "deferred_fixtures": 55,
+  "deferred_fixtures": 26,
   "errors": [],
-  "fixtures_with_rows": 10,
+  "fixtures_with_rows": 12,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 7,
   "match_detail": {
-    "bookmakers": 149,
+    "bookmakers": 174,
     "challenge_pages": 0,
-    "fixtures": 11,
-    "market_rows": 351,
-    "markets": 59,
-    "named_rows": 351,
+    "fixtures": 13,
+    "market_rows": 424,
+    "markets": 67,
+    "named_rows": 424,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": true,
+  "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 69.0,
@@ -174,6 +194,16 @@
       "w_score": 0.5873
     },
     {
+      "avg_p": 59.5,
+      "away": "ANGERS",
+      "date": "2026-11-22",
+      "home": "PARIS FC",
+      "league": "FR1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
+    },
+    {
       "avg_p": 54.49999999999999,
       "away": "NIGER TORNADOES",
       "date": "2026-11-22",
@@ -184,11 +214,11 @@
       "w_score": 0.5873
     },
     {
-      "avg_p": 50.0,
-      "away": "RANDERS",
+      "avg_p": 48.5,
+      "away": "ELFSBORG",
       "date": "2026-11-22",
-      "home": "VIBORG",
-      "league": "DK1",
+      "home": "HACKEN",
+      "league": "SE1",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
@@ -252,10 +282,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5873
+    },
+    {
+      "avg_p": 50.0,
+      "away": "RANDERS",
+      "date": "2026-11-22",
+      "home": "VIBORG",
+      "league": "DK1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5873
     }
   ],
-  "requests": 7,
-  "rows": 30,
+  "requests": 14,
+  "rows": 36,
   "schema": 1,
   "status": "ok"
 }
