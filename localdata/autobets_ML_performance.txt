@@ -2,10 +2,10 @@ autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
 BANK     58.9%   x0.589 of the initial base · 58.897 paper units
-CAPITAL  58.3% free / 0.6% reserved · 58.254 free / 0.643 reserved paper units
+CAPITAL  57.3% free / 1.6% reserved · 57.293 free / 1.603 reserved paper units
 
 RECORD   9W / 58L   (13.4% hit)   over 13 bet-days
-OPEN     2 held accas · 4 unresolved leg results
+OPEN     4 held accas · 6 unresolved leg results
 PROFIT   -41.1% of capital · -41.103 paper units · ROI -61.0%
 DRAWDOWN 41.103 paper units / 41.1% (ticket-date marks; pending at cost)
 DAYS     13 bet / 7 no-bet · 0 missed freeze
@@ -24,7 +24,7 @@ BET-DAYS, oldest first (13 of 13)
   2026-11-18   0W/2L   staked    0.3%   returned    0.0%   net   -0.3%   pending    0.0%   bank*   59.7%
   2026-11-20   1W/2L   staked    0.2%   returned    0.3%   net   +0.1%   pending    0.0%   bank*   59.8%
   2026-11-21   0W/5L   staked    0.9%   returned    0.0%   net   -0.9%   pending    0.0%   bank*   58.9%
-  2026-11-22   0W/0L   staked    0.0%   returned       —   net       —   pending    0.6%   bank*   58.9%
+  2026-11-22   0W/0L   staked    0.0%   returned       —   net       —   pending    1.6%   bank*   58.9%
 
 HELD (not yet settled; stake counted as committed)
   2026-11-22   ACCA #1 @20.412   stake 0.3% (0.322833 paper units)   HELD (not settled)
@@ -39,6 +39,18 @@ HELD (not yet settled; stake counted as committed)
          Match Under 2.5 Goals @1.890
       TRABZONSPOR vs EYUPSPOR · 2026-11-22 18:00 SAST
          Draw (1X2) @10.800
+  2026-11-22   ACCA #3 @13.489   stake 0.5% (0.482311 paper units)   HELD (not settled)
+      Receipt 20261122T015341887962Z / publication-local ticket 1
+      Gwangju FC vs Bucheon FC 1995 · 2026-11-22 07:00 SAST
+         Match Over 1.5 Goals @1.281
+      Trabzonspor vs Eyüpspor · 2026-11-22 18:00 SAST
+         Draw (1X2) @10.530
+  2026-11-22   ACCA #4 @13.489   stake 0.5% (0.478159 paper units)   HELD (not settled)
+      Receipt 20261122T020220367142Z / publication-local ticket 1
+      Gwangju FC vs Bucheon FC 1995 · 2026-11-22 07:00 SAST
+         Match Over 1.5 Goals @1.281
+      TRABZONSPOR vs EYUPSPOR · 2026-11-22 18:00 SAST
+         Draw (1X2) @10.530
 
 SUPERSEDED BEFORE KICKOFF — released, not wins or losses
   2026-11-13 @35.775 · released 0.097512 paper units
@@ -53,16 +65,16 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 102 resolved selected observations / 72 fixtures · pool 204 resolved fixtures
-LEARNING last decision: 204 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+EVIDENCE 102 resolved selected observations / 72 fixtures · pool 205 resolved fixtures
+LEARNING last decision: 205 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
-FORWARD POOL: Brier 0.2047 → 0.2056 · log loss 0.5950 → 0.5974 (base → adjusted)
-        adjusted worse on both metrics; 204 fixtures / 5577 observations
+FORWARD POOL: Brier 0.2056 → 0.2065 · log loss 0.5973 → 0.5995 (base → adjusted)
+        adjusted worse on both metrics; 205 fixtures / 5617 observations
 FORWARD SELECTED: Brier 0.2113 → 0.2183 · log loss 0.6140 → 0.6271 (base → adjusted)
         adjusted worse on both metrics; 72 fixtures / 102 observations
         Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
-PAIRED   204 fixtures / 5501 observations · Brier model 0.2060 / source 0.2049
+PAIRED   205 fixtures / 5541 observations · Brier model 0.2069 / source 0.2058
 
 DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
              Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.

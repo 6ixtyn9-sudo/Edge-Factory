@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 22.756012,
+  "bank": 20.944211999999997,
   "cycle_base": 100.0,
   "history": [
     {
@@ -11048,7 +11048,7 @@
     },
     {
       "date": "2026-11-21",
-      "staked_pct": 1.8118,
+      "staked_pct": 3.6236,
       "returned_pct": 2.8264,
       "accas": [
         {
@@ -11187,28 +11187,30 @@
               "price_kickoff": "2026-11-21T12:30:00.000Z"
             }
           ]
-        }
-      ],
-      "bank_pct": 22.756,
-      "close_pct": 22.756
-    }
-  ],
-  "events": [],
-  "open_slips": [
-    {
-      "date": "2026-11-21",
-      "accas": [
+        },
         {
+          "odds": 2.1,
+          "won": false,
+          "stake_pct": 1.8118,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "VfL Wolfsburg vs Holstein Kiel",
               "pick": "over",
-              "prob": 0.6864,
               "odds": 1.4,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-20T22:35:41.426876+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-21",
+                "VfL Wolfsburg",
+                "Holstein Kiel"
+              ],
+              "prob": 0.6864,
               "cohort_evidence": {
                 "rate": 0.6864,
                 "n": 507,
@@ -11233,31 +11235,31 @@
               "ml_rank_probability": 0.8735828720381681,
               "ml_model_key": "421b32ef367918477143d365848c7e95f4bf26b12abcdcb3cee7a4cef857a02f",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7334732418214307,
               "floor_basis": "market",
               "league": "2. Bundesliga",
-              "price_at": "2026-11-20T22:35:41.426876+00:00",
-              "price_kickoff": "2026-11-21T12:00:00Z",
-              "price_provenance": null,
               "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-21",
-                "VfL Wolfsburg",
-                "Holstein Kiel"
-              ]
+              "price_kickoff": "2026-11-21T12:00:00Z"
             },
             {
               "match": "Bahia vs Coritiba",
               "pick": "over",
-              "prob": 0.6526,
               "odds": 1.5,
-              "result": null,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-20T22:35:36.842129+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-21",
+                "Bahia",
+                "Coritiba"
+              ],
+              "prob": 0.6526,
               "cohort_evidence": {
                 "rate": 0.6526,
                 "n": 475,
@@ -11282,31 +11284,26 @@
               "ml_rank_probability": 0.675619749419405,
               "ml_model_key": "86c629db0cd7fe7e5358357f3c6a9a0fdbee5ecf202b217f8169cfa349be912a",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7334732418214307,
               "floor_basis": "market",
               "league": "Brasileir\u00e3o Serie A",
-              "price_at": "2026-11-20T22:35:36.842129+00:00",
-              "price_kickoff": "2026-11-21T20:30:00Z",
-              "price_provenance": null,
               "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-21",
-                "Bahia",
-                "Coritiba"
-              ]
+              "price_kickoff": "2026-11-21T20:30:00Z"
             }
-          ],
-          "odds": 2.1,
-          "stake_pct": 1.8118,
-          "results": [
-            "win",
-            null
-          ],
-          "won": null
-        },
+          ]
+        }
+      ],
+      "bank_pct": 20.9442,
+      "close_pct": 20.9442
+    }
+  ],
+  "events": [],
+  "open_slips": [
+    {
+      "date": "2026-11-21",
+      "accas": [
         {
           "legs": [
             {
@@ -11417,7 +11414,7 @@
           "won": null
         }
       ],
-      "staked_pct": 3.6236
+      "staked_pct": 1.8118
     },
     {
       "date": "2026-11-22",
@@ -11427,21 +11424,21 @@
             {
               "match": "Atalanta vs Inter",
               "pick": "away",
-              "prob": 0.8523,
+              "prob": 0.8518,
               "odds": 1.61,
               "result": null,
               "market": "away_under_25",
               "price_book": "MyBookie.ag",
               "price_source": "theoddsapi",
               "cohort_evidence": {
-                "rate": 0.8523,
-                "n": 1422,
+                "rate": 0.8518,
+                "n": 1424,
                 "contract_id": "pfc_ba85936207b4b393ab7ffecb",
                 "as_of_exclusive": "2026-11-22",
                 "market": "away_under_25",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 1212,
-                "cohort_lower_bound": 0.8329319264969862,
+                "cohort_min_hits": 1213,
+                "cohort_lower_bound": 0.8324273570264421,
                 "price_context": {
                   "contract_id": "pfc_ba85936207b4b393ab7ffecb",
                   "selection": "under",
@@ -11450,12 +11447,12 @@
                   "source": "theoddsapi",
                   "price": 1.61,
                   "captured_at": "2026-11-21T22:45:43.600530+00:00",
-                  "decision_at": "2026-11-22T00:46:59+02:00",
+                  "decision_at": "2026-11-22T03:40:54+02:00",
                   "kickoff": "2026-11-22T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6774802899151922,
-              "ml_model_key": "42273f3c7a98e003b8c5bc4eabd4a14769f2b5b61dbd37208c70c76d91ac7496",
+              "ml_rank_probability": 0.6839291742525422,
+              "ml_model_key": "1a333409505942a4e76ca34a28d35da4ac6c7c7c55595c8c4fc78adcfd8d2754",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Away Team Under 2.5 Goals",
               "floor": null,
@@ -11499,12 +11496,12 @@
                   "source": "theoddsapi",
                   "price": 1.85,
                   "captured_at": "2026-11-21T22:45:43.540117+00:00",
-                  "decision_at": "2026-11-22T00:46:59+02:00",
+                  "decision_at": "2026-11-22T03:40:54+02:00",
                   "kickoff": "2026-11-22T14:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6334807122594512,
-              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
+              "ml_rank_probability": 0.6334805740944017,
+              "ml_model_key": "a5f356eded5a394e754782b59004422babbcd02b57960c8a3173aa9747325bf7",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7435164034671629,
@@ -11524,111 +11521,893 @@
             }
           ],
           "odds": 2.98,
-          "stake_pct": 2.3916
+          "stake_pct": 1.5944
         },
         {
           "legs": [
             {
-              "match": "BURGOS vs ALBACETE",
-              "pick": "over",
-              "prob": 0.6083,
-              "odds": 2.07,
+              "match": "Liverpool FC vs Manchester United",
+              "pick": "under",
+              "prob": 0.8511,
+              "odds": 1.26,
               "result": null,
-              "market": "match_over_25",
-              "price_book": "Unibet (NL)",
-              "price_source": "theoddsapi",
+              "market": "match_under_45",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
               "cohort_evidence": {
-                "rate": 0.6083,
-                "n": 605,
-                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "rate": 0.8511,
+                "n": 1424,
+                "contract_id": "pfc_ba85936207b4b393ab7ffecb",
                 "as_of_exclusive": "2026-11-22",
-                "market": "match_over_25",
+                "market": "match_under_45",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 368,
-                "cohort_lower_bound": 0.5688015273172454,
+                "cohort_min_hits": 1212,
+                "cohort_lower_bound": 0.8316911427634318,
                 "price_context": {
-                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
-                  "selection": "home",
-                  "league": "ES2",
-                  "book": "Unibet (NL)",
-                  "source": "theoddsapi",
-                  "price": 2.07,
-                  "captured_at": "2026-11-21T22:45:44.524773+00:00",
-                  "decision_at": "2026-11-22T00:46:59+02:00",
-                  "kickoff": "2026-11-22T20:00:00+00:00"
+                  "contract_id": "pfc_ba85936207b4b393ab7ffecb",
+                  "selection": "under",
+                  "league": "Premier League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.26,
+                  "captured_at": "2026-11-22T01:38:48.764392+00:00",
+                  "decision_at": "2026-11-22T03:40:54+02:00",
+                  "kickoff": "2026-11-22T16:30:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6158048035118635,
-              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
+              "ml_rank_probability": 0.8800337254994114,
+              "ml_model_key": "1a333409505942a4e76ca34a28d35da4ac6c7c7c55595c8c4fc78adcfd8d2754",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7435164034671629,
-              "floor_basis": "market",
-              "league": "ES2",
-              "price_at": "2026-11-21T22:45:44.524773+00:00",
-              "price_kickoff": "2026-11-22T20:00:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-22",
-                "BURGOS",
-                "ALBACETE"
-              ]
-            },
-            {
-              "match": "GIRONA vs EIBAR",
-              "pick": "over",
-              "prob": 0.6083,
-              "odds": 1.79,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Unibet (NL)",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6083,
-                "n": 605,
-                "contract_id": "pfc_71a63d281a3dff22aa75f744",
-                "as_of_exclusive": "2026-11-22",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 368,
-                "cohort_lower_bound": 0.5688015273172454,
-                "price_context": {
-                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
-                  "selection": "home",
-                  "league": "ES2",
-                  "book": "Unibet (NL)",
-                  "source": "theoddsapi",
-                  "price": 1.79,
-                  "captured_at": "2026-11-21T22:45:44.468922+00:00",
-                  "decision_at": "2026-11-22T00:46:59+02:00",
-                  "kickoff": "2026-11-22T17:30:00+00:00"
-                }
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Premier League",
+              "price_at": "2026-11-22T01:38:48.764392+00:00",
+              "price_kickoff": "2026-11-22T16:30:00+00:00",
+              "price_provenance": {
+                "away": "Manchester Utd",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-11-22T01:38:48.764392+00:00",
+                "data_dt": [
+                  22,
+                  11,
+                  2026,
+                  17,
+                  30
+                ],
+                "decision_cutoff_utc": "2026-11-22T07:00:00+00:00",
+                "decision_day": "2026-11-22",
+                "home": "Liverpool",
+                "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-22.json",
+                "ledger_sha256": "aafb7c0f7bf211e44af7d3a852807bbb91e73794ea24d9fb1d4f05112a7cb5e9",
+                "market": "ou_4.5",
+                "price": 1.26,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-22T01:49",
+                      "2026-11-22T01:49"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      3.6,
+                      1.26
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 21,
+                  "row_sha256": "4348811d4aef2099c5c2551a347c0ed490fa6e1ddc5b81bf748ed5a0a4aa2b10"
+                },
+                "raw_kickoff": "17:30",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Manchester United",
+                      "csv_data_row": 2623,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "60fe6afad14dab650decb0fac94d2e584dfde6b2e67840292cafa3888d921e4f",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Liverpool",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                      "league": "Premier League",
+                      "observed_at_utc": "2026-11-21T22:24:44+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "38c301c49424877ccb432b17da8f28ecbdd6f2c29091afe63ea115d61ee44bd3",
+                      "schedule_row": {
+                        "away": "Manchester United",
+                        "captured_at": "2026-11-21T22:24:44+00:00",
+                        "country": "England",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Liverpool",
+                        "hs": "",
+                        "kickoff": "2026-11-22T16:30:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Premier League",
+                        "odd1": "1.7",
+                        "odd2": "4.5",
+                        "odd_gg": "1.53",
+                        "odd_ng": "2.37",
+                        "odd_o15": "1.14",
+                        "odd_o25": "1.5",
+                        "odd_o35": "2.2",
+                        "odd_u15": "5.5",
+                        "odd_u25": "2.62",
+                        "odd_u35": "1.66",
+                        "oddx": "4.2",
+                        "p1": "56.09918931807344",
+                        "p2": "21.192179303767286",
+                        "p_gg": "60.769230769230774",
+                        "p_ng": "39.23076923076923",
+                        "p_o15": "82.83132530120481",
+                        "p_o25": "63.59223300970874",
+                        "p_o35": "43.005181347150256",
+                        "px": "22.708631378159275",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "16:30"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Manchester United FC",
+                      "csv_data_row": 10659,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "2d6b62da0b5a3e7cd98e46b562a8ce8916a4e19434e4be57135ed2cc84dba2ef",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Liverpool",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                      "league": "England: Premier League",
+                      "observed_at_utc": "2026-11-20T22:13:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "e6e1b523569c969b87b49d94bdb614880aa910fdb2846a9f0abec421a6b2eb31",
+                      "schedule_row": {
+                        "away": "Manchester United FC",
+                        "captured_at": "2026-11-20T22:13:54+00:00",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Liverpool",
+                        "hs": "",
+                        "index": "1.2",
+                        "kickoff": "2026-11-22T17:30:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "England: Premier League",
+                        "p1": "51.0",
+                        "p2": "24.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "25.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Manchester United",
+                      "board_fetched_at": "2026-11-21T22:46:02+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000001772221404",
+                        "participant1Name": "Liverpool FC",
+                        "participant2Name": "Manchester United",
+                        "sportId": 10,
+                        "startTime": "2026-11-22T16:30:00.000Z",
+                        "statusId": 0
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "681bd39450ad37de05651d5c08966eb575184a081288511e164ed85e9291cdb5",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Liverpool FC",
+                      "json_pointer": "/boards/2026-11-22/fixtures/733",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-11-22T16:30:00+00:00",
+                      "observed_at_utc": "2026-11-21T22:46:02+00:00",
+                      "provider_event_id": "id1000001772221404",
+                      "row_sha256": "eea224ac31a34f377313ad8fe28a4f2816b8b33e19210b017b7aa2d78f17a5d7",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
               },
-              "ml_rank_probability": 0.6957536036392463,
-              "ml_model_key": "02bdf15286214023370f3da31c41732e5526e93afb5e728c07604984306d9ade",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7435164034671629,
-              "floor_basis": "market",
-              "league": "ES2",
-              "price_at": "2026-11-21T22:45:44.468922+00:00",
-              "price_kickoff": "2026-11-22T17:30:00Z",
-              "price_provenance": null,
               "shadow": true,
               "ml_ordering_active": false,
               "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-22",
-                "GIRONA",
-                "EIBAR"
+                "Liverpool FC",
+                "Manchester United"
+              ]
+            },
+            {
+              "match": "MARIBOR vs NAFTA",
+              "pick": "over",
+              "prob": 0.6083,
+              "odds": 1.58,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "cohort_evidence": {
+                "rate": 0.6083,
+                "n": 605,
+                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 368,
+                "cohort_lower_bound": 0.5688015273172454,
+                "price_context": {
+                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                  "selection": "home",
+                  "league": "SI1",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.58,
+                  "captured_at": "2026-11-22T01:37:45.370533+00:00",
+                  "decision_at": "2026-11-22T03:40:54+02:00",
+                  "kickoff": "2026-11-22T14:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7241369813818527,
+              "ml_model_key": "a5f356eded5a394e754782b59004422babbcd02b57960c8a3173aa9747325bf7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7435164034671629,
+              "floor_basis": "market",
+              "league": "SI1",
+              "price_at": "2026-11-22T01:37:45.370533+00:00",
+              "price_kickoff": "2026-11-22T14:00:00+00:00",
+              "price_provenance": {
+                "away": "Nafta",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-11-22T01:37:45.370533+00:00",
+                "data_dt": [
+                  22,
+                  11,
+                  2026,
+                  15,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-22T07:00:00+00:00",
+                "decision_day": "2026-11-22",
+                "home": "Maribor",
+                "kickoff_utc": "2026-11-22T14:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-22.json",
+                "ledger_sha256": "aafb7c0f7bf211e44af7d3a852807bbb91e73794ea24d9fb1d4f05112a7cb5e9",
+                "market": "ou_2.5",
+                "price": 1.58,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1103",
+                    "created": [
+                      "2026-11-19T15:04",
+                      "2026-11-19T15:04"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      1.58,
+                      2.19
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 3,
+                  "row_sha256": "d45218f45e3ff6b942860abb566131eaced20fc5d0435b4212a1e03496542fa3"
+                },
+                "raw_kickoff": "15:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-22T14:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Nafta",
+                      "csv_data_row": 2632,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "60fe6afad14dab650decb0fac94d2e584dfde6b2e67840292cafa3888d921e4f",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Maribor",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T14:00:00+00:00",
+                      "league": "1. SNL",
+                      "observed_at_utc": "2026-11-21T22:24:44+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "fe9f39a716b19810770bf46f414ee2d687ca8c1e29aac5bb9cd8d26631d4d614",
+                      "schedule_row": {
+                        "away": "Nafta",
+                        "captured_at": "2026-11-21T22:24:44+00:00",
+                        "country": "Slovenia",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Maribor",
+                        "hs": "",
+                        "kickoff": "2026-11-22T14:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "1. SNL",
+                        "odd1": "1.4",
+                        "odd2": "6.25",
+                        "odd_gg": "1.83",
+                        "odd_ng": "1.83",
+                        "odd_o15": "1.2",
+                        "odd_o25": "1.61",
+                        "odd_o35": "2.5",
+                        "odd_u15": "4.33",
+                        "odd_u25": "2.25",
+                        "odd_u35": "1.5",
+                        "oddx": "4.2",
+                        "p1": "64.21251348435814",
+                        "p2": "14.383315354189138",
+                        "p_gg": "50.0",
+                        "p_ng": "50.0",
+                        "p_o15": "78.30018083182641",
+                        "p_o25": "58.290155440414516",
+                        "p_o35": "37.50000000000001",
+                        "px": "21.404171161452712",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "14:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Nafta",
+                      "csv_data_row": 10688,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "2d6b62da0b5a3e7cd98e46b562a8ce8916a4e19434e4be57135ed2cc84dba2ef",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Maribor",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T14:00:00+00:00",
+                      "league": "Slovenia: 1. SNL",
+                      "observed_at_utc": "2026-11-20T22:13:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "bd7c3df70ac5d7ad9b197c43334b984d4843be127b89d0f02e9ec80a3cb6a737",
+                      "schedule_row": {
+                        "away": "Nafta",
+                        "captured_at": "2026-11-20T22:13:54+00:00",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Maribor",
+                        "hs": "",
+                        "index": "2.27",
+                        "kickoff": "2026-11-22T15:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Slovenia: 1. SNL",
+                        "p1": "63.0",
+                        "p2": "16.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "21.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-22",
+                "MARIBOR",
+                "NAFTA"
               ]
             }
           ],
-          "odds": 3.71,
-          "stake_pct": 2.3915
+          "odds": 1.99,
+          "stake_pct": 1.5944
+        },
+        {
+          "legs": [
+            {
+              "match": "BASEL vs LUZERN",
+              "pick": "under",
+              "prob": 0.7901,
+              "odds": 1.36,
+              "result": null,
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "cohort_evidence": {
+                "rate": 0.7901,
+                "n": 605,
+                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 478,
+                "cohort_lower_bound": 0.7558519756170754,
+                "price_context": {
+                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                  "selection": "home",
+                  "league": "CH1",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.36,
+                  "captured_at": "2026-11-22T01:39:19.882188+00:00",
+                  "decision_at": "2026-11-22T03:40:54+02:00",
+                  "kickoff": "2026-11-22T15:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.718091752109897,
+              "ml_model_key": "a5f356eded5a394e754782b59004422babbcd02b57960c8a3173aa9747325bf7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "CH1",
+              "price_at": "2026-11-22T01:39:19.882188+00:00",
+              "price_kickoff": "2026-11-22T15:30:00+00:00",
+              "price_provenance": {
+                "away": "Luzern",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-22T01:39:19.882188+00:00",
+                "data_dt": [
+                  22,
+                  11,
+                  2026,
+                  16,
+                  30
+                ],
+                "decision_cutoff_utc": "2026-11-22T07:00:00+00:00",
+                "decision_day": "2026-11-22",
+                "home": "Basel",
+                "kickoff_utc": "2026-11-22T15:30:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-22.json",
+                "ledger_sha256": "aafb7c0f7bf211e44af7d3a852807bbb91e73794ea24d9fb1d4f05112a7cb5e9",
+                "market": "ou_4.5",
+                "price": 1.36,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-18T08:21",
+                      "2026-11-18T08:21"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      3.0,
+                      1.36
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 16,
+                  "row_sha256": "0ac609588bffb74346139e79a300ac1225306908b089831f5b4b92acb5370606"
+                },
+                "raw_kickoff": "16:30",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-22T15:30:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Luzern",
+                      "csv_data_row": 2532,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "60fe6afad14dab650decb0fac94d2e584dfde6b2e67840292cafa3888d921e4f",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Basel",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T15:30:00+00:00",
+                      "league": "Super League",
+                      "observed_at_utc": "2026-11-21T22:24:44+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "6d4e417f055f5e0f251901f093d9cf0994ce8d205e101a49fd8906374286f00a",
+                      "schedule_row": {
+                        "away": "Luzern",
+                        "captured_at": "2026-11-21T22:24:44+00:00",
+                        "country": "Switzerland",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Basel",
+                        "hs": "",
+                        "kickoff": "2026-11-22T15:30:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Super League",
+                        "odd1": "2.25",
+                        "odd2": "2.7",
+                        "odd_gg": "1.33",
+                        "odd_ng": "3.25",
+                        "odd_o15": "1.1",
+                        "odd_o25": "1.36",
+                        "odd_o35": "1.83",
+                        "odd_u15": "7.0",
+                        "odd_u25": "3.1",
+                        "odd_u35": "1.83",
+                        "oddx": "4.0",
+                        "p1": "41.735537190082646",
+                        "p2": "34.78587528174305",
+                        "p_gg": "70.96069868995633",
+                        "p_ng": "29.03930131004367",
+                        "p_o15": "86.41975308641976",
+                        "p_o25": "69.5067264573991",
+                        "p_o35": "50.0",
+                        "px": "23.47858752817431",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "15:30"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "FC Luzern",
+                      "csv_data_row": 10461,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "2d6b62da0b5a3e7cd98e46b562a8ce8916a4e19434e4be57135ed2cc84dba2ef",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "FC Basel 1893",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T15:30:00+00:00",
+                      "league": "Switzerland: Super League",
+                      "observed_at_utc": "2026-11-20T22:13:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "d3669453833e938ad14c8579a288e983fa37b950b32c2be06fd8005b862b0a9c",
+                      "schedule_row": {
+                        "away": "FC Luzern",
+                        "captured_at": "2026-11-20T22:13:54+00:00",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "FC Basel 1893",
+                        "hs": "",
+                        "index": "0.93",
+                        "kickoff": "2026-11-22T16:30:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Switzerland: Super League",
+                        "p1": "47.0",
+                        "p2": "29.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "24.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "FC Luzern",
+                      "board_fetched_at": "2026-11-21T22:46:02+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000021574379726",
+                        "participant1Name": "FC Basel 1893",
+                        "participant2Name": "FC Luzern",
+                        "sportId": 10,
+                        "startTime": "2026-11-22T15:30:00.000Z",
+                        "statusId": 0
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "681bd39450ad37de05651d5c08966eb575184a081288511e164ed85e9291cdb5",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "FC Basel 1893",
+                      "json_pointer": "/boards/2026-11-22/fixtures/667",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-11-22T15:30:00+00:00",
+                      "observed_at_utc": "2026-11-21T22:46:02+00:00",
+                      "provider_event_id": "id1000021574379726",
+                      "row_sha256": "22d33244e037491c10aae116381d5372946a7cb29ea8c5a633632c88d954f898",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-22",
+                "BASEL",
+                "LUZERN"
+              ]
+            },
+            {
+              "match": "PAOK vs KIFISIA",
+              "pick": "over",
+              "prob": 0.6083,
+              "odds": 1.57,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "cohort_evidence": {
+                "rate": 0.6083,
+                "n": 605,
+                "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                "as_of_exclusive": "2026-11-22",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 368,
+                "cohort_lower_bound": 0.5688015273172454,
+                "price_context": {
+                  "contract_id": "pfc_71a63d281a3dff22aa75f744",
+                  "selection": "home",
+                  "league": "GR1",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.57,
+                  "captured_at": "2026-11-22T01:37:14.078097+00:00",
+                  "decision_at": "2026-11-22T03:40:54+02:00",
+                  "kickoff": "2026-11-22T17:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8060231640033734,
+              "ml_model_key": "a5f356eded5a394e754782b59004422babbcd02b57960c8a3173aa9747325bf7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7435164034671629,
+              "floor_basis": "market",
+              "league": "GR1",
+              "price_at": "2026-11-22T01:37:14.078097+00:00",
+              "price_kickoff": "2026-11-22T17:30:00+00:00",
+              "price_provenance": {
+                "away": "Kifisia",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-22T01:37:14.078097+00:00",
+                "data_dt": [
+                  22,
+                  11,
+                  2026,
+                  18,
+                  30
+                ],
+                "decision_cutoff_utc": "2026-11-22T07:00:00+00:00",
+                "decision_day": "2026-11-22",
+                "home": "PAOK",
+                "kickoff_utc": "2026-11-22T17:30:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-22.json",
+                "ledger_sha256": "aafb7c0f7bf211e44af7d3a852807bbb91e73794ea24d9fb1d4f05112a7cb5e9",
+                "market": "ou_2.5",
+                "price": 1.57,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-01T10:38",
+                      "2026-11-01T10:38"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      1.57,
+                      2.35
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 8,
+                  "row_sha256": "41fb82ec7235b2fe0600bf95a5d06159b30ab6cf16094f9bf5aa0ccb839fbbc0"
+                },
+                "raw_kickoff": "18:30",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-22T17:30:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Kifisia",
+                      "csv_data_row": 2648,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "60fe6afad14dab650decb0fac94d2e584dfde6b2e67840292cafa3888d921e4f",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "PAOK",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T17:30:00+00:00",
+                      "league": "Super League",
+                      "observed_at_utc": "2026-11-21T22:24:44+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "4cfc6787340954359c2ed920871b7df25f23aefbe5dd130065978e0f17a05dc8",
+                      "schedule_row": {
+                        "away": "Kifisia",
+                        "captured_at": "2026-11-21T22:24:44+00:00",
+                        "country": "Greece",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "PAOK",
+                        "hs": "",
+                        "kickoff": "2026-11-22T17:30:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Super League",
+                        "odd1": "1.36",
+                        "odd2": "8.0",
+                        "odd_gg": "1.8",
+                        "odd_ng": "1.95",
+                        "odd_o15": "1.16",
+                        "odd_o25": "1.57",
+                        "odd_o35": "2.37",
+                        "odd_u15": "5.0",
+                        "odd_u25": "2.35",
+                        "odd_u35": "1.53",
+                        "oddx": "4.75",
+                        "p1": "68.62139917695474",
+                        "p2": "11.690983913206136",
+                        "p_gg": "52.0",
+                        "p_ng": "48.00000000000001",
+                        "p_o15": "81.16883116883116",
+                        "p_o25": "59.94897959183674",
+                        "p_o35": "39.23076923076923",
+                        "px": "19.687616909839132",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "17:30"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Kifisia",
+                      "csv_data_row": 10788,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "2d6b62da0b5a3e7cd98e46b562a8ce8916a4e19434e4be57135ed2cc84dba2ef",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "PAOK",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-22T17:30:00+00:00",
+                      "league": "Greece: Super League 1",
+                      "observed_at_utc": "2026-11-20T22:13:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "50473726f3579563fc2f337cc904bd4dfdbd1b48c9f21d4d7d05c036c0986ae9",
+                      "schedule_row": {
+                        "away": "Kifisia",
+                        "captured_at": "2026-11-20T22:13:54+00:00",
+                        "date": "2026-11-22",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "PAOK",
+                        "hs": "",
+                        "index": "1.74",
+                        "kickoff": "2026-11-22T18:30:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Greece: Super League 1",
+                        "p1": "57.0",
+                        "p2": "18.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "25.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-22",
+                "PAOK",
+                "KIFISIA"
+              ]
+            }
+          ],
+          "odds": 2.14,
+          "stake_pct": 1.5943
         }
       ],
       "staked_pct": 4.7831

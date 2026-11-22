@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 27,
@@ -29,7 +29,7 @@
         "selection_unmapped": 82
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-23\\/2026-11-23' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -178,11 +178,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 15521
+        "out_of_window": 17262
       },
       "pa_matched": 0,
-      "pa_raw": 857,
-      "pa_scored": 15521,
+      "pa_raw": 960,
+      "pa_scored": 17262,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,31 +232,24 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 7,
+        "board_fixtures": 3,
         "board_league_count": 3,
         "board_leagues": {
-          "bolivia_-_primera_division": 50,
-          "ecuador_-_serie_a": 54,
-          "venezuela_-_primera_division": 96
+          "argentina_-_primera_nacional": 13,
+          "brazil_-_serie_a": 96,
+          "mexico_-_liga_mx": 91
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 13,
+        "board_team_count": 6,
         "board_team_names": {
-          "AB Boliviano": 3,
-          "Academia de Balompie Boliviano": 47,
-          "Aurora": 47,
-          "Barcelona (ECU)": 51,
-          "Barcelona SC": 3,
-          "Carabobo": 12,
-          "Carabobo FC": 45,
-          "Caracas": 39,
-          "Club Aurora": 3,
-          "Deportivo Tachira": 39,
-          "Portuguesa FC": 57,
-          "Univ Catolica (Ecu)": 51,
-          "Universidad Catolica": 3
+          "Chapecoense": 96,
+          "Cruzeiro MG": 96,
+          "Deportivo Madryn": 13,
+          "Gimnasia Jujuy": 13,
+          "Monterrey": 91,
+          "Pumas UNAM": 91
         },
         "board_truncated": false,
         "card_fixture_count": 0,
