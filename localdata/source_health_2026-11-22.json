@@ -44,25 +44,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 8,
-      "be_raw": 30,
-      "be_usable": 27,
+      "be_matched": 9,
+      "be_raw": 33,
+      "be_usable": 30,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 8,
+      "join_matched_rows": 9,
       "join_miss_counts": {
         "fixture_key_miss": 7,
-        "no_pick_for_fixture": 12
+        "no_pick_for_fixture": 14
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-22\\/2026-11-22' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -153,15 +153,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 170,
+      "join_matched_rows": 139,
       "join_miss_counts": {
-        "fixture_key_miss": 5634,
-        "market_unsupported": 4355,
-        "no_pick_for_fixture": 4852
+        "fixture_key_miss": 10656,
+        "market_unsupported": 4560,
+        "no_pick_for_fixture": 1133
       },
-      "op_matched": 1,
-      "op_raw": 15011,
-      "op_usable": 15011,
+      "op_matched": 2,
+      "op_raw": 16488,
+      "op_usable": 16488,
       "reason": null,
       "status": "cache_only"
     },
@@ -180,12 +180,12 @@
       "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 68,
+      "join_matched_rows": 66,
       "join_miss_counts": {
-        "fixture_key_miss": 20796,
-        "no_pick_for_fixture": 890
+        "fixture_key_miss": 20816,
+        "no_pick_for_fixture": 872
       },
-      "pa_matched": 66,
+      "pa_matched": 64,
       "pa_raw": 21754,
       "pa_scored": 21754,
       "reason": null,

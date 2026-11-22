@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 17262
       },
       "pa_matched": 0,
-      "pa_raw": 960,
+      "pa_raw": 17262,
       "pa_scored": 17262,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -232,24 +227,25 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 3,
-        "board_league_count": 3,
+        "board_fixtures": 4,
+        "board_league_count": 2,
         "board_leagues": {
-          "argentina_-_primera_nacional": 13,
-          "brazil_-_serie_a": 96,
-          "mexico_-_liga_mx": 91
+          "australia_-_a-league_women": 68,
+          "mexico_-_liga_mx": 132
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 6,
+        "board_team_count": 8,
         "board_team_names": {
-          "Chapecoense": 96,
-          "Cruzeiro MG": 96,
-          "Deportivo Madryn": 13,
-          "Gimnasia Jujuy": 13,
-          "Monterrey": 91,
-          "Pumas UNAM": 91
+          "CF America": 76,
+          "Club America": 56,
+          "Melbourne Victory (W)": 38,
+          "Melbourne Victory [W]": 30,
+          "Perth Glory (W)": 38,
+          "Perth Glory [W]": 30,
+          "Tigres": 76,
+          "Tigres UANL": 56
         },
         "board_truncated": false,
         "card_fixture_count": 0,
