@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 3,
@@ -29,7 +29,7 @@
         "selection_unmapped": 10
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-24\\/2026-11-24' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -169,20 +169,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 6,
+      "coherence_excluded_rows": 12,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 6
+        "withheld_mixed_events_one_x_two": 12
       },
-      "coherence_withheld_fixtures": 1,
+      "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 12771
+        "out_of_window": 12868
       },
       "pa_matched": 0,
-      "pa_raw": 680,
-      "pa_scored": 12771,
+      "pa_raw": 683,
+      "pa_scored": 12868,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -233,26 +233,24 @@
       "blocker": "fetch returned zero rows",
       "board_summary": {
         "board_fixtures": 4,
-        "board_league_count": 4,
+        "board_league_count": 2,
         "board_leagues": {
-          "brazil_-_serie_a": 77,
-          "brazil_-_serie_b": 58,
-          "ecuador_-_serie_a": 2,
-          "usa_-_major_league_soccer": 63
+          "argentina_-_primera_division": 113,
+          "argentina_-_primera_nacional": 87
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
         "board_team_count": 8,
         "board_team_names": {
-          "Atletico GO": 58,
-          "FC Cincinnati": 63,
-          "Fluminense": 77,
-          "LDU Quito": 2,
-          "Mirassol": 77,
-          "Nashville SC": 63,
-          "SD Aucas": 2,
-          "Vila Nova": 58
+          "CA Huracan": 56,
+          "Club Gimnasia y Tiro": 81,
+          "Deportivo Tristan Suarez": 6,
+          "Gimnasia y Tiro": 6,
+          "Huracan": 57,
+          "Instituto": 56,
+          "Instituto Cordoba": 57,
+          "Tristan Suarez": 81
         },
         "board_truncated": false,
         "card_fixture_count": 0,

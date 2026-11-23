@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-11-23T00:33:40",
+ "generated_at": "2026-11-23T03:29:11",
  "window_days": 90,
  "rows": [
   {
@@ -438343,8 +438343,7 @@
    "hs": 4,
    "gs": 4,
    "outcome": "draw",
-   "src": "scoutingstats_settled",
-   "status": "FT"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-11-22",
@@ -438397,9 +438396,18 @@
    "home": "Atletico Clube G",
    "away": "Vila Nova",
    "hs": 1,
-   "gs": 0,
-   "outcome": "home",
+   "gs": 1,
+   "outcome": "draw",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Atletico Goianiense",
+   "away": "Vila Nova",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-22",
@@ -438721,6 +438729,15 @@
   },
   {
    "date": "2026-11-22",
+   "home": "Bragantino",
+   "away": "Vasco da Gama",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "Bregalnica Stip",
    "away": "FC Struga Trim &amp;",
    "hs": 1,
@@ -438875,12 +438892,30 @@
   },
   {
    "date": "2026-11-22",
+   "home": "CSD Municipal",
+   "away": "Antigua GFC",
+   "hs": 0,
+   "gs": 0,
+   "outcome": "draw",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "CSM Ramnicu Valc",
    "away": "Metalul Buzau",
    "hs": 0,
    "gs": 2,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Cacereno",
+   "away": "Logrones CF",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-22",
@@ -439052,6 +439087,24 @@
   },
   {
    "date": "2026-11-22",
+   "home": "Chicago Fire",
+   "away": "Charlotte",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Chivas Guadalaja",
+   "away": "Cruz Azul",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "Churchill Brothers",
    "away": "ATK Mohun Bagan",
    "hs": 1,
@@ -439128,7 +439181,7 @@
    "date": "2026-11-22",
    "home": "Cob&Atilde;&iexcl;n Imperial",
    "away": "Deportivo San Pe",
-   "hs": 1,
+   "hs": 2,
    "gs": 0,
    "outcome": "home",
    "src": "bettingclosed_settled"
@@ -439146,10 +439199,20 @@
    "date": "2026-11-22",
    "home": "Colo Colo",
    "away": "Univ Catolica",
-   "hs": 2,
+   "hs": 3,
    "gs": 0,
    "outcome": "home",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Colo-Colo",
+   "away": "Universidad Cat\u00f3lica",
+   "hs": 3,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled",
+   "status": "FT"
   },
   {
    "date": "2026-11-22",
@@ -439283,9 +439346,9 @@
    "date": "2026-11-22",
    "home": "Deportivo Lara",
    "away": "Aragua FC",
-   "hs": 1,
+   "hs": 4,
    "gs": 1,
-   "outcome": "draw",
+   "outcome": "home",
    "src": "bettingclosed_settled"
   },
   {
@@ -439944,11 +440007,21 @@
   },
   {
    "date": "2026-11-22",
+   "home": "Fluminense",
+   "away": "Mirassol",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled",
+   "status": "FT"
+  },
+  {
+   "date": "2026-11-22",
    "home": "Fluminense RJ",
    "away": "Mirassol",
-   "hs": 0,
+   "hs": 1,
    "gs": 0,
-   "outcome": "draw",
+   "outcome": "home",
    "src": "bettingclosed_settled"
   },
   {
@@ -440131,6 +440204,25 @@
    "gs": 5,
    "outcome": "away",
    "src": "statarea_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Guadalajara",
+   "away": "Cruz Azul",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled",
+   "status": "FT"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Guarani de Juaze",
+   "away": "Icasa(CE)",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
+   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-11-22",
@@ -440484,10 +440576,19 @@
    "date": "2026-11-22",
    "home": "Inter San Carlos",
    "away": "Sporting San Jos",
-   "hs": 0,
-   "gs": 1,
+   "hs": 2,
+   "gs": 4,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Inter San Carlos",
+   "away": "Sporting San Jose",
+   "hs": 2,
+   "gs": 4,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-22",
@@ -440888,8 +440989,8 @@
    "home": "LDU Quito",
    "away": "Aucas",
    "hs": 0,
-   "gs": 0,
-   "outcome": "draw",
+   "gs": 1,
+   "outcome": "away",
    "src": "bettingclosed_settled"
   },
   {
@@ -440975,6 +441076,15 @@
   },
   {
    "date": "2026-11-22",
+   "home": "Leiria",
+   "away": "Leca",
+   "hs": 4,
+   "gs": 2,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "Lentigione",
    "away": "ASD Varesina",
    "hs": 3,
@@ -441035,6 +441145,15 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Limache",
+   "away": "Deportes La Sere",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
    "src": "bettingclosed_settled"
   },
   {
@@ -441405,9 +441524,18 @@
    "home": "Metropolitanos",
    "away": "Real Esppor Club",
    "hs": 1,
-   "gs": 2,
+   "gs": 5,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Metropolitanos FC",
+   "away": "Deportivo La Guaira",
+   "hs": 1,
+   "gs": 5,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-22",
@@ -441755,11 +441883,20 @@
   },
   {
    "date": "2026-11-22",
+   "home": "Olimpia",
+   "away": "Sportivo Trinidense",
+   "hs": 2,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "Olimpia Asuncion",
    "away": "Sportivo Trinide",
-   "hs": 1,
+   "hs": 2,
    "gs": 1,
-   "outcome": "draw",
+   "outcome": "home",
    "src": "bettingclosed_settled"
   },
   {
@@ -442149,6 +442286,15 @@
   },
   {
    "date": "2026-11-22",
+   "home": "Platense FC",
+   "away": "ATLETICO CHOLOMA",
+   "hs": 0,
+   "gs": 0,
+   "outcome": "draw",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "Pontedera",
    "away": "Sant'Angelo",
    "hs": 1,
@@ -442496,8 +442642,8 @@
    "date": "2026-11-22",
    "home": "River Plate",
    "away": "Lanus",
-   "hs": 1,
-   "gs": 0,
+   "hs": 3,
+   "gs": 1,
    "outcome": "home",
    "src": "bettingclosed_settled"
   },
@@ -442594,6 +442740,15 @@
   },
   {
    "date": "2026-11-22",
+   "home": "SA Bulo Bulo",
+   "away": "Always Ready",
+   "hs": 0,
+   "gs": 3,
+   "outcome": "away",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
    "home": "SC Farense",
    "away": "Fatima",
    "hs": 1,
@@ -442615,7 +442770,7 @@
    "home": "SCU Torreense",
    "away": "Benfica",
    "hs": 1,
-   "gs": 2,
+   "gs": 3,
    "outcome": "away",
    "src": "bettingclosed_settled"
   },
@@ -443316,7 +443471,7 @@
    "date": "2026-11-22",
    "home": "The Strongest",
    "away": "Blooming",
-   "hs": 3,
+   "hs": 4,
    "gs": 0,
    "outcome": "home",
    "src": "bettingclosed_settled"
@@ -443338,6 +443493,15 @@
    "gs": 2,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-22",
+   "home": "Torreense",
+   "away": "Benfica",
+   "hs": 1,
+   "gs": 3,
+   "outcome": "away",
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-11-22",
