@@ -265,14 +265,14 @@ def _unpriced_family(label: str) -> str | None:
     if {"draw", "bet"} <= tokens or "dnb" in tokens:
         # Draw no bet (full-time): priced as ("dnb", home/away). Same fulltime
         # gate ordering as double_chance: the period check above already
-        # refused p1/p2 variants before this label is reached. ml_paper has no
+        # refused p1/p2 variants before this label is reached. There is no
         # dnb consumer yet; row capture is priced-vocabulary capture, not a
         # pick market.
         return "draw_no_bet"
     if "double" in tokens and "chance" in tokens:
         # 2026-11-15: full-time double chance is now PRICED vocabulary — the
-        # parser resolves ("dc", 1x/x2/12) downstream and ml_paper/enh_pricing
-        # already consume dc rows. The classifier used to short-circuit these
+        # parser resolves ("dc", 1x/x2/12) downstream and enh_pricing
+        # already consumes dc rows. The classifier used to short-circuit these
         # with the unpriced marker, discarding market 101902's real price
         # supply before the DC-capable parser ever saw it (census 2026-11:
         # 116 sightings). Half-time/second-half DC variants are rejected before

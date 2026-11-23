@@ -23,10 +23,12 @@ runner is still late: these hours are not a guarantee that a card exists.
 | `NO BET` / insufficient quorum or eligible legs | Valid abstention. Do not loosen gates to manufacture a card. |
 | Missing card or inconsistent freeze artifacts | Not permission to bet; inspect the run and recovery evidence. |
 
-Main and ENH are separate lanes with separate state. `autobets_ML` is a
-**PAPER** lane, not authority to place a real-money bet. Morning and later
-pick snapshots are distinct evidence; never substitute an intraday slate for
-the original morning decision.
+Main and ENH are separate lanes with separate state. The former `autobets_ML`
+**PAPER** lane was retired on 2026-11-23; its source, receipts, state and
+scheduled steps were removed in a forward deletion commit. It never placed
+real money and is not authority to bet. Morning and later pick snapshots are
+distinct evidence; never substitute an intraday slate for the original morning
+decision.
 
 A frozen date's `frozen_by_date` entry and timestamp are write-once, co-located
 with state persistence. Legacy `.frozen` sidecars still lock their date and are
