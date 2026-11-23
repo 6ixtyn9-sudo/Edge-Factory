@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-23",
+ "generated_at": "2026-11-24",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -930,15 +930,16 @@
   },
   "away_over_15@v1": {
    "hits": 1,
-   "inv_price_sum": 0.9272859046875381,
+   "inv_price_sum": 1.6265866039882375,
    "multi_n": 0,
-   "n": 3,
+   "n": 4,
    "processed": [
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|away_over_15@v1",
     "2026-10-23|Brisbane Roar vs Perth Glory|away_over_15@v1",
-    "2026-11-17|RWANDA vs MALI|away_over_15@v1"
+    "2026-11-17|RWANDA vs MALI|away_over_15@v1",
+    "2026-11-23|Juticalpa vs Olancho FC|away_over_15@v1"
    ],
-   "profit": -0.674,
+   "profit": -1.674,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -1024,6 +1025,35 @@
      },
      "recorded_at": "2026-11-17T22:42:56.033406+00:00",
      "rule": "pfc_c33854a6f17eda6cca30d634",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Olancho FC",
+     "away_key": "olancho",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7167,
+     "date": "2026-11-23",
+     "hit": false,
+     "home": "Juticalpa",
+     "home_key": "juticalpa",
+     "league": "Honduras,Liga Nacional - Apertura",
+     "match": "Juticalpa vs Olancho FC",
+     "multi_source": false,
+     "price": 1.43,
+     "price_context": {
+      "book": "mozzartbet",
+      "captured_at": "2026-11-22T22:43:16.781212+00:00",
+      "contract_id": "pfc_2a4f2be544cd9d59f3cb7098",
+      "decision_at": "2026-11-23T00:46:37+02:00",
+      "kickoff": "2026-11-23T01:30:00+00:00",
+      "league": "Honduras,Liga Nacional - Apertura",
+      "price": 1.43,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-23T22:56:27.680459+00:00",
+     "rule": "pfc_2a4f2be544cd9d59f3cb7098",
      "source": "oddspapi",
      "stated": null
     }
@@ -2082,10 +2112,10 @@
    "status_since": "2026-10-16"
   },
   "away_under_25@v1": {
-   "hits": 12,
-   "inv_price_sum": 9.632111318043126,
+   "hits": 13,
+   "inv_price_sum": 10.257111318043126,
    "multi_n": 0,
-   "n": 16,
+   "n": 17,
    "processed": [
     "2026-10-04|Portugal vs Norway|away_under_25@v1",
     "2026-09-14|Inter vs Udinese|away_under_25@v1",
@@ -2134,9 +2164,10 @@
     "2026-10-25|Sydney FC vs Adelaide United|away_under_25@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|away_under_25@v1",
     "2026-11-08|Austin vs Portland Timbers|away_under_25@v1",
-    "2026-11-14|Guatemala vs Canada|away_under_25@v1"
+    "2026-11-14|Guatemala vs Canada|away_under_25@v1",
+    "2026-11-23|Juticalpa vs Olancho FC|away_under_25@v1"
    ],
-   "profit": 4.45,
+   "profit": 5.05,
    "records": [
     {
      "away": "Norway",
@@ -2549,6 +2580,35 @@
      },
      "recorded_at": "2026-11-15T05:21:38.113555+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Olancho FC",
+     "away_key": "olancho",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6333,
+     "date": "2026-11-23",
+     "hit": true,
+     "home": "Juticalpa",
+     "home_key": "juticalpa",
+     "league": "Honduras,Liga Nacional - Apertura",
+     "match": "Juticalpa vs Olancho FC",
+     "multi_source": false,
+     "price": 1.6,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-11-22T22:43:16.781212+00:00",
+      "contract_id": "pfc_2a4f2be544cd9d59f3cb7098",
+      "decision_at": "2026-11-23T00:46:37+02:00",
+      "kickoff": "2026-11-23T01:30:00+00:00",
+      "league": "Honduras,Liga Nacional - Apertura",
+      "price": 1.6,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-23T22:56:27.700011+00:00",
+     "rule": "pfc_2a4f2be544cd9d59f3cb7098",
      "source": "oddspapi",
      "stated": null
     }
@@ -7906,9 +7966,9 @@
   "match_over_25@v1": {
    "hits": 369,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 369.676366116646,
+   "inv_price_sum": 370.3215274069686,
    "multi_n": 107,
-   "n": 571,
+   "n": 572,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -8724,9 +8784,10 @@
     "2026-11-22|OSASUNA vs MALAGA|match_over_25@v1",
     "2026-11-22|KASIMPASA vs ALANYASPOR|match_over_25@v1",
     "2026-11-22|BOLOGNA vs UDINESE|match_over_25@v1",
-    "2026-11-22|TRABZONSPOR vs EYUPSPOR|match_over_25@v1"
+    "2026-11-22|TRABZONSPOR vs EYUPSPOR|match_over_25@v1",
+    "2026-11-23|Juticalpa vs Olancho FC|match_over_25@v1"
    ],
-   "profit": -0.944,
+   "profit": -1.944,
    "records": [
     {
      "away": "Spartak Varna",
@@ -18214,6 +18275,35 @@
      "rule": "pfc_71a63d281a3dff22aa75f744",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Olancho FC",
+     "away_key": "olancho",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6167,
+     "date": "2026-11-23",
+     "hit": false,
+     "home": "Juticalpa",
+     "home_key": "juticalpa",
+     "league": "Honduras,Liga Nacional - Apertura",
+     "match": "Juticalpa vs Olancho FC",
+     "multi_source": false,
+     "price": 1.55,
+     "price_context": {
+      "book": "bet3000",
+      "captured_at": "2026-11-22T22:43:16.781212+00:00",
+      "contract_id": "pfc_2a4f2be544cd9d59f3cb7098",
+      "decision_at": "2026-11-23T00:46:37+02:00",
+      "kickoff": "2026-11-23T01:30:00+00:00",
+      "league": "Honduras,Liga Nacional - Apertura",
+      "price": 1.55,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-23T22:56:27.690373+00:00",
+     "rule": "pfc_2a4f2be544cd9d59f3cb7098",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -20078,10 +20168,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 35,
-   "inv_price_sum": 24.86192726770119,
+   "hits": 36,
+   "inv_price_sum": 25.63953224437304,
    "multi_n": 0,
-   "n": 40,
+   "n": 41,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -20122,9 +20212,10 @@
     "2026-11-17|Canada vs Guatemala|match_under_45@v1",
     "2026-11-17|Trinidad and Tobago vs Antigua and Barbuda|match_under_45@v1",
     "2026-11-17|Martinique vs Aruba|match_under_45@v1",
-    "2026-11-20|Orlando City SC vs FC Cincinnati|match_under_45@v1"
+    "2026-11-20|Orlando City SC vs FC Cincinnati|match_under_45@v1",
+    "2026-11-23|Juticalpa vs Olancho FC|match_under_45@v1"
    ],
-   "profit": 17.207,
+   "profit": 17.493,
    "records": [
     {
      "away": "Atlante",
@@ -21243,10 +21334,39 @@
      "rule": "pfc_642ac9053223500b638e3451",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Olancho FC",
+     "away_key": "olancho",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7833,
+     "date": "2026-11-23",
+     "hit": true,
+     "home": "Juticalpa",
+     "home_key": "juticalpa",
+     "league": "Honduras,Liga Nacional - Apertura",
+     "match": "Juticalpa vs Olancho FC",
+     "multi_source": false,
+     "price": 1.286,
+     "price_context": {
+      "book": "888sport",
+      "captured_at": "2026-11-22T22:43:16.781212+00:00",
+      "contract_id": "pfc_2a4f2be544cd9d59f3cb7098",
+      "decision_at": "2026-11-23T00:46:37+02:00",
+      "kickoff": "2026-11-23T01:30:00+00:00",
+      "league": "Honduras,Liga Nacional - Apertura",
+      "price": 1.286,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-23T22:56:27.670586+00:00",
+     "rule": "pfc_2a4f2be544cd9d59f3cb7098",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
-   "status_reason": "n=40 wilsonLB95=0.7389 >= mean breakeven 0.6215 but multi-source verification 0/10 not met",
+   "status_reason": "n=41 wilsonLB95=0.7446 >= mean breakeven 0.6254 but multi-source verification 0/11 not met",
    "status_since": "2026-10-22"
   }
  },

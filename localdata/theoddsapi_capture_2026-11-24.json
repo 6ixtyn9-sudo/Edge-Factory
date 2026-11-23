@@ -1,0 +1,72 @@
+{
+  "added": 0,
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "LENS",
+      "date": "2026-11-24",
+      "home": "RB LEIPZIG",
+      "kickoff": "20:00",
+      "league": "ECL"
+    },
+    {
+      "away": "ABERDEEN",
+      "date": "2026-11-24",
+      "home": "RANGERS FC",
+      "kickoff": "20:00",
+      "league": "SCP"
+    }
+  ],
+  "candidate_fixtures": 18,
+  "captured_at": "2026-11-23T22:47:02+00:00",
+  "date": "2026-11-24",
+  "due_reasons": {
+    "first_at": 2
+  },
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "retry_cooldown": 16
+  },
+  "skipped": [
+    "Durban City|Polokwane City (retry cooldown (6h after failed attempt))",
+    "AFC Hornchurch|Sutton United (retry cooldown (6h after failed attempt))",
+    "Port Vale|Northampton Town (retry cooldown (6h after failed attempt))",
+    "Bristol City|Wrexham (retry cooldown (6h after failed attempt))",
+    "Cesena|Ascoli (retry cooldown (6h after failed attempt))",
+    "Slovan Bratislava|Real Betis (retry cooldown (6h after failed attempt))",
+    "Scunthorpe United|Gateshead (retry cooldown (6h after failed attempt))",
+    "Bod\u00f8 / Glimt|LASK Linz (retry cooldown (6h after failed attempt))",
+    "PORT VALE|NORTHAMPTON (retry cooldown (6h after failed attempt))",
+    "HIBERNIAN|FC DUNDEE (retry cooldown (6h after failed attempt))",
+    "MIDDLESBROUGH|SWANSEA (retry cooldown (6h after failed attempt))",
+    "CARLISLE|TAMWORTH (retry cooldown (6h after failed attempt))",
+    "CHARLTON|LINCOLN (retry cooldown (6h after failed attempt))",
+    "BLACKPOOL|LEICESTER (retry cooldown (6h after failed attempt))",
+    "BOSTON UTD|BARROW (retry cooldown (6h after failed attempt))",
+    "AKRON TOGLIATTI|CSKA MOSCOW (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "empty",
+  "unmatched": [
+    "RANGERS FC vs ABERDEEN (league not covered: SCP)",
+    "RB LEIPZIG vs LENS (keys exhausted)"
+  ],
+  "unmatched_reasons": {
+    "keys exhausted": 1,
+    "league not covered: SCP": 1
+  }
+}
