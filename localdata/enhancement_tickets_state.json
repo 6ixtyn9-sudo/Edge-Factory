@@ -12121,12 +12121,12 @@
                   "source": "betexplorer",
                   "price": 1.5,
                   "captured_at": "2026-11-23T04:32:22.426935+00:00",
-                  "decision_at": "2026-11-23T06:32:26+02:00",
+                  "decision_at": "2026-11-23T09:30:10+02:00",
                   "kickoff": "2026-11-23T20:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7936397532570604,
-              "ml_model_key": "da5e2db496dda4ac78d6e577528d2418c95a542fa0daec4cd7b8b1de81daeb20",
+              "ml_rank_probability": 0.7936397532698604,
+              "ml_model_key": "760bd64eb2a6f05dc3e6fff028d95b335ddd1422368fd28549fd3805851c64c9",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 3.5 Goals",
               "floor": 1.64,
@@ -12203,7 +12203,7 @@
                       "away": "Elche",
                       "csv_data_row": 2756,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "0bfada925b7baaaaa172f93e04c20c0f69dcf069cf5aa4c7ed134c2b635fca70",
+                      "file_sha256": "9290e979c4b2e764d270a2853f9a0bcd41882b8d91445b326ca9a6f6fcb318bb",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Levante",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12254,7 +12254,7 @@
                       "away": "Elche",
                       "csv_data_row": 11210,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "1c27302396f61a7939a35025021447da2aec75110603a206ce671e5f04aa3a40",
+                      "file_sha256": "6214b978350c0b12a898c63fe9261838abe22281954aac8d09323c5ea9f7e8e8",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Levante",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12328,12 +12328,12 @@
                   "source": "betexplorer",
                   "price": 1.53,
                   "captured_at": "2026-11-23T01:40:35.813794+00:00",
-                  "decision_at": "2026-11-23T06:32:26+02:00",
+                  "decision_at": "2026-11-23T09:30:10+02:00",
                   "kickoff": "2026-11-23T16:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6277577988628219,
-              "ml_model_key": "8f845c9fb8c563ec69a35795cdb52c4c75f113dff53251e21023c5bae9ab6b47",
+              "ml_rank_probability": 0.6277577988088565,
+              "ml_model_key": "294ecf25bf1e7c85462d70b3c10f62e46f8615eb54baffbe8095b99f10accebb",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.749732913053369,
@@ -12410,7 +12410,7 @@
                       "away": "Dunav Ruse",
                       "csv_data_row": 11213,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "1c27302396f61a7939a35025021447da2aec75110603a206ce671e5f04aa3a40",
+                      "file_sha256": "6214b978350c0b12a898c63fe9261838abe22281954aac8d09323c5ea9f7e8e8",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Ludogorets",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12460,7 +12460,12 @@
             }
           ],
           "odds": 2.29,
-          "stake_pct": 2.5829
+          "stake_pct": 2.5829,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 2.5829
@@ -12639,6 +12644,11 @@
     },
     "2026-11-22": {
       "frozen_at": "2026-11-22T10:43:15+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-23": {
+      "frozen_at": "2026-11-23T09:50:51+02:00",
       "final": true,
       "lock_source": "state"
     }
