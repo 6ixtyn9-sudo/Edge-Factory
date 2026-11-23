@@ -1,11 +1,63 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 7,
+  "attempted_fixtures": [
+    {
+      "away": "Dunav Ruse",
+      "date": "2026-11-23",
+      "home": "Ludogorets",
+      "kickoff": "23-11, 16:00",
+      "league": "Bulgaria First League"
+    },
+    {
+      "away": "FK Dunav Ruse",
+      "date": "2026-11-23",
+      "home": "Ludogorets",
+      "kickoff": "2026-11-23T16:00:00Z",
+      "league": "Parva Liga"
+    },
+    {
+      "away": "Grenoble Foot 38",
+      "date": "2026-11-23",
+      "home": "Nantes",
+      "kickoff": "2026-11-23T19:45:00Z",
+      "league": "Ligue 2"
+    },
+    {
+      "away": "GOTEBORG",
+      "date": "2026-11-23",
+      "home": "HAMMARBY",
+      "kickoff": "18:00",
+      "league": "SE1"
+    },
+    {
+      "away": "Danubio",
+      "date": "2026-11-23",
+      "home": "Albion",
+      "kickoff": "2026-11-23T22:30:00Z",
+      "league": "Primera Division"
+    },
+    {
+      "away": "Olancho FC",
+      "date": "2026-11-23",
+      "home": "Juticalpa",
+      "kickoff": "17:30",
+      "league": "Honduras,Liga Nacional - Apertura"
+    },
+    {
+      "away": "ELCHE",
+      "date": "2026-11-23",
+      "home": "LEVANTE",
+      "kickoff": "20:00",
+      "league": "ES1"
+    }
+  ],
   "candidate_fixtures": 7,
-  "captured_at": "2026-11-23T02:09:37+00:00",
+  "captured_at": "2026-11-23T04:54:43+00:00",
   "date": "2026-11-23",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 7
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -21,19 +73,24 @@
   ],
   "rows": 0,
   "schema": 1,
-  "skip_reasons": {
-    "retry_cooldown": 7
-  },
-  "skipped": [
-    "Ludogorets|Dunav Ruse (retry cooldown (6h after failed attempt))",
-    "Ludogorets|FK Dunav Ruse (retry cooldown (6h after failed attempt))",
-    "Nantes|Grenoble Foot 38 (retry cooldown (6h after failed attempt))",
-    "HAMMARBY|GOTEBORG (retry cooldown (6h after failed attempt))",
-    "Albion|Danubio (retry cooldown (6h after failed attempt))",
-    "Juticalpa|Olancho FC (retry cooldown (6h after failed attempt))",
-    "LEVANTE|ELCHE (retry cooldown (6h after failed attempt))"
-  ],
+  "skip_reasons": {},
+  "skipped": [],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Ludogorets vs Dunav Ruse (league not covered: Bulgaria First League)",
+    "Ludogorets vs FK Dunav Ruse (league not covered: Parva Liga)",
+    "Nantes vs Grenoble Foot 38 (league not covered: Ligue 2)",
+    "Albion vs Danubio (league not covered: Primera Division)",
+    "Juticalpa vs Olancho FC (league not covered: Honduras,Liga Nacional - Apertura)",
+    "HAMMARBY vs GOTEBORG (keys exhausted)"
+  ],
+  "unmatched_reasons": {
+    "keys exhausted": 1,
+    "league not covered: Bulgaria First League": 1,
+    "league not covered: Honduras,Liga Nacional - Apertura": 1,
+    "league not covered: Ligue 2": 1,
+    "league not covered: Parva Liga": 1,
+    "league not covered: Primera Division": 1
+  }
 }

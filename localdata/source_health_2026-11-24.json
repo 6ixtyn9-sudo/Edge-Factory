@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 12868
       },
       "pa_matched": 0,
-      "pa_raw": 683,
+      "pa_raw": 12868,
       "pa_scored": 12868,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -230,49 +225,58 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 4,
+        "board_fixtures": 2,
         "board_league_count": 2,
         "board_leagues": {
-          "argentina_-_primera_division": 113,
-          "argentina_-_primera_nacional": 87
+          "bulgaria_-_second_professional_league": 1,
+          "ukraine_-_premier_league": 199
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 16,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 4,
         "board_team_names": {
-          "CA Huracan": 56,
-          "Club Gimnasia y Tiro": 81,
-          "Deportivo Tristan Suarez": 6,
-          "Gimnasia y Tiro": 6,
-          "Huracan": 57,
-          "Instituto": 56,
-          "Instituto Cordoba": 57,
-          "Tristan Suarez": 81
+          "Beroe Stara Za": 1,
+          "CSKA Sofia II": 1,
+          "LNZ-Lebedyn": 199,
+          "Polissya Zhytomyr": 199
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 4,
+          "unknown_market:1st_half_team_total": 10,
+          "unknown_market:asian_total_goals": 2,
+          "unknown_market:exact_total_goals": 16,
+          "unknown_market:first_team_to_score": 3,
+          "unknown_market:halftime_fulltime": 9,
+          "unknown_market:total_corners": 14,
+          "unsupported_market:correct_score": 78,
+          "unsupported_market:team_total_goals": 14
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 200
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 16
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 1,
+      "sa_scored": 16,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

@@ -19992,7 +19992,7 @@
     "btts_total": 993,
     "btts_wins": 508,
     "over25_total": 993,
-    "over25_wins": 547,
+    "over25_wins": 548,
     "team_o15_total": 993,
     "team_o15_wins": 571
   },
@@ -52812,7 +52812,7 @@
     {
       "avg_p": 67.0,
       "date": "2026-11-22",
-      "gs": 1,
+      "gs": 2,
       "hs": 1,
       "market": "1x2",
       "match": "CHICAGO vs CHARLOTTE",
@@ -52820,16 +52820,16 @@
       "odds": null,
       "odds_match_method": "none",
       "odds_source": "UNKNOWN",
-      "outcome": "draw",
+      "outcome": "away",
       "parsed_stats": {
         "away_o15_expected": 0.262,
-        "away_o15_hit": true,
+        "away_o15_hit": false,
         "btts_expected": 0.5429999999999999,
         "btts_hit": true,
         "home_o15_expected": 0.59,
         "home_o15_hit": false,
         "over25_expected": 0.574,
-        "over25_hit": false,
+        "over25_hit": true,
         "top_scores": []
       },
       "price_evidence": "UNMATCHED",
@@ -53374,20 +53374,20 @@
   "start": "2026-10-25",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.140835,
-      "mae": 1.442974,
-      "mean_actual": 2.973734,
+      "bias": -0.139897,
+      "mae": 1.442073,
+      "mean_actual": 2.974672,
       "mean_promised": 3.114568,
       "n": 1066
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.208407,
-        "delta": -0.01941,
-        "hits": 355,
+        "brier": 0.208854,
+        "delta": -0.018472,
+        "hits": 356,
         "mean_promised": 0.352431,
         "n": 1066,
-        "realized": 0.333021
+        "realized": 0.333959
       },
       "btts": {
         "brier": 0.249246,
@@ -53406,12 +53406,12 @@
         "realized": 0.515009
       },
       "over25": {
-        "brier": 0.245124,
-        "delta": -0.034873,
-        "hits": 597,
+        "brier": 0.244986,
+        "delta": -0.033935,
+        "hits": 598,
         "mean_promised": 0.594911,
         "n": 1066,
-        "realized": 0.560038
+        "realized": 0.560976
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
@@ -53426,13 +53426,13 @@
         "realized": 0.145161
       },
       {
-        "brier": 0.206484,
+        "brier": 0.207113,
         "bucket": "0.2-0.3",
-        "delta": 0.019337,
-        "hits": 219,
+        "delta": 0.020658,
+        "hits": 220,
         "mean_promised": 0.269963,
         "n": 757,
-        "realized": 0.2893
+        "realized": 0.290621
       },
       {
         "brier": 0.212252,
@@ -53453,13 +53453,13 @@
         "realized": 0.445946
       },
       {
-        "brier": 0.249703,
+        "brier": 0.249636,
         "bucket": "0.5-0.6",
-        "delta": -0.028601,
-        "hits": 1158,
+        "delta": -0.02815,
+        "hits": 1159,
         "mean_promised": 0.551873,
         "n": 2213,
-        "realized": 0.523272
+        "realized": 0.523723
       },
       {
         "brier": 0.244257,

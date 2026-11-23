@@ -1,6 +1,36 @@
 {
-  "attempted": 3,
+  "attempted": 5,
   "attempted_fixtures": [
+    {
+      "avg_p": 71.50000000000001,
+      "away": "GOTEBORG",
+      "date": "2026-11-23",
+      "home": "HAMMARBY",
+      "league": "SE1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.588
+    },
+    {
+      "avg_p": 54.0,
+      "away": "ELCHE",
+      "date": "2026-11-23",
+      "home": "LEVANTE",
+      "league": "ES1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.588
+    },
+    {
+      "avg_p": 71.61087866108787,
+      "away": "Grenoble Foot 38",
+      "date": "2026-11-23",
+      "home": "Nantes",
+      "league": "Ligue 2",
+      "market": "ou_3.5",
+      "pick": "under",
+      "w_score": 0.7572
+    },
     {
       "avg_p": 88.0,
       "away": "Dunav Ruse",
@@ -20,39 +50,29 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5987
-    },
-    {
-      "avg_p": 71.50000000000001,
-      "away": "GOTEBORG",
-      "date": "2026-11-23",
-      "home": "HAMMARBY",
-      "league": "SE1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.588
     }
   ],
   "be_429": 2,
-  "be_cached": 1,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 1,
+  "cache_only": 3,
   "candidate_fixtures": 7,
-  "captured_at": "2026-11-23T01:39:29.157368+00:00",
+  "captured_at": "2026-11-23T04:31:14.557231+00:00",
   "date": "2026-11-23",
-  "deferred_fixtures": 4,
+  "deferred_fixtures": 2,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
   "market_requests": 5,
   "match_detail": {
-    "bookmakers": 17,
+    "bookmakers": 36,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 39,
-    "markets": 6,
-    "named_rows": 39,
+    "fixtures": 2,
+    "market_rows": 95,
+    "markets": 12,
+    "named_rows": 95,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -63,6 +83,16 @@
   "ml_refresh_attempted": 0,
   "network_attempted": 2,
   "quoted_fixtures": [
+    {
+      "avg_p": 54.0,
+      "away": "ELCHE",
+      "date": "2026-11-23",
+      "home": "LEVANTE",
+      "league": "ES1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.588
+    },
     {
       "avg_p": 84.8,
       "away": "FK Dunav Ruse",
@@ -75,7 +105,7 @@
     }
   ],
   "requests": 11,
-  "rows": 3,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
