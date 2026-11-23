@@ -1081,80 +1081,11 @@ def _store_fixture_cache_entry(pick: dict, day: str, entry: dict) -> bool:
 
 def _write_fixture_cache(pick: dict, day: str, rows: list[dict], *, detail: bool = False) -> None:
     """Atomically persist one same-day fixture result without synthetic rows."""
-    # A later enrichment/detail write must not erase today's refresh attempt.
-    prior = _fixture_cache_entry(pick, day) or {}
     _store_fixture_cache_entry(pick, day, {
         "cached_at": datetime.now(timezone.utc).isoformat(),
         "home": pick.get("home"), "away": pick.get("away"), "rows": rows,
         "detail": bool(detail),
-        **({"ml_refresh_attempted_at": prior["ml_refresh_attempted_at"]}
-           if prior.get("ml_refresh_attempted_at") else {}),
     })
-
-
-def ml_price_refresh_needed(pick: dict, day: str, *, freeze_at: datetime,
-                            now: datetime) -> bool:
-    """One pre-freeze refresh targeting a capture within the final six hours.
-
-    This collection target is intentionally tighter than ML's 12-hour admission
-    ceiling. It schedules collection, NOT quote admission. Negative answers,
-    poisoned rows, unknown kickoff and completed attempts never buy another
-    request. The normal cache TTL and other callers keep their existing policy.
-    """
-    from zoneinfo import ZoneInfo
-
-    from edgefactory.odds_normalization import parse_zoned_timestamp
-
-    if (freeze_at.tzinfo is None or now.tzinfo is None
-            or freeze_at.astimezone(ZoneInfo("Africa/Johannesburg")).isoformat()
-            != f"{str(day)[:10]}T09:00:00+02:00"
-            or not freeze_at - timedelta(hours=6) <= now < freeze_at):
-        return False
-    kickoff = parse_zoned_timestamp(pick.get("kickoff_utc"))
-    if kickoff is None or kickoff < freeze_at + timedelta(minutes=30):
-        return False
-    entry = _fixture_cache_entry(pick, day)
-    if not entry or entry.get("ml_refresh_attempted_at"):
-        return False
-    rows = entry.get("rows")
-    if not isinstance(rows, list) or not rows:
-        return False
-    valid, rejected = filter_rows_for_pick(rows, pick, day)
-    if not valid or rejected or any(str(row.get("date"))[:10] != str(day)[:10] for row in valid):
-        return False
-    # A cache's write time is not the quote observation time. In particular,
-    # re-publishing old rows must never make them count as freshly observed.
-    return not any((stamp := parse_zoned_timestamp(row.get("captured_at"))) is not None
-                   and freeze_at - timedelta(hours=6) <= stamp <= now for row in valid)
-
-
-def refresh_ml_prices_for_pick(pick: dict, day: str, *, freeze_at: datetime,
-                               now: datetime, norm_team_fn=None) -> list[dict]:
-    """Use the ordinary adapter/budgets once, retaining old evidence on failure."""
-    if not ml_price_refresh_needed(pick, day, freeze_at=freeze_at, now=now):
-        return cached_odds_rows_for_pick(pick, day)
-    if (_be_cooling_down or _fetch_count >= _MAX_FETCHES_PER_RUN
-            or _request_count >= _MAX_REQUESTS_PER_RUN):
-        return cached_odds_rows_for_pick(pick, day)
-    prior = _fixture_cache_entry(pick, day)
-    prior = {**prior, "ml_refresh_attempted_at": now.isoformat()}
-    # Persist before networking, so failed/crashed runs do not loop on this
-    # fixture. If the attempt cannot be recorded, do not spend the request.
-    if not _store_fixture_cache_entry(pick, day, prior):
-        return cached_odds_rows_for_pick(pick, day)
-    try:
-        rows = betexplorer_odds_rows_for_pick(
-            pick, day, norm_team_fn=norm_team_fn, refresh_prices=True)
-        if rows:
-            return rows
-    finally:
-        # The live call may have cached a negative answer before failing. Old
-        # evidence remains old: restore its clocks/detail flag, not a new stamp.
-        current = _fixture_cache_entry(pick, day) or {}
-        if not current.get("rows") or current == prior:
-            _fixture_cache[_fixture_cache_key(pick, day)] = list(prior["rows"])
-            _store_fixture_cache_entry(pick, day, prior)
-    return cached_odds_rows_for_pick(pick, day)
 
 
 def cached_fixture_present(pick: dict, day: str) -> bool:

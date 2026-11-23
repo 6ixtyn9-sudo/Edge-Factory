@@ -122,25 +122,18 @@ Split at break start (11-09, the Monday after the last full club weekend):
 Time"** — seen **116×** in the November census — but `_classify_catalog_entry` routes
 "double chance" to `unsupported_double_chance` before the priced-type step; parse
 receipts show **448 DC rows skipped**. Parser support for `double_chance` already exists
-(market `dc` emission via `_DC_SELECTION`), `ml_paper` already understands
+(market `dc` emission via `_DC_SELECTION`), `enh_pricing` already understands
 `double_chance`, and `odds_normalization` keeps `dc` OUT of 1x2 boards (the 2026-10-11
 Vidar/Brattvag incident class stays contained). So a small classifier change starts
 capturing real DC prices from tomorrow → re-run this harness on real prices in 2–4 weeks.
 
-## 4. autobets_ML held accas — corrected answer
+## 4. Former paper lane — retired (2026-11-23)
 
-Previous "one-tick lag, self-heals" was **wrong**. The paper lane is hard-blocked by
-`localdata/autobets_ML_integrity_block.json` (5 receipts listed invalid, from 11-13/11-14),
-written by the 11-15 10:07 deferred-restore run. `receipts()` refuses to read anything
-while the marker exists; the design **never auto-clears** ("Never clear an integrity block").
-
-**Evidence review performed now:** all 5 quarantined receipts pass
-`ml_paper.validate_record()` under current main code (schema/checksum/date/freeze chain,
-bets, concentration, admission). The block is *stale*: it was written under the
-mid-migration code state and nothing re-evaluates it. While it stands, the 6 HELD ML
-accas from 11-14 cannot settle and no new ML paper accas print. Live lanes are untouched
-by design. Unblock = operator deletes the one marker file (conflict copies in
-`localdata/autobets_ML_conflicts/` remain as evidence).
+The `autobets_ML` paper lane discussed in this diagnostic no longer exists in the
+repository tree. Its source module, CLI step, persistence retention, scheduled
+capture windows, tests, state and receipts were removed in a forward deletion
+commit on 2026-11-23. The historical block/supersession narrative is not current
+operating guidance; Main and ENH were untouched by the removal.
 
 ## 6. Problem tally (each with evidence)
 
@@ -162,9 +155,8 @@ by design. Unblock = operator deletes the one marker file (conflict copies in
 - **P6 — Evidence exists but is not enforced.** The assay already tags these legs
   (SKIPPED_VETO) and tracks them as *singles* (+8–10%) — nothing measures
   bucket-in-acca performance or feeds it back into admission.
-- **P7 — ML lane ops debt.** Stale integrity block since 11-13 (5/5 quarantined receipts
-  validate under current code; never auto-clears by design) → 6 held accas unsettle-able;
-  comparison lane dark during the exact week we needed it.
+- **P7 — (retired) paper-lane ops debt.** The former paper lane and its stale integrity
+  block were removed with the lane's retirement on 2026-11-23; no action remains.
 - **P8 — (context) ENH lane.** Bank 23.5%, 21W/33L over 28 bet-days — likely the same
   slate-regime cause; not examined in this run.
 
@@ -179,10 +171,9 @@ by design. Unblock = operator deletes the one marker file (conflict copies in
 | S9 | League-conditioned admission: veto (or ¼-stake) acca legs from INTL / ENG-lower / Asia-Afr groups; extend to minor/unknown during flagged break days | P2 | pure-major accas +60.4% vs negative-group −15.9% ROI (60d) | small | group taxonomy must come from NEUTRAL features (coverage/tier), not these in-window ROIs — see §10 |
 | S5 | Wire oddspapi market 101902 (fulltime DC) into capture | P5 | 116 catalog sightings/mo; 448 rows dropped | small (classifier + tests) | enables real DC-price evaluation in 2–4 wks; derived data says DC on OUR slate averages ~1.11 → insurance price, not a profit line; zero-coverage break fixtures still uncovered |
 | S6 | Self-guard loop: daily "in-acca ROI by odds×conf cell" block on the ticket assay; auto-tighten when a cell's 30d acca ROI goes negative with LB significance | P6 | ladder already computes LB bands per bucket | mid | the lasting version of S1; prevents "gate rots silently" |
-| S7 | Delete stale `autobets_ML_integrity_block.json` + daily "conflicts revalidated: 0 remain" line in persist so staleness is visible without auto-clearing | P7 | 5/5 receipts pass validate_record today | trivial | preserves fail-closed design; restores the comparison lane |
 | S8 | Same treatment for ENH lane after main lane stabilizes | P8 | 21W/33L | — | later |
 
-**Recommended sequence:** S7 (free), **S1+S4 in one PR** (the money), S2 dynamic gate (next),
+**Recommended sequence:** **S1+S4 in one PR** (the money), S2 dynamic gate (next),
 S5 (enabler for your DC hypothesis). S3 after a week of S1/S2 data. S6 when S1 shows teeth.
 None of it touches workflows — all code + tests.
 
@@ -212,9 +203,7 @@ None of it touches workflows — all code + tests.
    network from the analysis sandbox was restricted. One codespace call to
    `python3 scripts/probe_oddspapi_markets.py` closes that gap for a future-run ledger
    test; capture does NOT wait on it.
-3. **Clear the stale ML integrity block** after the recorded review above; the 6 held
-   11-14 accas then settle on the next paper tick.
-4. Today (11-15) ACCA#1 @4.62 (2.10@76% + 2.20@72%) sits in the historically losing
+3. Today (11-15) ACCA#1 @4.62 (2.10@76% + 2.20@72%) sits in the historically losing
    ≥3.5 combined band — flagged, pending tonight.
 
 ## 8. Counterfactual re-simulation — "where would we be with the fixes active?"
@@ -707,48 +696,14 @@ window can be judged from ENGINE ACTUAL alone if capture follows afterward.
 
 ---
 
-## 24. autobets_ML lane unblock (resolution landed 2026-11-16)
+## 24. Orphaned history legs healed; former paper lane retired
 
-Production CI run 43801399651 (2026-11-16, main c4088c0) showed the paper lane
-still blocked: `autobets_ML evidence conflict; paper lane blocked, live lanes
-unchanged` at persistence restore, both PAPER capture steps, and the ENH grade
-(`autobets_ML report unavailable`). The 2026-11-15 local resolution of the same
-chain never reached the remote (workspace loss before commit); this section
-records the re-applied resolution now shipped.
-
-**Link 1 — integrity block of 2026-11-13/14, cleared.** All five conflicted
-receipts are byte-identical between cache and committed copies (sha256 of each
-`.cached.` side equals the `.committed.` side), so no evidence ever diverged;
-the block came from row-level sha ties during those restores under the schema
-then current. Resolution marker
-`localdata/autobets_ML_conflicts/integrity_block.resolved_2026-11-16.510997949f38d746af358cbea8d61d396b68b620801a2e337bc911f190fb8f5d.json`
-documents the review; `localdata/autobets_ML_integrity_block.json` is removed.
-The cache can resurrect a deleted block, so persistence restore retires only
-its exact reviewed bytes when HEAD contains the matching approval, no active
-block remains committed, and the current restore found no new receipt conflicts.
-The original bytes are archived before removal. Cache-only approvals, changed
-blocks and new conflicts never clear PAPER. Receipt validation post-clear:
-all 118 receipts pass (137 s in the initial in-process check).
-
-**Link 2 — operator supersession deed, honored in code.** Receipt 1a902a22
-(2026-11-13T09:13:03Z) carries `supersession.policy =
-operator_pre_kickoff_paper_replacement_v1` targeting acca 1 of fdbe9fde
-(2026-11-12T22:36:42Z, a still-open double-draw; both legs kicked off 19:45 UTC,
-~10.5 h after the replacement froze). Without the deed in the committed-ledger
-fixture accounting, the replacement's declared `prior_open_stake_micro_units: 0`
-failed validation; without it in performance accounting, the replaced acca
-booked P&L it never risked. `SUPERSESSION_POLICY` + `_superseded_accas`
-(src/edgefactory/ml_paper.py) now validate deeds fail-closed (unknown policy,
-self/unknown/out-of-range targets, non-earlier receipts, kicked-off legs all
-raise), receipts() releases superseded stakes at the replacement decision,
-not retroactively across intervening receipts. The pre-kickoff check uses the
-replacement's actual freeze, not its earlier capture. Performance voids
-superseded accas — neither settled nor pending — surfacing
-`superseded_tickets` and both receipt hashes in the release audit, not the HELD
-list. Cancelled forecasts remain candidate-pool evidence but are no longer
-selected-ticket observations unless actively re-selected. Ledger after the
-fix: 53 settled (7W/46L),
-3 pending, 1 superseded, profit −43.6093 u, paper bank 56.3907 u.
+**Retirement note (2026-11-23).** The `autobets_ML` paper lane and its receipt
+history were removed in a forward deletion commit: source, CLI step, persistence
+retention, scheduled capture windows, tests, state and receipts are gone. The
+former Link 1 (integrity-block clearance) and Link 2 (operator supersession
+deed) narrative is deliberately not reproduced here — normal Git history still
+contains the old blobs, and history rewriting is out of scope.
 
 **Link 3 — orphaned history legs healed, evidence-only.** Three settled-acca
 legs permanently stuck at `result=None` (settlement only reads open slips):
@@ -774,15 +729,11 @@ pins the one Mes Shahr None-to-win difference and every other original field.
 The fourth orphan — Main 2026-10-21 Sporting JAX vs Louisville City AWAY —
 has no settled-facts evidence on or near its date and correctly stays None.
 
-Out of scope, deliberately: no booked bank/stake rewriting anywhere; the
-supersession deed surfaces and voids — frozen ML receipts remain byte-identical; ENH
+Out of scope, deliberately: no booked bank/stake rewriting anywhere; ENH
 ticket-decision receipt shard gaps and the >50 MiB conflict-cache files
 flagged in the same CI run are adjacent infra follow-ons, untouched here.
-Proof: tests/test_ml_paper_supersession.py (24),
-tests/test_ml_paper_integrity_resolution.py (7, including restore + publish),
-tests/test_auto_tickets_rolling.py (12 heal cases, 50 total), and 18 paired-lane
-financial cache backfill/guard cases in tests/test_phase5_persistence_audit.py —
-plus the in-process receipts()/performance() check over the restored store above.
-Full regression: **7,189 passed, 2 skipped** (`PYTHONPATH=src:scripts:tests
-.venv/bin/python -m pytest tests/ -q`); all 118 frozen ML receipts remain
-byte-identical after report regeneration.
+Proof: tests/test_auto_tickets_rolling.py (12 heal cases, 50 total) and 18
+paired-lane financial cache backfill/guard cases in
+tests/test_phase5_persistence_audit.py. Full regression at the time:
+**7,189 passed, 2 skipped** (`PYTHONPATH=src:scripts:tests
+.venv/bin/python -m pytest tests/ -q`).

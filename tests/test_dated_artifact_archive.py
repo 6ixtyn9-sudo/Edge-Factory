@@ -46,7 +46,7 @@ def test_all_known_families_relocate_exact_bytes_and_keep_active_paths(tmp_path,
 
 def test_boundary_future_unknown_monthly_state_and_special_receipts_stay(tmp_path):
     names = ["picks_2026-10-06.json", "picks_2026-11-05.json", "picks_2026-02-31.json",
-             "auto_tickets_state.json", "autobets_ML_state.json", "settled_results.json",
+             "auto_tickets_state.json", "settled_results.json",
              "forebet_2026-01.csv.gz", "auto_tickets_2026-09-01.json",
              "autobets_enh_tickets_2026-09-01_reset.json",
              "auto_tickets_2026-09-01_force_recut.txt", "unknown_2026-09-01.json"]
@@ -59,7 +59,7 @@ def test_boundary_future_unknown_monthly_state_and_special_receipts_stay(tmp_pat
 
 
 def test_latest_human_card_is_kept_even_after_a_long_gap(tmp_path):
-    for prefix in ("auto_tickets", "autobets_enh_tickets", "autobets_ML"):
+    for prefix in ("auto_tickets", "autobets_enh_tickets"):
         older = put(tmp_path, f"{prefix}_2026-08-01.txt")
         latest = put(tmp_path, f"{prefix}_2026-08-02.txt")
         archive_dated_artifacts(tmp_path, today=TODAY)

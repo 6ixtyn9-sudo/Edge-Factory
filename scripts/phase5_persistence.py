@@ -41,7 +41,6 @@ PHASE5_CLEAN_EXCLUDES = (
     "/localdata/card_enrich_shadow_*.json",
     "/localdata/scored_candidate_shadow_*.jsonl",
     "/localdata/*_decision*.json",
-    "/localdata/autobets_ML*",
 )
 
 
@@ -896,227 +895,6 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
     return retained
 
 
-def _clear_reviewed_ml_paper_block(repo: Path) -> None:
-    """Retire only exact stale cache bytes covered by a committed review.
-
-    Deleting a tracked block does not remove an old cache copy: PAPER evidence
-    is deliberately exempt from checkout/clean. Cache-provided approvals are
-    never trusted, nor may a review clear a different or newly extended block.
-    Called only after the current restore found no receipt conflicts.
-    """
-    relative = "localdata/autobets_ML_integrity_block.json"
-    marker = repo / relative
-    committed = _committed_localdata_files(repo)
-    if not marker.exists() or relative in committed:
-        return
-    original = marker.read_bytes()
-    sha = hashlib.sha256(original).hexdigest()
-    prefix = "localdata/autobets_ML_conflicts/integrity_block.resolved_"
-    for path in sorted(committed):
-        if not path.startswith(prefix) or not path.endswith(f".{sha}.json"):
-            continue
-        try:
-            review = json.loads(_head_blob(repo, path) or b"null")
-        except (ValueError, UnicodeDecodeError):
-            continue
-        if not isinstance(review, dict) or not (
-            review.get("lane") == "autobets_ML"
-            and review.get("paper_only") is True
-            and review.get("status") == "resolved_copies_byte_identical"
-            and review.get("block_sha256") == sha
-        ):
-            continue
-        archive = repo / f"localdata/autobets_ML_conflicts/integrity_block.reviewed_{sha}.json"
-        _atomic_write(archive, original)
-        marker.unlink()
-        print(f"restore: retired reviewed autobets_ML cache block {sha}", flush=True)
-        return
-
-
-def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
-    """Preserve paper evidence independently; never reconcile live financials.
-
-    Exact frozen conflicts are not guessed away. Preserve both copies, block
-    PAPER, and still let the existing Main/ENH restore proceed unchanged.
-    Valid drafts can advance by their actual pre-cutoff persistence timestamp.
-    """
-    from edgefactory import ml_paper
-    from edgefactory.odds_normalization import parse_zoned_timestamp
-    import re
-
-    pattern = re.compile(
-        r"^localdata/(?:phase5_reconciliation/ml_paper_receipts/)?"
-        r"autobets_ML_(?:(draft_)?(\d{4}-\d{2}-\d{2})(_\d{8}T\d{12}Z)?|state)\.json$"
-    )
-    tracked = {p for p in _tracked_localdata_paths(repo) if pattern.fullmatch(p)}
-    cached = {str(p.relative_to(repo)) for p in [
-        *(repo / "localdata").glob("autobets_ML_*.json"),
-        *ml_paper.receipt_files(repo / "localdata"),
-    ] if pattern.fullmatch(str(p.relative_to(repo)))}
-    retained = {}
-    history = {}
-    conflicts = []
-    for relative in sorted(tracked | cached):
-        match = pattern.fullmatch(relative)
-        state_file = relative == "localdata/autobets_ML_state.json"
-        draft, day = bool(match[1]) or state_file, match[2]
-        head = _head_blob(repo, relative) or None
-        cache = (repo / relative).read_bytes() if (repo / relative).exists() else None
-        values = {}
-        invalid = False
-        damaged = []
-        identical_copies = head is not None and cache is not None and head == cache
-        inputs = (("committed", head),) if identical_copies else (
-            ("committed", head), ("cached", cache))
-        for label, blob in inputs:
-            if blob is None:
-                continue
-            try:
-                row = json.loads(blob)
-                if state_file:
-                    ml_paper.validate_state(row)
-                else:
-                    ml_paper.validate_record(row, day, draft=draft)
-                    if not draft:
-                        expected = (ml_paper.rolling_receipt_path(repo / "localdata", row)
-                                    if row.get("freeze_basis") == ml_paper.ROLLING_FREEZE
-                                    else ml_paper.receipt_path(repo / "localdata", day))
-                        if Path(relative).name != expected.name:
-                            raise ValueError("ML paper receipt filename/context mismatch")
-                values[label] = row
-            except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
-                invalid = True
-                damaged.append(blob)
-        if identical_copies:
-            if "committed" in values:
-                values["cached"] = values["committed"]
-            else:
-                damaged.append(cache)
-        if state_file and damaged and values:
-            # Only exact, receipt-acknowledged corrupt bytes can be superseded
-            # by a validated later-day recovery. Never clear an integrity block.
-            repaired = next((label for label, row in values.items()
-                if all(ml_paper.state_recovery_acknowledges(repo / "localdata", row, blob)
-                       for blob in damaged)), None)
-            if repaired is not None:
-                retained[relative] = cache if repaired == "cached" else head
-                continue
-        if draft and damaged:
-            # A seal may acknowledge an unreadable draft as a missed day.
-            # Preserve its exact bytes, but do not turn that acknowledged
-            # no-bet day into a permanent experiment-wide block on restore.
-            # Frozen conflicts and pre-existing integrity blocks still win.
-            sealed_paths = [p for p in ml_paper.receipt_files(repo / "localdata")
-                            if state_file or p.stem == f"autobets_ML_{day}"]
-            acknowledged = False
-            for sealed_path in sealed_paths:
-                try:
-                    sealed = json.loads(sealed_path.read_bytes())
-                    sealed_day = sealed["date"]
-                    ml_paper.validate_record(sealed, sealed_day)
-                    proof = sealed["draft_integrity_error"]
-                    sha = proof["sha256"]
-                    expected = f"autobets_ML_conflicts/draft_{sealed_day}.{sha}.bin"
-                    acknowledged = (sealed["status"] == "missed_freeze_no_paper_bet"
-                        and proof["quarantine"] == expected
-                        and all(hashlib.sha256(blob).hexdigest() == sha for blob in damaged)
-                        and (repo / "localdata" / expected).read_bytes() == damaged[0])
-                except (OSError, ValueError, KeyError, TypeError, AttributeError):
-                    continue
-                if acknowledged:
-                    break
-            if acknowledged and (not state_file or not values):
-                retained[relative] = cache if cache is not None else head
-                continue
-        conflict = invalid
-        chosen = head if head is not None else cache
-        if not invalid and head is not None and cache is not None:
-            h, c = values["committed"], values["cached"]
-            if state_file and head == cache:
-                chosen = head
-            elif state_file:
-                try:
-                    chosen = json.dumps(ml_paper.merge_pending_states(h, c), sort_keys=True,
-                                        allow_nan=False).encode()
-                except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
-                    conflict = True
-            elif h["sha256"] != c["sha256"]:
-                if draft:
-                    ht = parse_zoned_timestamp(h["draft_persisted_at"])
-                    ct = parse_zoned_timestamp(c["draft_persisted_at"])
-                    if ct > ht and parse_zoned_timestamp(c["captured_at"]) >= parse_zoned_timestamp(h["captured_at"]):
-                        chosen = cache
-                    elif ht == ct:
-                        conflict = True
-                else:
-                    conflict = True
-        if conflict:
-            detail = {"file": relative, "invalid": invalid, "copies": {}}
-            for label, blob in (("committed", head), ("cached", cache)):
-                if blob is not None:
-                    sha = hashlib.sha256(blob).hexdigest()
-                    path = f"localdata/autobets_ML_conflicts/{Path(relative).name}.{label}.{sha}.json"
-                    _atomic_write(repo / path, blob)
-                    detail["copies"][label] = {"file": path, "sha256": sha}
-            conflicts.append(detail)
-        if chosen is not None:
-            retained[relative] = chosen
-            if not draft and not conflict:
-                row = values["committed" if chosen is head else "cached"]
-                # Only these small fields participate in cross-record checks.
-                # Keeping candidates/models/learning would expand the complete
-                # production graph alongside the retained raw byte history.
-                history[(row["date"], row.get("decision_id", ""))] = {
-                    k: row[k] for k in ("date", "captured_at", "decision_id", "sha256", "accas",
-                        "freeze_basis", "fixture_concentration", "prior_receipt_sha256s",
-                        "frozen_at", "persisted_at", "supersession") if k in row}
-        # Drop the last large decoded graph before parsing the next one.
-        values = row = h = c = None
-    frozen_by_day = {}
-    for relative, blob in retained.items():
-        match = pattern.fullmatch(relative)
-        if match[1] or match[2] is None:  # mutable pending evidence is handled above
-            continue
-        frozen_by_day.setdefault(match[2] + (match[3] or ""), []).append((relative, blob))
-    for day, copies in frozen_by_day.items():
-        if len({blob for _, blob in copies}) <= 1:
-            continue
-        detail = {"date": day, "cross_layout_conflict": True, "copies": {}}
-        for relative, blob in copies:
-            sha = hashlib.sha256(blob).hexdigest()
-            path = f"localdata/autobets_ML_conflicts/layout_{day}.{sha}.json"
-            _atomic_write(repo / path, blob)
-            detail["copies"][relative] = {"file": path, "sha256": sha}
-        conflicts.append(detail)
-    if not conflicts:
-        try:
-            ml_paper._validate_history(history.values())
-        except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
-            conflicts.append({"history_integrity_error": str(exc),
-                              "files": sorted(retained)})
-    if conflicts:
-        marker = repo / "localdata/autobets_ML_integrity_block.json"
-        # Do not erase earlier unresolved conflict details on later restores.
-        try:
-            previous = json.loads(marker.read_text()) if marker.exists() else {"conflicts": []}
-            if not isinstance(previous.get("conflicts"), list):
-                raise ValueError("invalid conflict marker")
-        except (ValueError, AttributeError):
-            original = marker.read_bytes()
-            sha = hashlib.sha256(original).hexdigest()
-            retained_marker = f"localdata/autobets_ML_conflicts/integrity_marker.{sha}.json"
-            _atomic_write(repo / retained_marker, original)
-            previous = {"conflicts": [{"invalid_previous_marker": retained_marker, "sha256": sha}]}
-        merged = {json.dumps(c, sort_keys=True): c for c in [*previous["conflicts"], *conflicts]}
-        _atomic_write(marker, json.dumps({"lane": "autobets_ML", "paper_only": True,
-            "status": "blocked_pending_evidence_review", "conflicts": list(merged.values())},
-            indent=2).encode())
-        print("::warning::autobets_ML evidence conflict retained; PAPER blocked, live lanes unchanged")
-    else:
-        _clear_reviewed_ml_paper_block(repo)
-    return retained
-
-
 def _validate_dated_claims(repo: Path | str) -> None:
     """Ensure every backing file cited by DATED-CLAIMS.md exists on disk."""
     repo = Path(repo)
@@ -1183,8 +961,7 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     # Validate BOTH lanes before checkout/clean mutates any restored evidence.
     financial_blobs = {relative: _retain_financial_state(repo, relative)
                        for relative in (ENH_STATE, MAIN_STATE)}
-    print(f"restore: financial evidence checked ({time.monotonic() - started:.2f}s); validating ML evidence", flush=True)
-    paper_blobs = _retain_ml_paper_evidence(repo)
+    print(f"restore: financial evidence checked ({time.monotonic() - started:.2f}s)", flush=True)
     # Save original human cards before checkout, only after BOTH lanes passed
     # the explicit recovery checks. Never replace a committed frozen card.
     recovered_cards = {}
@@ -1213,12 +990,10 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     protected = set(APPEND_ONLY_JSONL_IDS)
     for relative in _tracked_localdata_paths(repo):
         if relative in protected or (
-            relative.startswith(("localdata/archive/", "localdata/autobets_ML",
-                                 "localdata/phase5_reconciliation/ml_paper_receipts/"))
+            relative.startswith("localdata/archive/")
             and (repo / relative).exists()
         ):
-            # Exact paper dates are reconciled above; preserve cached conflict
-            # markers/copies as well. Missing files still restore from HEAD.
+            # Cached cold evidence is preserved; missing files restore from HEAD.
             continue
         restored.append(relative)
     # Same allowlisted paths, after the same financial/evidence validations;
@@ -1233,8 +1008,6 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             )
     print(f"restore: {len(restored)} tracked files restored ({time.monotonic() - started:.2f}s)", flush=True)
 
-    for relative, blob in paper_blobs.items():
-        _atomic_write(repo / relative, blob)
     for relative, blob in recovered_cards.items():
         _atomic_write(repo / relative, blob)
     # An authorized draft upgrade may have inserted its manifest before new
@@ -1252,14 +1025,6 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     )
     if clean.returncode != 0:
         raise RuntimeError(f"git clean failed: {_decode_output(clean.stderr)}")
-    from edgefactory import ml_paper
-    # Individual records AND the capital/supersession chain were checked by
-    # _retain_ml_paper_evidence. A no-op migration must not replay it all again.
-    if any((repo / "localdata").glob(f"{ml_paper.PREFIX}_????-??-??.json")):
-        try:
-            ml_paper.migrate_receipts(repo / "localdata")
-        except (OSError, ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
-            print(f"::warning::autobets_ML receipt migration deferred; live lanes unchanged: {exc}")
     print(f"restore: compacting ticket receipts ({time.monotonic() - started:.2f}s)", flush=True)
     compacted = _compact_receipts(repo)
     print(f"restore: complete ({time.monotonic() - started:.2f}s)", flush=True)
@@ -1577,8 +1342,7 @@ def persist_localdata(
 REPORT_ARTIFACT_PATTERNS = (
     "localdata/*.txt", "localdata/*.json", "localdata/*.md",
     "localdata/phase5_shadow/**", "localdata/phase5_activation/**",
-    "localdata/phase5_reconciliation/**", "localdata/autobets_ML_conflicts/**",
-    "localdata/archive/**",
+    "localdata/phase5_reconciliation/**", "localdata/archive/**",
 )
 
 
