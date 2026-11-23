@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 7,
-  "captured_at": "2026-11-23T13:28:01+00:00",
+  "captured_at": "2026-11-23T16:33:50+00:00",
   "date": "2026-11-23",
   "due_reasons": {},
   "errors": [],
@@ -22,10 +22,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 7
+    "kickoff_already_passed": 1,
+    "retry_cooldown": 6
   },
   "skipped": [
-    "Ludogorets|Dunav Ruse (retry cooldown (6h after failed attempt))",
+    "Ludogorets|Dunav Ruse (kickoff already passed)",
     "Ludogorets|FK Dunav Ruse (retry cooldown (6h after failed attempt))",
     "Nantes|Grenoble Foot 38 (retry cooldown (6h after failed attempt))",
     "HAMMARBY|GOTEBORG (retry cooldown (6h after failed attempt))",
