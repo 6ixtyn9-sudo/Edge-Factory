@@ -1,25 +1,21 @@
 {
-  "generated_at": "2026-11-24T06:57:57",
+  "generated_at": "2026-11-24T06:53:26",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 22.474731,
-  "multiple": 0.22474730999999998,
+  "bank_pct": 19.891831,
+  "multiple": 0.19891831,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 35,
+  "bet_days": 36,
   "accas": {
     "wins": 29,
-    "losses": 40
+    "losses": 41
   },
   "open_slips": [
     {
       "date": "2026-11-21",
       "staked_pct": 1.8118
-    },
-    {
-      "date": "2026-11-23",
-      "staked_pct": 2.5829
     },
     {
       "date": "2026-11-24",
@@ -11996,6 +11992,386 @@
       ],
       "bank_pct": 22.4747,
       "close_pct": 22.4747
+    },
+    {
+      "date": "2026-11-23",
+      "staked_pct": 2.5829,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.29,
+          "won": false,
+          "stake_pct": 2.5829,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "LEVANTE vs ELCHE",
+              "pick": "under",
+              "odds": 1.5,
+              "result": "win",
+              "label": "Match Under 3.5 Goals",
+              "market": "match_under_35",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-23T04:32:22.426935+00:00",
+              "price_provenance": {
+                "away": "Elche",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-23T04:32:22.426935+00:00",
+                "data_dt": [
+                  23,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-23T07:00:00+00:00",
+                "decision_day": "2026-11-23",
+                "home": "Levante",
+                "kickoff_utc": "2026-11-23T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-23.json",
+                "ledger_sha256": "08e224a3c408e5414e5087aa443a1edcf837f9947d3869c4877e33b8ec61a0dd",
+                "market": "ou_3.5",
+                "price": 1.5,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-22T07:01",
+                      "2026-11-22T07:01"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      2.63,
+                      1.5
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 17,
+                  "row_sha256": "52449026717722ba2a0043deb8007037b9e137a74490b9bffda65c42240e9862"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-23T20:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Elche",
+                      "csv_data_row": 2756,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "9290e979c4b2e764d270a2853f9a0bcd41882b8d91445b326ca9a6f6fcb318bb",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Levante",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-23T20:00:00+00:00",
+                      "league": "La Liga",
+                      "observed_at_utc": "2026-11-22T22:27:26+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "61bb9e777cc15613b258d443b6950bb72ffc0b175efe0aa01cf07be2f708c4ee",
+                      "schedule_row": {
+                        "away": "Elche",
+                        "captured_at": "2026-11-22T22:27:26+00:00",
+                        "country": "Spain",
+                        "date": "2026-11-23",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Levante",
+                        "hs": "",
+                        "kickoff": "2026-11-23T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "La Liga",
+                        "odd1": "2.15",
+                        "odd2": "3.2",
+                        "odd_gg": "1.57",
+                        "odd_ng": "2.25",
+                        "odd_o15": "1.2",
+                        "odd_o25": "1.66",
+                        "odd_o35": "2.62",
+                        "odd_u15": "4.5",
+                        "odd_u25": "2.2",
+                        "odd_u35": "1.5",
+                        "oddx": "3.6",
+                        "p1": "44.06859958309646",
+                        "p2": "29.609626681826796",
+                        "p_gg": "58.90052356020943",
+                        "p_ng": "41.09947643979058",
+                        "p_o15": "78.94736842105263",
+                        "p_o25": "56.994818652849744",
+                        "p_o35": "36.407766990291265",
+                        "px": "26.321773735076754",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Elche",
+                      "csv_data_row": 11210,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "6214b978350c0b12a898c63fe9261838abe22281954aac8d09323c5ea9f7e8e8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Levante",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-23T20:00:00+00:00",
+                      "league": "Spain: La Liga",
+                      "observed_at_utc": "2026-11-22T22:26:25+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "a09c6c954b29548e2f520b2c00b2ac1e73be0ef9ebcfa055c7c5adabaefb9d57",
+                      "schedule_row": {
+                        "away": "Elche",
+                        "captured_at": "2026-11-22T22:26:25+00:00",
+                        "date": "2026-11-23",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Levante",
+                        "hs": "",
+                        "index": "0.73",
+                        "kickoff": "2026-11-23T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Spain: La Liga",
+                        "p1": "44.0",
+                        "p2": "28.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "28.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-23",
+                "LEVANTE",
+                "ELCHE"
+              ],
+              "prob": 0.6301,
+              "cohort_evidence": {
+                "rate": 0.6301,
+                "n": 565,
+                "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+                "as_of_exclusive": "2026-11-23",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 356,
+                "cohort_lower_bound": 0.5895266154901437,
+                "price_context": {
+                  "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+                  "selection": "home",
+                  "league": "ES1",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.5,
+                  "captured_at": "2026-11-23T04:32:22.426935+00:00",
+                  "decision_at": "2026-11-23T09:30:10+02:00",
+                  "kickoff": "2026-11-23T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7936397532698604,
+              "ml_model_key": "760bd64eb2a6f05dc3e6fff028d95b335ddd1422368fd28549fd3805851c64c9",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "ES1",
+              "shadow": true,
+              "price_kickoff": "2026-11-23T20:00:00+00:00"
+            },
+            {
+              "match": "Ludogorets vs FK Dunav Ruse",
+              "pick": "over",
+              "odds": 1.53,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-23T01:40:35.813794+00:00",
+              "price_provenance": {
+                "away": "Dunav Ruse",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-23T01:40:35.813794+00:00",
+                "data_dt": [
+                  23,
+                  11,
+                  2026,
+                  17,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-23T07:00:00+00:00",
+                "decision_day": "2026-11-23",
+                "home": "Ludogorets",
+                "kickoff_utc": "2026-11-23T16:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-23.json",
+                "ledger_sha256": "08e224a3c408e5414e5087aa443a1edcf837f9947d3869c4877e33b8ec61a0dd",
+                "market": "ou_2.5",
+                "price": 1.53,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-23T00:01",
+                      "2026-11-23T00:01"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      1.53,
+                      2.4
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 8,
+                  "row_sha256": "5a6b52ba0cc0352df2df1bdb091eca9be6358a05dd79cef81ff353a62848258c"
+                },
+                "raw_kickoff": "17:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-23T16:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Dunav Ruse",
+                      "csv_data_row": 11213,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "6214b978350c0b12a898c63fe9261838abe22281954aac8d09323c5ea9f7e8e8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Ludogorets",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-23T16:00:00+00:00",
+                      "league": "Bulgaria: First League",
+                      "observed_at_utc": "2026-11-22T22:26:25+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "adef03ac581de4a5c7c992e843ea4bd4c4bf520e19b52816d482e4210e679b7b",
+                      "schedule_row": {
+                        "away": "Dunav Ruse",
+                        "captured_at": "2026-11-22T22:26:25+00:00",
+                        "date": "2026-11-23",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Ludogorets",
+                        "hs": "",
+                        "index": "3.23",
+                        "kickoff": "2026-11-23T17:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Bulgaria: First League",
+                        "p1": "74.0",
+                        "p2": "9.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "17.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-23",
+                "Ludogorets",
+                "FK Dunav Ruse"
+              ],
+              "prob": 0.615,
+              "cohort_evidence": {
+                "rate": 0.615,
+                "n": 413,
+                "contract_id": "pfc_bb7457f5848fd6b0f1f65fe4",
+                "as_of_exclusive": "2026-11-23",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 254,
+                "cohort_lower_bound": 0.5672282226612971,
+                "price_context": {
+                  "contract_id": "pfc_bb7457f5848fd6b0f1f65fe4",
+                  "selection": "home",
+                  "league": "Parva Liga",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.53,
+                  "captured_at": "2026-11-23T01:40:35.813794+00:00",
+                  "decision_at": "2026-11-23T09:30:10+02:00",
+                  "kickoff": "2026-11-23T16:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6277577988088565,
+              "ml_model_key": "294ecf25bf1e7c85462d70b3c10f62e46f8615eb54baffbe8095b99f10accebb",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.749732913053369,
+              "floor_basis": "market",
+              "league": "Parva Liga",
+              "shadow": false,
+              "price_kickoff": "2026-11-23T16:00:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 19.8918,
+      "close_pct": 19.8918
     }
   ]
 }
