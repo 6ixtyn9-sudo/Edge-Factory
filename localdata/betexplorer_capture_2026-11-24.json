@@ -1,5 +1,5 @@
 {
-  "attempted": 14,
+  "attempted": 15,
   "attempted_fixtures": [
     {
       "avg_p": 66.91600193376844,
@@ -29,6 +29,16 @@
       "league": "ENB",
       "market": "1x2",
       "pick": "home",
+      "w_score": 0.588
+    },
+    {
+      "avg_p": 50.5,
+      "away": "CSKA MOSCOW",
+      "date": "2026-11-24",
+      "home": "AKRON TOGLIATTI",
+      "league": "RUC",
+      "market": "1x2",
+      "pick": "away",
       "w_score": 0.588
     },
     {
@@ -143,26 +153,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 13,
+  "be_cached": 14,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 13,
+  "cache_only": 14,
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-24T01:31:53.756397+00:00",
+  "captured_at": "2026-11-24T04:32:18.435748+00:00",
   "date": "2026-11-24",
-  "deferred_fixtures": 1,
+  "deferred_fixtures": 0,
   "errors": [],
-  "fixtures_with_rows": 14,
+  "fixtures_with_rows": 15,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 1,
   "match_detail": {
-    "bookmakers": 196,
+    "bookmakers": 197,
     "challenge_pages": 0,
-    "fixtures": 13,
-    "market_rows": 506,
-    "markets": 75,
-    "named_rows": 506,
+    "fixtures": 14,
+    "market_rows": 507,
+    "markets": 76,
+    "named_rows": 507,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -199,6 +209,16 @@
       "league": "ENB",
       "market": "1x2",
       "pick": "home",
+      "w_score": 0.588
+    },
+    {
+      "avg_p": 50.5,
+      "away": "CSKA MOSCOW",
+      "date": "2026-11-24",
+      "home": "AKRON TOGLIATTI",
+      "league": "RUC",
+      "market": "1x2",
+      "pick": "away",
       "w_score": 0.588
     },
     {
@@ -312,8 +332,8 @@
       "w_score": 0.588
     }
   ],
-  "requests": 8,
-  "rows": 42,
+  "requests": 6,
+  "rows": 45,
   "schema": 1,
   "status": "ok"
 }

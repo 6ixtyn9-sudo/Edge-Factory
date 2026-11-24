@@ -158,13 +158,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -176,18 +171,18 @@
       },
       "coherence_withheld_fixtures": 8,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 14442
       },
       "pa_matched": 0,
-      "pa_raw": 766,
+      "pa_raw": 14442,
       "pa_scored": 14442,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -231,52 +226,59 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 5,
-        "board_league_count": 4,
+        "board_fixtures": 2,
+        "board_league_count": 1,
         "board_leagues": {
-          "brazil_-_serie_a": 61,
-          "colombia_-_primera_b": 41,
-          "costa_rica_-_liga_de_ascenso": 72,
-          "usa_-_major_league_soccer": 26
+          "afc_-_champions_league": 200
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 17,
+        "board_priced_rows": 20,
         "board_rows": 200,
-        "board_team_count": 9,
+        "board_team_count": 3,
         "board_team_names": {
-          "ADR Jicaral": 72,
-          "Boca Juniors de Cali": 41,
-          "Gremio": 56,
-          "Gremio Porto Alegre": 5,
-          "LAFC": 26,
-          "Pitbulls": 72,
-          "Quindio": 41,
-          "Santos": 61,
-          "St Louis City SC": 26
+          "Kashiwa": 55,
+          "Kashiwa Reysol": 145,
+          "Newcastle Jets": 200
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_asian_total_goals": 6,
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:1st_half_team_total": 12,
+          "unknown_market:1st_half_total_corners": 10,
+          "unknown_market:2nd_half_total_corners": 10,
+          "unknown_market:moneyline_3_way_total_goals": 18,
+          "unknown_market:total_corners": 10,
+          "unsupported_market:team_total_exact": 10,
+          "unsupported_market:team_total_goals": 17
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "player_prop": 17
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 20
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 1,
+      "sa_scored": 20,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

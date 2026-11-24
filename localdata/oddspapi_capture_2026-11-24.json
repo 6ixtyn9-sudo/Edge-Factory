@@ -1,13 +1,7 @@
 {
-  "added": 1009,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Bench Maji Bunna",
-      "fixture_id": "id1005117277031664",
-      "home": "Yirga Chefe Bunna"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-24",
     "keys": 3,
@@ -16,7 +10,8 @@
     "remaining_today": 5,
     "spent_today": 20
   },
-  "captured_at": "2026-11-24T01:31:53+00:00",
+  "budget_deferred": 11,
+  "captured_at": "2026-11-24T04:32:18+00:00",
   "date": "2026-11-24",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
@@ -26,77 +21,19 @@
   "future_slate_fixtures": 6,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 141,
-  "markets": {
-    "1x2": 153,
-    "btts": 30,
-    "dc": 132,
-    "dnb": 26,
-    "ou_0.5": 32,
-    "ou_1": 16,
-    "ou_1.25": 22,
-    "ou_1.5": 78,
-    "ou_1.75": 22,
-    "ou_2": 48,
-    "ou_2.25": 22,
-    "ou_2.5": 98,
-    "ou_2.75": 22,
-    "ou_3": 18,
-    "ou_3.25": 18,
-    "ou_3.5": 50,
-    "ou_4": 16,
-    "ou_4.5": 31,
-    "ou_5.5": 31,
-    "tt_away_0.5": 20,
-    "tt_away_1": 22,
-    "tt_away_1.5": 16,
-    "tt_away_2": 16,
-    "tt_home_0.5": 16,
-    "tt_home_1": 22,
-    "tt_home_1.5": 16,
-    "tt_home_2": 16
-  },
+  "market_census_distinct": 0,
+  "markets": {},
   "markets_source": "cache",
-  "matched": 1,
+  "matched": 0,
   "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "market_unsupported_clean_sheet": 6,
-    "market_unsupported_correct_score": 67,
-    "market_unsupported_early_payout": 9,
-    "market_unsupported_handicap": 137,
-    "market_unsupported_market_type": 170,
-    "market_unsupported_non_goal": 4,
-    "market_unsupported_odd_even": 51,
-    "market_unsupported_period": 633,
-    "market_unsupported_win_to_nil": 6,
-    "outcome_inactive": 2
-  },
   "parse_skips_classified": {
-    "expected": {
-      "outcome_inactive": 2
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_clean_sheet": 6,
-      "market_unsupported_correct_score": 67,
-      "market_unsupported_early_payout": 9,
-      "market_unsupported_handicap": 137,
-      "market_unsupported_market_type": 170,
-      "market_unsupported_non_goal": 4,
-      "market_unsupported_odd_even": 51,
-      "market_unsupported_period": 633,
-      "market_unsupported_win_to_nil": 6
-    }
+    "expected": {},
+    "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 1,
-  "quoted_fixtures": [
-    {
-      "away": "Bench Maji Bunna",
-      "fixture_id": "id1005117277031664",
-      "home": "Yirga Chefe Bunna"
-    }
-  ],
-  "reserved_requests": 6,
-  "rows": 1009,
+  "pending_fixtures": 11,
+  "quoted_fixtures": [],
+  "reserved_requests": 5,
+  "rows": 0,
   "schema": 1,
   "slate_candidate_fixtures": 18,
   "slate_match_mode": "exact_normalized_pair",
@@ -176,5 +113,6 @@
       "normalized_pair": "akron togliatti|cska moscow"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "reserved"
 }
