@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 3,
@@ -30,7 +30,7 @@
         "selection_unmapped": 43
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-25\\/2026-11-25' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -179,11 +179,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 14085
+        "out_of_window": 14442
       },
       "pa_matched": 0,
-      "pa_raw": 746,
-      "pa_scored": 14085,
+      "pa_raw": 766,
+      "pa_scored": 14442,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -233,30 +233,28 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
+        "board_fixtures": 5,
         "board_league_count": 4,
         "board_leagues": {
-          "bolivia_-_primera_division": 44,
-          "brazil_-_serie_a": 75,
-          "paraguay_-_primera_division": 72,
-          "uruguay_-_primera_division": 9
+          "brazil_-_serie_a": 61,
+          "colombia_-_primera_b": 41,
+          "costa_rica_-_liga_de_ascenso": 72,
+          "usa_-_major_league_soccer": 26
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 11,
+        "board_team_count": 9,
         "board_team_names": {
-          "Albion FC": 9,
-          "CD Gualberto Villarroel": 44,
-          "Club 2 de Mayo de Pedro Juan Cab": 72,
-          "Danubio": 9,
-          "EC Vitoria Salvador": 45,
-          "Internacional": 45,
-          "Internacional RS": 30,
-          "Sportivo San Lorenzo": 72,
-          "Universitario De Vinto": 3,
-          "Universitario de Vinto": 41,
-          "Vitoria Salvador": 30
+          "ADR Jicaral": 72,
+          "Boca Juniors de Cali": 41,
+          "Gremio": 56,
+          "Gremio Porto Alegre": 5,
+          "LAFC": 26,
+          "Pitbulls": 72,
+          "Quindio": 41,
+          "Santos": 61,
+          "St Louis City SC": 26
         },
         "board_truncated": false,
         "card_fixture_count": 0,
