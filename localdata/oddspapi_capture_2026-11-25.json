@@ -1,0 +1,219 @@
+{
+  "added": 20673,
+  "attempted": 4,
+  "attempted_fixtures": [
+    {
+      "away": "Atletico Mineiro MG",
+      "fixture_id": "id1001441376515490",
+      "home": "Sao Paulo FC SP"
+    },
+    {
+      "away": "Deportivo Cali",
+      "fixture_id": "id1002707076880498",
+      "home": "America de Cali"
+    },
+    {
+      "away": "Houston Dynamo",
+      "fixture_id": "id1000024276609952",
+      "home": "San Jose Earthquakes"
+    },
+    {
+      "away": "Roasso Kumamoto",
+      "fixture_id": "id1000209472152242",
+      "home": "FC Ryukyu"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-25",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 611,
+    "remaining_today": 13,
+    "spent_today": 12
+  },
+  "captured_at": "2026-11-24T22:25:34+00:00",
+  "date": "2026-11-25",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 9,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 232,
+  "future_slate_fixtures": 6,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 710,
+  "markets": {
+    "1x2": 1989,
+    "btts": 1140,
+    "dc": 1827,
+    "dnb": 984,
+    "ou_0.5": 705,
+    "ou_0.75": 78,
+    "ou_1": 164,
+    "ou_1.25": 126,
+    "ou_1.5": 1008,
+    "ou_1.75": 294,
+    "ou_2": 418,
+    "ou_2.25": 406,
+    "ou_2.5": 1128,
+    "ou_2.75": 502,
+    "ou_3": 444,
+    "ou_3.25": 360,
+    "ou_3.5": 1011,
+    "ou_3.75": 212,
+    "ou_4": 198,
+    "ou_4.25": 72,
+    "ou_4.5": 730,
+    "ou_4.75": 72,
+    "ou_5": 71,
+    "ou_5.25": 26,
+    "ou_5.5": 457,
+    "ou_5.75": 22,
+    "ou_6": 20,
+    "ou_6.25": 20,
+    "ou_6.5": 194,
+    "ou_6.75": 12,
+    "ou_7": 12,
+    "ou_7.25": 12,
+    "ou_7.5": 32,
+    "ou_7.75": 12,
+    "ou_8": 12,
+    "ou_8.25": 12,
+    "ou_8.5": 22,
+    "tt_away_0.5": 762,
+    "tt_away_0.75": 44,
+    "tt_away_1": 90,
+    "tt_away_1.25": 60,
+    "tt_away_1.5": 788,
+    "tt_away_1.75": 54,
+    "tt_away_2": 76,
+    "tt_away_2.25": 20,
+    "tt_away_2.5": 571,
+    "tt_away_3.5": 229,
+    "tt_away_4.5": 37,
+    "tt_away_5.5": 6,
+    "tt_home_0.5": 708,
+    "tt_home_0.75": 38,
+    "tt_home_1": 84,
+    "tt_home_1.25": 66,
+    "tt_home_1.5": 851,
+    "tt_home_1.75": 60,
+    "tt_home_2": 78,
+    "tt_home_2.25": 22,
+    "tt_home_2.5": 616,
+    "tt_home_2.75": 18,
+    "tt_home_3": 18,
+    "tt_home_3.25": 16,
+    "tt_home_3.5": 436,
+    "tt_home_4.5": 114,
+    "tt_home_5.5": 7
+  },
+  "markets_source": "fetch",
+  "matched": 4,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 4,
+    "market_inactive": 128,
+    "market_unsupported_cards": 1354,
+    "market_unsupported_clean_sheet": 346,
+    "market_unsupported_corners": 4638,
+    "market_unsupported_correct_score": 1179,
+    "market_unsupported_early_payout": 83,
+    "market_unsupported_handicap": 5647,
+    "market_unsupported_market_type": 4237,
+    "market_unsupported_non_goal": 1018,
+    "market_unsupported_odd_even": 1213,
+    "market_unsupported_period": 22055,
+    "market_unsupported_win_to_nil": 660,
+    "outcome_inactive": 1498
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 4,
+      "market_inactive": 128,
+      "outcome_inactive": 1498
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 1354,
+      "market_unsupported_clean_sheet": 346,
+      "market_unsupported_corners": 4638,
+      "market_unsupported_correct_score": 1179,
+      "market_unsupported_early_payout": 83,
+      "market_unsupported_handicap": 5647,
+      "market_unsupported_market_type": 4237,
+      "market_unsupported_non_goal": 1018,
+      "market_unsupported_odd_even": 1213,
+      "market_unsupported_period": 22055,
+      "market_unsupported_win_to_nil": 660
+    }
+  },
+  "pending_fixtures": 4,
+  "quoted_fixtures": [
+    {
+      "away": "Atletico Mineiro MG",
+      "fixture_id": "id1001441376515490",
+      "home": "Sao Paulo FC SP"
+    },
+    {
+      "away": "Deportivo Cali",
+      "fixture_id": "id1002707076880498",
+      "home": "America de Cali"
+    },
+    {
+      "away": "Houston Dynamo",
+      "fixture_id": "id1000024276609952",
+      "home": "San Jose Earthquakes"
+    },
+    {
+      "away": "Roasso Kumamoto",
+      "fixture_id": "id1000209472152242",
+      "home": "FC Ryukyu"
+    }
+  ],
+  "reserved_requests": 6,
+  "rows": 20673,
+  "schema": 1,
+  "slate_candidate_fixtures": 12,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 6,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "FC Barcelona",
+      "home": "Sabah",
+      "league": "Champions League",
+      "normalized_pair": "barcelona|sabah"
+    },
+    {
+      "away": "Viking",
+      "home": "Atl\u00e9tico de Madrid",
+      "league": "Champions League",
+      "normalized_pair": "atletico de madrid|viking"
+    },
+    {
+      "away": "Ceramica Cleopatra",
+      "home": "ENPPI",
+      "league": "Premier League",
+      "normalized_pair": "ceramica cleopatra|enppi"
+    },
+    {
+      "away": "Nagoya Grampus",
+      "home": "JEF United",
+      "league": "J1 League",
+      "normalized_pair": "jef united|nagoya grampus"
+    },
+    {
+      "away": "Avellino",
+      "home": "Cremonese",
+      "league": "Serie B",
+      "normalized_pair": "avellino|cremonese"
+    },
+    {
+      "away": "VfB Stuttgart",
+      "home": "Inter",
+      "league": "Champions League",
+      "normalized_pair": "inter|vfb stuttgart"
+    }
+  ],
+  "source": "oddspapi_odds"
+}

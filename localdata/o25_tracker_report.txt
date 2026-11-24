@@ -1,18 +1,18 @@
-O2.5 TRACKER — graded 814/1004 listed overs (window 2026-07-31..2026-11-24)
+O2.5 TRACKER — graded 808/1004 listed overs (window 2026-07-31..2026-11-24)
 
 cut                                   n    hit      stated  p_n     ROI
-ALL priced                          532    64%         55%  429   -1.3%
-band 50-60%                         121    61%         54%  121   -9.3%
-band <50%                           189    66%         47%  189   +3.2%
+ALL priced                          530    64%         55%  425   -2.0%
+band 50-60%                         119    61%         54%  119  -10.2%
+band <50%                           187    65%         47%  187   +2.1%
 band >=60%                          119    66%         68%  119   -3.2%
 SHARP-priced (theoddsapi/betexpl)   135    61%         56%   66   -5.5%
-SOFT-priced (scoutingstats)         258    66%         50%  258   +0.4%
+SOFT-priced (scoutingstats)         254    65%         50%  254   -0.8%
 
 --- goals surface by rule ---
 rule 2way-unanimous avg_p>=60        17    76%         47%   17  +27.2%
 rule 2way-unanimous avg_p>=70        39    69%         51%   39   -1.8%
-rule ml-meta avg_p>=55              146    64%         48%  146   +0.4%
-rule ml-meta avg_p>=60               74    64%         58%   74   -2.3%
+rule ml-meta avg_p>=55              143    63%         48%  143   -1.3%
+rule ml-meta avg_p>=60               73    63%         58%   73   -3.0%
 rule ml-meta avg_p>=65                9    67%         48%    9  -11.4%
 rule ml-meta avg_p>=70                5    80%         49%    5  +11.0%
 rule ml-meta avg_p>=80                3    67%         47%    3  -17.3%
@@ -25,7 +25,7 @@ rule pfc_142b7b762e570fa302940d6e     2    50%         55%    2   -9.4%
 rule pfc_1607fec83282d02c5254c2bf     2     0% unavailable    0 -100.0%
 rule pfc_27e0f725859bc708f95c58a3    69    61%         64%   56   -4.2%
 rule pfc_31bc21e2ce9abe2bd19332e0     3    67% unavailable    0   +1.0%
-rule pfc_36393ea9c9cad8508e33ea28     2    50% unavailable    0  -30.0%
+rule pfc_36393ea9c9cad8508e33ea28     4    50% unavailable    0  -32.5%
 rule pfc_439097cb9bb700e9996c0b07    11    64% unavailable    0  +14.6%
 rule pfc_444d408c4ccd3a4bf4fb020c     1     0% unavailable    0 -100.0%
 rule pfc_4a1f2bb2278d13c8189148d0     1   100% unavailable    0  +53.0%
@@ -52,20 +52,22 @@ rule unanimous[statarea+vitibet+zulubet    4    75%         65%    4  +25.0%
 rule unanimous[statarea+vitibet] avg_p>    9    67%         69%    9   -2.2%
 rule unanimous[vitibet+zulubet] avg_p>=    1     0%         74%    1 -100.0%
 --- goals surface by bucket ---
-bucket CAUTION                       67    72%         63%   37   +9.4%
+bucket CAUTION                       65    71%         64%   35   +8.2%
 bucket CERTIFIED_CLEAN               33    48%         54%   21  -26.7%
-bucket SKIPPED_VETO                 318    65%         54%  261   -0.7%
+bucket SKIPPED_VETO                 319    65%         54%  260   -1.0%
 bucket WATCHLIST_NO_ODDS              5    60%         54%    4  -12.2%
 bucket WATCHLIST_SUSPECT_PRICE       19    79%         58%   18  +10.9%
-bucket WATCHLIST_UNCORROBORATED_PRICE   86    60%         52%   86   -5.7%
+bucket WATCHLIST_UNCORROBORATED_PRICE   85    60%         52%   85   -7.7%
 bucket WATCHLIST_UNKNOWN_CTX          4    75%         51%    2  +25.7%
 GATE cut: 50-60% AND sharp           21    57%         55%   21  -11.8%
 
 CHECKPOINT 3 GATE (50-60% band, priced):
-   band 50-60% priced               121    61%         54%  121   -9.3%
-   STATUS: PENDING — hit 61% < 70%, ROI -9.3% <= 0
+   band 50-60% priced               119    61%         54%  119  -10.2%
+   STATUS: PENDING — hit 61% < 70%, ROI -10.2% <= 0
 
-pending priced overs (results not yet filed): 71
+pending priced overs (results not yet filed): 73
+   2026-09-22 45% @ 2.37 (scoutingstats)
+   2026-10-11 52% @ 1.37 (theoddsapi)
    2026-10-25 unavailable @ 1.44 (theoddsapi)
    2026-10-25 63% @ 1.3953 (pinnapi_odds)
    2026-10-25 unavailable @ 1.44 (theoddsapi)
@@ -74,5 +76,3 @@ pending priced overs (results not yet filed): 71
    2026-11-21 unavailable @ 1.35 (theoddsapi)
    2026-11-21 unavailable @ 1.76 (theoddsapi)
    2026-11-23 unavailable @ 1.53 (betexplorer)
-   2026-11-24 unavailable @ 1.36 (betexplorer)
-   2026-11-24 unavailable @ 1.3 (betexplorer)

@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-24T21:46:53",
+  "generated_at": "2026-11-25T00:39:10",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 329.3217640000001,
-  "multiple": 3.293217640000001,
+  "bank_pct": 335.4965440000001,
+  "multiple": 3.354965440000001,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 82,
+  "bet_days": 83,
   "accas": {
-    "wins": 93,
-    "losses": 84
+    "wins": 94,
+    "losses": 85
   },
-  "open_slips": [
-    {
-      "date": "2026-11-24",
-      "staked_pct": 82.3304
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -3648,6 +3643,87 @@
       ],
       "bank_pct": 329.3218,
       "close_pct": 329.3217
+    },
+    {
+      "date": "2026-11-24",
+      "staked_pct": 82.3304,
+      "returned_pct": 88.5052,
+      "accas": [
+        {
+          "odds": 2.15,
+          "won": true,
+          "stake_pct": 41.1652,
+          "returned_pct": 88.5052,
+          "legs": [
+            {
+              "match": "RB LEIPZIG vs LENS",
+              "pick": "HOME",
+              "odds": 1.39,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-24",
+                "RB LEIPZIG",
+                "LENS"
+              ]
+            },
+            {
+              "match": "Bod\u00f8 / Glimt vs LASK Linz",
+              "pick": "HOME",
+              "odds": 1.5435,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-24",
+                "Bod\u00f8 / Glimt",
+                "LASK Linz"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 1.79,
+          "won": false,
+          "stake_pct": 41.1652,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Slovan Bratislava vs Real Betis",
+              "pick": "AWAY",
+              "odds": 1.26,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-24",
+                "Slovan Bratislava",
+                "Real Betis"
+              ]
+            },
+            {
+              "match": "Scunthorpe United vs Gateshead",
+              "pick": "HOME",
+              "odds": 1.42,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-24",
+                "Scunthorpe United",
+                "Gateshead"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 335.4965,
+      "close_pct": 335.4965
     }
   ]
 }
