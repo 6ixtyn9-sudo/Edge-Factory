@@ -12501,12 +12501,12 @@
                   "source": "betexplorer",
                   "price": 1.38,
                   "captured_at": "2026-11-23T22:36:42.396603+00:00",
-                  "decision_at": "2026-11-24T06:33:07+02:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
                   "kickoff": "2026-11-24T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7483015543835076,
-              "ml_model_key": "ecca88fede2c5ced36134544c43f0707519f9967310d73351f6d3d3807e2ea85",
+              "ml_rank_probability": 0.7483015543850581,
+              "ml_model_key": "ac4465b8a997b8b9ad77e75db775f9475392e2503e022414f48b1489db3e1d7c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 1.5 Goals",
               "floor": 1.6578539100826535,
@@ -12574,7 +12574,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-24T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -12583,7 +12583,7 @@
                       "away": "Northampton Town",
                       "csv_data_row": 2854,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "2286c917571b6cfe1d21e6d095eced59386838fdbffadb94c1afe63512572557",
+                      "file_sha256": "b91c03bafa264c4949db884b452051b7b31cfb93a7e7ea5139bea47d0e7a6512",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Port Vale",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12634,7 +12634,7 @@
                       "away": "Northampton",
                       "csv_data_row": 11446,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Port Vale",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12673,7 +12673,7 @@
                       "csv_data_row": 11446,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Port Vale",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12694,29 +12694,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Northampton Town",
-                      "board_fetched_at": "2026-11-23T22:32:44+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1000002575464906",
-                        "participant1Name": "Port Vale",
-                        "participant2Name": "Northampton Town",
-                        "sportId": 10,
-                        "startTime": "2026-11-24T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "a0e45854a2c0ae1b75a2b897f0039556bf561b1c94734a3a13a6a97222a1cf38",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Port Vale",
-                      "json_pointer": "/boards/2026-11-24/fixtures/140",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-24T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-23T22:32:44+00:00",
-                      "provider_event_id": "id1000002575464906",
-                      "row_sha256": "7074d5f71da57398ed7ac567c342ef11daf2223d298f862850fca40b6f085cc8",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -12758,12 +12735,12 @@
                   "source": "betexplorer",
                   "price": 1.38,
                   "captured_at": "2026-11-23T22:36:42.396603+00:00",
-                  "decision_at": "2026-11-24T06:33:07+02:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
                   "kickoff": "2026-11-24T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6041553415340458,
-              "ml_model_key": "effd7acaabc14abbd19d226c8facc57f6c6ed200ff99b3ff9f9f8e085039a127",
+              "ml_rank_probability": 0.6041553454154646,
+              "ml_model_key": "b581e348c3aaa5bbd536bd9ddb8a6919b16f236a56eab8264ff9edafaae5bcd8",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 1.5 Goals",
               "floor": 1.6578539100826535,
@@ -12831,7 +12808,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-24T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -12840,7 +12817,7 @@
                       "away": "Northampton Town",
                       "csv_data_row": 2854,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "2286c917571b6cfe1d21e6d095eced59386838fdbffadb94c1afe63512572557",
+                      "file_sha256": "b91c03bafa264c4949db884b452051b7b31cfb93a7e7ea5139bea47d0e7a6512",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Port Vale",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12891,7 +12868,7 @@
                       "away": "Northampton",
                       "csv_data_row": 11446,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Port Vale",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12930,7 +12907,7 @@
                       "csv_data_row": 11446,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Port Vale",
                       "kickoff_origin": "provider_explicit_offset",
@@ -12951,29 +12928,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Northampton Town",
-                      "board_fetched_at": "2026-11-23T22:32:44+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1000002575464906",
-                        "participant1Name": "Port Vale",
-                        "participant2Name": "Northampton Town",
-                        "sportId": 10,
-                        "startTime": "2026-11-24T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "a0e45854a2c0ae1b75a2b897f0039556bf561b1c94734a3a13a6a97222a1cf38",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Port Vale",
-                      "json_pointer": "/boards/2026-11-24/fixtures/140",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-24T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-23T22:32:44+00:00",
-                      "provider_event_id": "id1000002575464906",
-                      "row_sha256": "7074d5f71da57398ed7ac567c342ef11daf2223d298f862850fca40b6f085cc8",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -12991,7 +12945,12 @@
             }
           ],
           "odds": 1.9,
-          "stake_pct": 1.5067
+          "stake_pct": 1.5067,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -13021,12 +12980,12 @@
                   "source": "betexplorer",
                   "price": 1.4,
                   "captured_at": "2026-11-23T22:36:10.895189+00:00",
-                  "decision_at": "2026-11-24T06:33:07+02:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
                   "kickoff": "2026-11-24T20:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.8329037703199643,
-              "ml_model_key": "7a6b3310c8cdd3d0c6ca6517f674ea953b37de8398a3402d92a5cb70c1d9356f",
+              "ml_rank_probability": 0.8329037703199483,
+              "ml_model_key": "abbb2d2f532b79316f303df19a27f48890445e3b6e5b8d8a40219c35a9dac2ac",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 4.5 Goals",
               "floor": null,
@@ -13103,7 +13062,7 @@
                       "away": "Real Betis",
                       "csv_data_row": 2868,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "2286c917571b6cfe1d21e6d095eced59386838fdbffadb94c1afe63512572557",
+                      "file_sha256": "b91c03bafa264c4949db884b452051b7b31cfb93a7e7ea5139bea47d0e7a6512",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Slovan Bratislava",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13154,7 +13113,7 @@
                       "away": "Real Betis",
                       "csv_data_row": 11475,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Slovan Bratislava",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13193,7 +13152,7 @@
                       "csv_data_row": 11475,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Slovan Bratislava",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13255,12 +13214,12 @@
                   "source": "betexplorer",
                   "price": 1.25,
                   "captured_at": "2026-11-23T22:37:45.400125+00:00",
-                  "decision_at": "2026-11-24T06:33:07+02:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
                   "kickoff": "2026-11-24T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7894544993191177,
-              "ml_model_key": "ecca88fede2c5ced36134544c43f0707519f9967310d73351f6d3d3807e2ea85",
+              "ml_rank_probability": 0.7894544993172031,
+              "ml_model_key": "ac4465b8a997b8b9ad77e75db775f9475392e2503e022414f48b1489db3e1d7c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 4.5 Goals",
               "floor": null,
@@ -13337,7 +13296,7 @@
                       "away": "Swansea",
                       "csv_data_row": 11423,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Middlesbrough FC",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13376,7 +13335,7 @@
                       "csv_data_row": 11423,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Middlesbrough FC",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13414,7 +13373,12 @@
             }
           ],
           "odds": 1.75,
-          "stake_pct": 1.5067
+          "stake_pct": 1.5067,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -13444,12 +13408,12 @@
                   "source": "betexplorer",
                   "price": 1.45,
                   "captured_at": "2026-11-23T22:35:08.037053+00:00",
-                  "decision_at": "2026-11-24T06:33:07+02:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
                   "kickoff": "2026-11-24T20:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.8961462254924657,
-              "ml_model_key": "ecca88fede2c5ced36134544c43f0707519f9967310d73351f6d3d3807e2ea85",
+              "ml_rank_probability": 0.8961462254984721,
+              "ml_model_key": "ac4465b8a997b8b9ad77e75db775f9475392e2503e022414f48b1489db3e1d7c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 4.5 Goals",
               "floor": null,
@@ -13526,7 +13490,7 @@
                       "away": "Lens",
                       "csv_data_row": 2856,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "2286c917571b6cfe1d21e6d095eced59386838fdbffadb94c1afe63512572557",
+                      "file_sha256": "b91c03bafa264c4949db884b452051b7b31cfb93a7e7ea5139bea47d0e7a6512",
                       "fixture_identity_origin": "provider_participants",
                       "home": "RB Leipzig",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13577,7 +13541,7 @@
                       "away": "Lens",
                       "csv_data_row": 11451,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "RB Leipzig",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13616,7 +13580,7 @@
                       "csv_data_row": 11451,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "RB Leipzig",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13678,12 +13642,12 @@
                   "source": "betexplorer",
                   "price": 1.48,
                   "captured_at": "2026-11-23T22:37:14.407564+00:00",
-                  "decision_at": "2026-11-24T06:33:07+02:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
                   "kickoff": "2026-11-24T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7618377394298269,
-              "ml_model_key": "ecca88fede2c5ced36134544c43f0707519f9967310d73351f6d3d3807e2ea85",
+              "ml_rank_probability": 0.7618377394265221,
+              "ml_model_key": "ac4465b8a997b8b9ad77e75db775f9475392e2503e022414f48b1489db3e1d7c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 3.5 Goals",
               "floor": 1.64,
@@ -13751,7 +13715,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-24T19:45:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -13760,7 +13724,7 @@
                       "away": "Dundee",
                       "csv_data_row": 2834,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "2286c917571b6cfe1d21e6d095eced59386838fdbffadb94c1afe63512572557",
+                      "file_sha256": "b91c03bafa264c4949db884b452051b7b31cfb93a7e7ea5139bea47d0e7a6512",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Hibernian",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13811,7 +13775,7 @@
                       "away": "Dundee",
                       "csv_data_row": 11388,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Hibernian",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13850,7 +13814,7 @@
                       "csv_data_row": 11388,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "52d7a3d33c01dcf84522189fab3f9f4b874b32ddaba3b5c85e56ad8d225893b5",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Hibernian",
                       "kickoff_origin": "provider_explicit_offset",
@@ -13871,29 +13835,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Dundee FC",
-                      "board_fetched_at": "2026-11-23T22:32:44+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1000003674982104",
-                        "participant1Name": "Hibernian FC",
-                        "participant2Name": "Dundee FC",
-                        "sportId": 10,
-                        "startTime": "2026-11-24T19:45:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "a0e45854a2c0ae1b75a2b897f0039556bf561b1c94734a3a13a6a97222a1cf38",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Hibernian FC",
-                      "json_pointer": "/boards/2026-11-24/fixtures/141",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-24T19:45:00+00:00",
-                      "observed_at_utc": "2026-11-23T22:32:44+00:00",
-                      "provider_event_id": "id1000003674982104",
-                      "row_sha256": "628115370f255afbce2b4c537df2d7f6c74853b92d4ac38787e6347855654f59",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -13911,7 +13852,12 @@
             }
           ],
           "odds": 2.15,
-          "stake_pct": 1.5066
+          "stake_pct": 1.5066,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 4.52
@@ -14095,6 +14041,11 @@
     },
     "2026-11-23": {
       "frozen_at": "2026-11-23T09:50:51+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-24": {
+      "frozen_at": "2026-11-24T09:36:33+02:00",
       "final": true,
       "lock_source": "state"
     }

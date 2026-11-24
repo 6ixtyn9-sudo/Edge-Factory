@@ -1,126 +1,11 @@
 {
   "added": 0,
-  "attempted": 16,
-  "attempted_fixtures": [
-    {
-      "away": "Polokwane City",
-      "date": "2026-11-24",
-      "home": "Durban City",
-      "kickoff": "2026-11-24T17:30:00Z",
-      "league": "Premier League"
-    },
-    {
-      "away": "Sutton United",
-      "date": "2026-11-24",
-      "home": "AFC Hornchurch",
-      "kickoff": "2026-11-24T19:45:00Z",
-      "league": "Enterprise National League"
-    },
-    {
-      "away": "Northampton Town",
-      "date": "2026-11-24",
-      "home": "Port Vale",
-      "kickoff": "2026-11-24T19:45:00Z",
-      "league": "League Two"
-    },
-    {
-      "away": "Wrexham",
-      "date": "2026-11-24",
-      "home": "Bristol City",
-      "kickoff": "2026-11-24T19:45:00Z",
-      "league": "Championship"
-    },
-    {
-      "away": "Ascoli",
-      "date": "2026-11-24",
-      "home": "Cesena",
-      "kickoff": "2026-11-24T19:00:00Z",
-      "league": "Serie B"
-    },
-    {
-      "away": "Real Betis",
-      "date": "2026-11-24",
-      "home": "Slovan Bratislava",
-      "kickoff": "2026-11-24T20:00:00Z",
-      "league": "Champions League"
-    },
-    {
-      "away": "Gateshead",
-      "date": "2026-11-24",
-      "home": "Scunthorpe United",
-      "kickoff": "2026-11-24T19:45:00Z",
-      "league": "Enterprise National League"
-    },
-    {
-      "away": "LASK Linz",
-      "date": "2026-11-24",
-      "home": "Bod\u00f8 / Glimt",
-      "kickoff": "2026-11-24T17:45:00Z",
-      "league": "Champions League"
-    },
-    {
-      "away": "NORTHAMPTON",
-      "date": "2026-11-24",
-      "home": "PORT VALE",
-      "kickoff": "19:45",
-      "league": "EN2"
-    },
-    {
-      "away": "FC DUNDEE",
-      "date": "2026-11-24",
-      "home": "HIBERNIAN",
-      "kickoff": "19:45",
-      "league": "SCP"
-    },
-    {
-      "away": "SWANSEA",
-      "date": "2026-11-24",
-      "home": "MIDDLESBROUGH",
-      "kickoff": "19:45",
-      "league": "ENC"
-    },
-    {
-      "away": "TAMWORTH",
-      "date": "2026-11-24",
-      "home": "CARLISLE",
-      "kickoff": "19:45",
-      "league": "ENB"
-    },
-    {
-      "away": "LINCOLN",
-      "date": "2026-11-24",
-      "home": "CHARLTON",
-      "kickoff": "19:45",
-      "league": "ENC"
-    },
-    {
-      "away": "LEICESTER",
-      "date": "2026-11-24",
-      "home": "BLACKPOOL",
-      "kickoff": "19:45",
-      "league": "EN1"
-    },
-    {
-      "away": "BARROW",
-      "date": "2026-11-24",
-      "home": "BOSTON UTD",
-      "kickoff": "19:45",
-      "league": "ENB"
-    },
-    {
-      "away": "CSKA MOSCOW",
-      "date": "2026-11-24",
-      "home": "AKRON TOGLIATTI",
-      "kickoff": "14:00",
-      "league": "RUC"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 18,
-  "captured_at": "2026-11-24T04:39:21+00:00",
+  "captured_at": "2026-11-24T07:25:51+00:00",
   "date": "2026-11-24",
-  "due_reasons": {
-    "first_at": 16
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -137,41 +22,29 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 2
+    "retry_cooldown": 18
   },
   "skipped": [
+    "Durban City|Polokwane City (retry cooldown (6h after failed attempt))",
+    "AFC Hornchurch|Sutton United (retry cooldown (6h after failed attempt))",
+    "Port Vale|Northampton Town (retry cooldown (6h after failed attempt))",
     "RB LEIPZIG|LENS (retry cooldown (6h after failed attempt))",
-    "RANGERS FC|ABERDEEN (retry cooldown (6h after failed attempt))"
+    "RANGERS FC|ABERDEEN (retry cooldown (6h after failed attempt))",
+    "Bristol City|Wrexham (retry cooldown (6h after failed attempt))",
+    "Cesena|Ascoli (retry cooldown (6h after failed attempt))",
+    "Slovan Bratislava|Real Betis (retry cooldown (6h after failed attempt))",
+    "Scunthorpe United|Gateshead (retry cooldown (6h after failed attempt))",
+    "Bod\u00f8 / Glimt|LASK Linz (retry cooldown (6h after failed attempt))",
+    "PORT VALE|NORTHAMPTON (retry cooldown (6h after failed attempt))",
+    "HIBERNIAN|FC DUNDEE (retry cooldown (6h after failed attempt))",
+    "MIDDLESBROUGH|SWANSEA (retry cooldown (6h after failed attempt))",
+    "CARLISLE|TAMWORTH (retry cooldown (6h after failed attempt))",
+    "CHARLTON|LINCOLN (retry cooldown (6h after failed attempt))",
+    "BLACKPOOL|LEICESTER (retry cooldown (6h after failed attempt))",
+    "BOSTON UTD|BARROW (retry cooldown (6h after failed attempt))",
+    "AKRON TOGLIATTI|CSKA MOSCOW (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Durban City vs Polokwane City (league not covered: Premier League)",
-    "AFC Hornchurch vs Sutton United (league not covered: Enterprise National League)",
-    "Port Vale vs Northampton Town (league not covered: League Two)",
-    "Cesena vs Ascoli (league not covered: Serie B)",
-    "Scunthorpe United vs Gateshead (league not covered: Enterprise National League)",
-    "PORT VALE vs NORTHAMPTON (league not covered: EN2)",
-    "HIBERNIAN vs FC DUNDEE (league not covered: SCP)",
-    "MIDDLESBROUGH vs SWANSEA (league not covered: ENC)",
-    "CARLISLE vs TAMWORTH (league not covered: ENB)",
-    "CHARLTON vs LINCOLN (league not covered: ENC)",
-    "BLACKPOOL vs LEICESTER (league not covered: EN1)",
-    "BOSTON UTD vs BARROW (league not covered: ENB)",
-    "AKRON TOGLIATTI vs CSKA MOSCOW (league not covered: RUC)",
-    "Bristol City vs Wrexham (keys exhausted)"
-  ],
-  "unmatched_reasons": {
-    "keys exhausted": 1,
-    "league not covered: EN1": 1,
-    "league not covered: EN2": 1,
-    "league not covered: ENB": 2,
-    "league not covered: ENC": 2,
-    "league not covered: Enterprise National League": 2,
-    "league not covered: League Two": 1,
-    "league not covered: Premier League": 1,
-    "league not covered: RUC": 1,
-    "league not covered: SCP": 1,
-    "league not covered: Serie B": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
