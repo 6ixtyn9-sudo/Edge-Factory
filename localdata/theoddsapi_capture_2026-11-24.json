@@ -1,11 +1,28 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "LENS",
+      "date": "2026-11-24",
+      "home": "RB LEIPZIG",
+      "kickoff": "20:00",
+      "league": "ECL"
+    },
+    {
+      "away": "ABERDEEN",
+      "date": "2026-11-24",
+      "home": "RANGERS FC",
+      "kickoff": "20:00",
+      "league": "SCP"
+    }
+  ],
   "candidate_fixtures": 18,
-  "captured_at": "2026-11-24T10:38:04+00:00",
+  "captured_at": "2026-11-24T13:24:06+00:00",
   "date": "2026-11-24",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 2
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -22,14 +39,12 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 18
+    "retry_cooldown": 16
   },
   "skipped": [
     "Durban City|Polokwane City (retry cooldown (6h after failed attempt))",
     "AFC Hornchurch|Sutton United (retry cooldown (6h after failed attempt))",
     "Port Vale|Northampton Town (retry cooldown (6h after failed attempt))",
-    "RB LEIPZIG|LENS (retry cooldown (6h after failed attempt))",
-    "RANGERS FC|ABERDEEN (retry cooldown (6h after failed attempt))",
     "Bristol City|Wrexham (retry cooldown (6h after failed attempt))",
     "Cesena|Ascoli (retry cooldown (6h after failed attempt))",
     "Slovan Bratislava|Real Betis (retry cooldown (6h after failed attempt))",
@@ -45,6 +60,13 @@
     "AKRON TOGLIATTI|CSKA MOSCOW (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "RANGERS FC vs ABERDEEN (league not covered: SCP)",
+    "RB LEIPZIG vs LENS (keys exhausted)"
+  ],
+  "unmatched_reasons": {
+    "keys exhausted": 1,
+    "league not covered: SCP": 1
+  }
 }
