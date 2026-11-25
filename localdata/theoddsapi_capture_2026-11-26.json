@@ -1,0 +1,80 @@
+{
+  "added": 0,
+  "attempted": 3,
+  "attempted_fixtures": [
+    {
+      "away": "FC K\u00f8benhavn",
+      "date": "2026-11-26",
+      "home": "Inter Club d'Escaldes",
+      "kickoff": "2026-11-26T20:00:00Z",
+      "league": "Conference League"
+    },
+    {
+      "away": "REMO",
+      "date": "2026-11-26",
+      "home": "SAO PAULO",
+      "kickoff": "23:00",
+      "league": "BR1"
+    },
+    {
+      "away": "Independiente Medellin",
+      "date": "2026-11-26",
+      "home": "Atletico Nacional",
+      "kickoff": "26-11, 01:30",
+      "league": "Colombia Primera A"
+    }
+  ],
+  "candidate_fixtures": 20,
+  "captured_at": "2026-11-25T22:39:02+00:00",
+  "date": "2026-11-26",
+  "due_reasons": {
+    "first_at": 3
+  },
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "retry_cooldown": 17
+  },
+  "skipped": [
+    "Brighton & Hove Albion|Universitatea Craiova (retry cooldown (6h after failed attempt))",
+    "Sporting Braga|KuPS (retry cooldown (6h after failed attempt))",
+    "Salzburg|Ararat-Armenia (retry cooldown (6h after failed attempt))",
+    "Juventus|Omonia Nicosia (retry cooldown (6h after failed attempt))",
+    "Olympique Lyonnais|Lillestr\u00f8m (retry cooldown (6h after failed attempt))",
+    "Be\u015fikta\u015f|Hapoel Be'er Sheva (retry cooldown (6h after failed attempt))",
+    "Sunderland|Jagiellonia Bia\u0142ystok (retry cooldown (6h after failed attempt))",
+    "Union Saint-Gilloise|Lech Pozna\u0144 (retry cooldown (6h after failed attempt))",
+    "TSG Hoffenheim|Sturm Graz (retry cooldown (6h after failed attempt))",
+    "Atl\u00e9tico Nacional|Independiente Medell\u00edn (retry cooldown (6h after failed attempt))",
+    "Borac Banja Luka|Atalanta (retry cooldown (6h after failed attempt))",
+    "FK Borac Banja Luka|Atalanta (retry cooldown (6h after failed attempt))",
+    "HEARTS|MONACO (retry cooldown (6h after failed attempt))",
+    "FC Nordsjaelland|Panathinaikos (retry cooldown (6h after failed attempt))",
+    "FREIBURG|TWENTE (retry cooldown (6h after failed attempt))",
+    "CRYSTAL PALACE|REAL SOCIEDAD (retry cooldown (6h after failed attempt))",
+    "CSKA SOFIA|TRABZONSPOR (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "empty",
+  "unmatched": [
+    "Atletico Nacional vs Independiente Medellin (league not covered: Colombia Primera A)",
+    "Inter Club d'Escaldes vs FC K\u00f8benhavn (keys exhausted)"
+  ],
+  "unmatched_reasons": {
+    "keys exhausted": 1,
+    "league not covered: Colombia Primera A": 1
+  }
+}
