@@ -1,13 +1,7 @@
 {
-  "added": 6167,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Jubilo Iwata",
-      "fixture_id": "id1000040272151390",
-      "home": "Montedio Yamagata"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-25",
     "keys": 3,
@@ -16,173 +10,16 @@
     "remaining_today": 0,
     "spent_today": 26
   },
-  "budget_deferred": 127,
-  "captured_at": "2026-11-25T09:04:36+00:00",
+  "captured_at": "2026-11-25T10:31:33+00:00",
   "date": "2026-11-25",
   "errors": [],
-  "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 9,
-  "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 237,
-  "future_slate_fixtures": 1,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 456,
-  "markets": {
-    "1x2": 624,
-    "btts": 382,
-    "dc": 567,
-    "dnb": 330,
-    "ou_0.5": 196,
-    "ou_0.75": 22,
-    "ou_1": 32,
-    "ou_1.25": 38,
-    "ou_1.5": 313,
-    "ou_1.75": 76,
-    "ou_2": 118,
-    "ou_2.25": 134,
-    "ou_2.5": 351,
-    "ou_2.75": 144,
-    "ou_3": 125,
-    "ou_3.25": 98,
-    "ou_3.5": 317,
-    "ou_3.75": 42,
-    "ou_4": 74,
-    "ou_4.25": 38,
-    "ou_4.5": 287,
-    "ou_4.75": 38,
-    "ou_5": 16,
-    "ou_5.25": 8,
-    "ou_5.5": 98,
-    "ou_5.75": 8,
-    "ou_6": 8,
-    "ou_6.25": 8,
-    "ou_6.5": 64,
-    "ou_6.75": 4,
-    "ou_7": 4,
-    "ou_7.25": 4,
-    "ou_7.5": 26,
-    "ou_7.75": 4,
-    "ou_8": 4,
-    "ou_8.25": 4,
-    "ou_8.5": 7,
-    "tt_away_0.5": 146,
-    "tt_away_0.75": 18,
-    "tt_away_1": 26,
-    "tt_away_1.25": 24,
-    "tt_away_1.5": 258,
-    "tt_away_1.75": 24,
-    "tt_away_2": 26,
-    "tt_away_2.25": 18,
-    "tt_away_2.5": 160,
-    "tt_away_2.75": 2,
-    "tt_away_3": 16,
-    "tt_away_3.5": 68,
-    "tt_away_4.5": 44,
-    "tt_away_5.5": 4,
-    "tt_home_0.5": 252,
-    "tt_home_0.75": 24,
-    "tt_home_1": 32,
-    "tt_home_1.25": 24,
-    "tt_home_1.5": 162,
-    "tt_home_1.75": 18,
-    "tt_home_2": 24,
-    "tt_home_2.25": 16,
-    "tt_home_2.5": 109,
-    "tt_home_3.5": 56,
-    "tt_home_4.5": 2,
-    "tt_home_5.5": 1
-  },
-  "markets_source": "cache",
-  "matched": 1,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 1,
-    "market_inactive": 59,
-    "market_unsupported_clean_sheet": 146,
-    "market_unsupported_corners": 792,
-    "market_unsupported_correct_score": 397,
-    "market_unsupported_early_payout": 15,
-    "market_unsupported_handicap": 1623,
-    "market_unsupported_market_type": 1310,
-    "market_unsupported_non_goal": 64,
-    "market_unsupported_odd_even": 318,
-    "market_unsupported_period": 5886,
-    "market_unsupported_win_to_nil": 184,
-    "outcome_inactive": 371
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 1,
-      "market_inactive": 59,
-      "outcome_inactive": 371
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_clean_sheet": 146,
-      "market_unsupported_corners": 792,
-      "market_unsupported_correct_score": 397,
-      "market_unsupported_early_payout": 15,
-      "market_unsupported_handicap": 1623,
-      "market_unsupported_market_type": 1310,
-      "market_unsupported_non_goal": 64,
-      "market_unsupported_odd_even": 318,
-      "market_unsupported_period": 5886,
-      "market_unsupported_win_to_nil": 184
-    }
-  },
-  "pending_fixtures": 128,
-  "quoted_fixtures": [
-    {
-      "away": "Jubilo Iwata",
-      "fixture_id": "id1000040272151390",
-      "home": "Montedio Yamagata"
-    }
-  ],
-  "reserved_requests": 0,
-  "rows": 6167,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 12,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 2,
-  "slate_provider_overlap_fixtures": 6,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "FC Barcelona",
-      "home": "Sabah",
-      "league": "Champions League",
-      "normalized_pair": "barcelona|sabah"
-    },
-    {
-      "away": "Viking",
-      "home": "Atl\u00e9tico de Madrid",
-      "league": "Champions League",
-      "normalized_pair": "atletico de madrid|viking"
-    },
-    {
-      "away": "Ceramica Cleopatra",
-      "home": "ENPPI",
-      "league": "Premier League",
-      "normalized_pair": "ceramica cleopatra|enppi"
-    },
-    {
-      "away": "Nagoya Grampus",
-      "home": "JEF United",
-      "league": "J1 League",
-      "normalized_pair": "jef united|nagoya grampus"
-    },
-    {
-      "away": "Avellino",
-      "home": "Cremonese",
-      "league": "Serie B",
-      "normalized_pair": "avellino|cremonese"
-    },
-    {
-      "away": "VfB Stuttgart",
-      "home": "Inter",
-      "league": "Champions League",
-      "normalized_pair": "inter|vfb stuttgart"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
