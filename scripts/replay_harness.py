@@ -4166,7 +4166,10 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
     The date is then re-validated against ``context["date"]``/``build_at``
     during replay, so this is a scoping filter, never an identity relaxation.
     Receipts whose filename carries no parseable date are always audited and
-    listed in ``scope["undated_receipts"]`` — never silently dropped.
+    listed in ``scope["undated_receipts"]`` — never silently dropped. Cached
+    receipt-conflict files use that same scope: a recent or undated conflict is
+    a failure, while an older conflict remains explicitly reported as
+    out-of-scope evidence and makes the report PARTIAL, never PASS.
 
     ``time_budget_seconds`` interrupts even one expensive receipt/result load
     on the POSIX main thread; elapsed checks also cover the final receipt.
@@ -4191,6 +4194,7 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
                  selection_basis="receipt filename date, before any read; "
                                  "context date/build_at re-validated during replay",
                  selected_receipts=0, excluded_receipts=0, undated_receipts=[],
+                 excluded_receipt_conflicts=0, undated_receipt_conflicts=[],
                  coverage_caveat=("Windowed audit of recent receipts only — NOT a "
                                   "full-history parity claim." if window_days else
                                   "Full retained history."))
@@ -4203,8 +4207,25 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
     settled_facts = None  # lazy, shared across valid frozen ENH receipts
     for lane, prefix, state_file in (("main", "auto_tickets", "auto_tickets_state.json"),
                                       ("enh", "autobets_enh_tickets", "enhancement_tickets_state.json")):
+        # A routine window must not silently forget an older quarantined
+        # receipt, but neither may a 10-day-old cache conflict turn a report
+        # that audited only this week's receipts into a current parity FAIL.
+        # Keep the old evidence visible and downgrade the claim to PARTIAL
+        # below; only in-scope/undated conflicts are current audit failures.
+        receipt_conflicts, out_of_scope_conflicts = [], []
+        for conflict in ticket_receipt_files(base, prefix, conflicts=True):
+            relative = str(conflict.relative_to(base))
+            filed_day = _receipt_filename_date(conflict.name.removesuffix(".gz"))
+            if cutoff is not None and filed_day is not None and filed_day < cutoff:
+                scope["excluded_receipt_conflicts"] += 1
+                out_of_scope_conflicts.append(relative)
+                continue
+            if filed_day is None:
+                scope["undated_receipt_conflicts"].append(relative)
+            receipt_conflicts.append(relative)
         lane_report = dict(receipts=[], missing_receipt_days=[], state_error=None,
-                           receipt_conflicts=[str(p.relative_to(base)) for p in ticket_receipt_files(base, prefix, conflicts=True)])
+                           receipt_conflicts=receipt_conflicts,
+                           out_of_scope_receipt_conflicts=out_of_scope_conflicts)
         report["lanes"][lane] = lane_report
         try:
             state = json.loads((base / state_file).read_text())
@@ -4370,6 +4391,7 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
     bad = bad or any(lane["receipt_conflicts"] for lane in report["lanes"].values())
     count = sum(len(lane["receipts"]) for lane in report["lanes"].values())
     incomplete = any(lane["missing_receipt_days"] or lane["state_error"]
+                     or lane["out_of_scope_receipt_conflicts"]
                      or any(r["ledger"] in ("UNAVAILABLE", "INCOMPLETE_IDENTITY")
                             or r.get("bank_reconciliation") == "UNAVAILABLE"
                             or r["settlement"] == "INCOMPLETE_OUTCOME"
@@ -4385,8 +4407,16 @@ def decision_parity_report(root=None, *, window_days=None, reference=None,
         scope["coverage_caveat"] += (" Audit stopped on its time budget; remaining "
                                      "receipts were NOT replayed.")
         return report
-    report["status"] = ("FAIL" if bad else "INSUFFICIENT_EVIDENCE" if not count
-                        else "PARTIAL" if incomplete else "PASS")
+    has_out_of_scope_conflicts = any(
+        lane["out_of_scope_receipt_conflicts"] for lane in report["lanes"].values())
+    if bad:
+        report["status"] = "FAIL"
+    elif incomplete and (count or has_out_of_scope_conflicts):
+        report["status"] = "PARTIAL"
+    elif not count:
+        report["status"] = "INSUFFICIENT_EVIDENCE"
+    else:
+        report["status"] = "PASS"
     return report
 
 

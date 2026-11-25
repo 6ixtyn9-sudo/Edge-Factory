@@ -3,9 +3,11 @@
 
 The daily workflow's cache is an optimization, not the source of truth. Before
 restoring the remaining tracked localdata, this helper unions the cached and
-committed Phase 5 JSONL ledgers. At persistence time it resolves only
-append-only Phase 5 JSONL rebase conflicts; any other conflict is left intact
-for an explicit warning and the workflow artifact fallback.
+committed Phase 5 JSONL ledgers. At persistence time it resolves append-only
+Phase 5 JSONL conflicts and one deliberately narrow financial case: an
+upstream ENH settlement proven to be exactly one step ahead of a stale replay.
+Every other financial conflict is left intact for an explicit warning and the
+workflow artifact fallback.
 """
 from __future__ import annotations
 
@@ -194,6 +196,14 @@ def _tracked_localdata_paths(repo: Path) -> list[str]:
 
 ENH_STATE = "localdata/enhancement_tickets_state.json"
 MAIN_STATE = "localdata/auto_tickets_state.json"
+# The ENH performance views are derived from ENH_STATE.  They are only merged
+# as a group with a proved newer ENH settlement below; neither report can
+# authorize a ledger change on its own.
+ENH_FINANCIAL_REPORTS = frozenset((
+    "localdata/autobets_enh_tickets_performance.json",
+    "localdata/autobets_enh_tickets_performance.txt",
+))
+ENH_FINANCIAL_REBASE_PATHS = ENH_FINANCIAL_REPORTS | {ENH_STATE}
 
 
 def _financial_rows(state):
@@ -1048,19 +1058,95 @@ def _stage_blob(repo: Path, stage: int, path: str) -> bytes | None:
     return result.stdout if result.returncode == 0 else None
 
 
+def _upstream_enh_settlement_for_rebase(repo: Path, paths: set[str]) -> dict[str, bytes] | None:
+    """Return stage-2 ENH evidence only for one already-proved settlement.
+
+    ``git pull --rebase`` exposes the remote branch as index stage 2 and this
+    runner's just-created persistence commit as stage 3.  A queued run can
+    therefore be replayed after another run (or a reviewed correction) has
+    settled its frozen ENH card.  Git's line merger quite correctly conflicts
+    on the state and its human/machine performance views, but choosing either
+    side wholesale is not acceptable financial conflict resolution.
+
+    This is intentionally one-way: retain stage 2 only when it is exactly one
+    valid settlement step ahead of stage 3.  ``_settlement_step`` proves the
+    booked leg/stake/price identities, unchanged locks and cycle data, complete
+    disposition of every old open position, and exact bank delta.  A runner
+    that is ahead, a modified historical bet, new lock, bank drift, or an
+    unknown report/file remains an unresolved conflict.  The reports are
+    derived views and travel only alongside the authorized stage-2 ledger.
+    """
+    financial = paths & ENH_FINANCIAL_REBASE_PATHS
+    if not financial:
+        return {}
+    # A financial report without its ledger (or a different financial lane) is
+    # not a reason to choose a side.  Git will handle any non-conflicting
+    # derived view normally; only conflicting paths reach this function.
+    if ENH_STATE not in financial:
+        return None
+
+    upstream_blob = _stage_blob(repo, 2, ENH_STATE)
+    replayed_blob = _stage_blob(repo, 3, ENH_STATE)
+    if not upstream_blob or not replayed_blob:
+        return None
+    try:
+        upstream = json.loads(upstream_blob)
+        replayed = json.loads(replayed_blob)
+        if not isinstance(upstream, dict) or not isinstance(replayed, dict):
+            return None
+        # Keep malformed/nonnumeric financial records in the normal fail-closed
+        # path rather than allowing equality of some incidental JSON fields.
+        for state in (upstream, replayed):
+            _financial_rows(state)
+            bank = state.get("bank")
+            if (isinstance(bank, bool) or not isinstance(bank, (int, float))
+                    or not math.isfinite(bank)):
+                return None
+        newer_settlement = _settlement_step(upstream, replayed) is not None
+    except (EvidenceMergeError, TypeError, ValueError, KeyError, OverflowError):
+        return None
+    if not newer_settlement:
+        return None
+
+    chosen = {ENH_STATE: upstream_blob}
+    # An empty/missing stage-2 report could silently delete a useful view, so
+    # accept each conflicted report only when the upstream side contains bytes.
+    for relative in financial - {ENH_STATE}:
+        report = _stage_blob(repo, 2, relative)
+        if not report:
+            return None
+        chosen[relative] = report
+    print("PHASE5_PERSISTENCE retained_upstream_enh_financial_evidence "
+          "upstream_settlement_step")
+    return chosen
+
+
 def resolve_phase5_jsonl_conflicts(repo: Path | str) -> tuple[bool, list[str], str | None]:
-    """Resolve only allowlisted Phase 5 JSONL conflicts using index stages."""
+    """Resolve allowlisted JSONL conflicts and a proved upstream ENH settlement.
+
+    The historical public name remains because callers/tests use it.  It does
+    not become a generic JSON merge: the only non-JSONL paths it can stage are
+    ``ENH_FINANCIAL_REBASE_PATHS``, and only in the one-way proof above.
+    """
     repo = Path(repo)
     paths = _unmerged_paths(repo)
     if not paths:
         return True, [], None
-    unsupported = sorted(path for path in paths if path not in APPEND_ONLY_JSONL_IDS)
-    if unsupported:
-        return False, [], "unsupported conflicts: " + ", ".join(unsupported)
+    path_set = set(paths)
+    jsonl_paths = path_set & set(APPEND_ONLY_JSONL_IDS)
+    financial_payloads = _upstream_enh_settlement_for_rebase(repo, path_set)
+    financial_paths = set(financial_payloads or ())
+    unsupported = sorted(path_set - jsonl_paths - financial_paths)
+    if unsupported or financial_payloads is None:
+        # Keep the exact paths in the warning/artifact-visible failure.  A
+        # proved settlement must never turn an adjacent unknown conflict into
+        # an implicit choice of cache or remote.
+        return False, [], "unsupported conflicts: " + ", ".join(sorted(
+            path_set if financial_payloads is None else unsupported))
 
-    merged_payloads: dict[str, bytes] = {}
+    merged_payloads: dict[str, bytes] = dict(financial_payloads)
     try:
-        for path in paths:
+        for path in sorted(jsonl_paths):
             upstream = _stage_blob(repo, 2, path) or b""
             replayed = _stage_blob(repo, 3, path) or b""
             merged, _count = merge_jsonl_payloads(upstream, replayed, path=path)
@@ -1075,7 +1161,7 @@ def resolve_phase5_jsonl_conflicts(repo: Path | str) -> tuple[bool, list[str], s
         if staged.returncode != 0:
             detail = _decode_output(staged.stderr)
             return False, [], f"could not stage merged evidence {relative}: {detail}"
-    return True, paths, None
+    return True, sorted(paths), None
 
 
 def _rebase_in_progress(repo: Path) -> bool:
@@ -1094,7 +1180,7 @@ def _index_and_worktree_clean(repo: Path) -> bool:
 
 
 def finish_rebase(repo: Path | str, *, max_steps: int = 32) -> tuple[bool, str | None]:
-    """Continue a rebase, auto-merging only append-only Phase 5 evidence."""
+    """Continue a rebase with tightly authorized Phase 5 conflict handling."""
     repo = Path(repo)
     for _ in range(max_steps):
         if not _rebase_in_progress(repo):
