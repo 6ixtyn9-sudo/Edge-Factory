@@ -134,6 +134,37 @@ def test_window_scope_labels_the_claim_as_partial(tmp_path):
     assert report["scope"]["coverage_caveat"]
 
 
+def test_windowed_audit_surfaces_but_does_not_fail_on_an_old_receipt_conflict(tmp_path):
+    """A 7-day parity claim cannot call an older cache conflict a current DIFF.
+
+    The artifact stays explicit and the result remains PARTIAL, never a parity
+    MATCH. A recent or undated conflict follows the ordinary failure path instead.
+    """
+    base = _seed_window_receipts(tmp_path, days=("2026-11-01",))
+    conflict = (base / "phase5_reconciliation" / "ticket_decisions" /
+                "auto_tickets_2026-11-01_decision_cache_conflict_deadbeef.json.gz")
+    conflict.write_bytes(b"quarantined evidence; this test never reads it")
+    report = rh.decision_parity_report(
+        tmp_path, window_days=3, reference=datetime(2026, 11, 8, 12, tzinfo=timezone.utc))
+    lane = report["lanes"]["main"]
+    assert lane["receipt_conflicts"] == []
+    assert lane["out_of_scope_receipt_conflicts"] == [str(conflict.relative_to(base))]
+    assert report["scope"]["excluded_receipt_conflicts"] == 1
+    assert report["status"] == "PARTIAL"
+
+
+def test_windowed_audit_fails_on_a_current_receipt_conflict(tmp_path):
+    base = _seed_window_receipts(tmp_path, days=("2026-11-07",))
+    conflict = (base / "phase5_reconciliation" / "ticket_decisions" /
+                "auto_tickets_2026-11-07_decision_cache_conflict_deadbeef.json.gz")
+    conflict.write_bytes(b"quarantined current evidence")
+    report = rh.decision_parity_report(
+        tmp_path, window_days=3, reference=datetime(2026, 11, 8, 12, tzinfo=timezone.utc))
+    assert report["lanes"]["main"]["receipt_conflicts"] == [str(conflict.relative_to(base))]
+    assert report["lanes"]["main"]["out_of_scope_receipt_conflicts"] == []
+    assert report["status"] == "FAIL"
+
+
 # ---------------------------------------------------------------------------
 # time budget: must never report PASS
 # ---------------------------------------------------------------------------

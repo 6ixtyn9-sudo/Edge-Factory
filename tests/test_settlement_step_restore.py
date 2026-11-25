@@ -13,6 +13,7 @@ The repair accepts exactly one settlement step (settled accas plus a fresh,
 unfrozen draft) and keeps refusing everything else. These tests pin both
 halves: the step that must be accepted, and the shortcuts that must not be.
 """
+import copy
 import json
 import subprocess
 
@@ -298,3 +299,100 @@ def test_plain_script_finance_projection_works_without_root_PYTHONPATH(tmp_path)
     result = subprocess.run([sys.executable,'-c',code,str(script.parent),str(tmp_path)],cwd=tmp_path,env=env,text=True,capture_output=True)
     assert result.returncode == 0, result.stderr
     assert "'bank': 100" in result.stdout
+
+
+# ---------------------------------------------------------------------------
+# Persistence-time rebase: a later confirmed settlement is not a generic
+# JSON conflict.  The reports are derived views but must move with the exact
+# stage-2 financial ledger, never with a stale cache view.
+# ---------------------------------------------------------------------------
+
+def _git(repo, *args, check=True):
+    return subprocess.run(['git', *args], cwd=repo, check=check, text=True,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def _configure(repo):
+    _git(repo, 'config', 'user.name', 'Persistence rebase test')
+    _git(repo, 'config', 'user.email', 'persistence-rebase@example.invalid')
+
+
+def _write_enh_rebase_group(repo, state, json_report, text_report):
+    (repo / persistence.ENH_STATE).write_text(json.dumps(state, indent=2))
+    (repo / 'localdata/autobets_enh_tickets_performance.json').write_text(json_report)
+    (repo / 'localdata/autobets_enh_tickets_performance.txt').write_text(text_report)
+
+
+def _start_enh_rebase_race(settlement_step, tmp_path, *, corrupt_upstream_bank=False):
+    """Create stage 1/2/3 exactly as ``persist -> pull --rebase`` does."""
+    repo, _path, head, cache, install = settlement_step
+    # This non-financial receipt/approval namespace is deliberately outside
+    # the settlement proof.  Updating it on both rebase sides makes the state
+    # a real text conflict instead of letting Git cleanly splice an added key.
+    head['integrity_recovery'] = {'rebase_note': 'base'}
+    cache['integrity_recovery'] = {'rebase_note': 'upstream'}
+    install(head, head)
+    base_json, base_text = '{"view":"base"}\n', 'BASE REPORT\n'
+    _write_enh_rebase_group(repo, head, base_json, base_text)
+    _git(repo, 'add', '-f', 'localdata')
+    _git(repo, 'commit', '-qm', 'base ENH ledger and its performance views')
+    _git(repo, 'branch', '-M', 'main')
+
+    origin = tmp_path / 'origin.git'
+    _git(tmp_path, 'init', '-q', '--bare', '--initial-branch=main', str(origin))
+    _git(repo, 'remote', 'add', 'origin', str(origin))
+    _git(repo, 'push', '-qu', 'origin', 'main')
+    upstream, runner = tmp_path / 'upstream', tmp_path / 'runner'
+    _git(tmp_path, 'clone', '-q', str(origin), str(upstream))
+    _git(tmp_path, 'clone', '-q', str(origin), str(runner))
+    _configure(upstream)
+    _configure(runner)
+
+    upstream_state = copy.deepcopy(cache)
+    if corrupt_upstream_bank:
+        upstream_state['bank'] += .25
+    upstream_json, upstream_text = '{"view":"upstream-settled"}\n', 'UPSTREAM SETTLED REPORT\n'
+    _write_enh_rebase_group(upstream, upstream_state, upstream_json, upstream_text)
+    _git(upstream, 'add', '-f', 'localdata')
+    _git(upstream, 'commit', '-qm', 'settle the independently frozen ENH acca')
+    _git(upstream, 'push', '-q', 'origin', 'main')
+
+    # The worker starts from the old ledger and refreshes an ordinary
+    # non-financial metadata view plus its reports.  This changes stage 3,
+    # which is why Git sees a three-way conflict even though its money record
+    # is merely stale.  It must not win over the verified stage-2 settlement.
+    replayed_state = copy.deepcopy(head)
+    replayed_state['integrity_recovery'] = {'rebase_note': 'stale runner'}
+    replayed_json, replayed_text = '{"view":"stale-runner"}\n', 'STALE RUNNER REPORT\n'
+    _write_enh_rebase_group(runner, replayed_state, replayed_json, replayed_text)
+    _git(runner, 'add', '-f', 'localdata')
+    _git(runner, 'commit', '-qm', 'runner report refresh from cached pre-settlement ledger')
+
+    pulled = _git(runner, 'pull', '--rebase', check=False)
+    assert pulled.returncode != 0
+    assert set(persistence._unmerged_paths(runner)) == persistence.ENH_FINANCIAL_REBASE_PATHS
+    return runner, upstream_state, (upstream_json, upstream_text), (replayed_json, replayed_text)
+
+
+def test_rebase_retains_proven_upstream_settlement_and_its_reports(settlement_step, tmp_path):
+    runner, upstream_state, upstream_reports, replayed_reports = _start_enh_rebase_race(
+        settlement_step, tmp_path)
+
+    assert persistence.finish_rebase(runner) == (True, None)
+    assert not persistence._unmerged_paths(runner)
+    assert json.loads((runner / persistence.ENH_STATE).read_text()) == upstream_state
+    assert (runner / 'localdata/autobets_enh_tickets_performance.json').read_text() == upstream_reports[0]
+    assert (runner / 'localdata/autobets_enh_tickets_performance.txt').read_text() == upstream_reports[1]
+    assert upstream_reports != replayed_reports
+
+
+def test_rebase_refuses_unreconciled_upstream_financial_conflict(settlement_step, tmp_path):
+    runner, _upstream_state, _upstream_reports, _replayed_reports = _start_enh_rebase_race(
+        settlement_step, tmp_path, corrupt_upstream_bank=True)
+
+    resolved, reason = persistence.finish_rebase(runner)
+    assert not resolved
+    assert 'unsupported conflicts:' in reason
+    assert persistence.ENH_STATE in reason
+    assert set(persistence._unmerged_paths(runner)) == persistence.ENH_FINANCIAL_REBASE_PATHS
+    _git(runner, 'rebase', '--abort')
