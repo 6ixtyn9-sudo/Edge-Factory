@@ -42,29 +42,27 @@
       "w_score": 0.8139
     }
   ],
-  "be_429": 2,
+  "be_429": 0,
   "be_cached": 3,
-  "be_cooling_down": true,
+  "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 3,
   "candidate_fixtures": 4,
-  "captured_at": "2026-11-25T04:31:00.148695+00:00",
+  "captured_at": "2026-11-25T09:04:36.171480+00:00",
   "date": "2026-11-25",
   "deferred_fixtures": 0,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
-  "fixtures_with_rows": 2,
+  "errors": [],
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 17,
+    "bookmakers": 36,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 47,
-    "markets": 6,
-    "named_rows": 47,
+    "fixtures": 3,
+    "market_rows": 96,
+    "markets": 12,
+    "named_rows": 96,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -92,10 +90,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6787
+    },
+    {
+      "avg_p": 86.14084507042253,
+      "away": "FC Barcelona",
+      "date": "2026-11-25",
+      "home": "Sabah",
+      "league": "Champions League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.8139
     }
   ],
-  "requests": 2,
-  "rows": 6,
+  "requests": 9,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }

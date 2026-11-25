@@ -1,11 +1,11 @@
 ENHANCEMENT TICKETS (ROLLING) — performance, percent of capital
 ==============================================================
-generated 2026-11-25T04:29:44
+generated 2026-11-25T11:29:58
 
 BANK     25.4%   x0.25 of the 100% base
 CYCLE    baseline 100.0%   next take-profit notice at 200.0%   (+100% per cycle)
 RECORD   33W / 41L   (44.6% hit)   over 37 bet-days
-OPEN     0 open slips   0 held accas   0 take-profit notice(s) to date
+OPEN     1 open slips   2 held accas   0 take-profit notice(s) to date
 
 BET-DAYS, oldest first (37 of 37)
   2026-10-14   0W/2L   staked  25.0%   returned   0.0%   net  -25.0%   bank   75.0%
@@ -45,6 +45,14 @@ BET-DAYS, oldest first (37 of 37)
   2026-11-22   2W/1L   staked   4.8%   returned   6.3%   net   +1.5%   bank   23.8%
   2026-11-23   0W/1L   staked   2.6%   returned   0.0%   net   -2.6%   bank   21.2%
   2026-11-24   3W/0L   staked   4.5%   returned   8.7%   net   +4.2%   bank   25.4%
+
+HELD (not yet settled; stake counted as committed)
+  2026-11-25   ACCA @2.02   stake 3.2%   HELD (not settled)
+      AWAY TEAM UNDER 2.5 GOALS @1.32
+      HOME TEAM OVER 0.5 GOALS @1.53
+  2026-11-25   ACCA @1.69   stake 3.2%   HELD (not settled)
+      HOME TEAM UNDER 2.5 GOALS @1.32
+      MATCH UNDER 3.5 GOALS @1.28
 
 NOTES
   Stake, returned and net are % of capital. Bank is the stored close for each day.
