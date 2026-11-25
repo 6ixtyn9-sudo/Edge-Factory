@@ -374,6 +374,47 @@ def test_exact_committed_supersession_restores_corrected_finance(financial_super
     assert json.loads(path.read_bytes())['open_slips'] == []  # no draft resurrection
 
 
+def test_prior_committed_supersessions_remain_valid_after_later_correction(financial_supersession):
+    import copy
+    repo, persistence, path, head, cache, install = financial_supersession
+    later_cache = copy.deepcopy(cache)
+    later_cache['bank'] = 105
+    later_cache['history'][0]['returned_pct'] = 15
+    later_cache['history'][0]['accas'][0].update(returned_pct=15, won=True)
+    head['integrity_recovery']['cache_supersessions'] = [{
+        'schema': 1,
+        'superseded_financial_sha256': persistence._financial_fingerprint(later_cache),
+        'retained_financial_sha256': persistence._financial_fingerprint(head),
+    }]
+    install(head, later_cache)
+    persistence.restore_committed_localdata(repo)
+    assert json.loads(path.read_bytes()) == head
+
+
+def test_failed_restore_leaves_evidence_but_blocks_direct_persistence(financial_supersession):
+    repo, persistence, path, head, cache, install = financial_supersession
+    head.pop('integrity_recovery')
+    install(head, cache)
+    before = path.read_bytes()
+    with pytest.raises(persistence.EvidenceMergeError, match='divergent enhancement financial histories'):
+        persistence.restore_committed_localdata(repo)
+    marker = repo / persistence.RESTORE_FAILURE_SENTINEL
+    assert marker.exists()
+    failure = json.loads(marker.read_text())
+    assert failure['action'] == 'restore'
+    assert failure['error_type'] == 'EvidenceMergeError'
+    assert path.read_bytes() == before  # conflicting cache remains artifact evidence
+    result = persistence.persist_localdata(repo, run_id='must-not-publish')
+    assert result['status'] == 'not_persisted'
+    assert 'failed committed restore' in result['reason']
+    assert path.read_bytes() == before
+
+    # Only a complete, subsequently valid restore clears the publication block.
+    path.write_text(json.dumps(head))
+    persistence.restore_committed_localdata(repo)
+    assert not marker.exists()
+
+
 @pytest.mark.parametrize('change', [
     'cache_bank', 'cache_history', 'cache_stake', 'cache_leg', 'cache_new_position',
     'cache_lock', 'head_bank', 'head_history', 'head_new_position', 'head_lock',

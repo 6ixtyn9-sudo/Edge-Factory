@@ -130,6 +130,7 @@ jobs:
             localdata-v2-
 
       - name: Restore committed data (override stale cache)
+        id: committed_restore
         run: |
           set -e
           python3 scripts/phase5_persistence.py restore
@@ -272,15 +273,19 @@ jobs:
         if: inputs.mode != 'remine_only'
         run: python3 scripts/phase5_persistence.py history-check
 
+      # A rejected cache/HEAD financial merge is evidence for the artifact
+      # path, not a replacement state.  Do not refresh the prefix-restored
+      # cache or stage its bytes merely because these durability steps normally
+      # run after a recoverable diagnostic failure.
       - name: Persist localdata State (Cache)
         uses: actions/cache/save@v4
-        if: always() && inputs.mode != 'remine_only'
+        if: success() && steps.committed_restore.outcome == 'success' && inputs.mode != 'remine_only'
         with:
           path: localdata
           key: localdata-v2-${{ github.run_id }}
 
       - name: Persist pipeline state to git (single source of truth)
-        if: always() && inputs.mode != 'remine_only'
+        if: success() && steps.committed_restore.outcome == 'success' && inputs.mode != 'remine_only'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
