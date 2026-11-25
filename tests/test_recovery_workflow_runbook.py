@@ -30,9 +30,16 @@ def test_reference_restore_exact_original_path_and_current_state_restored_even_o
     assert '--force' not in recovery and 'daily.py' not in recovery
     assert 'continue-on-error' not in ids['recovery']
     assert 'EDGE_FACTORY_ENH_COHORT_PARITY' in wf['jobs']['run-autonomous-agent']['env']
+    committed_restore = ids['committed_restore']
+    assert committed_restore['name'] == 'Restore committed data (override stale cache)'
+    # A rejected cache/HEAD financial merge may be archived, never saved back
+    # under the prefix cache or staged for publication.  ``success()`` alone is
+    # not enough documentation for this property: retain the explicit restore
+    # step outcome as a guard against future always-run durability edits.
+    publication_guard = "success() && steps.committed_restore.outcome == 'success' && inputs.mode != 'remine_only'"
     for step in steps:
         if step.get('uses') == 'actions/cache/save@v4' or 'phase5_persistence.py persist' in step.get('run', ''):
-            assert step['if'] == "always() && inputs.mode != 'remine_only'"
+            assert step['if'] == publication_guard
     ordinary = next(s for s in steps if s['name'] == 'Execute Autonomous Smart Schedule')
     assert ordinary['if'] == "inputs.mode != 'recover_and_rebuild'"
     checks = [s for s in steps if s.get('run') == 'python3 scripts/phase5_persistence.py history-check']

@@ -204,6 +204,41 @@ ENH_FINANCIAL_REPORTS = frozenset((
     "localdata/autobets_enh_tickets_performance.txt",
 ))
 ENH_FINANCIAL_REBASE_PATHS = ENH_FINANCIAL_REPORTS | {ENH_STATE}
+# This file is intentionally outside ``localdata``: it must not become part of
+# the cache payload which a failed restore just rejected.  A successful restore
+# removes it; its presence is a second, process-independent publication guard.
+RESTORE_FAILURE_SENTINEL = ".cache/phase5_restore_failed.json"
+
+
+def _restore_failure_sentinel(repo: Path) -> Path:
+    return repo / RESTORE_FAILURE_SENTINEL
+
+
+def _record_restore_failure(repo: Path, error: Exception) -> None:
+    marker = _restore_failure_sentinel(repo)
+    head = _run(repo, "rev-parse", "HEAD")
+    payload = {
+        "schema": 1,
+        "action": "restore",
+        "recorded_at_epoch": time.time(),
+        "head": _decode_output(head.stdout) if head.returncode == 0 else "unavailable",
+        "error_type": type(error).__name__,
+        "error": str(error),
+    }
+    try:
+        _atomic_write(marker, json.dumps(payload, sort_keys=True, indent=2).encode())
+    except OSError as marker_error:
+        # The original evidence error is still authoritative, but publish the
+        # failure to create the independent publication guard as well.
+        print(f"::warning::could not write restore-failure sentinel: {marker_error}")
+
+
+def _clear_restore_failure(repo: Path) -> None:
+    marker = _restore_failure_sentinel(repo)
+    try:
+        marker.unlink(missing_ok=True)
+    except OSError as error:
+        raise RuntimeError(f"could not clear successful restore sentinel: {error}") from error
 
 
 def _financial_rows(state):
@@ -573,11 +608,27 @@ def _retain_financial_state(repo, relative=ENH_STATE):
     # settled draft with the actually placed ticket). Only an explicit HEAD
     # receipt binding BOTH exact financial snapshots can supersede that cache.
     # Cached receipts are never trusted, and unknown positions cannot match.
-    receipt = head.get("integrity_recovery", {}).get("cache_supersession", {})
+    # Keep prior correction receipts immutable: an older cache can still be
+    # restored on a long-lived runner after a newer recovery was published.
+    recovery = head.get("integrity_recovery", {})
+    if not isinstance(recovery, dict):
+        raise EvidenceMergeError("invalid committed integrity recovery record")
+    receipts = []
+    legacy_receipt = recovery.get("cache_supersession")
+    if legacy_receipt is not None:
+        if not isinstance(legacy_receipt, dict):
+            raise EvidenceMergeError("invalid committed cache supersession receipt")
+        receipts.append(legacy_receipt)
+    additional_receipts = recovery.get("cache_supersessions", [])
+    if not isinstance(additional_receipts, list) or any(
+            not isinstance(receipt, dict) for receipt in additional_receipts):
+        raise EvidenceMergeError("invalid committed cache supersession receipt list")
+    receipts.extend(additional_receipts)
     head_sha, cache_sha = _financial_fingerprint(head), _financial_fingerprint(cache)
-    if (receipt.get("schema") == 1
-            and receipt.get("superseded_financial_sha256") == cache_sha
-            and receipt.get("retained_financial_sha256") == head_sha):
+    if any(receipt.get("schema") == 1
+           and receipt.get("superseded_financial_sha256") == cache_sha
+           and receipt.get("retained_financial_sha256") == head_sha
+           for receipt in receipts):
         return blob
     # A committed audit backfill must not turn the unchanged cached money
     # ledger into a restore conflict. Exact approvals above still bind their
@@ -963,8 +1014,25 @@ def _validate_cached_dated_archives(repo):
 
 
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
-    """Restore ordinary tracked state without overwriting cached append-only evidence."""
+    """Restore state and leave a publication block until every check succeeds.
+
+    The workflow also gates cache-save and Git publication on this step.  The
+    sentinel closes the gap for a future workflow edit or a direct ``persist``
+    invocation: rejected cache financial evidence may be uploaded for review,
+    but never promoted to Git.
+    """
     repo = Path(repo)
+    try:
+        result = _restore_committed_localdata(repo)
+    except Exception as error:
+        _record_restore_failure(repo, error)
+        raise
+    _clear_restore_failure(repo)
+    return result
+
+
+def _restore_committed_localdata(repo: Path) -> dict[str, Any]:
+    """Restore ordinary tracked state without overwriting cached append-only evidence."""
     started = time.monotonic()
     _validate_cached_dated_archives(repo)
     print("restore: validating Main/ENH financial evidence", flush=True)
@@ -1335,6 +1403,20 @@ def persist_localdata(
 ) -> dict[str, Any]:
     """Commit, rebase with safe JSONL unions, and push without force."""
     repo = Path(repo)
+    # A failed restore leaves the cache filesystem untouched for the always-run
+    # artifact path.  It is evidence, not publishable pipeline state.  Refuse
+    # a direct invocation too, so this remains true even if a workflow guard is
+    # accidentally weakened later.
+    restore_failure = _restore_failure_sentinel(repo)
+    if restore_failure.exists():
+        try:
+            detail = json.loads(restore_failure.read_text()).get("error", "unreadable restore failure")
+        except (OSError, ValueError, TypeError):
+            detail = "unreadable restore failure sentinel"
+        reason = ("refusing persistence after failed committed restore; "
+                  f"preserving cache only for artifact review ({detail})")
+        _warn_not_persisted(reason)
+        return {"status": "not_persisted", "reason": reason}
     # Capture BEFORE commit/pull/rebase. This identifies this persistence
     # invocation, not the revision used by every earlier pipeline subprocess.
     revision = _run(repo, "rev-parse", "HEAD")

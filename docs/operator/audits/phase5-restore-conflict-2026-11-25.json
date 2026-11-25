@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "incident": "failed_restore_cache_promotion",
+  "lane": "enh",
+  "run": {
+    "id": "45564741490",
+    "checkout_head": "38dc1f5de0e0bac2090d214b353511fe2e60cda2",
+    "restore_step": "Restore committed data (override stale cache)",
+    "restore_outcome": "failure",
+    "failure": "EvidenceMergeError: divergent enhancement financial histories: different open positions, freeze locks or cycle state; no matching committed supersession receipt"
+  },
+  "cache_provenance": {
+    "restored_cache": {
+      "id": "11077719667",
+      "key": "localdata-v2-45543755547",
+      "created_at": "2026-11-25T04:56:57.940909Z",
+      "last_accessed_at": "2026-11-25T07:00:46.554437Z"
+    },
+    "post_failure_cache": {
+      "id": "11081650058",
+      "key": "localdata-v2-45564741490",
+      "created_at": "2026-11-25T07:03:01.041823Z"
+    },
+    "cache_version": "32796527db00ba0c2c7e1ba02c911a1b250a74086f3d9500381d84105d40cc8b"
+  },
+  "financial_snapshots": {
+    "committed_before_run": {
+      "commit": "38dc1f5de0e0bac2090d214b353511fe2e60cda2",
+      "sha256": "91af5d1e960c213ea3b7c194b3de4b737953563061ba3e0d5f744439ece5e5e9",
+      "bank_pct": 25.396854,
+      "open_slips": 0
+    },
+    "rejected_cache": {
+      "sha256": "40bc945b1dfb8a44e3c56f53a897645bb1daa07f67b8068d12a6622f16cc968e",
+      "bank_pct": 24.110476,
+      "open_slips": 2,
+      "open_dates": [
+        "2026-11-21",
+        "2026-11-25"
+      ]
+    },
+    "erroneous_publication": {
+      "commit": "1d50d5659080c57e40edda015658bbb83b59b179",
+      "reason": "The workflow used always() for cache-save and persist after the restore failure. This commit is retained as evidence; it is not authority for the rejected financial state."
+    }
+  },
+  "resolution": {
+    "kind": "exact_committed_cache_supersession",
+    "retained_snapshot": "91af5d1e960c213ea3b7c194b3de4b737953563061ba3e0d5f744439ece5e5e9",
+    "rejected_snapshot": "40bc945b1dfb8a44e3c56f53a897645bb1daa07f67b8068d12a6622f16cc968e",
+    "basis": "The later state was present before the failed run completed, was explicitly rejected by the financial restore validator, and was only published by the failed run's always() persistence steps. The pre-run committed state is the settled ledger. This is not a settlement-step authorization.",
+    "selection_or_stake_change": false,
+    "frozen_card_change": false,
+    "settlement_change": false
+  },
+  "replay_parity": {
+    "run_step": {
+      "name": "Ticket decision replay parity (read-only, flag never gate)",
+      "api_conclusion": "success",
+      "started_at": "2026-11-25T07:04:43Z",
+      "completed_at": "2026-11-25T07:04:43Z",
+      "artifact": "Replay-Parity-45564741490",
+      "artifact_size_bytes": 2059
+    },
+    "reproduction": {
+      "command": "PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity --parity-window-days 7 --parity-reference 2026-11-25T07:04:43+00:00 --parity-time-budget 120",
+      "exit_code": 0,
+      "status": "PARTIAL",
+      "selected_receipts": 0,
+      "excluded_receipts": 36,
+      "excluded_receipt_conflicts": 10
+    },
+    "conclusion": "No replay-parity nonzero exit is reproduced from the committed 38dc1f5 evidence at the run reference time. The Actions artifact payload could not be retrieved in this environment because GitHub redirects artifact downloads to a blocked external blob host, so its exact JSON is not asserted. In all cases replay runs after cache/git/report publication and is configured continue-on-error; the confirmed job failure was restore step 7."
+  }
+}
