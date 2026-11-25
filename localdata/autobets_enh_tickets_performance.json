@@ -1,25 +1,21 @@
 {
-  "generated_at": "2026-11-25T00:42:18",
+  "generated_at": "2026-11-25T04:00:44",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 22.980451,
-  "multiple": 0.22980451,
+  "bank_pct": 24.110476,
+  "multiple": 0.24110475999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
   "bet_days": 37,
   "accas": {
-    "wins": 31,
+    "wins": 32,
     "losses": 41
   },
   "open_slips": [
     {
       "date": "2026-11-21",
       "staked_pct": 1.8118
-    },
-    {
-      "date": "2026-11-24",
-      "staked_pct": 1.5067
     }
   ],
   "events": [],
@@ -12375,8 +12371,8 @@
     },
     {
       "date": "2026-11-24",
-      "staked_pct": 3.0133,
-      "returned_pct": 6.1019,
+      "staked_pct": 4.52,
+      "returned_pct": 8.7386,
       "accas": [
         {
           "odds": 1.9,
@@ -13329,10 +13325,435 @@
               "price_kickoff": "2026-11-24T19:45:00+00:00"
             }
           ]
+        },
+        {
+          "odds": 1.75,
+          "won": true,
+          "stake_pct": 1.5067,
+          "returned_pct": 2.6367,
+          "legs": [
+            {
+              "match": "Slovan Bratislava vs Real Betis",
+              "pick": "under",
+              "odds": 1.4,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-23T22:36:10.895189+00:00",
+              "price_provenance": {
+                "away": "Betis",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-23T22:36:10.895189+00:00",
+                "data_dt": [
+                  24,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-24T07:00:00+00:00",
+                "decision_day": "2026-11-24",
+                "home": "Slovan Bratislava",
+                "kickoff_utc": "2026-11-24T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-24.json",
+                "ledger_sha256": "51e7911cedd013a351912076feee83f49e2d656998e35b23d9fef1fc71b29f8c",
+                "market": "ou_4.5",
+                "price": 1.4,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-21T23:29",
+                      "2026-11-21T23:29"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      3.0,
+                      1.4
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 18,
+                  "row_sha256": "46e6255d15823e5e2f85bbd5ed3c39153e0b89bc8dc04e5fad10380645f1062d"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-24T20:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Real Betis",
+                      "csv_data_row": 2868,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "b91c03bafa264c4949db884b452051b7b31cfb93a7e7ea5139bea47d0e7a6512",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Slovan Bratislava",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-24T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-23T22:17:31+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "36aab6c3e388ce7a6eff525c4464f11a0f8146d15fccc0a2e558d01ed130ff74",
+                      "schedule_row": {
+                        "away": "Real Betis",
+                        "captured_at": "2026-11-23T22:17:31+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-24",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Slovan Bratislava",
+                        "hs": "",
+                        "kickoff": "2026-11-24T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Champions League",
+                        "odd1": "11.0",
+                        "odd2": "1.25",
+                        "odd_gg": "1.7",
+                        "odd_ng": "2.05",
+                        "odd_o15": "1.1",
+                        "odd_o25": "1.36",
+                        "odd_o35": "1.9",
+                        "odd_u15": "7.0",
+                        "odd_u25": "3.2",
+                        "odd_u35": "1.9",
+                        "oddx": "6.0",
+                        "p1": "8.594931921331316",
+                        "p2": "75.642965204236",
+                        "p_gg": "54.666666666666664",
+                        "p_ng": "45.33333333333333",
+                        "p_o15": "86.41975308641976",
+                        "p_o25": "70.17543859649122",
+                        "p_o35": "50.0",
+                        "px": "15.76210287443268",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Real Betis",
+                      "csv_data_row": 11475,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Slovan Bratislava",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-24T20:00:00+00:00",
+                      "league": "World: UEFA Champions League",
+                      "observed_at_utc": "2026-11-23T22:16:49+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "74c8586ffb9bb50d72d836b91d6256d159a425626dde59ed3134472ffecc7075",
+                      "schedule_row": {
+                        "away": "Real Betis",
+                        "captured_at": "2026-11-23T22:16:49+00:00",
+                        "date": "2026-11-24",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Slovan Bratislava",
+                        "hs": "",
+                        "index": "-2.79",
+                        "kickoff": "2026-11-24T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "World: UEFA Champions League",
+                        "p1": "12.0",
+                        "p2": "69.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "19.0",
+                        "schedule_history": "[{\"away\": \"Real Betis\", \"captured_at\": \"2026-11-22T22:26:26+00:00\", \"date\": \"2026-11-24\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Slovan Bratislava\", \"kickoff\": \"2026-11-24T21:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "2"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Real Betis",
+                      "csv_data_row": 11475,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Slovan Bratislava",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-24T20:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-22T22:26:26+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "1032cf79d3cdb0b36bb480532c84b5771f42bc262fc2891d638ee57599d6e189",
+                      "schedule_row": {
+                        "away": "Real Betis",
+                        "captured_at": "2026-11-22T22:26:26+00:00",
+                        "date": "2026-11-24",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Slovan Bratislava",
+                        "kickoff": "2026-11-24T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-24",
+                "Slovan Bratislava",
+                "Real Betis"
+              ],
+              "prob": 0.7939,
+              "cohort_evidence": {
+                "rate": 0.7939,
+                "n": 131,
+                "contract_id": "pfc_36393ea9c9cad8508e33ea28",
+                "as_of_exclusive": "2026-11-24",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 104,
+                "cohort_lower_bound": 0.7167337384926469,
+                "price_context": {
+                  "contract_id": "pfc_36393ea9c9cad8508e33ea28",
+                  "selection": "away",
+                  "league": "Champions League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.4,
+                  "captured_at": "2026-11-23T22:36:10.895189+00:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
+                  "kickoff": "2026-11-24T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8329037703199483,
+              "ml_model_key": "abbb2d2f532b79316f303df19a27f48890445e3b6e5b8d8a40219c35a9dac2ac",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-24T20:00:00+00:00"
+            },
+            {
+              "match": "MIDDLESBROUGH vs SWANSEA",
+              "pick": "under",
+              "odds": 1.25,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-23T22:37:45.400125+00:00",
+              "price_provenance": {
+                "away": "Swansea",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-23T22:37:45.400125+00:00",
+                "data_dt": [
+                  24,
+                  11,
+                  2026,
+                  20,
+                  45
+                ],
+                "decision_cutoff_utc": "2026-11-24T07:00:00+00:00",
+                "decision_day": "2026-11-24",
+                "home": "Middlesbrough",
+                "kickoff_utc": "2026-11-24T19:45:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-24.json",
+                "ledger_sha256": "51e7911cedd013a351912076feee83f49e2d656998e35b23d9fef1fc71b29f8c",
+                "market": "ou_4.5",
+                "price": 1.25,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-23T07:01",
+                      "2026-11-23T07:01"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      4.0,
+                      1.25
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 16,
+                  "row_sha256": "f70734c2b0e09483fc18adf5b9ad78a0f8780a33db9530bc1b2dc084e0499468"
+                },
+                "raw_kickoff": "20:45",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-24T19:45:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Swansea",
+                      "csv_data_row": 11423,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Middlesbrough FC",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+                      "league": "England: Championship",
+                      "observed_at_utc": "2026-11-23T22:16:49+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "c5a33d73f673b2396cd72812bf4097a2fd6022488a752554f263b34a2cb7c025",
+                      "schedule_row": {
+                        "away": "Swansea",
+                        "captured_at": "2026-11-23T22:16:49+00:00",
+                        "date": "2026-11-24",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Middlesbrough FC",
+                        "hs": "",
+                        "index": "2.36",
+                        "kickoff": "2026-11-24T20:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "England: Championship",
+                        "p1": "65.0",
+                        "p2": "14.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "21.0",
+                        "schedule_history": "[{\"away\": \"Swansea\", \"captured_at\": \"2026-11-22T22:26:26+00:00\", \"date\": \"2026-11-24\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Middlesbrough FC\", \"kickoff\": \"2026-11-24T20:45:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Swansea",
+                      "csv_data_row": 11423,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "765d1410fc25c3ecb3dec82d489da7195dd7c84ffe0776c4cb49347dd920ed9c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Middlesbrough FC",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-22T22:26:26+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "4a05510625240b365a4024ae55f107690e68646d1712a5f9da6089e76a6b26b2",
+                      "schedule_row": {
+                        "away": "Swansea",
+                        "captured_at": "2026-11-22T22:26:26+00:00",
+                        "date": "2026-11-24",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Middlesbrough FC",
+                        "kickoff": "2026-11-24T20:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-24",
+                "MIDDLESBROUGH",
+                "SWANSEA"
+              ],
+              "prob": 0.7919,
+              "cohort_evidence": {
+                "rate": 0.7919,
+                "n": 567,
+                "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+                "as_of_exclusive": "2026-11-24",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 449,
+                "cohort_lower_bound": 0.756562915420993,
+                "price_context": {
+                  "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+                  "selection": "home",
+                  "league": "ENC",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.25,
+                  "captured_at": "2026-11-23T22:37:45.400125+00:00",
+                  "decision_at": "2026-11-24T09:21:44+02:00",
+                  "kickoff": "2026-11-24T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7894544993172031,
+              "ml_model_key": "ac4465b8a997b8b9ad77e75db775f9475392e2503e022414f48b1489db3e1d7c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "ENC",
+              "shadow": false,
+              "price_kickoff": "2026-11-24T19:45:00+00:00"
+            }
+          ]
         }
       ],
-      "bank_pct": 22.9805,
-      "close_pct": 22.9804
+      "bank_pct": 24.1105,
+      "close_pct": 24.1104
     }
   ]
 }
