@@ -1,5 +1,5 @@
 {
-  "attempted": 6,
+  "attempted": 10,
   "attempted_fixtures": [
     {
       "avg_p": 80.5,
@@ -26,6 +26,46 @@
       "away": "STURM GRAZ",
       "date": "2026-11-26",
       "home": "HOFFENHEIM",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 71.0,
+      "away": "JAGIELLONIA",
+      "date": "2026-11-26",
+      "home": "SUNDERLAND",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 69.5,
+      "away": "ARSENAL TULA",
+      "date": "2026-11-26",
+      "home": "URAL",
+      "league": "RU2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 62.0,
+      "away": "TWENTE",
+      "date": "2026-11-26",
+      "home": "FREIBURG",
+      "league": "ECO",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 62.0,
+      "away": "LEVSKI SOFIA",
+      "date": "2026-11-26",
+      "home": "MARSEILLE",
       "league": "EEL",
       "market": "1x2",
       "pick": "home",
@@ -63,33 +103,33 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 5,
+  "be_cached": 6,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 5,
+  "cache_only": 6,
   "candidate_fixtures": 27,
-  "captured_at": "2026-11-26T07:24:09.059643+00:00",
+  "captured_at": "2026-11-26T10:36:12.109216+00:00",
   "date": "2026-11-26",
-  "deferred_fixtures": 21,
+  "deferred_fixtures": 17,
   "errors": [],
-  "fixtures_with_rows": 5,
+  "fixtures_with_rows": 9,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 19,
   "match_detail": {
-    "bookmakers": 51,
+    "bookmakers": 100,
     "challenge_pages": 0,
-    "fixtures": 5,
-    "market_rows": 179,
-    "markets": 17,
-    "named_rows": 179,
+    "fixtures": 9,
+    "market_rows": 315,
+    "markets": 34,
+    "named_rows": 315,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 1,
+  "network_attempted": 4,
   "quoted_fixtures": [
     {
       "avg_p": 80.5,
@@ -106,6 +146,46 @@
       "away": "STURM GRAZ",
       "date": "2026-11-26",
       "home": "HOFFENHEIM",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 71.0,
+      "away": "JAGIELLONIA",
+      "date": "2026-11-26",
+      "home": "SUNDERLAND",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 69.5,
+      "away": "ARSENAL TULA",
+      "date": "2026-11-26",
+      "home": "URAL",
+      "league": "RU2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 62.0,
+      "away": "TWENTE",
+      "date": "2026-11-26",
+      "home": "FREIBURG",
+      "league": "ECO",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 62.0,
+      "away": "LEVSKI SOFIA",
+      "date": "2026-11-26",
+      "home": "MARSEILLE",
       "league": "EEL",
       "market": "1x2",
       "pick": "home",
@@ -142,8 +222,8 @@
       "w_score": 0.6557
     }
   ],
-  "requests": 7,
-  "rows": 15,
+  "requests": 30,
+  "rows": 27,
   "schema": 1,
   "status": "ok"
 }
