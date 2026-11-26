@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-25",
+ "generated_at": "2026-11-27",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -1257,10 +1257,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 23,
-   "inv_price_sum": 16.27656860311444,
+   "hits": 24,
+   "inv_price_sum": 17.039927381740394,
    "multi_n": 0,
-   "n": 30,
+   "n": 31,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -1291,9 +1291,10 @@
     "2026-11-18|El Salvador vs Saint Martin|away_under_15@v1",
     "2026-11-19|Gr\u00eamio vs Bahia|away_under_15@v1",
     "2026-11-19|Corinthians vs Botafogo|away_under_15@v1",
-    "2026-11-20|Orlando City SC vs FC Cincinnati|away_under_15@v1"
+    "2026-11-20|Orlando City SC vs FC Cincinnati|away_under_15@v1",
+    "2026-11-26|Atletico Nacional vs Independiente Medellin|away_under_15@v1"
    ],
-   "profit": 25.364,
+   "profit": 25.674,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -2104,11 +2105,40 @@
      "rule": "pfc_642ac9053223500b638e3451",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Independiente Medellin",
+     "away_key": "independientemedellin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.772,
+     "date": "2026-11-26",
+     "hit": true,
+     "home": "Atletico Nacional",
+     "home_key": "atleticonacional",
+     "league": "Colombia Primera A",
+     "match": "Atletico Nacional vs Independiente Medellin",
+     "multi_source": false,
+     "price": 1.31,
+     "price_context": {
+      "book": "betano.de",
+      "captured_at": "2026-11-25T22:28:26.332206+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-26T00:32:00+02:00",
+      "kickoff": "2026-11-26T01:30:00+00:00",
+      "league": "Colombia Primera A",
+      "price": 1.31,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-26T22:34:01.917364+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
    "status": "PAPER",
-   "status_reason": "n=30 wilsonLB95=0.5907 >= mean breakeven 0.5426 but multi-source verification 0/8 not met",
+   "status_reason": "n=31 wilsonLB95=0.6019 >= mean breakeven 0.5497 but multi-source verification 0/8 not met",
    "status_since": "2026-10-16"
   },
   "away_under_25@v1": {
@@ -3953,10 +3983,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 16,
-   "inv_price_sum": 16.968324352548144,
+   "hits": 17,
+   "inv_price_sum": 17.440022465755693,
    "multi_n": 0,
-   "n": 28,
+   "n": 29,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3985,9 +4015,10 @@
     "2026-11-17|Martinique vs Aruba|home_over_15@v1",
     "2026-11-18|El Salvador vs Saint Martin|home_over_15@v1",
     "2026-11-19|Corinthians vs Botafogo|home_over_15@v1",
-    "2026-11-20|Orlando City SC vs FC Cincinnati|home_over_15@v1"
+    "2026-11-20|Orlando City SC vs FC Cincinnati|home_over_15@v1",
+    "2026-11-26|Atletico Nacional vs Independiente Medellin|home_over_15@v1"
    ],
-   "profit": -1.651,
+   "profit": -0.531,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -4800,6 +4831,35 @@
      "rule": "pfc_642ac9053223500b638e3451",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Independiente Medellin",
+     "away_key": "independientemedellin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6387,
+     "date": "2026-11-26",
+     "hit": true,
+     "home": "Atletico Nacional",
+     "home_key": "atleticonacional",
+     "league": "Colombia Primera A",
+     "match": "Atletico Nacional vs Independiente Medellin",
+     "multi_source": false,
+     "price": 2.12,
+     "price_context": {
+      "book": "netbet",
+      "captured_at": "2026-11-25T22:28:26.332206+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-26T00:32:00+02:00",
+      "kickoff": "2026-11-26T01:30:00+00:00",
+      "league": "Colombia Primera A",
+      "price": 2.12,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-26T22:34:01.935012+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -5323,9 +5383,9 @@
   },
   "home_under_25@v1": {
    "hits": 24,
-   "inv_price_sum": 23.572305202554166,
+   "inv_price_sum": 24.359706777357314,
    "multi_n": 0,
-   "n": 36,
+   "n": 37,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -5402,9 +5462,10 @@
     "2026-11-17|RUSSIA vs VENEZUELA|home_under_25@v1",
     "2026-11-19|Gr\u00eamio vs Bahia|home_under_25@v1",
     "2026-11-19|Corinthians vs Botafogo|home_under_25@v1",
-    "2026-11-20|Orlando City SC vs FC Cincinnati|home_under_25@v1"
+    "2026-11-20|Orlando City SC vs FC Cincinnati|home_under_25@v1",
+    "2026-11-26|Atletico Nacional vs Independiente Medellin|home_under_25@v1"
    ],
-   "profit": -0.138,
+   "profit": -1.138,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -6435,6 +6496,35 @@
      },
      "recorded_at": "2026-11-20T23:12:26.069238+00:00",
      "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Independiente Medellin",
+     "away_key": "independientemedellin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6279,
+     "date": "2026-11-26",
+     "hit": false,
+     "home": "Atletico Nacional",
+     "home_key": "atleticonacional",
+     "league": "Colombia Primera A",
+     "match": "Atletico Nacional vs Independiente Medellin",
+     "multi_source": false,
+     "price": 1.27,
+     "price_context": {
+      "book": "betano",
+      "captured_at": "2026-11-25T22:28:26.332206+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-26T00:32:00+02:00",
+      "kickoff": "2026-11-26T01:30:00+00:00",
+      "league": "Colombia Primera A",
+      "price": 1.27,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-26T22:34:01.929473+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "oddspapi",
      "stated": null
     }
@@ -8026,9 +8116,9 @@
   "match_over_25@v1": {
    "hits": 374,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 374.7380101838121,
+   "inv_price_sum": 375.4522958980978,
    "multi_n": 107,
-   "n": 579,
+   "n": 580,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -8852,9 +8942,10 @@
     "2026-11-24|Slovan Bratislava vs Real Betis|match_over_25@v1",
     "2026-11-24|PORT VALE vs NORTHAMPTON|match_over_25@v1",
     "2026-11-24|HIBERNIAN vs FC DUNDEE|match_over_25@v1",
-    "2026-11-24|RANGERS FC vs ABERDEEN|match_over_25@v1"
+    "2026-11-24|RANGERS FC vs ABERDEEN|match_over_25@v1",
+    "2026-11-26|LYON vs LILLESTROM|match_over_25@v1"
    ],
-   "profit": -1.004,
+   "profit": -2.004,
    "records": [
     {
      "away": "Spartak Varna",
@@ -18574,6 +18665,35 @@
      "rule": "pfc_68b634f28f5ef3e8beb682ba",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "LILLESTROM",
+     "away_key": "lillestrom",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.6147,
+     "date": "2026-11-26",
+     "hit": false,
+     "home": "LYON",
+     "home_key": "lyon",
+     "league": "EEL",
+     "match": "LYON vs LILLESTROM",
+     "multi_source": false,
+     "price": 1.4,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-26T04:37:22.230075+00:00",
+      "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+      "decision_at": "2026-11-26T18:24:20+02:00",
+      "kickoff": "2026-11-26T20:00:00+00:00",
+      "league": "EEL",
+      "price": 1.4,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-26T22:34:01.942814+00:00",
+     "rule": "pfc_68b634f28f5ef3e8beb682ba",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -19644,10 +19764,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 17,
-   "inv_price_sum": 20.178021335685862,
+   "hits": 18,
+   "inv_price_sum": 21.47431763198216,
    "multi_n": 0,
-   "n": 34,
+   "n": 36,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -19682,9 +19802,11 @@
     "2026-11-24|PORT VALE vs NORTHAMPTON|match_under_35@v1",
     "2026-11-24|HIBERNIAN vs FC DUNDEE|match_under_35@v1",
     "2026-11-24|CARLISLE vs TAMWORTH|match_under_35@v1",
-    "2026-11-24|RANGERS FC vs ABERDEEN|match_under_35@v1"
+    "2026-11-24|RANGERS FC vs ABERDEEN|match_under_35@v1",
+    "2026-11-26|Atletico Nacional vs Independiente Medellin|match_under_35@v1",
+    "2026-11-26|LYON vs LILLESTROM|match_under_35@v1"
    ],
-   "profit": -3.091,
+   "profit": -3.291,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -20671,6 +20793,64 @@
      "rule": "pfc_68b634f28f5ef3e8beb682ba",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "Independiente Medellin",
+     "away_key": "independientemedellin",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6175,
+     "date": "2026-11-26",
+     "hit": false,
+     "home": "Atletico Nacional",
+     "home_key": "atleticonacional",
+     "league": "Colombia Primera A",
+     "match": "Atletico Nacional vs Independiente Medellin",
+     "multi_source": false,
+     "price": 1.35,
+     "price_context": {
+      "book": "betano.de",
+      "captured_at": "2026-11-25T22:28:26.332206+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-26T00:32:00+02:00",
+      "kickoff": "2026-11-26T01:30:00+00:00",
+      "league": "Colombia Primera A",
+      "price": 1.35,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-26T22:34:01.923503+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "LILLESTROM",
+     "away_key": "lillestrom",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.6301,
+     "date": "2026-11-26",
+     "hit": true,
+     "home": "LYON",
+     "home_key": "lyon",
+     "league": "EEL",
+     "match": "LYON vs LILLESTROM",
+     "multi_source": false,
+     "price": 1.8,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-26T04:37:22.230075+00:00",
+      "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+      "decision_at": "2026-11-26T18:24:20+02:00",
+      "kickoff": "2026-11-26T20:00:00+00:00",
+      "league": "EEL",
+      "price": 1.8,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-26T22:34:01.954042+00:00",
+     "rule": "pfc_68b634f28f5ef3e8beb682ba",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -20678,10 +20858,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 39,
-   "inv_price_sum": 28.59535283032067,
+   "hits": 40,
+   "inv_price_sum": 29.347232529568792,
    "multi_n": 0,
-   "n": 45,
+   "n": 46,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -20727,9 +20907,10 @@
     "2026-11-24|RB LEIPZIG vs LENS|match_under_45@v1",
     "2026-11-24|MIDDLESBROUGH vs SWANSEA|match_under_45@v1",
     "2026-11-24|Slovan Bratislava vs Real Betis|match_under_45@v1",
-    "2026-11-24|RANGERS FC vs ABERDEEN|match_under_45@v1"
+    "2026-11-24|RANGERS FC vs ABERDEEN|match_under_45@v1",
+    "2026-11-26|LYON vs LILLESTROM|match_under_45@v1"
    ],
-   "profit": 17.593,
+   "profit": 17.923,
    "records": [
     {
      "away": "Atlante",
@@ -21993,10 +22174,39 @@
      "rule": "pfc_68b634f28f5ef3e8beb682ba",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "LILLESTROM",
+     "away_key": "lillestrom",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.7945,
+     "date": "2026-11-26",
+     "hit": true,
+     "home": "LYON",
+     "home_key": "lyon",
+     "league": "EEL",
+     "match": "LYON vs LILLESTROM",
+     "multi_source": false,
+     "price": 1.33,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-26T04:37:22.230075+00:00",
+      "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+      "decision_at": "2026-11-26T18:24:20+02:00",
+      "kickoff": "2026-11-26T20:00:00+00:00",
+      "league": "EEL",
+      "price": 1.33,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-26T22:34:01.948455+00:00",
+     "rule": "pfc_68b634f28f5ef3e8beb682ba",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "status": "PAPER",
-   "status_reason": "n=45 wilsonLB95=0.7382 >= mean breakeven 0.6355 but multi-source verification 0/12 not met",
+   "status_reason": "n=46 wilsonLB95=0.7433 >= mean breakeven 0.6380 but multi-source verification 0/12 not met",
    "status_since": "2026-10-22"
   }
  },
