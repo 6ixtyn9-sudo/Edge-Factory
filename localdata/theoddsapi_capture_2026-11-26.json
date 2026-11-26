@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 26,
-  "captured_at": "2026-11-26T16:29:43+00:00",
+  "captured_at": "2026-11-26T19:38:22+00:00",
   "date": "2026-11-26",
   "due_reasons": {},
   "errors": [],
@@ -22,8 +22,8 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
-    "retry_cooldown": 25
+    "kickoff_already_passed": 2,
+    "retry_cooldown": 24
   },
   "skipped": [
     "Brighton & Hove Albion|Universitatea Craiova (retry cooldown (6h after failed attempt))",
@@ -49,7 +49,7 @@
     "MARSEILLE|LEVSKI SOFIA (retry cooldown (6h after failed attempt))",
     "HEARTS|MONACO (retry cooldown (6h after failed attempt))",
     "CRYSTAL PALACE|REAL SOCIEDAD (retry cooldown (6h after failed attempt))",
-    "FC Nordsjaelland|Panathinaikos (retry cooldown (6h after failed attempt))",
+    "FC Nordsjaelland|Panathinaikos (kickoff already passed)",
     "CSKA SOFIA|TRABZONSPOR (retry cooldown (6h after failed attempt))",
     "CELTA VIGO|BOURNEMOUTH (retry cooldown (6h after failed attempt))"
   ],

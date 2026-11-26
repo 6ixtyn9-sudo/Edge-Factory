@@ -42,19 +42,18 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 21,
-      "be_raw": 39,
-      "be_usable": 36,
+      "be_matched": 0,
+      "be_raw": 42,
+      "be_usable": 42,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 10,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 6,
-        "no_pick_for_fixture": 20
+        "fixture_key_miss": 42
       },
       "reason": null,
       "status": "cache_only"
@@ -177,12 +176,12 @@
       "coherence_withheld_fixtures": 9,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 22,
+      "join_matched_rows": 1,
       "join_miss_counts": {
-        "fixture_key_miss": 13654,
-        "no_pick_for_fixture": 286
+        "fixture_key_miss": 13943,
+        "no_pick_for_fixture": 18
       },
-      "pa_matched": 37,
+      "pa_matched": 5,
       "pa_raw": 13962,
       "pa_scored": 13962,
       "reason": null,
@@ -267,7 +266,7 @@
           "unknown_selection:tie_or_atletico_bucaramanga": 1,
           "unsupported_market:asian_handicap": 4
         },
-        "card_fixture_count": 28,
+        "card_fixture_count": 25,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 52,
