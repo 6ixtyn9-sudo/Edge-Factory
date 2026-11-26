@@ -1,21 +1,11 @@
 {
-  "attempted": 5,
+  "attempted": 6,
   "attempted_fixtures": [
     {
       "avg_p": 80.5,
       "away": "OMONIA",
       "date": "2026-11-26",
       "home": "JUVENTUS",
-      "league": "EEL",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 76.5,
-      "away": "LILLESTROM",
-      "date": "2026-11-26",
-      "home": "LYON",
       "league": "EEL",
       "market": "1x2",
       "pick": "home",
@@ -30,6 +20,26 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.6557
+    },
+    {
+      "avg_p": 72.0,
+      "away": "STURM GRAZ",
+      "date": "2026-11-26",
+      "home": "HOFFENHEIM",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 76.5,
+      "away": "LILLESTROM",
+      "date": "2026-11-26",
+      "home": "LYON",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
     },
     {
       "avg_p": 69.95726008300859,
@@ -53,26 +63,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 4,
+  "be_cached": 5,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 4,
+  "cache_only": 5,
   "candidate_fixtures": 27,
-  "captured_at": "2026-11-26T04:36:23.625046+00:00",
+  "captured_at": "2026-11-26T07:24:09.059643+00:00",
   "date": "2026-11-26",
-  "deferred_fixtures": 22,
+  "deferred_fixtures": 21,
   "errors": [],
-  "fixtures_with_rows": 4,
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 2,
   "match_detail": {
-    "bookmakers": 45,
+    "bookmakers": 51,
     "challenge_pages": 0,
-    "fixtures": 4,
-    "market_rows": 159,
-    "markets": 15,
-    "named_rows": 159,
+    "fixtures": 5,
+    "market_rows": 179,
+    "markets": 17,
+    "named_rows": 179,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -86,6 +96,16 @@
       "away": "OMONIA",
       "date": "2026-11-26",
       "home": "JUVENTUS",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 72.0,
+      "away": "STURM GRAZ",
+      "date": "2026-11-26",
+      "home": "HOFFENHEIM",
       "league": "EEL",
       "market": "1x2",
       "pick": "home",
@@ -122,8 +142,8 @@
       "w_score": 0.6557
     }
   ],
-  "requests": 8,
-  "rows": 12,
+  "requests": 7,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }
