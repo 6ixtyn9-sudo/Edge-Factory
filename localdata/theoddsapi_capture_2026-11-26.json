@@ -1,140 +1,11 @@
 {
   "added": 0,
-  "attempted": 18,
-  "attempted_fixtures": [
-    {
-      "away": "Universitatea Craiova",
-      "date": "2026-11-26",
-      "home": "Brighton & Hove Albion",
-      "kickoff": "2026-11-26T17:45:00Z",
-      "league": "Europa Conference League"
-    },
-    {
-      "away": "KuPS",
-      "date": "2026-11-26",
-      "home": "Sporting Braga",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Europa Conference League"
-    },
-    {
-      "away": "Ararat-Armenia",
-      "date": "2026-11-26",
-      "home": "Salzburg",
-      "kickoff": "2026-11-26T17:45:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Omonia Nicosia",
-      "date": "2026-11-26",
-      "home": "Juventus",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Lillestr\u00f8m",
-      "date": "2026-11-26",
-      "home": "Olympique Lyonnais",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Hapoel Be'er Sheva",
-      "date": "2026-11-26",
-      "home": "Be\u015fikta\u015f",
-      "kickoff": "2026-11-26T17:45:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "FC K\u00f8benhavn",
-      "date": "2026-11-26",
-      "home": "Inter Club d'Escaldes",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Conference League"
-    },
-    {
-      "away": "Lech Pozna\u0144",
-      "date": "2026-11-26",
-      "home": "Union Saint-Gilloise",
-      "kickoff": "2026-11-26T17:45:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Sturm Graz",
-      "date": "2026-11-26",
-      "home": "TSG Hoffenheim",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Independiente Medell\u00edn",
-      "date": "2026-11-26",
-      "home": "Atl\u00e9tico Nacional",
-      "kickoff": "2026-11-26T01:30:00Z",
-      "league": "Liga BetPlay"
-    },
-    {
-      "away": "REMO",
-      "date": "2026-11-26",
-      "home": "SAO PAULO",
-      "kickoff": "23:00",
-      "league": "BR1"
-    },
-    {
-      "away": "Atalanta",
-      "date": "2026-11-26",
-      "home": "Borac Banja Luka",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Europa Conference League"
-    },
-    {
-      "away": "Atalanta",
-      "date": "2026-11-26",
-      "home": "FK Borac Banja Luka",
-      "kickoff": "2026-11-26T20:00:00Z",
-      "league": "Conference League"
-    },
-    {
-      "away": "TWENTE",
-      "date": "2026-11-26",
-      "home": "FREIBURG",
-      "kickoff": "20:00",
-      "league": "ECO"
-    },
-    {
-      "away": "MONACO",
-      "date": "2026-11-26",
-      "home": "HEARTS",
-      "kickoff": "17:45",
-      "league": "ECO"
-    },
-    {
-      "away": "REAL SOCIEDAD",
-      "date": "2026-11-26",
-      "home": "CRYSTAL PALACE",
-      "kickoff": "20:00",
-      "league": "EEL"
-    },
-    {
-      "away": "Panathinaikos",
-      "date": "2026-11-26",
-      "home": "FC Nordsjaelland",
-      "kickoff": "26-11, 20:00",
-      "league": "World UEFA Europa Conference League"
-    },
-    {
-      "away": "TRABZONSPOR",
-      "date": "2026-11-26",
-      "home": "CSKA SOFIA",
-      "kickoff": "20:00",
-      "league": "ECO"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 26,
-  "captured_at": "2026-11-26T10:48:36+00:00",
+  "captured_at": "2026-11-26T13:28:17+00:00",
   "date": "2026-11-26",
-  "due_reasons": {
-    "first_at": 18
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -152,37 +23,37 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "retry_cooldown": 7
+    "retry_cooldown": 25
   },
   "skipped": [
+    "Brighton & Hove Albion|Universitatea Craiova (retry cooldown (6h after failed attempt))",
+    "Sporting Braga|KuPS (retry cooldown (6h after failed attempt))",
+    "Salzburg|Ararat-Armenia (retry cooldown (6h after failed attempt))",
+    "Juventus|Omonia Nicosia (retry cooldown (6h after failed attempt))",
     "JUVENTUS|OMONIA (retry cooldown (6h after failed attempt))",
+    "Olympique Lyonnais|Lillestr\u00f8m (retry cooldown (6h after failed attempt))",
+    "Be\u015fikta\u015f|Hapoel Be'er Sheva (retry cooldown (6h after failed attempt))",
     "LYON|LILLESTROM (retry cooldown (6h after failed attempt))",
+    "Inter Club d'Escaldes|FC K\u00f8benhavn (retry cooldown (6h after failed attempt))",
     "HOFFENHEIM|STURM GRAZ (retry cooldown (6h after failed attempt))",
     "SUNDERLAND|JAGIELLONIA (retry cooldown (6h after failed attempt))",
+    "Union Saint-Gilloise|Lech Pozna\u0144 (retry cooldown (6h after failed attempt))",
+    "TSG Hoffenheim|Sturm Graz (retry cooldown (6h after failed attempt))",
+    "Atl\u00e9tico Nacional|Independiente Medell\u00edn (retry cooldown (6h after failed attempt))",
+    "SAO PAULO|REMO (retry cooldown (6h after failed attempt))",
     "URAL|ARSENAL TULA (retry cooldown (6h after failed attempt))",
     "Atletico Nacional|Independiente Medellin (kickoff already passed)",
+    "Borac Banja Luka|Atalanta (retry cooldown (6h after failed attempt))",
+    "FK Borac Banja Luka|Atalanta (retry cooldown (6h after failed attempt))",
+    "FREIBURG|TWENTE (retry cooldown (6h after failed attempt))",
     "MARSEILLE|LEVSKI SOFIA (retry cooldown (6h after failed attempt))",
+    "HEARTS|MONACO (retry cooldown (6h after failed attempt))",
+    "CRYSTAL PALACE|REAL SOCIEDAD (retry cooldown (6h after failed attempt))",
+    "FC Nordsjaelland|Panathinaikos (retry cooldown (6h after failed attempt))",
+    "CSKA SOFIA|TRABZONSPOR (retry cooldown (6h after failed attempt))",
     "CELTA VIGO|BOURNEMOUTH (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Atl\u00e9tico Nacional vs Independiente Medell\u00edn (league not covered: Liga BetPlay)",
-    "FREIBURG vs TWENTE (league not covered: ECO)",
-    "HEARTS vs MONACO (league not covered: ECO)",
-    "CRYSTAL PALACE vs REAL SOCIEDAD (league not covered: EEL)",
-    "CSKA SOFIA vs TRABZONSPOR (league not covered: ECO)",
-    "Brighton & Hove Albion vs Universitatea Craiova (keys exhausted)",
-    "Sporting Braga vs KuPS (keys exhausted)",
-    "Inter Club d'Escaldes vs FC K\u00f8benhavn (keys exhausted)",
-    "Borac Banja Luka vs Atalanta (keys exhausted)",
-    "FK Borac Banja Luka vs Atalanta (keys exhausted)",
-    "FC Nordsjaelland vs Panathinaikos (keys exhausted)"
-  ],
-  "unmatched_reasons": {
-    "keys exhausted": 6,
-    "league not covered: ECO": 3,
-    "league not covered: EEL": 1,
-    "league not covered: Liga BetPlay": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

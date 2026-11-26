@@ -1,5 +1,5 @@
 {
-  "attempted": 10,
+  "attempted": 9,
   "attempted_fixtures": [
     {
       "avg_p": 80.5,
@@ -32,26 +32,6 @@
       "w_score": 0.584
     },
     {
-      "avg_p": 71.0,
-      "away": "JAGIELLONIA",
-      "date": "2026-11-26",
-      "home": "SUNDERLAND",
-      "league": "EEL",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 69.5,
-      "away": "ARSENAL TULA",
-      "date": "2026-11-26",
-      "home": "URAL",
-      "league": "RU2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
       "avg_p": 62.0,
       "away": "TWENTE",
       "date": "2026-11-26",
@@ -70,6 +50,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
+    },
+    {
+      "avg_p": 58.652306638008916,
+      "away": "MONACO",
+      "date": "2026-11-26",
+      "home": "HEARTS",
+      "league": "ECO",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5917
     },
     {
       "avg_p": 76.5,
@@ -103,19 +93,21 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 6,
+  "be_cached": 8,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 6,
-  "candidate_fixtures": 27,
-  "captured_at": "2026-11-26T10:36:12.109216+00:00",
+  "cache_only": 8,
+  "candidate_fixtures": 24,
+  "captured_at": "2026-11-26T13:21:46.972175+00:00",
   "date": "2026-11-26",
-  "deferred_fixtures": 17,
-  "errors": [],
-  "fixtures_with_rows": 9,
+  "deferred_fixtures": 15,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
+  "fixtures_with_rows": 7,
   "market_budget_stop": false,
-  "market_requests": 19,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 100,
     "challenge_pages": 0,
@@ -129,7 +121,7 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 4,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 80.5,
@@ -147,26 +139,6 @@
       "date": "2026-11-26",
       "home": "HOFFENHEIM",
       "league": "EEL",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 71.0,
-      "away": "JAGIELLONIA",
-      "date": "2026-11-26",
-      "home": "SUNDERLAND",
-      "league": "EEL",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 69.5,
-      "away": "ARSENAL TULA",
-      "date": "2026-11-26",
-      "home": "URAL",
-      "league": "RU2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
@@ -222,8 +194,8 @@
       "w_score": 0.6557
     }
   ],
-  "requests": 30,
-  "rows": 27,
+  "requests": 3,
+  "rows": 21,
   "schema": 1,
   "status": "ok"
 }
