@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 335.4965440000001,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-26",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "HOFFENHEIM vs STURM GRAZ",
+              "pick": "HOME",
+              "prob": 0.72,
+              "odds": 1.339,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-26",
+                "HOFFENHEIM",
+                "STURM GRAZ"
+              ]
+            },
+            {
+              "match": "Borac Banja Luka vs Atalanta",
+              "pick": "AWAY",
+              "prob": 0.6505725740775543,
+              "odds": 1.42,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-26",
+                "Borac Banja Luka",
+                "Atalanta"
+              ]
+            }
+          ],
+          "odds": 1.9,
+          "stake_pct": 41.9371
+        },
+        {
+          "legs": [
+            {
+              "match": "Union Saint-Gilloise vs Lech Pozna\u0144",
+              "pick": "HOME",
+              "prob": 0.7097445600756859,
+              "odds": 1.3289,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-26",
+                "Union Saint-Gilloise",
+                "Lech Pozna\u0144"
+              ]
+            },
+            {
+              "match": "SAO PAULO vs REMO",
+              "pick": "HOME",
+              "prob": 0.6995726008300859,
+              "odds": 1.3597,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-26",
+                "SAO PAULO",
+                "REMO"
+              ]
+            }
+          ],
+          "odds": 1.81,
+          "stake_pct": 41.937
+        }
+      ],
+      "staked_pct": 83.8741
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

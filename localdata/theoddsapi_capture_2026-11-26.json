@@ -1,20 +1,27 @@
 {
   "added": 0,
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "away": "JAGIELLONIA",
+      "away": "FC K\u00f8benhavn",
       "date": "2026-11-26",
-      "home": "SUNDERLAND",
-      "kickoff": "20:00",
-      "league": "EEL"
+      "home": "Inter Club d'Escaldes",
+      "kickoff": "2026-11-26T20:00:00Z",
+      "league": "Conference League"
+    },
+    {
+      "away": "REMO",
+      "date": "2026-11-26",
+      "home": "SAO PAULO",
+      "kickoff": "23:00",
+      "league": "BR1"
     }
   ],
   "candidate_fixtures": 26,
-  "captured_at": "2026-11-26T01:46:54+00:00",
+  "captured_at": "2026-11-26T04:47:13+00:00",
   "date": "2026-11-26",
   "due_reasons": {
-    "first_at": 1
+    "first_at": 2
   },
   "errors": [],
   "fixtures_with_rows": 0,
@@ -33,7 +40,7 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "retry_cooldown": 24
+    "retry_cooldown": 23
   },
   "skipped": [
     "Brighton & Hove Albion|Universitatea Craiova (retry cooldown (6h after failed attempt))",
@@ -44,12 +51,11 @@
     "Olympique Lyonnais|Lillestr\u00f8m (retry cooldown (6h after failed attempt))",
     "Be\u015fikta\u015f|Hapoel Be'er Sheva (retry cooldown (6h after failed attempt))",
     "LYON|LILLESTROM (retry cooldown (6h after failed attempt))",
-    "Inter Club d'Escaldes|FC K\u00f8benhavn (retry cooldown (6h after failed attempt))",
     "HOFFENHEIM|STURM GRAZ (retry cooldown (6h after failed attempt))",
+    "SUNDERLAND|JAGIELLONIA (retry cooldown (6h after failed attempt))",
     "Union Saint-Gilloise|Lech Pozna\u0144 (retry cooldown (6h after failed attempt))",
     "TSG Hoffenheim|Sturm Graz (retry cooldown (6h after failed attempt))",
     "Atl\u00e9tico Nacional|Independiente Medell\u00edn (retry cooldown (6h after failed attempt))",
-    "SAO PAULO|REMO (retry cooldown (6h after failed attempt))",
     "URAL|ARSENAL TULA (retry cooldown (6h after failed attempt))",
     "Atletico Nacional|Independiente Medellin (kickoff already passed)",
     "Borac Banja Luka|Atalanta (retry cooldown (6h after failed attempt))",
@@ -65,9 +71,9 @@
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "SUNDERLAND vs JAGIELLONIA (league not covered: EEL)"
+    "Inter Club d'Escaldes vs FC K\u00f8benhavn (keys exhausted)"
   ],
   "unmatched_reasons": {
-    "league not covered: EEL": 1
+    "keys exhausted": 1
   }
 }
