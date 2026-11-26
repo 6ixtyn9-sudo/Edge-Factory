@@ -2,6 +2,16 @@
   "attempted": 4,
   "attempted_fixtures": [
     {
+      "avg_p": 80.5,
+      "away": "OMONIA",
+      "date": "2026-11-26",
+      "home": "JUVENTUS",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
       "avg_p": 74.73981125589825,
       "away": "FC K\u00f8benhavn",
       "date": "2026-11-26",
@@ -22,16 +32,6 @@
       "w_score": 0.5917
     },
     {
-      "avg_p": 67.0,
-      "away": "Independiente Medellin",
-      "date": "2026-11-26",
-      "home": "Atletico Nacional",
-      "league": "Colombia Primera A",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 64.1239240744221,
       "away": "Atalanta",
       "date": "2026-11-26",
@@ -43,34 +43,44 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 22,
-  "captured_at": "2026-11-25T22:30:27.584887+00:00",
+  "cache_only": 3,
+  "candidate_fixtures": 27,
+  "captured_at": "2026-11-26T01:36:03.119936+00:00",
   "date": "2026-11-26",
-  "deferred_fixtures": 18,
+  "deferred_fixtures": 23,
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 8,
+  "market_requests": 3,
   "match_detail": {
-    "bookmakers": 27,
+    "bookmakers": 36,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 84,
-    "markets": 9,
-    "named_rows": 84,
+    "fixtures": 3,
+    "market_rows": 122,
+    "markets": 12,
+    "named_rows": 122,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 4,
+  "network_attempted": 1,
   "quoted_fixtures": [
+    {
+      "avg_p": 80.5,
+      "away": "OMONIA",
+      "date": "2026-11-26",
+      "home": "JUVENTUS",
+      "league": "EEL",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
     {
       "avg_p": 69.95726008300859,
       "away": "REMO",
@@ -92,8 +102,8 @@
       "w_score": 0.6557
     }
   ],
-  "requests": 16,
-  "rows": 6,
+  "requests": 8,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }

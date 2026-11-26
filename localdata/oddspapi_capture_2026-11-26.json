@@ -1,53 +1,7 @@
 {
-  "added": 43240,
-  "attempted": 9,
-  "attempted_fixtures": [
-    {
-      "away": "Independiente Medellin",
-      "fixture_id": "id1002707076880488",
-      "home": "Atletico Nacional"
-    },
-    {
-      "away": "Independiente Rivadavia",
-      "fixture_id": "id1000015576711706",
-      "home": "Boca Juniors"
-    },
-    {
-      "away": "CSD Independiente del Valle",
-      "fixture_id": "id1000024076966928",
-      "home": "Barcelona SC"
-    },
-    {
-      "away": "CD Walter Ferretti",
-      "fixture_id": "id1001924277028608",
-      "home": "Managua FC"
-    },
-    {
-      "away": "Rancho Santana FC",
-      "fixture_id": "id1001924277028610",
-      "home": "Real Esteli FC"
-    },
-    {
-      "away": "Chorrillo FC",
-      "fixture_id": "id1001949076959304",
-      "home": "Udelas FC"
-    },
-    {
-      "away": "CD FAS Santa Ana",
-      "fixture_id": "id1002708877113824",
-      "home": "CD Platense Municipal Zacatecoluca"
-    },
-    {
-      "away": "Atlas FC",
-      "fixture_id": "id1002746477108994",
-      "home": "Deportivo Toluca FC"
-    },
-    {
-      "away": "CD Aguila San Miguel",
-      "fixture_id": "id1002708877113822",
-      "home": "Inter Santa Tecla"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-26",
     "keys": 3,
@@ -56,8 +10,8 @@
     "remaining_today": 3,
     "spent_today": 22
   },
-  "budget_deferred": 2,
-  "captured_at": "2026-11-25T22:30:27+00:00",
+  "budget_deferred": 3,
+  "captured_at": "2026-11-26T01:36:03+00:00",
   "date": "2026-11-26",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
@@ -67,176 +21,24 @@
   "future_slate_fixtures": 4,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 694,
-  "markets": {
-    "1x2": 4217,
-    "btts": 2356,
-    "dc": 3764,
-    "dnb": 1819,
-    "ou_0.5": 1307,
-    "ou_0.75": 148,
-    "ou_1": 284,
-    "ou_1.25": 210,
-    "ou_1.5": 2027,
-    "ou_1.75": 532,
-    "ou_2": 830,
-    "ou_2.25": 810,
-    "ou_2.5": 2448,
-    "ou_2.75": 1006,
-    "ou_3": 1086,
-    "ou_3.25": 666,
-    "ou_3.5": 2353,
-    "ou_3.75": 410,
-    "ou_4": 528,
-    "ou_4.25": 224,
-    "ou_4.5": 2005,
-    "ou_4.75": 124,
-    "ou_5": 313,
-    "ou_5.25": 104,
-    "ou_5.5": 1118,
-    "ou_5.75": 72,
-    "ou_6": 78,
-    "ou_6.25": 72,
-    "ou_6.5": 410,
-    "ou_6.75": 44,
-    "ou_7": 44,
-    "ou_7.25": 44,
-    "ou_7.5": 117,
-    "ou_7.75": 36,
-    "ou_8": 36,
-    "ou_8.25": 36,
-    "ou_8.5": 77,
-    "tt_away_0.5": 1556,
-    "tt_away_0.75": 88,
-    "tt_away_1": 172,
-    "tt_away_1.25": 82,
-    "tt_away_1.5": 1570,
-    "tt_away_1.75": 52,
-    "tt_away_2": 87,
-    "tt_away_2.25": 20,
-    "tt_away_2.5": 1066,
-    "tt_away_3": 3,
-    "tt_away_3.5": 275,
-    "tt_away_4": 1,
-    "tt_away_4.5": 37,
-    "tt_away_5": 1,
-    "tt_away_5.5": 3,
-    "tt_home_0.5": 1390,
-    "tt_home_0.75": 44,
-    "tt_home_1": 144,
-    "tt_home_1.25": 94,
-    "tt_home_1.5": 1606,
-    "tt_home_1.75": 60,
-    "tt_home_2": 126,
-    "tt_home_2.25": 42,
-    "tt_home_2.5": 1396,
-    "tt_home_2.75": 20,
-    "tt_home_3": 70,
-    "tt_home_3.25": 2,
-    "tt_home_3.5": 912,
-    "tt_home_3.75": 2,
-    "tt_home_4": 18,
-    "tt_home_4.5": 382,
-    "tt_home_5": 17,
-    "tt_home_5.5": 144,
-    "tt_home_6.5": 3
-  },
-  "markets_source": "fetch",
-  "matched": 9,
+  "market_census_distinct": 0,
+  "markets": {},
+  "markets_source": "cache",
+  "matched": 0,
   "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 14,
-    "market_inactive": 275,
-    "market_unsupported_cards": 1740,
-    "market_unsupported_clean_sheet": 667,
-    "market_unsupported_corners": 7352,
-    "market_unsupported_correct_score": 2415,
-    "market_unsupported_early_payout": 153,
-    "market_unsupported_handicap": 11074,
-    "market_unsupported_market_type": 7918,
-    "market_unsupported_non_goal": 1359,
-    "market_unsupported_odd_even": 2206,
-    "market_unsupported_period": 39263,
-    "market_unsupported_to_qualify": 2,
-    "market_unsupported_win_to_nil": 1379,
-    "outcome_inactive": 2507
-  },
   "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 14,
-      "market_inactive": 275,
-      "outcome_inactive": 2507
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 1740,
-      "market_unsupported_clean_sheet": 667,
-      "market_unsupported_corners": 7352,
-      "market_unsupported_correct_score": 2415,
-      "market_unsupported_early_payout": 153,
-      "market_unsupported_handicap": 11074,
-      "market_unsupported_market_type": 7918,
-      "market_unsupported_non_goal": 1359,
-      "market_unsupported_odd_even": 2206,
-      "market_unsupported_period": 39263,
-      "market_unsupported_to_qualify": 2,
-      "market_unsupported_win_to_nil": 1379
-    }
+    "expected": {},
+    "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 11,
-  "quoted_fixtures": [
-    {
-      "away": "Independiente Medellin",
-      "fixture_id": "id1002707076880488",
-      "home": "Atletico Nacional"
-    },
-    {
-      "away": "Independiente Rivadavia",
-      "fixture_id": "id1000015576711706",
-      "home": "Boca Juniors"
-    },
-    {
-      "away": "CSD Independiente del Valle",
-      "fixture_id": "id1000024076966928",
-      "home": "Barcelona SC"
-    },
-    {
-      "away": "CD Walter Ferretti",
-      "fixture_id": "id1001924277028608",
-      "home": "Managua FC"
-    },
-    {
-      "away": "Rancho Santana FC",
-      "fixture_id": "id1001924277028610",
-      "home": "Real Esteli FC"
-    },
-    {
-      "away": "Chorrillo FC",
-      "fixture_id": "id1001949076959304",
-      "home": "Udelas FC"
-    },
-    {
-      "away": "CD FAS Santa Ana",
-      "fixture_id": "id1002708877113824",
-      "home": "CD Platense Municipal Zacatecoluca"
-    },
-    {
-      "away": "Atlas FC",
-      "fixture_id": "id1002746477108994",
-      "home": "Deportivo Toluca FC"
-    },
-    {
-      "away": "CD Aguila San Miguel",
-      "fixture_id": "id1002708877113822",
-      "home": "Inter Santa Tecla"
-    }
-  ],
-  "reserved_requests": 4,
-  "rows": 43240,
+  "pending_fixtures": 3,
+  "quoted_fixtures": [],
+  "reserved_requests": 3,
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 19,
+  "slate_candidate_fixtures": 25,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 1,
-  "slate_provider_overlap_fixtures": 5,
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 4,
   "slate_unmatched_fixtures": [
     {
       "away": "Universitatea Craiova",
@@ -257,6 +59,12 @@
       "normalized_pair": "juventus|omonia nicosia"
     },
     {
+      "away": "OMONIA",
+      "home": "JUVENTUS",
+      "league": "EEL",
+      "normalized_pair": "juventus|omonia"
+    },
+    {
       "away": "Lillestr\u00f8m",
       "home": "Olympique Lyonnais",
       "league": "Europa League",
@@ -269,10 +77,28 @@
       "normalized_pair": "besiktas|hapoel be'er sheva"
     },
     {
+      "away": "LILLESTROM",
+      "home": "LYON",
+      "league": "EEL",
+      "normalized_pair": "lillestrom|lyon"
+    },
+    {
       "away": "FC K\u00f8benhavn",
       "home": "Inter Club d'Escaldes",
       "league": "Conference League",
       "normalized_pair": "inter d'escaldes|kobenhavn"
+    },
+    {
+      "away": "STURM GRAZ",
+      "home": "HOFFENHEIM",
+      "league": "EEL",
+      "normalized_pair": "hoffenheim|sturm graz"
+    },
+    {
+      "away": "JAGIELLONIA",
+      "home": "SUNDERLAND",
+      "league": "EEL",
+      "normalized_pair": "jagiellonia|sunderland"
     },
     {
       "away": "Lech Pozna\u0144",
@@ -287,6 +113,12 @@
       "normalized_pair": "remo|sao paulo"
     },
     {
+      "away": "ARSENAL TULA",
+      "home": "URAL",
+      "league": "RU2",
+      "normalized_pair": "arsenal tula|ural"
+    },
+    {
       "away": "FC Copenhagen",
       "home": "Inter Club d'Escaldes",
       "league": "World UEFA Europa Conference League",
@@ -299,10 +131,28 @@
       "normalized_pair": "atalanta|borac banja luka"
     },
     {
+      "away": "TWENTE",
+      "home": "FREIBURG",
+      "league": "ECO",
+      "normalized_pair": "freiburg|twente"
+    },
+    {
+      "away": "LEVSKI SOFIA",
+      "home": "MARSEILLE",
+      "league": "EEL",
+      "normalized_pair": "levski sofia|marseille"
+    },
+    {
       "away": "MONACO",
       "home": "HEARTS",
       "league": "ECO",
       "normalized_pair": "hearts|monaco"
+    },
+    {
+      "away": "REAL SOCIEDAD",
+      "home": "CRYSTAL PALACE",
+      "league": "EEL",
+      "normalized_pair": "crystal palace|real sociedad"
     },
     {
       "away": "Panathinaikos",
@@ -311,16 +161,10 @@
       "normalized_pair": "nordsjaelland|panathinaikos"
     },
     {
-      "away": "TWENTE",
-      "home": "FREIBURG",
-      "league": "ECO",
-      "normalized_pair": "freiburg|twente"
-    },
-    {
-      "away": "REAL SOCIEDAD",
-      "home": "CRYSTAL PALACE",
+      "away": "BOURNEMOUTH",
+      "home": "CELTA VIGO",
       "league": "EEL",
-      "normalized_pair": "crystal palace|real sociedad"
+      "normalized_pair": "bournemouth|celta vigo"
     }
   ],
   "source": "oddspapi_odds",

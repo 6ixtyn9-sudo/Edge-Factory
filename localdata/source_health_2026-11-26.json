@@ -42,22 +42,24 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 3,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_matched": 2,
+      "be_raw": 6,
+      "be_usable": 3,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_matched_rows": 1,
+      "join_miss_counts": {
+        "no_pick_for_fixture": 2
+      },
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-26\\/2026-11-26' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -148,13 +150,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 585,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 26691,
-        "market_unsupported": 11485,
-        "no_pick_for_fixture": 4479
+        "fixture_key_miss": 31755,
+        "market_unsupported": 11485
       },
-      "op_matched": 3,
+      "op_matched": 0,
       "op_raw": 43240,
       "op_usable": 43240,
       "reason": null,
@@ -175,12 +176,12 @@
       "coherence_withheld_fixtures": 9,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 24,
+      "join_matched_rows": 25,
       "join_miss_counts": {
-        "fixture_key_miss": 13659,
-        "no_pick_for_fixture": 279
+        "fixture_key_miss": 13599,
+        "no_pick_for_fixture": 338
       },
-      "pa_matched": 36,
+      "pa_matched": 43,
       "pa_raw": 13962,
       "pa_scored": 13962,
       "reason": null,
@@ -265,7 +266,7 @@
           "unknown_selection:tie_or_atletico_bucaramanga": 1,
           "unsupported_market:asian_handicap": 4
         },
-        "card_fixture_count": 21,
+        "card_fixture_count": 28,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 52,

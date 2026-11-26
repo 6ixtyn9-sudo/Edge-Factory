@@ -14129,7 +14129,484 @@
     }
   ],
   "events": [],
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-26",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "FK Borac Banja Luka vs Atalanta",
+              "pick": "under",
+              "prob": 0.7982,
+              "odds": 1.25,
+              "result": null,
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "cohort_evidence": {
+                "rate": 0.7982,
+                "n": 109,
+                "contract_id": "pfc_65d970e7e5c86e2c0de75220",
+                "as_of_exclusive": "2026-11-26",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 87,
+                "cohort_lower_bound": 0.7132666603362428,
+                "price_context": {
+                  "contract_id": "pfc_65d970e7e5c86e2c0de75220",
+                  "selection": "away",
+                  "league": "Conference League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.25,
+                  "captured_at": "2026-11-25T22:32:00.517961+00:00",
+                  "decision_at": "2026-11-26T03:37:01+02:00",
+                  "kickoff": "2026-11-26T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7274834627864393,
+              "ml_model_key": "8c474c5aa3925229dda7ce1f9b677dfa1a112ad14d6b796efef0ba540bf76be7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Conference League",
+              "price_at": "2026-11-25T22:32:00.517961+00:00",
+              "price_kickoff": "2026-11-26T20:00:00+00:00",
+              "price_provenance": {
+                "away": "Atalanta",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-25T22:32:00.517961+00:00",
+                "data_dt": [
+                  26,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-26T07:00:00+00:00",
+                "decision_day": "2026-11-26",
+                "home": "Borac Banja Luka",
+                "kickoff_utc": "2026-11-26T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-26.json",
+                "ledger_sha256": "1893ef1ed3dac15bb6fd97c9d6b59f5ef473020fb1aaa3f5051ef3b8518f28ef",
+                "market": "ou_4.5",
+                "price": 1.25,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-25T13:54",
+                      "2026-11-25T13:54"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      3.75,
+                      1.25
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 16,
+                  "row_sha256": "9be42e9982b93ec049705a1fcca2ef6ecfad5c8519b5c8a715a49d7658bc00dd"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-26T20:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Atalanta",
+                      "csv_data_row": 2991,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "14cb40a3c1a4ca08f7a2e72c8c83c764ec7418abb9b33924779a97a87e05c129",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Borac Banja Luka",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-26T20:00:00+00:00",
+                      "league": "Europa Conference League",
+                      "observed_at_utc": "2026-11-25T22:14:45+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "57f33cd1a61a4c8ba823767848647ee0a1ba16ba5a3b6947c6a2fb055c5c9f7e",
+                      "schedule_row": {
+                        "away": "Atalanta",
+                        "captured_at": "2026-11-25T22:14:45+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-26",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Borac Banja Luka",
+                        "hs": "",
+                        "kickoff": "2026-11-26T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Europa Conference League",
+                        "odd1": "6.25",
+                        "odd2": "1.42",
+                        "odd_gg": "1.66",
+                        "odd_ng": "2.1",
+                        "odd_o15": "1.14",
+                        "odd_o25": "1.47",
+                        "odd_o35": "2.2",
+                        "odd_u15": "5.5",
+                        "odd_u25": "2.6",
+                        "odd_u35": "1.61",
+                        "oddx": "5.0",
+                        "p1": "15.034767900770532",
+                        "p2": "66.1717722232663",
+                        "p_gg": "55.851063829787236",
+                        "p_ng": "44.148936170212764",
+                        "p_o15": "82.83132530120481",
+                        "p_o25": "63.88206388206389",
+                        "p_o35": "42.257217847769034",
+                        "px": "18.793459875963165",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Atalanta BC",
+                      "csv_data_row": 11795,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "739d03707baa367aac015772fc36e6005deb583087771a1f0e9caf7cbaaa88dc",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Borac Banja Luka",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-26T20:00:00+00:00",
+                      "league": "World: UEFA Europa Conference League",
+                      "observed_at_utc": "2026-11-25T22:14:14+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "79a7fe8c45d147188e2285d33de6941222ac00fd8901c9a6a636a88d07f7da52",
+                      "schedule_row": {
+                        "away": "Atalanta BC",
+                        "captured_at": "2026-11-25T22:14:14+00:00",
+                        "date": "2026-11-26",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Borac Banja Luka",
+                        "hs": "",
+                        "index": "-2.63",
+                        "kickoff": "2026-11-26T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "World: UEFA Europa Conference League",
+                        "p1": "13.0",
+                        "p2": "67.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "20.0",
+                        "schedule_history": "[{\"away\": \"Atalanta BC\", \"captured_at\": \"2026-11-24T22:13:00+00:00\", \"date\": \"2026-11-26\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Borac Banja Luka\", \"kickoff\": \"2026-11-26T21:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "2"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Atalanta BC",
+                      "csv_data_row": 11795,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "739d03707baa367aac015772fc36e6005deb583087771a1f0e9caf7cbaaa88dc",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Borac Banja Luka",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-26T20:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-24T22:13:00+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "7a5de361bf82e4e12d44502be7475e4333a701d9b25b8e380532c8732631d780",
+                      "schedule_row": {
+                        "away": "Atalanta BC",
+                        "captured_at": "2026-11-24T22:13:00+00:00",
+                        "date": "2026-11-26",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Borac Banja Luka",
+                        "kickoff": "2026-11-26T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Atalanta BC",
+                      "board_fetched_at": "2026-11-25T22:28:22+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1003448074173334",
+                        "participant1Name": "FK Borac Banja Luka",
+                        "participant2Name": "Atalanta BC",
+                        "sportId": 10,
+                        "startTime": "2026-11-26T20:00:00.000Z",
+                        "statusId": 0
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "b45e29d4b8c287e1b3c3ec54f8c6f408d12b8c2d8c2111a442f61f0eb7bff757",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "FK Borac Banja Luka",
+                      "json_pointer": "/boards/2026-11-26/fixtures/136",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-11-26T20:00:00+00:00",
+                      "observed_at_utc": "2026-11-25T22:28:22+00:00",
+                      "provider_event_id": "id1003448074173334",
+                      "row_sha256": "2c2ae6890db7b77fc7950d964dbb68c1db618d1a5fd0e15f891204c5cbf27151",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-26",
+                "FK Borac Banja Luka",
+                "Atalanta"
+              ]
+            },
+            {
+              "match": "SAO PAULO vs REMO",
+              "pick": "under",
+              "prob": 0.6531,
+              "odds": 1.44,
+              "result": null,
+              "market": "match_under_35",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "cohort_evidence": {
+                "rate": 0.6531,
+                "n": 441,
+                "contract_id": "pfc_31a651bb4038b2a2acf7a954",
+                "as_of_exclusive": "2026-11-26",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 288,
+                "cohort_lower_bound": 0.6074864615231226,
+                "price_context": {
+                  "contract_id": "pfc_31a651bb4038b2a2acf7a954",
+                  "selection": "home",
+                  "league": "BR1",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.44,
+                  "captured_at": "2026-11-25T22:31:38.391412+00:00",
+                  "decision_at": "2026-11-26T03:37:01+02:00",
+                  "kickoff": "2026-11-26T23:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7244368676429449,
+              "ml_model_key": "e7c5af2ede2f57dd36e2c441f266c9334d8c0d7e7fdfacd777f55db977cb819c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Under 3.5 Goals",
+              "floor": 3.0351916454111767,
+              "floor_basis": "market",
+              "league": "BR1",
+              "price_at": "2026-11-25T22:31:38.391412+00:00",
+              "price_kickoff": "2026-11-26T23:00:00+00:00",
+              "price_provenance": {
+                "away": "Remo",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-25T22:31:38.391412+00:00",
+                "data_dt": [
+                  27,
+                  11,
+                  2026,
+                  0,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-26T07:00:00+00:00",
+                "decision_day": "2026-11-26",
+                "home": "Sao Paulo",
+                "kickoff_utc": "2026-11-26T23:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-26.json",
+                "ledger_sha256": "1893ef1ed3dac15bb6fd97c9d6b59f5ef473020fb1aaa3f5051ef3b8518f28ef",
+                "market": "ou_3.5",
+                "price": 1.44,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-24T07:01",
+                      "2026-11-24T07:01"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      2.75,
+                      1.44
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 14,
+                  "row_sha256": "352b135db0ad55cac785bd99395b80a2b7a633749e43ed66a21bc30c9252f58a"
+                },
+                "raw_kickoff": "00:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-26T23:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Remo",
+                      "csv_data_row": 3048,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "14cb40a3c1a4ca08f7a2e72c8c83c764ec7418abb9b33924779a97a87e05c129",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "S\u00e3o Paulo",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-26T23:00:00+00:00",
+                      "league": "Serie A",
+                      "observed_at_utc": "2026-11-25T22:14:45+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "82a018df761c4b511461eb90fd58662525d5c09aca2db302c4a9e3663addc0e0",
+                      "schedule_row": {
+                        "away": "Remo",
+                        "captured_at": "2026-11-25T22:14:45+00:00",
+                        "country": "Brazil",
+                        "date": "2026-11-26",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "S\u00e3o Paulo",
+                        "hs": "",
+                        "kickoff": "2026-11-26T23:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Serie A",
+                        "odd1": "1.38",
+                        "odd2": "9.5",
+                        "odd_gg": "1.95",
+                        "odd_ng": "1.8",
+                        "odd_o15": "1.22",
+                        "odd_o25": "1.66",
+                        "odd_o35": "2.75",
+                        "odd_u15": "4.33",
+                        "odd_u25": "2.15",
+                        "odd_u35": "1.44",
+                        "oddx": "4.5",
+                        "p1": "68.87178024902576",
+                        "p2": "10.008554319931566",
+                        "p_gg": "48.00000000000001",
+                        "p_ng": "52.0",
+                        "p_o15": "78.01801801801803",
+                        "p_o25": "56.43044619422572",
+                        "p_o35": "34.36754176610979",
+                        "px": "21.119665431042677",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "23:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Remo",
+                      "csv_data_row": 12188,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "739d03707baa367aac015772fc36e6005deb583087771a1f0e9caf7cbaaa88dc",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Sao Paulo",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-26T23:00:00+00:00",
+                      "league": "Brazil: Serie A",
+                      "observed_at_utc": "2026-11-25T22:14:15+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "b6d2e0638a3e1457ca25eea8602a554a39ef81d3e1fbe5e3171400d91083842f",
+                      "schedule_row": {
+                        "away": "Remo",
+                        "captured_at": "2026-11-25T22:14:15+00:00",
+                        "date": "2026-11-27",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Sao Paulo",
+                        "hs": "",
+                        "index": "1.92",
+                        "kickoff": "2026-11-27T00:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Brazil: Serie A",
+                        "p1": "59.0",
+                        "p2": "17.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "24.0",
+                        "schedule_history": "[]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-26",
+                "SAO PAULO",
+                "REMO"
+              ]
+            }
+          ],
+          "odds": 1.8,
+          "stake_pct": 3.1825
+        }
+      ],
+      "staked_pct": 3.1825
+    }
+  ],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,
@@ -14483,7 +14960,7 @@
     ]
   },
   "enh_floor_table": {
-    "as_of": "2026-11-25",
+    "as_of": "2026-11-26",
     "margin": 0.1,
     "min_n": 30,
     "floors": {
