@@ -1,5 +1,5 @@
 {
-  "attempted": 9,
+  "attempted": 13,
   "attempted_fixtures": [
     {
       "avg_p": 80.5,
@@ -42,24 +42,64 @@
       "w_score": 0.584
     },
     {
-      "avg_p": 62.0,
-      "away": "LEVSKI SOFIA",
+      "avg_p": 57.00000000000001,
+      "away": "REAL SOCIEDAD",
       "date": "2026-11-26",
-      "home": "MARSEILLE",
+      "home": "CRYSTAL PALACE",
       "league": "EEL",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
     },
     {
-      "avg_p": 58.652306638008916,
-      "away": "MONACO",
+      "avg_p": 56.99999999999999,
+      "away": "Panathinaikos",
       "date": "2026-11-26",
-      "home": "HEARTS",
-      "league": "ECO",
+      "home": "FC Nordsjaelland",
+      "league": "World UEFA Europa Conference League",
       "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5917
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 83.34739803094233,
+      "away": "Universitatea Craiova",
+      "date": "2026-11-26",
+      "home": "Brighton & Hove Albion",
+      "league": "Europa Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7918
+    },
+    {
+      "avg_p": 82.41056834487492,
+      "away": "KuPS",
+      "date": "2026-11-26",
+      "home": "Sporting Braga",
+      "league": "Europa Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6787
+    },
+    {
+      "avg_p": 81.6995331999619,
+      "away": "Ararat-Armenia",
+      "date": "2026-11-26",
+      "home": "Salzburg",
+      "league": "Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7918
+    },
+    {
+      "avg_p": 81.08925869894101,
+      "away": "Omonia Nicosia",
+      "date": "2026-11-26",
+      "home": "Juventus",
+      "league": "Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7918
     },
     {
       "avg_p": 76.5,
@@ -93,35 +133,33 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 8,
+  "be_cached": 7,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 8,
-  "candidate_fixtures": 24,
-  "captured_at": "2026-11-26T13:21:46.972175+00:00",
+  "cache_only": 7,
+  "candidate_fixtures": 21,
+  "captured_at": "2026-11-26T16:21:19.007685+00:00",
   "date": "2026-11-26",
-  "deferred_fixtures": 15,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
-  "fixtures_with_rows": 7,
+  "deferred_fixtures": 8,
+  "errors": [],
+  "fixtures_with_rows": 11,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 22,
   "match_detail": {
-    "bookmakers": 100,
+    "bookmakers": 178,
     "challenge_pages": 0,
-    "fixtures": 9,
-    "market_rows": 315,
-    "markets": 34,
-    "named_rows": 315,
+    "fixtures": 14,
+    "market_rows": 542,
+    "markets": 60,
+    "named_rows": 542,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 1,
+  "network_attempted": 6,
   "quoted_fixtures": [
     {
       "avg_p": 80.5,
@@ -154,14 +192,54 @@
       "w_score": 0.584
     },
     {
-      "avg_p": 62.0,
-      "away": "LEVSKI SOFIA",
+      "avg_p": 57.00000000000001,
+      "away": "REAL SOCIEDAD",
       "date": "2026-11-26",
-      "home": "MARSEILLE",
+      "home": "CRYSTAL PALACE",
       "league": "EEL",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
+    },
+    {
+      "avg_p": 56.99999999999999,
+      "away": "Panathinaikos",
+      "date": "2026-11-26",
+      "home": "FC Nordsjaelland",
+      "league": "World UEFA Europa Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 82.41056834487492,
+      "away": "KuPS",
+      "date": "2026-11-26",
+      "home": "Sporting Braga",
+      "league": "Europa Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6787
+    },
+    {
+      "avg_p": 81.6995331999619,
+      "away": "Ararat-Armenia",
+      "date": "2026-11-26",
+      "home": "Salzburg",
+      "league": "Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7918
+    },
+    {
+      "avg_p": 81.08925869894101,
+      "away": "Omonia Nicosia",
+      "date": "2026-11-26",
+      "home": "Juventus",
+      "league": "Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7918
     },
     {
       "avg_p": 76.5,
@@ -194,8 +272,8 @@
       "w_score": 0.6557
     }
   ],
-  "requests": 3,
-  "rows": 21,
+  "requests": 36,
+  "rows": 33,
   "schema": 1,
   "status": "ok"
 }
