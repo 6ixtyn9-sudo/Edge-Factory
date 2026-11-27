@@ -1,38 +1,7 @@
 {
-  "added": 28060,
-  "attempted": 6,
-  "attempted_fixtures": [
-    {
-      "away": "Indigenas de Matagalpa FC",
-      "fixture_id": "id1001924277028614",
-      "home": "Diriangen FC Diriamba"
-    },
-    {
-      "away": "Club Nacional de Football",
-      "fixture_id": "id1003712777118578",
-      "home": "Montevideo City Torque"
-    },
-    {
-      "away": "CD Guadalajara",
-      "fixture_id": "id1002746477108988",
-      "home": "CF Pachuca"
-    },
-    {
-      "away": "Independiente FC",
-      "fixture_id": "id1003917377117824",
-      "home": "CD Marte Soyapango"
-    },
-    {
-      "away": "Guadalajara",
-      "fixture_id": "id1004805677127796",
-      "home": "FC Juarez"
-    },
-    {
-      "away": "CF Cruz Azul",
-      "fixture_id": "id1002746477108990",
-      "home": "Club Leon"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-27",
     "keys": 3,
@@ -41,198 +10,35 @@
     "remaining_today": 8,
     "spent_today": 16
   },
-  "captured_at": "2026-11-26T22:23:14+00:00",
+  "captured_at": "2026-11-27T01:19:43+00:00",
   "date": "2026-11-27",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 8,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 326,
-  "future_slate_fixtures": 7,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 658,
-  "markets": {
-    "1x2": 3013,
-    "btts": 1555,
-    "dc": 2749,
-    "dnb": 1311,
-    "ou_0.5": 858,
-    "ou_0.75": 80,
-    "ou_1": 150,
-    "ou_1.25": 116,
-    "ou_1.5": 1249,
-    "ou_1.75": 266,
-    "ou_2": 472,
-    "ou_2.25": 558,
-    "ou_2.5": 1586,
-    "ou_2.75": 640,
-    "ou_3": 720,
-    "ou_3.25": 586,
-    "ou_3.5": 1379,
-    "ou_3.75": 220,
-    "ou_4": 336,
-    "ou_4.25": 120,
-    "ou_4.5": 1175,
-    "ou_4.75": 70,
-    "ou_5": 150,
-    "ou_5.25": 38,
-    "ou_5.5": 728,
-    "ou_5.75": 34,
-    "ou_6": 32,
-    "ou_6.25": 32,
-    "ou_6.5": 299,
-    "ou_6.75": 20,
-    "ou_7": 20,
-    "ou_7.25": 20,
-    "ou_7.5": 74,
-    "ou_7.75": 16,
-    "ou_8": 16,
-    "ou_8.25": 16,
-    "ou_8.5": 30,
-    "tt_away_0.5": 876,
-    "tt_away_0.75": 74,
-    "tt_away_1": 116,
-    "tt_away_1.25": 92,
-    "tt_away_1.5": 958,
-    "tt_away_1.75": 56,
-    "tt_away_2": 92,
-    "tt_away_2.25": 54,
-    "tt_away_2.5": 784,
-    "tt_away_2.75": 4,
-    "tt_away_3": 8,
-    "tt_away_3.25": 4,
-    "tt_away_3.5": 435,
-    "tt_away_3.75": 2,
-    "tt_away_4": 2,
-    "tt_away_4.5": 117,
-    "tt_away_5.5": 2,
-    "tt_home_0.5": 833,
-    "tt_home_0.75": 74,
-    "tt_home_1": 122,
-    "tt_home_1.25": 92,
-    "tt_home_1.5": 952,
-    "tt_home_1.75": 56,
-    "tt_home_2": 108,
-    "tt_home_2.25": 54,
-    "tt_home_2.5": 855,
-    "tt_home_2.75": 36,
-    "tt_home_3": 22,
-    "tt_home_3.25": 2,
-    "tt_home_3.5": 358,
-    "tt_home_4": 18,
-    "tt_home_4.5": 57,
-    "tt_home_5.5": 11
-  },
-  "markets_source": "fetch",
-  "matched": 6,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 20,
-    "market_inactive": 100,
-    "market_unsupported_cards": 1281,
-    "market_unsupported_clean_sheet": 476,
-    "market_unsupported_corners": 5423,
-    "market_unsupported_correct_score": 1623,
-    "market_unsupported_early_payout": 113,
-    "market_unsupported_handicap": 6863,
-    "market_unsupported_market_type": 5243,
-    "market_unsupported_non_goal": 1601,
-    "market_unsupported_odd_even": 1660,
-    "market_unsupported_period": 26745,
-    "market_unsupported_win_to_nil": 850,
-    "outcome_inactive": 1486
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 20,
-      "market_inactive": 100,
-      "outcome_inactive": 1486
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 1281,
-      "market_unsupported_clean_sheet": 476,
-      "market_unsupported_corners": 5423,
-      "market_unsupported_correct_score": 1623,
-      "market_unsupported_early_payout": 113,
-      "market_unsupported_handicap": 6863,
-      "market_unsupported_market_type": 5243,
-      "market_unsupported_non_goal": 1601,
-      "market_unsupported_odd_even": 1660,
-      "market_unsupported_period": 26745,
-      "market_unsupported_win_to_nil": 850
-    }
-  },
-  "pending_fixtures": 6,
-  "quoted_fixtures": [
-    {
-      "away": "Indigenas de Matagalpa FC",
-      "fixture_id": "id1001924277028614",
-      "home": "Diriangen FC Diriamba"
-    },
-    {
-      "away": "Club Nacional de Football",
-      "fixture_id": "id1003712777118578",
-      "home": "Montevideo City Torque"
-    },
-    {
-      "away": "CD Guadalajara",
-      "fixture_id": "id1002746477108988",
-      "home": "CF Pachuca"
-    },
-    {
-      "away": "Independiente FC",
-      "fixture_id": "id1003917377117824",
-      "home": "CD Marte Soyapango"
-    },
-    {
-      "away": "Guadalajara",
-      "fixture_id": "id1004805677127796",
-      "home": "FC Juarez"
-    },
-    {
-      "away": "CF Cruz Azul",
-      "fixture_id": "id1002746477108990",
-      "home": "Club Leon"
-    }
-  ],
-  "reserved_requests": 7,
-  "rows": 28060,
+  "markets": {},
+  "matched": 0,
+  "pending_fixtures": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 19,
+  "slate_candidate_fixtures": 15,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
-  "slate_provider_overlap_fixtures": 7,
+  "slate_provider_overlap_fixtures": 6,
   "slate_unmatched_fixtures": [
     {
-      "away": "Sabadell",
-      "home": "Legan\u00e9s",
-      "league": "La Liga 2",
+      "away": "SABADELL",
+      "home": "LEGANES",
+      "league": "ES2",
       "normalized_pair": "leganes|sabadell"
-    },
-    {
-      "away": "Casertana",
-      "home": "Foggia",
-      "league": "Serie C: Girone C",
-      "normalized_pair": "casertana|foggia"
-    },
-    {
-      "away": "Nacional",
-      "home": "Mar\u00edtimo",
-      "league": "Liga Portugal",
-      "normalized_pair": "maritimo|nacional"
     },
     {
       "away": "Penybont",
       "home": "Briton Ferry",
       "league": "Premier League",
       "normalized_pair": "briton ferry|penybont"
-    },
-    {
-      "away": "Guadalajara Chivas",
-      "home": "CF Pachuca",
-      "league": "Mexico Liga MX",
-      "normalized_pair": "guadalajara chivas|pachuca"
     },
     {
       "away": "RACING SANTANDER",
@@ -277,5 +83,6 @@
       "normalized_pair": "scunthorpe|wealdstone"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "nothing_pending"
 }

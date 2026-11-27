@@ -8114,11 +8114,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 374,
+   "hits": 375,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 375.4522958980978,
+   "inv_price_sum": 376.0510982933074,
    "multi_n": 107,
-   "n": 580,
+   "n": 581,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -8943,9 +8943,10 @@
     "2026-11-24|PORT VALE vs NORTHAMPTON|match_over_25@v1",
     "2026-11-24|HIBERNIAN vs FC DUNDEE|match_over_25@v1",
     "2026-11-24|RANGERS FC vs ABERDEEN|match_over_25@v1",
-    "2026-11-26|LYON vs LILLESTROM|match_over_25@v1"
+    "2026-11-26|LYON vs LILLESTROM|match_over_25@v1",
+    "2026-11-26|SAO PAULO vs REMO|match_over_25@v1"
    ],
-   "profit": -2.004,
+   "profit": -1.334,
    "records": [
     {
      "away": "Spartak Varna",
@@ -18694,6 +18695,35 @@
      "rule": "pfc_68b634f28f5ef3e8beb682ba",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "REMO",
+     "away_key": "remo",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6032,
+     "date": "2026-11-26",
+     "hit": true,
+     "home": "SAO PAULO",
+     "home_key": "saopaulo",
+     "league": "BR1",
+     "match": "SAO PAULO vs REMO",
+     "multi_source": false,
+     "price": 1.67,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-25T22:31:38.391412+00:00",
+      "contract_id": "pfc_31a651bb4038b2a2acf7a954",
+      "decision_at": "2026-11-26T00:32:00+02:00",
+      "kickoff": "2026-11-26T23:00:00+00:00",
+      "league": "BR1",
+      "price": 1.67,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-27T01:30:13.050198+00:00",
+     "rule": "pfc_31a651bb4038b2a2acf7a954",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -19765,9 +19795,9 @@
   },
   "match_under_35@v1": {
    "hits": 18,
-   "inv_price_sum": 21.47431763198216,
+   "inv_price_sum": 22.168762076426603,
    "multi_n": 0,
-   "n": 36,
+   "n": 37,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -19804,9 +19834,10 @@
     "2026-11-24|CARLISLE vs TAMWORTH|match_under_35@v1",
     "2026-11-24|RANGERS FC vs ABERDEEN|match_under_35@v1",
     "2026-11-26|Atletico Nacional vs Independiente Medellin|match_under_35@v1",
-    "2026-11-26|LYON vs LILLESTROM|match_under_35@v1"
+    "2026-11-26|LYON vs LILLESTROM|match_under_35@v1",
+    "2026-11-26|SAO PAULO vs REMO|match_under_35@v1"
    ],
-   "profit": -3.291,
+   "profit": -4.291,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -20849,6 +20880,35 @@
      },
      "recorded_at": "2026-11-26T22:34:01.954042+00:00",
      "rule": "pfc_68b634f28f5ef3e8beb682ba",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "REMO",
+     "away_key": "remo",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6531,
+     "date": "2026-11-26",
+     "hit": false,
+     "home": "SAO PAULO",
+     "home_key": "saopaulo",
+     "league": "BR1",
+     "match": "SAO PAULO vs REMO",
+     "multi_source": false,
+     "price": 1.44,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-11-25T22:31:38.391412+00:00",
+      "contract_id": "pfc_31a651bb4038b2a2acf7a954",
+      "decision_at": "2026-11-26T00:32:00+02:00",
+      "kickoff": "2026-11-26T23:00:00+00:00",
+      "league": "BR1",
+      "price": 1.44,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-27T01:30:13.044083+00:00",
+     "rule": "pfc_31a651bb4038b2a2acf7a954",
      "source": "betexplorer",
      "stated": null
     }
