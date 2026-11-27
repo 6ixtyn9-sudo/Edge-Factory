@@ -1,5 +1,5 @@
 {
-  "attempted": 3,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 80.6993054906724,
@@ -22,45 +22,15 @@
       "w_score": 0.6787
     },
     {
-      "avg_p": 60.5,
-      "away": "SABADELL",
+      "avg_p": 57.81853998731998,
+      "away": "Penybont",
       "date": "2026-11-27",
-      "home": "LEGANES",
-      "league": "ES2",
+      "home": "Briton Ferry",
+      "league": "Premier League",
       "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    }
-  ],
-  "be_429": 2,
-  "be_cached": 2,
-  "be_cooling_down": true,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "cache_only": 2,
-  "candidate_fixtures": 15,
-  "captured_at": "2026-11-27T01:19:43.909468+00:00",
-  "date": "2026-11-27",
-  "deferred_fixtures": 12,
-  "errors": [],
-  "fixtures_with_rows": 1,
-  "market_budget_stop": false,
-  "market_requests": 4,
-  "match_detail": {
-    "bookmakers": 12,
-    "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 44,
-    "markets": 4,
-    "named_rows": 44,
-    "standings_rows": 0,
-    "with_h2h": 0,
-    "with_last_results": 0,
-    "with_standings": 0
-  },
-  "max_fixtures": 12,
-  "network_attempted": 1,
-  "quoted_fixtures": [
+      "pick": "away",
+      "w_score": 0.6001
+    },
     {
       "avg_p": 60.5,
       "away": "SABADELL",
@@ -72,8 +42,58 @@
       "w_score": 0.584
     }
   ],
-  "requests": 9,
-  "rows": 3,
+  "be_429": 2,
+  "be_cached": 3,
+  "be_cooling_down": true,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "cache_only": 3,
+  "candidate_fixtures": 15,
+  "captured_at": "2026-11-27T04:30:16.664510+00:00",
+  "date": "2026-11-27",
+  "deferred_fixtures": 11,
+  "errors": [],
+  "fixtures_with_rows": 2,
+  "market_budget_stop": false,
+  "market_requests": 2,
+  "match_detail": {
+    "bookmakers": 16,
+    "challenge_pages": 0,
+    "fixtures": 2,
+    "market_rows": 54,
+    "markets": 6,
+    "named_rows": 54,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
+  "max_fixtures": 12,
+  "network_attempted": 1,
+  "quoted_fixtures": [
+    {
+      "avg_p": 57.81853998731998,
+      "away": "Penybont",
+      "date": "2026-11-27",
+      "home": "Briton Ferry",
+      "league": "Premier League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.6001
+    },
+    {
+      "avg_p": 60.5,
+      "away": "SABADELL",
+      "date": "2026-11-27",
+      "home": "LEGANES",
+      "league": "ES2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    }
+  ],
+  "requests": 7,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }

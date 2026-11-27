@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-27T03:32:56",
+  "generated_at": "2026-11-27T06:50:56",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 293.5595440000001,
-  "multiple": 2.9355954400000006,
+  "bank_pct": 331.30293400000005,
+  "multiple": 3.3130293400000004,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
   "bet_days": 84,
   "accas": {
-    "wins": 94,
+    "wins": 95,
     "losses": 86
   },
   "open_slips": [
     {
-      "date": "2026-11-26",
-      "staked_pct": 41.9371
+      "date": "2026-11-27",
+      "staked_pct": 82.8257
     }
   ],
   "events": [
@@ -3732,8 +3732,8 @@
     },
     {
       "date": "2026-11-26",
-      "staked_pct": 41.937,
-      "returned_pct": 0.0,
+      "staked_pct": 83.8741,
+      "returned_pct": 79.6805,
       "accas": [
         {
           "odds": 1.81,
@@ -3770,10 +3770,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 1.9,
+          "won": true,
+          "stake_pct": 41.9371,
+          "returned_pct": 79.6805,
+          "legs": [
+            {
+              "match": "HOFFENHEIM vs STURM GRAZ",
+              "pick": "HOME",
+              "odds": 1.339,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-26",
+                "HOFFENHEIM",
+                "STURM GRAZ"
+              ]
+            },
+            {
+              "match": "Borac Banja Luka vs Atalanta",
+              "pick": "AWAY",
+              "odds": 1.42,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-26",
+                "Borac Banja Luka",
+                "Atalanta"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 293.5595,
-      "close_pct": 293.5595
+      "bank_pct": 331.3029,
+      "close_pct": 331.3029
     }
   ]
 }
