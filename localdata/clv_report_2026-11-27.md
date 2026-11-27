@@ -70,10 +70,10 @@
 
 ## By bucket
 
-- `CAUTION`: n=154, two_prices=154, avg_raw=-0.000153, avg_ip=8.3e-05, beat_rate=0.012987
+- `CAUTION`: n=157, two_prices=157, avg_raw=-0.00015, avg_ip=8.2e-05, beat_rate=0.012739
 - `CERTIFIED_CLEAN`: n=45, two_prices=45, avg_raw=-0.000927, avg_ip=0.000501, beat_rate=0.022222
 - `SKIPPED_VETO`: n=719, two_prices=698, avg_raw=-0.000996, avg_ip=0.000262, beat_rate=0.008596
 - `WATCHLIST_NO_ODDS`: n=142, two_prices=12, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_SUSPECT_PRICE`: n=73, two_prices=59, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
-- `WATCHLIST_UNCORROBORATED_PRICE`: n=29, two_prices=29, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
+- `WATCHLIST_UNCORROBORATED_PRICE`: n=26, two_prices=26, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_UNKNOWN_CTX`: n=27, two_prices=26, avg_raw=0.002169, avg_ip=-0.001503, beat_rate=0.0

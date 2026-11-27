@@ -1,5 +1,5 @@
 {
-  "attempted": 9,
+  "attempted": 10,
   "attempted_fixtures": [
     {
       "avg_p": 80.6993054906724,
@@ -62,14 +62,24 @@
       "w_score": 0.5917
     },
     {
-      "avg_p": 61.47334931486578,
-      "away": "Hapoel Tel Aviv",
+      "avg_p": 42.934831460674154,
+      "away": "MANISA FK",
       "date": "2026-11-27",
-      "home": "Maccabi Petah Tikva",
-      "league": "Ligat ha'Al",
+      "home": "UMRANIYESPOR",
+      "league": "TR2",
       "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6787
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 62.400454517535785,
+      "away": "Wis\u0142a P\u0142ock",
+      "date": "2026-11-27",
+      "home": "G\u00f3rnik Zabrze",
+      "league": "Ekstraklasa",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5795
     },
     {
       "avg_p": 60.5,
@@ -93,26 +103,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 7,
+  "be_cached": 8,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 7,
-  "candidate_fixtures": 15,
-  "captured_at": "2026-11-27T10:33:08.951996+00:00",
+  "cache_only": 8,
+  "candidate_fixtures": 14,
+  "captured_at": "2026-11-27T13:34:05.118188+00:00",
   "date": "2026-11-27",
-  "deferred_fixtures": 6,
+  "deferred_fixtures": 4,
   "errors": [],
-  "fixtures_with_rows": 5,
+  "fixtures_with_rows": 6,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 62,
+    "bookmakers": 79,
     "challenge_pages": 0,
-    "fixtures": 5,
-    "market_rows": 170,
-    "markets": 23,
-    "named_rows": 170,
+    "fixtures": 6,
+    "market_rows": 209,
+    "markets": 29,
+    "named_rows": 209,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -152,6 +162,16 @@
       "w_score": 0.5917
     },
     {
+      "avg_p": 42.934831460674154,
+      "away": "MANISA FK",
+      "date": "2026-11-27",
+      "home": "UMRANIYESPOR",
+      "league": "TR2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
       "avg_p": 60.5,
       "away": "SABADELL",
       "date": "2026-11-27",
@@ -172,8 +192,8 @@
       "w_score": 0.6001
     }
   ],
-  "requests": 5,
-  "rows": 15,
+  "requests": 12,
+  "rows": 18,
   "schema": 1,
   "status": "ok"
 }
