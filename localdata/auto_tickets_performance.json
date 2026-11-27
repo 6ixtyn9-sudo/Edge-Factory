@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-27T21:49:04",
+  "generated_at": "2026-11-28T01:08:26",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 331.30293400000005,
-  "multiple": 3.3130293400000004,
+  "bank_pct": 265.04253399999993,
+  "multiple": 2.6504253399999995,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 84,
+  "bet_days": 85,
   "accas": {
     "wins": 95,
-    "losses": 86
+    "losses": 90
   },
   "open_slips": [
     {
       "date": "2026-11-27",
-      "staked_pct": 82.8255
+      "staked_pct": 16.5651
     }
   ],
   "events": [
@@ -3810,6 +3810,159 @@
       ],
       "bank_pct": 331.3029,
       "close_pct": 331.3029
+    },
+    {
+      "date": "2026-11-27",
+      "staked_pct": 66.2604,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.65,
+          "won": false,
+          "stake_pct": 16.5651,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "G\u00f3rnik Zabrze vs Wis\u0142a P\u0142ock",
+              "pick": "HOME",
+              "odds": 1.4587,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "G\u00f3rnik Zabrze",
+                "Wis\u0142a P\u0142ock"
+              ]
+            },
+            {
+              "match": "Rak\u00f3w Cz\u0119stochowa vs Piast Gliwice",
+              "pick": "HOME",
+              "odds": 1.8197,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "Rak\u00f3w Cz\u0119stochowa",
+                "Piast Gliwice"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.95,
+          "won": false,
+          "stake_pct": 16.5651,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Maccabi Petah Tikva vs Hapoel Tel Aviv",
+              "pick": "AWAY",
+              "odds": 1.4184,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "Maccabi Petah Tikva",
+                "Hapoel Tel Aviv"
+              ]
+            },
+            {
+              "match": "Fluminense vs Cruzeiro",
+              "pick": "HOME",
+              "odds": 2.08,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "Fluminense",
+                "Cruzeiro"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 6.08,
+          "won": false,
+          "stake_pct": 16.5651,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "LEGANES vs SABADELL",
+              "pick": "HOME",
+              "odds": 2.33,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "LEGANES",
+                "SABADELL"
+              ]
+            },
+            {
+              "match": "ALANYASPOR vs KONYASPOR",
+              "pick": "HOME",
+              "odds": 2.61,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "ALANYASPOR",
+                "KONYASPOR"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 3.9,
+          "won": false,
+          "stake_pct": 16.5651,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "LEVANTE vs RACING SANTANDER",
+              "pick": "HOME",
+              "odds": 2.0,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "LEVANTE",
+                "RACING SANTANDER"
+              ]
+            },
+            {
+              "match": "RIZESPOR vs KASIMPASA",
+              "pick": "HOME",
+              "odds": 1.95,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "RIZESPOR",
+                "KASIMPASA"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 265.0425,
+      "close_pct": 265.0425
     }
   ]
 }

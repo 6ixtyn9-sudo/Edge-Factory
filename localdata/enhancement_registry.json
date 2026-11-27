@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-27",
+ "generated_at": "2026-11-28",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 19,
-   "inv_price_sum": 18.641472105799934,
+   "hits": 20,
+   "inv_price_sum": 19.408931814165246,
    "multi_n": 0,
-   "n": 29,
+   "n": 30,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -89,9 +89,10 @@
     "2026-11-17|RWANDA vs MALI|away_over_05@v1",
     "2026-11-17|RUSSIA vs VENEZUELA|away_over_05@v1",
     "2026-11-19|Gr\u00eamio vs Bahia|away_over_05@v1",
-    "2026-11-19|Corinthians vs Botafogo|away_over_05@v1"
+    "2026-11-19|Corinthians vs Botafogo|away_over_05@v1",
+    "2026-11-27|CF Pachuca vs Guadalajara Chivas|away_over_05@v1"
    ],
-   "profit": -0.718,
+   "profit": -0.415,
    "records": [
     {
      "away": "Mixco",
@@ -921,6 +922,35 @@
      "rule": "pfc_142b7b762e570fa302940d6e",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Guadalajara Chivas",
+     "away_key": "guadalajarachivas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.8636,
+     "date": "2026-11-27",
+     "hit": true,
+     "home": "CF Pachuca",
+     "home_key": "pachuca",
+     "league": "Mexico Liga MX",
+     "match": "CF Pachuca vs Guadalajara Chivas",
+     "multi_source": false,
+     "price": 1.303,
+     "price_context": {
+      "book": "bodog.eu",
+      "captured_at": "2026-11-26T22:22:34.250826+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-27T00:24:03+02:00",
+      "kickoff": "2026-11-27T01:00:00+00:00",
+      "league": "Mexico Liga MX",
+      "price": 1.303,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-27T23:04:36.379238+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -930,16 +960,17 @@
   },
   "away_over_15@v1": {
    "hits": 1,
-   "inv_price_sum": 1.6265866039882375,
+   "inv_price_sum": 2.0265866039882376,
    "multi_n": 0,
-   "n": 4,
+   "n": 5,
    "processed": [
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|away_over_15@v1",
     "2026-10-23|Brisbane Roar vs Perth Glory|away_over_15@v1",
     "2026-11-17|RWANDA vs MALI|away_over_15@v1",
-    "2026-11-23|Juticalpa vs Olancho FC|away_over_15@v1"
+    "2026-11-23|Juticalpa vs Olancho FC|away_over_15@v1",
+    "2026-11-27|CF Pachuca vs Guadalajara Chivas|away_over_15@v1"
    ],
-   "profit": -1.674,
+   "profit": -2.674,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -1054,6 +1085,35 @@
      },
      "recorded_at": "2026-11-23T22:56:27.680459+00:00",
      "rule": "pfc_2a4f2be544cd9d59f3cb7098",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Guadalajara Chivas",
+     "away_key": "guadalajarachivas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.614,
+     "date": "2026-11-27",
+     "hit": false,
+     "home": "CF Pachuca",
+     "home_key": "pachuca",
+     "league": "Mexico Liga MX",
+     "match": "CF Pachuca vs Guadalajara Chivas",
+     "multi_source": false,
+     "price": 2.5,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-26T22:22:34.250826+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-27T00:24:03+02:00",
+      "kickoff": "2026-11-27T01:00:00+00:00",
+      "league": "Mexico Liga MX",
+      "price": 2.5,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-27T23:04:36.419584+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "oddspapi",
      "stated": null
     }
@@ -5062,9 +5122,9 @@
   },
   "home_under_15@v1": {
    "hits": 6,
-   "inv_price_sum": 5.377179231675485,
+   "inv_price_sum": 6.006110049285548,
    "multi_n": 0,
-   "n": 11,
+   "n": 12,
    "processed": [
     "2026-10-14|Mito Hollyhock vs FC Tokyo|home_under_15@v1",
     "2026-10-14|Slovan Bratislava vs VfB Stuttgart|home_under_15@v1",
@@ -5076,9 +5136,10 @@
     "2026-10-23|Brisbane Roar vs Perth Glory|home_under_15@v1",
     "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|home_under_15@v1",
     "2026-11-08|Austin vs Portland Timbers|home_under_15@v1",
-    "2026-11-13|Curacao vs Panama|home_under_15@v1"
+    "2026-11-13|Curacao vs Panama|home_under_15@v1",
+    "2026-11-27|CF Pachuca vs Guadalajara Chivas|home_under_15@v1"
    ],
-   "profit": 0.252,
+   "profit": -0.748,
    "records": [
     {
      "away": "FC Tokyo",
@@ -5372,6 +5433,35 @@
      },
      "recorded_at": "2026-11-13T23:34:52.056314+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Guadalajara Chivas",
+     "away_key": "guadalajarachivas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.7513,
+     "date": "2026-11-27",
+     "hit": false,
+     "home": "CF Pachuca",
+     "home_key": "pachuca",
+     "league": "Mexico Liga MX",
+     "match": "CF Pachuca vs Guadalajara Chivas",
+     "multi_source": false,
+     "price": 1.59,
+     "price_context": {
+      "book": "hth",
+      "captured_at": "2026-11-26T22:22:34.250826+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-27T00:24:03+02:00",
+      "kickoff": "2026-11-27T01:00:00+00:00",
+      "league": "Mexico Liga MX",
+      "price": 1.59,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-27T23:04:36.400701+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "oddspapi",
      "stated": null
     }
@@ -8114,11 +8204,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 375,
+   "hits": 376,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 376.0510982933074,
+   "inv_price_sum": 376.52058186138254,
    "multi_n": 107,
-   "n": 581,
+   "n": 582,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -8944,9 +9034,10 @@
     "2026-11-24|HIBERNIAN vs FC DUNDEE|match_over_25@v1",
     "2026-11-24|RANGERS FC vs ABERDEEN|match_over_25@v1",
     "2026-11-26|LYON vs LILLESTROM|match_over_25@v1",
-    "2026-11-26|SAO PAULO vs REMO|match_over_25@v1"
+    "2026-11-26|SAO PAULO vs REMO|match_over_25@v1",
+    "2026-11-27|CF Pachuca vs Guadalajara Chivas|match_over_25@v1"
    ],
-   "profit": -1.334,
+   "profit": -0.204,
    "records": [
     {
      "away": "Spartak Varna",
@@ -18724,6 +18815,35 @@
      "rule": "pfc_31a651bb4038b2a2acf7a954",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "Guadalajara Chivas",
+     "away_key": "guadalajarachivas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.601,
+     "date": "2026-11-27",
+     "hit": true,
+     "home": "CF Pachuca",
+     "home_key": "pachuca",
+     "league": "Mexico Liga MX",
+     "match": "CF Pachuca vs Guadalajara Chivas",
+     "multi_source": false,
+     "price": 2.13,
+     "price_context": {
+      "book": "hth",
+      "captured_at": "2026-11-26T22:22:34.250826+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-27T00:24:03+02:00",
+      "kickoff": "2026-11-27T01:00:00+00:00",
+      "league": "Mexico Liga MX",
+      "price": 2.13,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-27T23:04:36.410185+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -19794,10 +19914,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 18,
-   "inv_price_sum": 22.168762076426603,
+   "hits": 19,
+   "inv_price_sum": 22.898689083725873,
    "multi_n": 0,
-   "n": 37,
+   "n": 38,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -19835,9 +19955,10 @@
     "2026-11-24|RANGERS FC vs ABERDEEN|match_under_35@v1",
     "2026-11-26|Atletico Nacional vs Independiente Medellin|match_under_35@v1",
     "2026-11-26|LYON vs LILLESTROM|match_under_35@v1",
-    "2026-11-26|SAO PAULO vs REMO|match_under_35@v1"
+    "2026-11-26|SAO PAULO vs REMO|match_under_35@v1",
+    "2026-11-27|CF Pachuca vs Guadalajara Chivas|match_under_35@v1"
    ],
-   "profit": -4.291,
+   "profit": -3.921,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -20910,6 +21031,35 @@
      "recorded_at": "2026-11-27T01:30:13.044083+00:00",
      "rule": "pfc_31a651bb4038b2a2acf7a954",
      "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Guadalajara Chivas",
+     "away_key": "guadalajarachivas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6209,
+     "date": "2026-11-27",
+     "hit": true,
+     "home": "CF Pachuca",
+     "home_key": "pachuca",
+     "league": "Mexico Liga MX",
+     "match": "CF Pachuca vs Guadalajara Chivas",
+     "multi_source": false,
+     "price": 1.37,
+     "price_context": {
+      "book": "atg.se",
+      "captured_at": "2026-11-26T22:22:34.250826+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-27T00:24:03+02:00",
+      "kickoff": "2026-11-27T01:00:00+00:00",
+      "league": "Mexico Liga MX",
+      "price": 1.37,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-27T23:04:36.390865+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
      "stated": null
     }
    ],
