@@ -1,5 +1,5 @@
 {
-  "attempted": 4,
+  "attempted": 7,
   "attempted_fixtures": [
     {
       "avg_p": 80.6993054906724,
@@ -22,14 +22,34 @@
       "w_score": 0.6787
     },
     {
-      "avg_p": 57.81853998731998,
-      "away": "Penybont",
+      "avg_p": 55.50000000000001,
+      "away": "RACING SANTANDER",
       "date": "2026-11-27",
-      "home": "Briton Ferry",
-      "league": "Premier League",
+      "home": "LEVANTE",
+      "league": "ES1",
       "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6001
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 55.441961514587206,
+      "away": "KASIMPASA",
+      "date": "2026-11-27",
+      "home": "RIZESPOR",
+      "league": "TR1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 53.15500783166357,
+      "away": "TS GALAXY",
+      "date": "2026-11-27",
+      "home": "STELLENBOSCH",
+      "league": "ZA1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
     },
     {
       "avg_p": 60.5,
@@ -40,46 +60,76 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
+    },
+    {
+      "avg_p": 57.81853998731998,
+      "away": "Penybont",
+      "date": "2026-11-27",
+      "home": "Briton Ferry",
+      "league": "Premier League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.6001
     }
   ],
   "be_429": 2,
-  "be_cached": 3,
+  "be_cached": 4,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 3,
+  "cache_only": 4,
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-27T04:30:16.664510+00:00",
+  "captured_at": "2026-11-27T07:26:21.762720+00:00",
   "date": "2026-11-27",
-  "deferred_fixtures": 11,
+  "deferred_fixtures": 8,
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 15,
   "match_detail": {
-    "bookmakers": 16,
+    "bookmakers": 62,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 54,
-    "markets": 6,
-    "named_rows": 54,
+    "fixtures": 5,
+    "market_rows": 170,
+    "markets": 23,
+    "named_rows": 170,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 1,
+  "network_attempted": 3,
   "quoted_fixtures": [
     {
-      "avg_p": 57.81853998731998,
-      "away": "Penybont",
+      "avg_p": 55.50000000000001,
+      "away": "RACING SANTANDER",
       "date": "2026-11-27",
-      "home": "Briton Ferry",
-      "league": "Premier League",
+      "home": "LEVANTE",
+      "league": "ES1",
       "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6001
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 55.441961514587206,
+      "away": "KASIMPASA",
+      "date": "2026-11-27",
+      "home": "RIZESPOR",
+      "league": "TR1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 53.15500783166357,
+      "away": "TS GALAXY",
+      "date": "2026-11-27",
+      "home": "STELLENBOSCH",
+      "league": "ZA1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
     },
     {
       "avg_p": 60.5,
@@ -90,10 +140,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
+    },
+    {
+      "avg_p": 57.81853998731998,
+      "away": "Penybont",
+      "date": "2026-11-27",
+      "home": "Briton Ferry",
+      "league": "Premier League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.6001
     }
   ],
-  "requests": 7,
-  "rows": 6,
+  "requests": 24,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }
