@@ -1,5 +1,5 @@
 {
-  "attempted": 7,
+  "attempted": 9,
   "attempted_fixtures": [
     {
       "avg_p": 80.6993054906724,
@@ -7,16 +7,6 @@
       "date": "2026-11-27",
       "home": "Flint Town United",
       "league": "Premier League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6787
-    },
-    {
-      "avg_p": 61.47334931486578,
-      "away": "Hapoel Tel Aviv",
-      "date": "2026-11-27",
-      "home": "Maccabi Petah Tikva",
-      "league": "Ligat ha'Al",
       "market": "1x2",
       "pick": "away",
       "w_score": 0.6787
@@ -52,6 +42,36 @@
       "w_score": 0.5917
     },
     {
+      "avg_p": 52.0,
+      "away": "BUCARAMANGA",
+      "date": "2026-11-27",
+      "home": "DEPORTIVO CALI",
+      "league": "CO1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 51.4281925555864,
+      "away": "KONYASPOR",
+      "date": "2026-11-27",
+      "home": "ALANYASPOR",
+      "league": "TR1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 61.47334931486578,
+      "away": "Hapoel Tel Aviv",
+      "date": "2026-11-27",
+      "home": "Maccabi Petah Tikva",
+      "league": "Ligat ha'Al",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.6787
+    },
+    {
       "avg_p": 60.5,
       "away": "SABADELL",
       "date": "2026-11-27",
@@ -73,19 +93,19 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 4,
+  "be_cached": 7,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 4,
+  "cache_only": 7,
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-27T07:26:21.762720+00:00",
+  "captured_at": "2026-11-27T10:33:08.951996+00:00",
   "date": "2026-11-27",
-  "deferred_fixtures": 8,
+  "deferred_fixtures": 6,
   "errors": [],
   "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 15,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 62,
     "challenge_pages": 0,
@@ -99,7 +119,7 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 3,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 55.50000000000001,
@@ -152,7 +172,7 @@
       "w_score": 0.6001
     }
   ],
-  "requests": 24,
+  "requests": 5,
   "rows": 15,
   "schema": 1,
   "status": "ok"
