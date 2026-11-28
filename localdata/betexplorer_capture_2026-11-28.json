@@ -1,5 +1,5 @@
 {
-  "attempted": 17,
+  "attempted": 19,
   "attempted_fixtures": [
     {
       "avg_p": 74.20782087669505,
@@ -42,36 +42,6 @@
       "w_score": 0.584
     },
     {
-      "avg_p": 70.0,
-      "away": "KARLSRUHER",
-      "date": "2026-11-28",
-      "home": "HERTHA BERLIN",
-      "league": "DE2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 66.58373664505525,
-      "away": "Karlsruher SC",
-      "date": "2026-11-28",
-      "home": "Hertha BSC",
-      "league": "2. Bundesliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6628
-    },
-    {
-      "avg_p": 66.0,
-      "away": "CRAWLEY TOWN",
-      "date": "2026-11-28",
-      "home": "EXETER",
-      "league": "EN2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
       "avg_p": 65.99999999999999,
       "away": "BOLTON",
       "date": "2026-11-28",
@@ -87,6 +57,46 @@
       "date": "2026-11-28",
       "home": "BOREHAM WOOD",
       "league": "ENB",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
+    },
+    {
+      "avg_p": 65.87448754336172,
+      "away": "BAYERN MUNCHEN",
+      "date": "2026-11-28",
+      "home": "HAMBURGER SV",
+      "league": "DE1",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 65.3906850696414,
+      "away": "RAYO VALLECANO",
+      "date": "2026-11-28",
+      "home": "BETIS",
+      "league": "ES1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 64.26862581502427,
+      "away": "MLADOST LUCANI",
+      "date": "2026-11-28",
+      "home": "CUKARICKI",
+      "league": "RS1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 61.5,
+      "away": "FC ANDORRA",
+      "date": "2026-11-28",
+      "home": "LAS PALMAS",
+      "league": "ES2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
@@ -157,6 +167,16 @@
       "date": "2026-11-28",
       "home": "Stockport County",
       "league": "League One",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6628
+    },
+    {
+      "avg_p": 66.58373664505525,
+      "away": "Karlsruher SC",
+      "date": "2026-11-28",
+      "home": "Hertha BSC",
+      "league": "2. Bundesliga",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6628
@@ -178,28 +198,28 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 15,
-  "candidate_fixtures": 91,
-  "captured_at": "2026-11-28T07:23:50.733036+00:00",
+  "candidate_fixtures": 82,
+  "captured_at": "2026-11-28T10:39:12.498558+00:00",
   "date": "2026-11-28",
-  "deferred_fixtures": 74,
+  "deferred_fixtures": 63,
   "errors": [],
   "fixtures_with_rows": 12,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 164,
+    "bookmakers": 199,
     "challenge_pages": 0,
-    "fixtures": 11,
-    "market_rows": 425,
-    "markets": 59,
-    "named_rows": 425,
+    "fixtures": 13,
+    "market_rows": 518,
+    "markets": 71,
+    "named_rows": 518,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 2,
+  "network_attempted": 4,
   "quoted_fixtures": [
     {
       "avg_p": 71.0,
@@ -207,26 +227,6 @@
       "date": "2026-11-28",
       "home": "LEICESTER",
       "league": "EN1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 70.0,
-      "away": "KARLSRUHER",
-      "date": "2026-11-28",
-      "home": "HERTHA BERLIN",
-      "league": "DE2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.584
-    },
-    {
-      "avg_p": 66.0,
-      "away": "CRAWLEY TOWN",
-      "date": "2026-11-28",
-      "home": "EXETER",
-      "league": "EN2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
@@ -240,6 +240,26 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
+    },
+    {
+      "avg_p": 65.3906850696414,
+      "away": "RAYO VALLECANO",
+      "date": "2026-11-28",
+      "home": "BETIS",
+      "league": "ES1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
+    },
+    {
+      "avg_p": 64.26862581502427,
+      "away": "MLADOST LUCANI",
+      "date": "2026-11-28",
+      "home": "CUKARICKI",
+      "league": "RS1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5917
     },
     {
       "avg_p": 71.95168539325843,
@@ -322,7 +342,7 @@
       "w_score": 0.584
     }
   ],
-  "requests": 12,
+  "requests": 19,
   "rows": 36,
   "schema": 1,
   "status": "ok"

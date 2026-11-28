@@ -1,168 +1,204 @@
 {
-  "added": 16202,
-  "attempted": 2,
+  "added": 30358,
+  "attempted": 5,
   "attempted_fixtures": [
     {
-      "away": "Karlsruher SC",
-      "fixture_id": "id1000004472513998",
-      "home": "Hertha BSC"
+      "away": "Linfield FC",
+      "fixture_id": "id1000020072346440",
+      "home": "Crusaders FC"
     },
     {
-      "away": "Genclerbirligi SK",
-      "fixture_id": "id1000005272723356",
-      "home": "Samsunspor"
+      "away": "Spennymoor Town FC",
+      "fixture_id": "id1000017672759518",
+      "home": "Buxton FC"
+    },
+    {
+      "away": "Farnborough FC",
+      "fixture_id": "id1000017472758366",
+      "home": "Dorking Wanderers"
+    },
+    {
+      "away": "Gateshead FC",
+      "fixture_id": "id1000017372740870",
+      "home": "Boreham Wood FC"
+    },
+    {
+      "away": "Southport FC",
+      "fixture_id": "id1000017672759534",
+      "home": "Oxford City"
     }
   ],
   "budget": {
     "day": "2026-11-28",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 685,
-    "remaining_today": 15,
-    "spent_today": 10
+    "month_spent": 699,
+    "remaining_today": 1,
+    "spent_today": 24
   },
-  "budget_deferred": 198,
-  "captured_at": "2026-11-28T07:23:50+00:00",
+  "budget_deferred": 195,
+  "captured_at": "2026-11-28T10:39:12+00:00",
   "date": "2026-11-28",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 26,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 1015,
-  "future_slate_fixtures": 25,
+  "future_slate_fixtures": 6,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 594,
+  "market_census_distinct": 612,
   "markets": {
-    "1x2": 1366,
-    "btts": 837,
-    "dc": 1250,
-    "dnb": 747,
-    "ou_0.5": 425,
-    "ou_0.75": 42,
-    "ou_1": 83,
-    "ou_1.25": 60,
-    "ou_1.5": 717,
-    "ou_1.75": 140,
-    "ou_2": 206,
-    "ou_2.25": 248,
-    "ou_2.5": 756,
-    "ou_2.75": 290,
-    "ou_3": 350,
-    "ou_3.25": 368,
-    "ou_3.5": 756,
-    "ou_3.75": 236,
-    "ou_4": 290,
-    "ou_4.25": 176,
-    "ou_4.5": 716,
-    "ou_4.75": 82,
-    "ou_5": 120,
-    "ou_5.25": 64,
-    "ou_5.5": 563,
-    "ou_5.75": 34,
-    "ou_6": 58,
-    "ou_6.25": 32,
-    "ou_6.5": 240,
-    "ou_6.75": 14,
-    "ou_7": 12,
-    "ou_7.25": 12,
-    "ou_7.5": 103,
-    "ou_7.75": 12,
-    "ou_8": 12,
-    "ou_8.25": 12,
-    "ou_8.5": 51,
-    "tt_away_0.5": 612,
-    "tt_away_0.75": 48,
-    "tt_away_1": 52,
-    "tt_away_1.25": 36,
-    "tt_away_1.5": 600,
-    "tt_away_1.75": 36,
-    "tt_away_2": 22,
-    "tt_away_2.25": 34,
-    "tt_away_2.5": 421,
-    "tt_away_2.75": 18,
-    "tt_away_3": 4,
-    "tt_away_3.5": 191,
-    "tt_away_4": 2,
-    "tt_away_4.5": 17,
-    "tt_away_5.5": 2,
-    "tt_home_0.5": 419,
-    "tt_home_0.75": 18,
-    "tt_home_1": 38,
-    "tt_home_1.25": 20,
-    "tt_home_1.5": 611,
-    "tt_home_1.75": 42,
-    "tt_home_2": 40,
-    "tt_home_2.25": 42,
-    "tt_home_2.5": 615,
-    "tt_home_2.75": 20,
-    "tt_home_3": 40,
-    "tt_home_3.25": 20,
-    "tt_home_3.5": 469,
-    "tt_home_3.75": 4,
-    "tt_home_4": 20,
-    "tt_home_4.5": 167,
-    "tt_home_5.5": 42
+    "1x2": 3249,
+    "btts": 1922,
+    "dc": 2913,
+    "dnb": 1520,
+    "ou_0.5": 435,
+    "ou_0.75": 20,
+    "ou_1": 94,
+    "ou_1.25": 44,
+    "ou_1.5": 1065,
+    "ou_1.75": 124,
+    "ou_2": 378,
+    "ou_2.25": 252,
+    "ou_2.5": 1640,
+    "ou_2.75": 404,
+    "ou_3": 596,
+    "ou_3.25": 576,
+    "ou_3.5": 1707,
+    "ou_3.75": 552,
+    "ou_4": 538,
+    "ou_4.25": 374,
+    "ou_4.5": 1488,
+    "ou_4.75": 214,
+    "ou_5": 380,
+    "ou_5.25": 130,
+    "ou_5.5": 1093,
+    "ou_5.75": 44,
+    "ou_6": 136,
+    "ou_6.25": 44,
+    "ou_6.5": 450,
+    "ou_6.75": 29,
+    "ou_7": 24,
+    "ou_7.25": 24,
+    "ou_7.5": 211,
+    "ou_7.75": 19,
+    "ou_8": 15,
+    "ou_8.25": 15,
+    "ou_8.5": 128,
+    "tt_away_0.5": 982,
+    "tt_away_0.75": 92,
+    "tt_away_1": 122,
+    "tt_away_1.25": 80,
+    "tt_away_1.5": 786,
+    "tt_away_1.75": 76,
+    "tt_away_2": 60,
+    "tt_away_2.25": 26,
+    "tt_away_2.5": 606,
+    "tt_away_2.75": 32,
+    "tt_away_3": 16,
+    "tt_away_3.5": 224,
+    "tt_away_4": 16,
+    "tt_away_4.5": 127,
+    "tt_away_5.5": 22,
+    "tt_away_6.5": 6,
+    "tt_away_7.5": 3,
+    "tt_home_0.5": 583,
+    "tt_home_0.75": 22,
+    "tt_home_1": 74,
+    "tt_home_1.25": 44,
+    "tt_home_1.5": 762,
+    "tt_home_1.75": 76,
+    "tt_home_2": 96,
+    "tt_home_2.25": 76,
+    "tt_home_2.5": 922,
+    "tt_home_2.75": 80,
+    "tt_home_3": 96,
+    "tt_home_3.25": 70,
+    "tt_home_3.5": 618,
+    "tt_home_3.75": 32,
+    "tt_home_4": 64,
+    "tt_home_4.25": 16,
+    "tt_home_4.5": 368,
+    "tt_home_5": 18,
+    "tt_home_5.5": 149,
+    "tt_home_6.5": 40,
+    "tt_home_7.5": 29
   },
   "markets_source": "cache",
-  "matched": 2,
+  "matched": 5,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 10,
-    "market_inactive": 66,
-    "market_unsupported_cards": 674,
-    "market_unsupported_clean_sheet": 352,
-    "market_unsupported_corners": 4777,
-    "market_unsupported_correct_score": 1024,
-    "market_unsupported_early_payout": 83,
-    "market_unsupported_handicap": 4754,
-    "market_unsupported_market_type": 3671,
-    "market_unsupported_non_goal": 661,
-    "market_unsupported_odd_even": 1087,
-    "market_unsupported_period": 18977,
-    "market_unsupported_win_to_nil": 620,
-    "outcome_inactive": 798
+    "alt_line_skipped": 3,
+    "market_inactive": 21,
+    "market_unsupported_cards": 16,
+    "market_unsupported_clean_sheet": 434,
+    "market_unsupported_corners": 3109,
+    "market_unsupported_correct_score": 1674,
+    "market_unsupported_early_payout": 69,
+    "market_unsupported_handicap": 6868,
+    "market_unsupported_market_type": 5226,
+    "market_unsupported_non_goal": 203,
+    "market_unsupported_odd_even": 1679,
+    "market_unsupported_period": 26358,
+    "market_unsupported_win_to_nil": 698,
+    "outcome_inactive": 1400
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 10,
-      "market_inactive": 66,
-      "outcome_inactive": 798
+      "alt_line_skipped": 3,
+      "market_inactive": 21,
+      "outcome_inactive": 1400
     },
     "loss_or_diagnosis": {
-      "market_unsupported_cards": 674,
-      "market_unsupported_clean_sheet": 352,
-      "market_unsupported_corners": 4777,
-      "market_unsupported_correct_score": 1024,
-      "market_unsupported_early_payout": 83,
-      "market_unsupported_handicap": 4754,
-      "market_unsupported_market_type": 3671,
-      "market_unsupported_non_goal": 661,
-      "market_unsupported_odd_even": 1087,
-      "market_unsupported_period": 18977,
-      "market_unsupported_win_to_nil": 620
+      "market_unsupported_cards": 16,
+      "market_unsupported_clean_sheet": 434,
+      "market_unsupported_corners": 3109,
+      "market_unsupported_correct_score": 1674,
+      "market_unsupported_early_payout": 69,
+      "market_unsupported_handicap": 6868,
+      "market_unsupported_market_type": 5226,
+      "market_unsupported_non_goal": 203,
+      "market_unsupported_odd_even": 1679,
+      "market_unsupported_period": 26358,
+      "market_unsupported_win_to_nil": 698
     }
   },
-  "pending_fixtures": 397,
+  "pending_fixtures": 712,
   "quoted_fixtures": [
     {
-      "away": "Karlsruher SC",
-      "fixture_id": "id1000004472513998",
-      "home": "Hertha BSC"
+      "away": "Linfield FC",
+      "fixture_id": "id1000020072346440",
+      "home": "Crusaders FC"
     },
     {
-      "away": "Genclerbirligi SK",
-      "fixture_id": "id1000005272723356",
-      "home": "Samsunspor"
+      "away": "Spennymoor Town FC",
+      "fixture_id": "id1000017672759518",
+      "home": "Buxton FC"
+    },
+    {
+      "away": "Farnborough FC",
+      "fixture_id": "id1000017472758366",
+      "home": "Dorking Wanderers"
+    },
+    {
+      "away": "Gateshead FC",
+      "fixture_id": "id1000017372740870",
+      "home": "Boreham Wood FC"
+    },
+    {
+      "away": "Southport FC",
+      "fixture_id": "id1000017672759534",
+      "home": "Oxford City"
     }
   ],
-  "reserved_requests": 16,
-  "rows": 16202,
+  "reserved_requests": 3,
+  "rows": 30358,
   "schema": 1,
-  "slate_candidate_fixtures": 81,
+  "slate_candidate_fixtures": 72,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 4,
-  "slate_provider_overlap_fixtures": 30,
+  "slate_priority_fixtures": 20,
+  "slate_provider_overlap_fixtures": 29,
   "slate_unmatched_fixtures": [
     {
       "away": "FALKIRK",
@@ -231,12 +267,6 @@
       "normalized_pair": "buriram united|rasi salai united"
     },
     {
-      "away": "KARLSRUHER",
-      "home": "HERTHA BERLIN",
-      "league": "DE2",
-      "normalized_pair": "hertha berlin|karlsruher"
-    },
-    {
       "away": "RADNICKI NIS",
       "home": "PARTIZAN",
       "league": "RS1",
@@ -255,12 +285,6 @@
       "normalized_pair": "coventry|leeds"
     },
     {
-      "away": "CRAWLEY TOWN",
-      "home": "EXETER",
-      "league": "EN2",
-      "normalized_pair": "crawley town|exeter"
-    },
-    {
       "away": "BOLTON",
       "home": "BIRMINGHAM",
       "league": "ENC",
@@ -277,18 +301,6 @@
       "home": "CUKARICKI",
       "league": "RS1",
       "normalized_pair": "cukaricki|mladost lucani"
-    },
-    {
-      "away": "WOLVERHAMPTON",
-      "home": "LINCOLN",
-      "league": "ENC",
-      "normalized_pair": "lincoln|wolverhampton"
-    },
-    {
-      "away": "SPORTIST SVOGE",
-      "home": "MONTANA",
-      "league": "BG2",
-      "normalized_pair": "montana|sportist svoge"
     },
     {
       "away": "Ludogorets",
@@ -333,34 +345,10 @@
       "normalized_pair": "dundee united|st johnstone"
     },
     {
-      "away": "CHARLTON",
-      "home": "BLACKBURN",
-      "league": "ENC",
-      "normalized_pair": "blackburn|charlton"
-    },
-    {
-      "away": "AKRON TOGLIATTI",
-      "home": "RUBIN",
-      "league": "RU1",
-      "normalized_pair": "akron togliatti|rubin"
-    },
-    {
-      "away": "TRANMERE",
-      "home": "BRISTOL ROVERS",
-      "league": "EN2",
-      "normalized_pair": "bristol rovers|tranmere"
-    },
-    {
       "away": "Bursaspor",
       "home": "Vanspor FK",
       "league": "Trendyol 1. Lig",
       "normalized_pair": "bursaspor|vanspor"
-    },
-    {
-      "away": "Dinamo Minsk",
-      "home": "Naftan",
-      "league": "Belarus Premier League",
-      "normalized_pair": "dinamo minsk|naftan"
     },
     {
       "away": "De Treffers",
@@ -463,6 +451,12 @@
       "home": "WALSALL",
       "league": "EN2",
       "normalized_pair": "northampton|walsall"
+    },
+    {
+      "away": "SCHALKE 04",
+      "home": "PADERBORN",
+      "league": "DE1",
+      "normalized_pair": "paderborn|schalke 04"
     }
   ],
   "source": "oddspapi_odds",
