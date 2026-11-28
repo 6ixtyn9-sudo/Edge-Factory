@@ -14617,6 +14617,146 @@
         {
           "legs": [
             {
+              "match": "Hertha BSC vs Karlsruher SC",
+              "pick": "home",
+              "prob": 0.8293,
+              "odds": 1.29,
+              "result": null,
+              "market": "home_under_35",
+              "price_book": "betano",
+              "price_source": "oddspapi",
+              "cohort_evidence": {
+                "rate": 0.8293,
+                "n": 1646,
+                "contract_id": "pfc_923a18ea5d5bae05913c3df3",
+                "as_of_exclusive": "2026-11-28",
+                "market": "home_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1365,
+                "cohort_lower_bound": 0.8103443808875284,
+                "price_context": {
+                  "contract_id": "pfc_923a18ea5d5bae05913c3df3",
+                  "selection": "home",
+                  "league": "2. Bundesliga",
+                  "book": "betano",
+                  "source": "oddspapi",
+                  "price": 1.29,
+                  "captured_at": "2026-11-28T07:23:26.124985+00:00",
+                  "decision_at": "2026-11-28T09:25:04+02:00",
+                  "kickoff": "2026-11-28T12:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6966999547082863,
+              "ml_model_key": "6abcab06770eeec28aa2a5ecfaf0f30ba455d3ff992c6224fb66de5962afb950",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Home Team Under 3.5 Goals",
+              "floor": 1.9664,
+              "floor_basis": "pick_evidence",
+              "league": "2. Bundesliga",
+              "price_at": "2026-11-28T07:23:26.124985+00:00",
+              "price_kickoff": "2026-11-28T12:00:00.000Z",
+              "price_provenance": null,
+              "shadow": true,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-28",
+                "Hertha BSC",
+                "Karlsruher SC"
+              ]
+            },
+            {
+              "match": "SAMSUNSPOR vs GENCLERBIRLIGI",
+              "pick": "over",
+              "prob": 0.8,
+              "odds": 1.27,
+              "result": null,
+              "market": "match_over_15",
+              "price_book": "betano",
+              "price_source": "oddspapi",
+              "cohort_evidence": {
+                "rate": 0.8,
+                "n": 450,
+                "contract_id": "pfc_31a651bb4038b2a2acf7a954",
+                "as_of_exclusive": "2026-11-28",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 360,
+                "cohort_lower_bound": 0.7605725078479408,
+                "price_context": {
+                  "contract_id": "pfc_31a651bb4038b2a2acf7a954",
+                  "selection": "home",
+                  "league": "TR1",
+                  "book": "betano",
+                  "source": "oddspapi",
+                  "price": 1.27,
+                  "captured_at": "2026-11-28T07:23:40.421969+00:00",
+                  "decision_at": "2026-11-28T09:25:04+02:00",
+                  "kickoff": "2026-11-28T13:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.9292450345958434,
+              "ml_model_key": "29f77b1797b4eecef2292efdecb930af2db219fd1a4e1a966fa030f79e197f93",
+              "ml_model_schema": "enh_score_logit_v2",
+              "label": "Match Over 1.5 Goals",
+              "floor": 1.635041182651783,
+              "floor_basis": "market",
+              "league": "TR1",
+              "price_at": "2026-11-28T07:23:40.421969+00:00",
+              "price_kickoff": "2026-11-28T13:00:00.000Z",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Genclerbirligi SK",
+                  "bookmaker": "betano",
+                  "bookmaker_market_id": "3077472451",
+                  "captured_at": "2026-11-28T07:23:40.421969+00:00",
+                  "date": "2026-11-28",
+                  "home": "Samsunspor",
+                  "kickoff": "2026-11-28T13:00:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.27",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-28T05:09:13.966Z",
+                  "provider_fixture_id": "id1000005272723356",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "b70728a2d5207426d47d0f9a825f55cb21631ef8ecbae62e59419f2f11af519e",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "shadow": false,
+              "ml_ordering_active": false,
+              "ranking_basis": "cohort",
+              "fixture_key": [
+                "2026-11-28",
+                "SAMSUNSPOR",
+                "GENCLERBIRLIGI"
+              ]
+            }
+          ],
+          "odds": 1.64,
+          "stake_pct": 1.8565,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
               "match": "MACCABI TEL AVIV vs HAPOEL PETAH TIKVA",
               "pick": "under",
               "prob": 0.8089,
@@ -14642,7 +14782,7 @@
                   "source": "betexplorer",
                   "price": 1.41,
                   "captured_at": "2026-11-27T22:41:38.776006+00:00",
-                  "decision_at": "2026-11-28T06:31:50+02:00",
+                  "decision_at": "2026-11-28T09:25:04+02:00",
                   "kickoff": "2026-11-28T17:00:00+00:00"
                 }
               },
@@ -14672,7 +14812,7 @@
                 "kickoff_utc": "2026-11-28T17:00:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-28.json",
-                "ledger_sha256": "d1ec76b95ce9b89c5853524d33c2210938788ac39530a5624161665b1511cbbd",
+                "ledger_sha256": "9b03f211938faad8cddda81860fe19815d8a393c6ac3fbd9b54116075a83c780",
                 "market": "ou_4.5",
                 "price": 1.41,
                 "quote_evidence": {
@@ -14715,7 +14855,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-28T17:00:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -14724,7 +14864,7 @@
                       "away": "Hapoel Petah Tikva",
                       "csv_data_row": 3360,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "d7e7f385b6bbf16213d606924b3391d7f6d052e57ca0ec798aa9dbaa69690878",
+                      "file_sha256": "48caf039fee000fa4a9abe5ee274ee20ff37dd4f11e67168604217513506e8ed",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv",
                       "kickoff_origin": "provider_explicit_offset",
@@ -14775,7 +14915,7 @@
                       "away": "Hapoel Petah Tikva FC",
                       "csv_data_row": 12950,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
+                      "file_sha256": "c3e93d9a0b386995cf8059cf05665cb7f65fdec1199853c5093f3e2548a587f7",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv FC",
                       "kickoff_origin": "provider_explicit_offset",
@@ -14814,7 +14954,7 @@
                       "csv_data_row": 12950,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
+                      "file_sha256": "c3e93d9a0b386995cf8059cf05665cb7f65fdec1199853c5093f3e2548a587f7",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv FC",
                       "kickoff_origin": "provider_explicit_offset",
@@ -14835,29 +14975,6 @@
                         "source": "vitibet"
                       },
                       "source": "vitibet"
-                    },
-                    {
-                      "away": "Hapoel Petah Tikva FC",
-                      "board_fetched_at": "2026-11-27T22:38:48+00:00",
-                      "board_fixture": {
-                        "fixtureId": "id1000026672225444",
-                        "participant1Name": "Maccabi Tel Aviv FC",
-                        "participant2Name": "Hapoel Petah Tikva FC",
-                        "sportId": 10,
-                        "startTime": "2026-11-28T17:00:00.000Z",
-                        "statusId": 0
-                      },
-                      "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "67cd45c3900f8c3a224d0865bc29df2338683d309de48d1cf7462659c953eaa6",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Maccabi Tel Aviv FC",
-                      "json_pointer": "/boards/2026-11-28/fixtures/854",
-                      "kickoff_origin": "provider_startTime",
-                      "kickoff_utc": "2026-11-28T17:00:00+00:00",
-                      "observed_at_utc": "2026-11-27T22:38:48+00:00",
-                      "provider_event_id": "id1000026672225444",
-                      "row_sha256": "47ed68f5cbaf45d908f0526445bb2d0156b2b44f08750b22295bba735c57bd22",
-                      "source": "oddspapi"
                     }
                   ]
                 },
@@ -14874,48 +14991,48 @@
               ]
             },
             {
-              "match": "LEEDS vs COVENTRY",
+              "match": "Stockport County vs Leyton Orient",
               "pick": "under",
-              "prob": 0.63,
-              "odds": 1.44,
+              "prob": 0.7916,
+              "odds": 1.25,
               "result": null,
-              "market": "match_under_35",
+              "market": "match_under_45",
               "price_book": "BetMGM.us",
               "price_source": "betexplorer",
               "cohort_evidence": {
-                "rate": 0.63,
-                "n": 600,
-                "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+                "rate": 0.7916,
+                "n": 1646,
+                "contract_id": "pfc_923a18ea5d5bae05913c3df3",
                 "as_of_exclusive": "2026-11-28",
-                "market": "match_under_35",
+                "market": "match_under_45",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 378,
-                "cohort_lower_bound": 0.5906554962110404,
+                "cohort_min_hits": 1303,
+                "cohort_lower_bound": 0.7713270765377521,
                 "price_context": {
-                  "contract_id": "pfc_68b634f28f5ef3e8beb682ba",
+                  "contract_id": "pfc_923a18ea5d5bae05913c3df3",
                   "selection": "home",
-                  "league": "ENP",
+                  "league": "League One",
                   "book": "BetMGM.us",
                   "source": "betexplorer",
-                  "price": 1.44,
-                  "captured_at": "2026-11-28T01:39:44.550184+00:00",
-                  "decision_at": "2026-11-28T06:31:50+02:00",
+                  "price": 1.25,
+                  "captured_at": "2026-11-27T22:43:13.320413+00:00",
+                  "decision_at": "2026-11-28T09:25:04+02:00",
                   "kickoff": "2026-11-28T15:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7489314007257544,
-              "ml_model_key": "f63fa3667db7efe38bc03d85df0e3ccdf635ba9dd524d334af1cbeed45af1b45",
+              "ml_rank_probability": 0.7475009277978236,
+              "ml_model_key": "6abcab06770eeec28aa2a5ecfaf0f30ba455d3ff992c6224fb66de5962afb950",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 3.5 Goals",
-              "floor": 2.9694463573751944,
-              "floor_basis": "market",
-              "league": "ENP",
-              "price_at": "2026-11-28T01:39:44.550184+00:00",
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "League One",
+              "price_at": "2026-11-27T22:43:13.320413+00:00",
               "price_kickoff": "2026-11-28T15:00:00+00:00",
               "price_provenance": {
-                "away": "Coventry",
+                "away": "Leyton Orient",
                 "bookmaker": "BetMGM.us",
-                "captured_at": "2026-11-28T01:39:44.550184+00:00",
+                "captured_at": "2026-11-27T22:43:13.320413+00:00",
                 "data_dt": [
                   28,
                   11,
@@ -14925,13 +15042,13 @@
                 ],
                 "decision_cutoff_utc": "2026-11-28T07:00:00+00:00",
                 "decision_day": "2026-11-28",
-                "home": "Leeds",
+                "home": "Stockport County",
                 "kickoff_utc": "2026-11-28T15:00:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-28.json",
-                "ledger_sha256": "d1ec76b95ce9b89c5853524d33c2210938788ac39530a5624161665b1511cbbd",
-                "market": "ou_3.5",
-                "price": 1.44,
+                "ledger_sha256": "9b03f211938faad8cddda81860fe19815d8a393c6ac3fbd9b54116075a83c780",
+                "market": "ou_4.5",
+                "price": 1.25,
                 "quote_evidence": {
                   "column_index": 1,
                   "columns": [
@@ -14940,21 +15057,21 @@
                   ],
                   "market_slug": "ou",
                   "row": {
-                    "best": false,
+                    "best": true,
                     "bookmaker": "BetMGM.us",
-                    "bookmaker_id": "1103",
+                    "bookmaker_id": "1105",
                     "created": [
-                      "2026-11-26T14:32",
-                      "2026-11-26T14:32"
+                      "2026-11-25T09:15",
+                      "2026-11-27T23:29"
                     ],
-                    "line": "3.50",
+                    "line": "4.50",
                     "movement": [
-                      "down",
-                      "up"
+                      "up",
+                      "down"
                     ],
                     "odds": [
-                      2.6,
-                      1.44
+                      3.6,
+                      1.25
                     ],
                     "pos": [
                       "1",
@@ -14963,7 +15080,7 @@
                     "source": "all"
                   },
                   "row_index": 18,
-                  "row_sha256": "3d535814d0631aeea90e22f0341f3258806ed2d5e915cdb624b8fa3c82205c9a"
+                  "row_sha256": "ec235bf5525095adf773ae8e5177650b88c3570732d5120d0b4c6da5eedd6b8d"
                 },
                 "raw_kickoff": "16:00",
                 "resolution": {
@@ -14978,37 +15095,88 @@
                   "status": "corroborated",
                   "witnesses": [
                     {
-                      "away": "Coventry",
-                      "csv_data_row": 12906,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
+                      "away": "Leyton Orient",
+                      "csv_data_row": 3465,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "48caf039fee000fa4a9abe5ee274ee20ff37dd4f11e67168604217513506e8ed",
                       "fixture_identity_origin": "provider_participants",
-                      "home": "Leeds",
+                      "home": "Stockport County",
                       "kickoff_origin": "provider_explicit_offset",
                       "kickoff_utc": "2026-11-28T15:00:00+00:00",
-                      "league": "England: Premier League",
+                      "league": "League One",
+                      "observed_at_utc": "2026-11-27T22:15:21+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "84098ac8f2b80173b036af32399720e8ceef9add42f313d78cb105e6dfcb0569",
+                      "schedule_row": {
+                        "away": "Leyton Orient",
+                        "captured_at": "2026-11-27T22:15:21+00:00",
+                        "country": "England",
+                        "date": "2026-11-28",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Stockport County",
+                        "hs": "",
+                        "kickoff": "2026-11-28T15:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "League One",
+                        "odd1": "1.4",
+                        "odd2": "7.0",
+                        "odd_gg": "1.7",
+                        "odd_ng": "2.05",
+                        "odd_o15": "1.14",
+                        "odd_o25": "1.5",
+                        "odd_o35": "2.2",
+                        "odd_u15": "5.5",
+                        "odd_u25": "2.5",
+                        "odd_u35": "1.61",
+                        "oddx": "4.5",
+                        "p1": "66.1756531406337",
+                        "p2": "13.238836390587364",
+                        "p_gg": "54.666666666666664",
+                        "p_ng": "45.33333333333333",
+                        "p_o15": "82.83132530120481",
+                        "p_o25": "62.5",
+                        "p_o35": "42.257217847769034",
+                        "px": "20.58551046877895",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "15:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Leyton Orient FC",
+                      "csv_data_row": 13341,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "c3e93d9a0b386995cf8059cf05665cb7f65fdec1199853c5093f3e2548a587f7",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Stockport County FC",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-28T15:00:00+00:00",
+                      "league": "England: League One",
                       "observed_at_utc": "2026-11-27T22:14:48+00:00",
                       "provider_commence_time": null,
                       "provider_event_id": null,
-                      "row_sha256": "a8e8473e3b451a4e3e335172e45b3ceb8899bd3598b95c899e82d013c2308d32",
+                      "row_sha256": "7b402e87250c8100724b49094e9326debf0213ad093d6e74de849ce738daa089",
                       "schedule_row": {
-                        "away": "Coventry",
+                        "away": "Leyton Orient FC",
                         "captured_at": "2026-11-27T22:14:48+00:00",
                         "date": "2026-11-28",
                         "fixture_identity_origin": "provider_participants",
                         "gs": "",
-                        "home": "Leeds",
+                        "home": "Stockport County FC",
                         "hs": "",
-                        "index": "1.81",
+                        "index": "2.52",
                         "kickoff": "2026-11-28T16:00:00+01:00",
                         "kickoff_origin": "provider_explicit_offset",
-                        "league": "England: Premier League",
-                        "p1": "58.0",
-                        "p2": "19.0",
+                        "league": "England: League One",
+                        "p1": "67.0",
+                        "p2": "13.0",
                         "pred_gs": "",
                         "pred_hs": "",
-                        "px": "23.0",
-                        "schedule_history": "[{\"away\": \"Coventry\", \"captured_at\": \"2026-11-26T22:10:36+00:00\", \"date\": \"2026-11-28\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Leeds\", \"kickoff\": \"2026-11-28T16:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "px": "20.0",
+                        "schedule_history": "[{\"away\": \"Leyton Orient FC\", \"captured_at\": \"2026-11-26T22:10:36+00:00\", \"date\": \"2026-11-28\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Stockport County FC\", \"kickoff\": \"2026-11-28T16:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
                         "source": "vitibet",
                         "status": "scheduled",
                         "tip": "1"
@@ -15016,26 +15184,26 @@
                       "source": "vitibet"
                     },
                     {
-                      "away": "Coventry",
-                      "csv_data_row": 12906,
+                      "away": "Leyton Orient FC",
+                      "csv_data_row": 13341,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
+                      "file_sha256": "c3e93d9a0b386995cf8059cf05665cb7f65fdec1199853c5093f3e2548a587f7",
                       "fixture_identity_origin": "provider_participants",
-                      "home": "Leeds",
+                      "home": "Stockport County FC",
                       "kickoff_origin": "provider_explicit_offset",
                       "kickoff_utc": "2026-11-28T15:00:00+00:00",
                       "league": null,
                       "observed_at_utc": "2026-11-26T22:10:36+00:00",
                       "provider_commence_time": null,
                       "provider_event_id": null,
-                      "row_sha256": "127da043aa7b378769d3889c787340df1dd36a138490e129427e63bf19fc361c",
+                      "row_sha256": "ee9175ee5332bea0a6ce02fcd6d1f104f0c517674a57375b526e094d3d911a72",
                       "schedule_row": {
-                        "away": "Coventry",
+                        "away": "Leyton Orient FC",
                         "captured_at": "2026-11-26T22:10:36+00:00",
                         "date": "2026-11-28",
                         "fixture_identity_origin": "provider_participants",
-                        "home": "Leeds",
+                        "home": "Stockport County FC",
                         "kickoff": "2026-11-28T16:00:00+01:00",
                         "kickoff_origin": "provider_explicit_offset",
                         "source": "vitibet"
@@ -15045,20 +15213,25 @@
                   ]
                 },
                 "selection": "under",
-                "site_best": false
+                "site_best": true
               },
               "shadow": true,
               "ml_ordering_active": false,
               "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-28",
-                "LEEDS",
-                "COVENTRY"
+                "Stockport County",
+                "Leyton Orient"
               ]
             }
           ],
-          "odds": 2.03,
-          "stake_pct": 1.8565
+          "odds": 1.76,
+          "stake_pct": 1.8565,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -15088,7 +15261,7 @@
                   "source": "betexplorer",
                   "price": 1.36,
                   "captured_at": "2026-11-27T22:39:27.376204+00:00",
-                  "decision_at": "2026-11-28T06:31:50+02:00",
+                  "decision_at": "2026-11-28T09:25:04+02:00",
                   "kickoff": "2026-11-28T15:00:00+00:00"
                 }
               },
@@ -15118,7 +15291,7 @@
                 "kickoff_utc": "2026-11-28T15:00:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-28.json",
-                "ledger_sha256": "d1ec76b95ce9b89c5853524d33c2210938788ac39530a5624161665b1511cbbd",
+                "ledger_sha256": "9b03f211938faad8cddda81860fe19815d8a393c6ac3fbd9b54116075a83c780",
                 "market": "ou_4.5",
                 "price": 1.36,
                 "quote_evidence": {
@@ -15170,7 +15343,7 @@
                       "away": "Falkirk",
                       "csv_data_row": 3418,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "d7e7f385b6bbf16213d606924b3391d7f6d052e57ca0ec798aa9dbaa69690878",
+                      "file_sha256": "48caf039fee000fa4a9abe5ee274ee20ff37dd4f11e67168604217513506e8ed",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Rangers",
                       "kickoff_origin": "provider_explicit_offset",
@@ -15221,7 +15394,7 @@
                       "away": "Falkirk",
                       "csv_data_row": 13186,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
+                      "file_sha256": "c3e93d9a0b386995cf8059cf05665cb7f65fdec1199853c5093f3e2548a587f7",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Rangers",
                       "kickoff_origin": "provider_explicit_offset",
@@ -15260,7 +15433,7 @@
                       "csv_data_row": 13186,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
+                      "file_sha256": "c3e93d9a0b386995cf8059cf05665cb7f65fdec1199853c5093f3e2548a587f7",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Rangers",
                       "kickoff_origin": "provider_explicit_offset",
@@ -15297,253 +15470,13 @@
               ]
             },
             {
-              "match": "Stockport County vs Leyton Orient",
+              "match": "INTER MILAN vs GENOA",
               "pick": "under",
-              "prob": 0.7916,
+              "prob": 0.8089,
               "odds": 1.25,
               "result": null,
               "market": "match_under_45",
               "price_book": "bet365.us",
-              "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.7916,
-                "n": 1646,
-                "contract_id": "pfc_923a18ea5d5bae05913c3df3",
-                "as_of_exclusive": "2026-11-28",
-                "market": "match_under_45",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 1303,
-                "cohort_lower_bound": 0.7713270765377521,
-                "price_context": {
-                  "contract_id": "pfc_923a18ea5d5bae05913c3df3",
-                  "selection": "home",
-                  "league": "League One",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.25,
-                  "captured_at": "2026-11-27T22:43:13.320413+00:00",
-                  "decision_at": "2026-11-28T06:31:50+02:00",
-                  "kickoff": "2026-11-28T15:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.7475009277978236,
-              "ml_model_key": "6abcab06770eeec28aa2a5ecfaf0f30ba455d3ff992c6224fb66de5962afb950",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 4.5 Goals",
-              "floor": null,
-              "floor_basis": "inherited",
-              "league": "League One",
-              "price_at": "2026-11-27T22:43:13.320413+00:00",
-              "price_kickoff": "2026-11-28T15:00:00+00:00",
-              "price_provenance": {
-                "away": "Leyton Orient",
-                "bookmaker": "bet365.us",
-                "captured_at": "2026-11-27T22:43:13.320413+00:00",
-                "data_dt": [
-                  28,
-                  11,
-                  2026,
-                  16,
-                  0
-                ],
-                "decision_cutoff_utc": "2026-11-28T07:00:00+00:00",
-                "decision_day": "2026-11-28",
-                "home": "Stockport County",
-                "kickoff_utc": "2026-11-28T15:00:00+00:00",
-                "kind": "betexplorer_pre_cutoff_v1",
-                "ledger_file": "betexplorer_match_detail_2026-11-28.json",
-                "ledger_sha256": "d1ec76b95ce9b89c5853524d33c2210938788ac39530a5624161665b1511cbbd",
-                "market": "ou_4.5",
-                "price": 1.25,
-                "quote_evidence": {
-                  "column_index": 1,
-                  "columns": [
-                    "Over",
-                    "Under"
-                  ],
-                  "market_slug": "ou",
-                  "row": {
-                    "best": true,
-                    "bookmaker": "bet365.us",
-                    "bookmaker_id": "1105",
-                    "created": [
-                      "2026-11-25T09:14",
-                      "2026-11-25T09:14"
-                    ],
-                    "line": "4.50",
-                    "movement": [
-                      null,
-                      null
-                    ],
-                    "odds": [
-                      3.75,
-                      1.25
-                    ],
-                    "pos": [
-                      "1",
-                      "2"
-                    ],
-                    "source": "all"
-                  },
-                  "row_index": 17,
-                  "row_sha256": "1ed36ebccb2ef1849ec48200ba9c6c64500eac789f88509bf77a089ce458b229"
-                },
-                "raw_kickoff": "16:00",
-                "resolution": {
-                  "interpretations": [
-                    "inferred_europe_prague",
-                    "inferred_fixed_utc_plus_1"
-                  ],
-                  "kickoff_utc": "2026-11-28T15:00:00+00:00",
-                  "late_witness_records": 0,
-                  "provenance": "witness_corroborated_aware_iso",
-                  "reason": "independent_pre_cutoff_schedule_witness",
-                  "status": "corroborated",
-                  "witnesses": [
-                    {
-                      "away": "Leyton Orient",
-                      "csv_data_row": 3465,
-                      "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "d7e7f385b6bbf16213d606924b3391d7f6d052e57ca0ec798aa9dbaa69690878",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Stockport County",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-28T15:00:00+00:00",
-                      "league": "League One",
-                      "observed_at_utc": "2026-11-27T22:15:21+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "84098ac8f2b80173b036af32399720e8ceef9add42f313d78cb105e6dfcb0569",
-                      "schedule_row": {
-                        "away": "Leyton Orient",
-                        "captured_at": "2026-11-27T22:15:21+00:00",
-                        "country": "England",
-                        "date": "2026-11-28",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Stockport County",
-                        "hs": "",
-                        "kickoff": "2026-11-28T15:00:00Z",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "League One",
-                        "odd1": "1.4",
-                        "odd2": "7.0",
-                        "odd_gg": "1.7",
-                        "odd_ng": "2.05",
-                        "odd_o15": "1.14",
-                        "odd_o25": "1.5",
-                        "odd_o35": "2.2",
-                        "odd_u15": "5.5",
-                        "odd_u25": "2.5",
-                        "odd_u35": "1.61",
-                        "oddx": "4.5",
-                        "p1": "66.1756531406337",
-                        "p2": "13.238836390587364",
-                        "p_gg": "54.666666666666664",
-                        "p_ng": "45.33333333333333",
-                        "p_o15": "82.83132530120481",
-                        "p_o25": "62.5",
-                        "p_o35": "42.257217847769034",
-                        "px": "20.58551046877895",
-                        "schedule_history": "[]",
-                        "source": "scoutingstats",
-                        "status": "15:00"
-                      },
-                      "source": "scoutingstats"
-                    },
-                    {
-                      "away": "Leyton Orient FC",
-                      "csv_data_row": 13341,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Stockport County FC",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-28T15:00:00+00:00",
-                      "league": "England: League One",
-                      "observed_at_utc": "2026-11-27T22:14:48+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "7b402e87250c8100724b49094e9326debf0213ad093d6e74de849ce738daa089",
-                      "schedule_row": {
-                        "away": "Leyton Orient FC",
-                        "captured_at": "2026-11-27T22:14:48+00:00",
-                        "date": "2026-11-28",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Stockport County FC",
-                        "hs": "",
-                        "index": "2.52",
-                        "kickoff": "2026-11-28T16:00:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "England: League One",
-                        "p1": "67.0",
-                        "p2": "13.0",
-                        "pred_gs": "",
-                        "pred_hs": "",
-                        "px": "20.0",
-                        "schedule_history": "[{\"away\": \"Leyton Orient FC\", \"captured_at\": \"2026-11-26T22:10:36+00:00\", \"date\": \"2026-11-28\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Stockport County FC\", \"kickoff\": \"2026-11-28T16:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
-                        "source": "vitibet",
-                        "status": "scheduled",
-                        "tip": "1"
-                      },
-                      "source": "vitibet"
-                    },
-                    {
-                      "away": "Leyton Orient FC",
-                      "csv_data_row": 13341,
-                      "csv_history_index": 0,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Stockport County FC",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-28T15:00:00+00:00",
-                      "league": null,
-                      "observed_at_utc": "2026-11-26T22:10:36+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "ee9175ee5332bea0a6ce02fcd6d1f104f0c517674a57375b526e094d3d911a72",
-                      "schedule_row": {
-                        "away": "Leyton Orient FC",
-                        "captured_at": "2026-11-26T22:10:36+00:00",
-                        "date": "2026-11-28",
-                        "fixture_identity_origin": "provider_participants",
-                        "home": "Stockport County FC",
-                        "kickoff": "2026-11-28T16:00:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "source": "vitibet"
-                      },
-                      "source": "vitibet"
-                    }
-                  ]
-                },
-                "selection": "under",
-                "site_best": true
-              },
-              "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-28",
-                "Stockport County",
-                "Leyton Orient"
-              ]
-            }
-          ],
-          "odds": 1.7,
-          "stake_pct": 1.8565
-        },
-        {
-          "legs": [
-            {
-              "match": "PARTIZAN vs RADNICKI NIS",
-              "pick": "under",
-              "prob": 0.8089,
-              "odds": 1.26,
-              "result": null,
-              "market": "match_under_45",
-              "price_book": "BetMGM.us",
               "price_source": "betexplorer",
               "cohort_evidence": {
                 "rate": 0.8089,
@@ -15557,261 +15490,27 @@
                 "price_context": {
                   "contract_id": "pfc_31a651bb4038b2a2acf7a954",
                   "selection": "home",
-                  "league": "RS1",
-                  "book": "BetMGM.us",
+                  "league": "IT1",
+                  "book": "bet365.us",
                   "source": "betexplorer",
-                  "price": 1.26,
-                  "captured_at": "2026-11-27T22:42:41.804994+00:00",
-                  "decision_at": "2026-11-28T06:31:50+02:00",
-                  "kickoff": "2026-11-28T17:30:00+00:00"
+                  "price": 1.25,
+                  "captured_at": "2026-11-27T22:40:35.807410+00:00",
+                  "decision_at": "2026-11-28T09:25:04+02:00",
+                  "kickoff": "2026-11-28T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.9623644691347608,
+              "ml_rank_probability": 0.8118387826458597,
               "ml_model_key": "29f77b1797b4eecef2292efdecb930af2db219fd1a4e1a966fa030f79e197f93",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 4.5 Goals",
               "floor": null,
               "floor_basis": "inherited",
-              "league": "RS1",
-              "price_at": "2026-11-27T22:42:41.804994+00:00",
-              "price_kickoff": "2026-11-28T17:30:00+00:00",
-              "price_provenance": {
-                "away": "Radnicki Nis",
-                "bookmaker": "BetMGM.us",
-                "captured_at": "2026-11-27T22:42:41.804994+00:00",
-                "data_dt": [
-                  28,
-                  11,
-                  2026,
-                  18,
-                  30
-                ],
-                "decision_cutoff_utc": "2026-11-28T07:00:00+00:00",
-                "decision_day": "2026-11-28",
-                "home": "Partizan",
-                "kickoff_utc": "2026-11-28T17:30:00+00:00",
-                "kind": "betexplorer_pre_cutoff_v1",
-                "ledger_file": "betexplorer_match_detail_2026-11-28.json",
-                "ledger_sha256": "d1ec76b95ce9b89c5853524d33c2210938788ac39530a5624161665b1511cbbd",
-                "market": "ou_4.5",
-                "price": 1.26,
-                "quote_evidence": {
-                  "column_index": 1,
-                  "columns": [
-                    "Over",
-                    "Under"
-                  ],
-                  "market_slug": "ou",
-                  "row": {
-                    "best": true,
-                    "bookmaker": "BetMGM.us",
-                    "bookmaker_id": "1105",
-                    "created": [
-                      "2026-11-27T18:32",
-                      "2026-11-27T18:32"
-                    ],
-                    "line": "4.50",
-                    "movement": [
-                      "down",
-                      "up"
-                    ],
-                    "odds": [
-                      3.5,
-                      1.26
-                    ],
-                    "pos": [
-                      "1",
-                      "2"
-                    ],
-                    "source": "all"
-                  },
-                  "row_index": 13,
-                  "row_sha256": "1165e78986f590c2f2db3bf13fba3e8eb251d4fec620ac56b684ebe9f699fc55"
-                },
-                "raw_kickoff": "18:30",
-                "resolution": {
-                  "interpretations": [
-                    "inferred_europe_prague",
-                    "inferred_fixed_utc_plus_1"
-                  ],
-                  "kickoff_utc": "2026-11-28T17:30:00+00:00",
-                  "late_witness_records": 0,
-                  "provenance": "witness_corroborated_aware_iso",
-                  "reason": "independent_pre_cutoff_schedule_witness",
-                  "status": "corroborated",
-                  "witnesses": [
-                    {
-                      "away": "Radni\u010dki Ni\u0161",
-                      "csv_data_row": 3396,
-                      "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "d7e7f385b6bbf16213d606924b3391d7f6d052e57ca0ec798aa9dbaa69690878",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Partizan",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-28T17:30:00+00:00",
-                      "league": "Super Liga",
-                      "observed_at_utc": "2026-11-27T22:15:21+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "ee62171e510f37353d81a626dac9513f849523b940aa2e722fced7c998235a4c",
-                      "schedule_row": {
-                        "away": "Radni\u010dki Ni\u0161",
-                        "captured_at": "2026-11-27T22:15:21+00:00",
-                        "country": "Serbia",
-                        "date": "2026-11-28",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "Partizan",
-                        "hs": "",
-                        "kickoff": "2026-11-28T17:30:00Z",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "Super Liga",
-                        "odd1": "1.4",
-                        "odd2": "7.0",
-                        "odd_gg": "1.8",
-                        "odd_ng": "1.9",
-                        "odd_o15": "1.14",
-                        "odd_o25": "1.5",
-                        "odd_o35": "2.1",
-                        "odd_u15": "5.0",
-                        "odd_u25": "2.5",
-                        "odd_u35": "1.66",
-                        "oddx": "4.6",
-                        "p1": "66.4712451144612",
-                        "p2": "13.29797133817234",
-                        "p_gg": "51.35135135135135",
-                        "p_ng": "48.648648648648646",
-                        "p_o15": "81.43322475570032",
-                        "p_o25": "62.5",
-                        "p_o35": "44.148936170212764",
-                        "px": "20.23078354736646",
-                        "schedule_history": "[]",
-                        "source": "scoutingstats",
-                        "status": "17:30"
-                      },
-                      "source": "scoutingstats"
-                    },
-                    {
-                      "away": "Radnicki Nis",
-                      "csv_data_row": 12703,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "FK Partizan",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-28T17:30:00+00:00",
-                      "league": "Serbia: Super Liga",
-                      "observed_at_utc": "2026-11-27T22:14:48+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "9b7ee7695bc37b767a4e854574e067a6f8ee9ea69b1c290a1d6c30f1f1b89bc4",
-                      "schedule_row": {
-                        "away": "Radnicki Nis",
-                        "captured_at": "2026-11-27T22:14:48+00:00",
-                        "date": "2026-11-28",
-                        "fixture_identity_origin": "provider_participants",
-                        "gs": "",
-                        "home": "FK Partizan",
-                        "hs": "",
-                        "index": "2.05",
-                        "kickoff": "2026-11-28T18:30:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "league": "Serbia: Super Liga",
-                        "p1": "61.0",
-                        "p2": "17.0",
-                        "pred_gs": "",
-                        "pred_hs": "",
-                        "px": "22.0",
-                        "schedule_history": "[{\"away\": \"Radnicki Nis\", \"captured_at\": \"2026-11-26T22:10:36+00:00\", \"date\": \"2026-11-28\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"FK Partizan\", \"kickoff\": \"2026-11-28T18:30:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
-                        "source": "vitibet",
-                        "status": "scheduled",
-                        "tip": "1"
-                      },
-                      "source": "vitibet"
-                    },
-                    {
-                      "away": "Radnicki Nis",
-                      "csv_data_row": 12703,
-                      "csv_history_index": 0,
-                      "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "663b6a3693a4c276083e42f790245452be6580f79d764f808d1815397706b44e",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "FK Partizan",
-                      "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-28T17:30:00+00:00",
-                      "league": null,
-                      "observed_at_utc": "2026-11-26T22:10:36+00:00",
-                      "provider_commence_time": null,
-                      "provider_event_id": null,
-                      "row_sha256": "722de0fa75b6047a23b9cb6a0a21dcfc229a55d57e6bbf28e19b74d15592e29d",
-                      "schedule_row": {
-                        "away": "Radnicki Nis",
-                        "captured_at": "2026-11-26T22:10:36+00:00",
-                        "date": "2026-11-28",
-                        "fixture_identity_origin": "provider_participants",
-                        "home": "FK Partizan",
-                        "kickoff": "2026-11-28T18:30:00+01:00",
-                        "kickoff_origin": "provider_explicit_offset",
-                        "source": "vitibet"
-                      },
-                      "source": "vitibet"
-                    }
-                  ]
-                },
-                "selection": "under",
-                "site_best": true
-              },
-              "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-28",
-                "PARTIZAN",
-                "RADNICKI NIS"
-              ]
-            },
-            {
-              "match": "INTER MILAN vs GENOA",
-              "pick": "under",
-              "prob": 0.6489,
-              "odds": 1.55,
-              "result": null,
-              "market": "match_under_35",
-              "price_book": "BetMGM.us",
-              "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.6489,
-                "n": 450,
-                "contract_id": "pfc_31a651bb4038b2a2acf7a954",
-                "as_of_exclusive": "2026-11-28",
-                "market": "match_under_35",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 292,
-                "cohort_lower_bound": 0.6036965193029254,
-                "price_context": {
-                  "contract_id": "pfc_31a651bb4038b2a2acf7a954",
-                  "selection": "home",
-                  "league": "IT1",
-                  "book": "BetMGM.us",
-                  "source": "betexplorer",
-                  "price": 1.55,
-                  "captured_at": "2026-11-27T22:40:35.807410+00:00",
-                  "decision_at": "2026-11-28T06:31:50+02:00",
-                  "kickoff": "2026-11-28T19:45:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.6747383086062066,
-              "ml_model_key": "29f77b1797b4eecef2292efdecb930af2db219fd1a4e1a966fa030f79e197f93",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Under 3.5 Goals",
-              "floor": 2.9694463573751944,
-              "floor_basis": "market",
               "league": "IT1",
               "price_at": "2026-11-27T22:40:35.807410+00:00",
               "price_kickoff": "2026-11-28T19:45:00+00:00",
               "price_provenance": {
                 "away": "Genoa",
-                "bookmaker": "BetMGM.us",
+                "bookmaker": "bet365.us",
                 "captured_at": "2026-11-27T22:40:35.807410+00:00",
                 "data_dt": [
                   28,
@@ -15826,9 +15525,9 @@
                 "kickoff_utc": "2026-11-28T19:45:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-28.json",
-                "ledger_sha256": "d1ec76b95ce9b89c5853524d33c2210938788ac39530a5624161665b1511cbbd",
-                "market": "ou_3.5",
-                "price": 1.55,
+                "ledger_sha256": "9b03f211938faad8cddda81860fe19815d8a393c6ac3fbd9b54116075a83c780",
+                "market": "ou_4.5",
+                "price": 1.25,
                 "quote_evidence": {
                   "column_index": 1,
                   "columns": [
@@ -15838,20 +15537,20 @@
                   "market_slug": "ou",
                   "row": {
                     "best": true,
-                    "bookmaker": "BetMGM.us",
-                    "bookmaker_id": "1103",
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
                     "created": [
-                      "2026-11-26T19:40",
-                      "2026-11-26T19:40"
+                      "2026-11-25T07:34",
+                      "2026-11-25T07:34"
                     ],
-                    "line": "3.50",
+                    "line": "4.50",
                     "movement": [
-                      null,
-                      null
+                      "up",
+                      "down"
                     ],
                     "odds": [
-                      2.3,
-                      1.55
+                      4.0,
+                      1.25
                     ],
                     "pos": [
                       "1",
@@ -15859,8 +15558,8 @@
                     ],
                     "source": "all"
                   },
-                  "row_index": 17,
-                  "row_sha256": "bbc3d693ca76deff515e75e749a603703be0bffd253a707763fbf624720e4948"
+                  "row_index": 19,
+                  "row_sha256": "877c8fef3f2f9c9443d9c02a2cd95f73ae889d331b847b82c9f5123d080a5381"
                 },
                 "raw_kickoff": "20:45",
                 "resolution": {
@@ -15878,7 +15577,7 @@
                       "away": "Genoa",
                       "csv_data_row": 3321,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "d7e7f385b6bbf16213d606924b3391d7f6d052e57ca0ec798aa9dbaa69690878",
+                      "file_sha256": "48caf039fee000fa4a9abe5ee274ee20ff37dd4f11e67168604217513506e8ed",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Inter",
                       "kickoff_origin": "provider_explicit_offset",
@@ -15940,8 +15639,13 @@
               ]
             }
           ],
-          "odds": 1.95,
-          "stake_pct": 1.8565
+          "odds": 1.7,
+          "stake_pct": 1.8565,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 5.5695
@@ -16140,6 +15844,11 @@
     },
     "2026-11-26": {
       "frozen_at": "2026-11-26T09:42:21+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-28": {
+      "frozen_at": "2026-11-28T09:46:04+02:00",
       "final": true,
       "lock_source": "state"
     }

@@ -228,43 +228,43 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 2,
-        "board_league_count": 2,
+        "board_fixtures": 8,
+        "board_league_count": 4,
         "board_leagues": {
-          "japan_-_j1_league": 84,
-          "usa_-_major_league_soccer": 116
+          "hong_kong_-_premier_league": 38,
+          "japan_-_j1_league": 110,
+          "korea_-_k1_league": 15,
+          "world_-_international_friendlies_women": 37
         },
-        "board_non_prematch_rows": 152,
+        "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 4,
+        "board_team_count": 15,
         "board_team_names": {
-          "Cerezo Osaka": 84,
-          "Kyoto Sanga": 84,
-          "Real Salt Lake": 116,
-          "Vancouver Whitecaps": 116
+          "Albania (W)": 27,
+          "Albania [W]": 10,
+          "Bucheon FC 1995": 15,
+          "Fagiano Okayama": 3,
+          "Gimcheon Sangmu": 15,
+          "Hiroshima": 34,
+          "Kashima": 73,
+          "Kashima Antlers": 3,
+          "Kashiwa": 34,
+          "Malawi (W)": 27,
+          "Malawi [W]": 10,
+          "North District": 37,
+          "North District FC": 1,
+          "Okayama": 73,
+          "Southern District": 38
         },
         "board_truncated": false,
-        "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_asian_handicap_corners": 2,
-          "unknown_market:1st_half_asian_total_goals": 6,
-          "unknown_market:1st_half_moneyline": 3,
-          "unknown_market:1st_half_total_corners": 10,
-          "unknown_market:1st_half_total_goals": 2,
-          "unknown_market:2nd_half_asian_handicap_corners": 2,
-          "unknown_market:2nd_half_asian_total_goals": 6,
-          "unknown_market:2nd_half_moneyline": 3,
-          "unknown_market:2nd_half_total_corners": 10,
-          "unsupported_market:asian_handicap": 4
-        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 116,
-          "player_prop": 36
+          "live_price": 200
         },
         "requested_limit": 1000
       },
@@ -273,7 +273,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_unmappable",
+      "reason": "all_rows_live_or_stale",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
