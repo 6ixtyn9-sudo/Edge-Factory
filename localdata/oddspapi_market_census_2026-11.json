@@ -1,6 +1,6 @@
 {
   "catalog_size": 4814,
-  "last_run": "2026-11-28T10:39:12+00:00",
+  "last_run": "2026-11-28T13:24:15+00:00",
   "markets": {
     "101": {
       "catalog": true,
@@ -8663,24 +8663,8 @@
   },
   "month": "2026-11",
   "parse_skips": {
-    "expected": {
-      "alt_line_skipped": 3,
-      "market_inactive": 21,
-      "outcome_inactive": 1400
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 16,
-      "market_unsupported_clean_sheet": 434,
-      "market_unsupported_corners": 3109,
-      "market_unsupported_correct_score": 1674,
-      "market_unsupported_early_payout": 69,
-      "market_unsupported_handicap": 6868,
-      "market_unsupported_market_type": 5226,
-      "market_unsupported_non_goal": 203,
-      "market_unsupported_odd_even": 1679,
-      "market_unsupported_period": 26358,
-      "market_unsupported_win_to_nil": 698
-    }
+    "expected": {},
+    "loss_or_diagnosis": {}
   },
   "schema": 1,
   "source": "oddspapi",
