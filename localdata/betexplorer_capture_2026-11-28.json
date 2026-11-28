@@ -1,5 +1,5 @@
 {
-  "attempted": 14,
+  "attempted": 15,
   "attempted_fixtures": [
     {
       "avg_p": 74.20782087669505,
@@ -62,11 +62,11 @@
       "w_score": 0.6628
     },
     {
-      "avg_p": 66.5,
-      "away": "COVENTRY",
+      "avg_p": 66.0,
+      "away": "CRAWLEY TOWN",
       "date": "2026-11-28",
-      "home": "LEEDS",
-      "league": "ENP",
+      "home": "EXETER",
+      "league": "EN2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
@@ -140,29 +140,39 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6628
+    },
+    {
+      "avg_p": 66.5,
+      "away": "COVENTRY",
+      "date": "2026-11-28",
+      "home": "LEEDS",
+      "league": "ENP",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
     }
   ],
   "be_429": 2,
-  "be_cached": 13,
+  "be_cached": 14,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 13,
+  "cache_only": 14,
   "candidate_fixtures": 92,
-  "captured_at": "2026-11-28T01:38:39.054364+00:00",
+  "captured_at": "2026-11-28T04:31:01.364114+00:00",
   "date": "2026-11-28",
-  "deferred_fixtures": 78,
+  "deferred_fixtures": 77,
   "errors": [],
-  "fixtures_with_rows": 10,
+  "fixtures_with_rows": 11,
   "market_budget_stop": false,
-  "market_requests": 4,
+  "market_requests": 1,
   "match_detail": {
-    "bookmakers": 143,
+    "bookmakers": 146,
     "challenge_pages": 0,
-    "fixtures": 9,
-    "market_rows": 373,
-    "markets": 52,
-    "named_rows": 373,
+    "fixtures": 10,
+    "market_rows": 376,
+    "markets": 53,
+    "named_rows": 376,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -192,11 +202,11 @@
       "w_score": 0.584
     },
     {
-      "avg_p": 66.5,
-      "away": "COVENTRY",
+      "avg_p": 66.0,
+      "away": "CRAWLEY TOWN",
       "date": "2026-11-28",
-      "home": "LEEDS",
-      "league": "ENP",
+      "home": "EXETER",
+      "league": "EN2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.584
@@ -270,10 +280,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6628
+    },
+    {
+      "avg_p": 66.5,
+      "away": "COVENTRY",
+      "date": "2026-11-28",
+      "home": "LEEDS",
+      "league": "ENP",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.584
     }
   ],
-  "requests": 9,
-  "rows": 30,
+  "requests": 6,
+  "rows": 33,
   "schema": 1,
   "status": "ok"
 }

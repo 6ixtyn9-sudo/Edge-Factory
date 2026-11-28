@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-11-28T03:19:47",
+ "generated_at": "2026-11-28T06:16:21",
  "window_days": 90,
  "rows": [
   {
@@ -404271,12 +404271,31 @@
   },
   {
    "date": "2026-11-27",
+   "home": "Antofagasta",
+   "away": "Deportes Copiapo",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-11-27",
    "home": "Artis",
    "away": "Slov\u00e1cko",
    "hs": 4,
    "gs": 1,
    "outcome": "home",
    "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-11-27",
+   "home": "Atlanta",
+   "away": "Ciudad de Bol\u00edvar",
+   "hs": 0,
+   "gs": 1,
+   "outcome": "away",
+   "src": "scoutingstats_settled",
+   "status": "FT"
   },
   {
    "date": "2026-11-27",
@@ -404672,6 +404691,15 @@
   },
   {
    "date": "2026-11-27",
+   "home": "Deportivo Cali",
+   "away": "Bucaramanga",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-11-27",
    "home": "Deportivo Cuenca",
    "away": "Manta FC",
    "hs": 3,
@@ -404886,8 +404914,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "scoutingstats_settled",
-   "status": "FT"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-27",
@@ -405446,6 +405473,16 @@
   },
   {
    "date": "2026-11-27",
+   "home": "Liverpool",
+   "away": "Racing",
+   "hs": 2,
+   "gs": 2,
+   "outcome": "draw",
+   "src": "scoutingstats_settled",
+   "status": "FT"
+  },
+  {
+   "date": "2026-11-27",
    "home": "Livyi Bereh",
    "away": "Kolos Kovalivka",
    "hs": 1,
@@ -405720,13 +405757,12 @@
   },
   {
    "date": "2026-11-27",
-   "home": "Northern Ireland W",
-   "away": "Greece W",
+   "home": "Northern Ireland (w)",
+   "away": "Greece (w)",
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "scoutingstats_settled",
-   "status": "FT"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-27",
@@ -405862,8 +405898,8 @@
    "date": "2026-11-27",
    "home": "Racing Club Mont",
    "away": "Liverpool (URU)",
-   "hs": 1,
-   "gs": 1,
+   "hs": 2,
+   "gs": 2,
    "outcome": "draw",
    "src": "bettingclosed_settled"
   },
@@ -406361,6 +406397,15 @@
    "gs": 0,
    "outcome": "home",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-27",
+   "home": "Vila Nova",
+   "away": "Atletico Goianiense",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-27",
@@ -409149,6 +409194,34 @@
    "date": "2026-11-26",
    "home": "USM Khenchela",
    "away": "MB Rouissat",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-27",
+   "home": "FC Dordrecht",
+   "away": "Vitesse",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-27",
+   "home": "Jong AZ",
+   "away": "TOP Oss",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-27",
+   "home": "Jong FC Utrecht",
+   "away": "Almere City",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-27",
+   "home": "VVV-Venlo",
+   "away": "RKC Waalwijk",
    "disposition": "POSTPONED",
    "src": "source_status:scoutingstats"
   },

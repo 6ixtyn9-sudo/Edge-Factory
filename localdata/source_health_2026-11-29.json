@@ -158,13 +158,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -176,18 +171,18 @@
       },
       "coherence_withheld_fixtures": 5,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 20463
       },
       "pa_matched": 0,
-      "pa_raw": 1128,
+      "pa_raw": 20463,
       "pa_scored": 20463,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -233,40 +228,43 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 4,
+        "board_fixtures": 2,
+        "board_league_count": 2,
         "board_leagues": {
-          "argentina_-_primera_nacional": 4,
-          "colombia_-_primera_a": 21,
-          "panama_-_primera_division": 63,
-          "usa_-_major_league_soccer": 112
+          "japan_-_j1_league": 84,
+          "usa_-_major_league_soccer": 116
         },
-        "board_non_prematch_rows": 200,
+        "board_non_prematch_rows": 152,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 12,
+        "board_team_count": 4,
         "board_team_names": {
-          "America de Cali": 5,
-          "America de Cali S.A": 16,
-          "Arabe Unido": 63,
-          "Colon de Santa": 4,
-          "Columbus": 87,
-          "Columbus Crew": 25,
-          "Deportivo Moron": 4,
-          "Inter Miami": 25,
-          "Inter Miami CF": 87,
-          "Millonarios": 16,
-          "Millonarios Bogota": 5,
-          "San Francisco FC": 63
+          "Cerezo Osaka": 84,
+          "Kyoto Sanga": 84,
+          "Real Salt Lake": 116,
+          "Vancouver Whitecaps": 116
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_asian_handicap_corners": 2,
+          "unknown_market:1st_half_asian_total_goals": 6,
+          "unknown_market:1st_half_moneyline": 3,
+          "unknown_market:1st_half_total_corners": 10,
+          "unknown_market:1st_half_total_goals": 2,
+          "unknown_market:2nd_half_asian_handicap_corners": 2,
+          "unknown_market:2nd_half_asian_total_goals": 6,
+          "unknown_market:2nd_half_moneyline": 3,
+          "unknown_market:2nd_half_total_corners": 10,
+          "unsupported_market:asian_handicap": 4
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 116,
+          "player_prop": 36
         },
         "requested_limit": 1000
       },
@@ -275,7 +273,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "reason": "all_rows_unmappable",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
