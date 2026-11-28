@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-28T01:08:26",
+  "generated_at": "2026-11-28T04:09:33",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 265.04253399999993,
-  "multiple": 2.6504253399999995,
+  "bank_pct": 248.47743399999993,
+  "multiple": 2.4847743399999995,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
   "bet_days": 85,
   "accas": {
     "wins": 95,
-    "losses": 90
+    "losses": 91
   },
-  "open_slips": [
-    {
-      "date": "2026-11-27",
-      "staked_pct": 16.5651
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -3813,7 +3808,7 @@
     },
     {
       "date": "2026-11-27",
-      "staked_pct": 66.2604,
+      "staked_pct": 82.8255,
       "returned_pct": 0.0,
       "accas": [
         {
@@ -3876,7 +3871,7 @@
               "match": "Fluminense vs Cruzeiro",
               "pick": "HOME",
               "odds": 2.08,
-              "result": null,
+              "result": "loss",
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
@@ -3959,10 +3954,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 2.72,
+          "won": false,
+          "stake_pct": 16.5651,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Briton Ferry vs Penybont",
+              "pick": "AWAY",
+              "odds": 1.53,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "Briton Ferry",
+                "Penybont"
+              ]
+            },
+            {
+              "match": "DEPORTIVO CALI vs BUCARAMANGA",
+              "pick": "HOME",
+              "odds": 1.7752,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-27",
+                "DEPORTIVO CALI",
+                "BUCARAMANGA"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 265.0425,
-      "close_pct": 265.0425
+      "bank_pct": 248.4774,
+      "close_pct": 248.4774
     }
   ]
 }

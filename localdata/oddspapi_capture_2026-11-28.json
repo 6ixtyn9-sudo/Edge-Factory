@@ -10,8 +10,8 @@
     "remaining_today": 21,
     "spent_today": 4
   },
-  "budget_deferred": 21,
-  "captured_at": "2026-11-27T22:38:50+00:00",
+  "budget_deferred": 30,
+  "captured_at": "2026-11-28T01:38:38+00:00",
   "date": "2026-11-28",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
@@ -23,19 +23,19 @@
   "market_census": "oddspapi_market_census_2026-11.json",
   "market_census_distinct": 0,
   "markets": {},
-  "markets_source": "fetch",
+  "markets_source": "cache",
   "matched": 0,
   "odds_vocabulary": "unchanged",
   "parse_skips_classified": {
     "expected": {},
     "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 21,
+  "pending_fixtures": 30,
   "quoted_fixtures": [],
   "reserved_requests": 21,
   "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 83,
+  "slate_candidate_fixtures": 82,
   "slate_match_mode": "exact_normalized_pair",
   "slate_priority_fixtures": 0,
   "slate_provider_overlap_fixtures": 30,
@@ -191,12 +191,6 @@
       "normalized_pair": "holywell|llandudno"
     },
     {
-      "away": "Lobos ULMX",
-      "home": "Reboceros La Piedad",
-      "league": "Mexico Primera Premier",
-      "normalized_pair": "lobos ulmx|reboceros la piedad"
-    },
-    {
       "away": "Dunajsk\u00e1 Streda",
       "home": "Podbrezov\u00e1",
       "league": "Nik\u00e9 Liga",
@@ -339,6 +333,12 @@
       "home": "ALBACETE",
       "league": "ES2",
       "normalized_pair": "albacete|tenerife"
+    },
+    {
+      "away": "STRASBOURG",
+      "home": "LE HAVRE",
+      "league": "FR1",
+      "normalized_pair": "le havre|strasbourg"
     }
   ],
   "source": "oddspapi_odds",

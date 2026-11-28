@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 3,
@@ -30,7 +30,7 @@
         "selection_unmapped": 124
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-11-29\\/2026-11-29' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -179,11 +179,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 19245
+        "out_of_window": 20463
       },
       "pa_matched": 0,
-      "pa_raw": 1056,
-      "pa_scored": 19245,
+      "pa_raw": 1128,
+      "pa_scored": 20463,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -233,22 +233,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 3,
-        "board_league_count": 2,
+        "board_fixtures": 6,
+        "board_league_count": 4,
         "board_leagues": {
-          "argentina_-_primera_nacional": 168,
-          "ecuador_-_serie_a": 32
+          "argentina_-_primera_nacional": 4,
+          "colombia_-_primera_a": 21,
+          "panama_-_primera_division": 63,
+          "usa_-_major_league_soccer": 112
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 5,
+        "board_team_count": 12,
         "board_team_names": {
-          "CA Atlanta": 168,
-          "Ciudad Bolivar": 61,
-          "Ciudad de Bolivar": 107,
-          "Deportivo Cuenca": 32,
-          "Manta FC": 32
+          "America de Cali": 5,
+          "America de Cali S.A": 16,
+          "Arabe Unido": 63,
+          "Colon de Santa": 4,
+          "Columbus": 87,
+          "Columbus Crew": 25,
+          "Deportivo Moron": 4,
+          "Inter Miami": 25,
+          "Inter Miami CF": 87,
+          "Millonarios": 16,
+          "Millonarios Bogota": 5,
+          "San Francisco FC": 63
         },
         "board_truncated": false,
         "card_fixture_count": 0,
