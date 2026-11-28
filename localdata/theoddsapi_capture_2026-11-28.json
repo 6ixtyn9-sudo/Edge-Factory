@@ -1,111 +1,27 @@
 {
   "added": 0,
-  "attempted": 14,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "away": "Gateshead",
+      "away": "Hapoel Petah Tikva",
       "date": "2026-11-28",
-      "home": "Boreham Wood",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "Enterprise National League"
-    },
-    {
-      "away": "Falkirk",
-      "date": "2026-11-28",
-      "home": "Rangers",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "Premiership"
-    },
-    {
-      "away": "FC Bayern M\u00fcnchen",
-      "date": "2026-11-28",
-      "home": "Hamburger SV",
-      "kickoff": "2026-11-28T14:30:00Z",
-      "league": "Bundesliga"
-    },
-    {
-      "away": "Lorient",
-      "date": "2026-11-28",
-      "home": "Paris Saint Germain",
-      "kickoff": "2026-11-28T19:45:00Z",
-      "league": "Ligue 1"
-    },
-    {
-      "away": "HAPOEL PETAH TIKVA",
-      "date": "2026-11-28",
-      "home": "MACCABI TEL AVIV",
-      "kickoff": "17:00",
-      "league": "IL1"
-    },
-    {
-      "away": "RADNICKI NIS",
-      "date": "2026-11-28",
-      "home": "PARTIZAN",
-      "kickoff": "17:30",
-      "league": "RS1"
-    },
-    {
-      "away": "Mladost Lu\u010dani",
-      "date": "2026-11-28",
-      "home": "\u010cukari\u010dki",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "Super Liga"
-    },
-    {
-      "away": "Maccabi Haifa",
-      "date": "2026-11-28",
-      "home": "Bnei Sakhnin",
-      "kickoff": "2026-11-28T13:00:00Z",
+      "home": "Maccabi Tel Aviv",
+      "kickoff": "2026-11-28T17:00:00Z",
       "league": "Ligat ha'Al"
     },
     {
-      "away": "Rio Ave",
+      "away": "Radni\u010dki Ni\u0161",
       "date": "2026-11-28",
-      "home": "Arouca",
-      "kickoff": "2026-11-28T15:30:00Z",
-      "league": "Liga Portugal"
-    },
-    {
-      "away": "Barnet",
-      "date": "2026-11-28",
-      "home": "Rochdale",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "League Two"
-    },
-    {
-      "away": "St. Johnstone",
-      "date": "2026-11-28",
-      "home": "Dundee United",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "Premiership"
-    },
-    {
-      "away": "Rayo Vallecano",
-      "date": "2026-11-28",
-      "home": "Real Betis",
-      "kickoff": "2026-11-28T13:00:00Z",
-      "league": "La Liga"
-    },
-    {
-      "away": "Mansfield Town",
-      "date": "2026-11-28",
-      "home": "Leicester City",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "League One"
-    },
-    {
-      "away": "Dundee FC",
-      "date": "2026-11-28",
-      "home": "Aberdeen",
-      "kickoff": "2026-11-28T15:00:00Z",
-      "league": "Scottish Premiership"
+      "home": "Partizan",
+      "kickoff": "2026-11-28T17:30:00Z",
+      "league": "Super Liga"
     }
   ],
   "candidate_fixtures": 79,
-  "captured_at": "2026-11-28T13:34:06+00:00",
+  "captured_at": "2026-11-28T16:34:53+00:00",
   "date": "2026-11-28",
   "due_reasons": {
-    "first_at": 14
+    "first_at": 2
   },
   "errors": [],
   "fixtures_with_rows": 0,
@@ -124,11 +40,15 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 2,
-    "retry_cooldown": 63
+    "retry_cooldown": 75
   },
   "skipped": [
+    "Boreham Wood|Gateshead (retry cooldown (6h after failed attempt))",
     "Al Hazm|Al Nassr (retry cooldown (6h after failed attempt))",
     "FCSB|Csikszereda (retry cooldown (6h after failed attempt))",
+    "Rangers|Falkirk (retry cooldown (6h after failed attempt))",
+    "Hamburger SV|FC Bayern M\u00fcnchen (retry cooldown (6h after failed attempt))",
+    "Paris Saint Germain|Lorient (retry cooldown (6h after failed attempt))",
     "Crusaders|Linfield (retry cooldown (6h after failed attempt))",
     "Dynamo Kyiv|Chornomorets (retry cooldown (6h after failed attempt))",
     "Al Wasl|Al Dhafra (retry cooldown (6h after failed attempt))",
@@ -154,19 +74,26 @@
     "Slovan Bratislava|FK Ko\u0161ice (retry cooldown (6h after failed attempt))",
     "Siroki Brijeg|Zrinjski (retry cooldown (6h after failed attempt))",
     "Holywell|Llandudno (retry cooldown (6h after failed attempt))",
+    "\u010cukari\u010dki|Mladost Lu\u010dani (retry cooldown (6h after failed attempt))",
     "Reboceros La Piedad|Lobos ULMX (kickoff already passed)",
     "Podbrezov\u00e1|Dunajsk\u00e1 Streda (retry cooldown (6h after failed attempt))",
     "SHEFFIELD WED|READING (retry cooldown (6h after failed attempt))",
+    "Bnei Sakhnin|Maccabi Haifa (retry cooldown (6h after failed attempt))",
     "BLACKBURN|CHARLTON (retry cooldown (6h after failed attempt))",
     "RUBIN|AKRON TOGLIATTI (retry cooldown (6h after failed attempt))",
+    "Arouca|Rio Ave (retry cooldown (6h after failed attempt))",
     "BRISTOL ROVERS|TRANMERE (retry cooldown (6h after failed attempt))",
     "Vanspor FK|Bursaspor (retry cooldown (6h after failed attempt))",
+    "Rochdale|Barnet (retry cooldown (6h after failed attempt))",
     "Naftan|Dinamo Minsk (kickoff already passed)",
     "Quick Boys|De Treffers (retry cooldown (6h after failed attempt))",
+    "Dundee United|St. Johnstone (retry cooldown (6h after failed attempt))",
     "Vissel Kobe|JEF United (retry cooldown (6h after failed attempt))",
     "BEITAR JERUSALEM|HAPOEL JERUSALEM (retry cooldown (6h after failed attempt))",
+    "Real Betis|Rayo Vallecano (retry cooldown (6h after failed attempt))",
     "FOREST GREEN|TAMWORTH (retry cooldown (6h after failed attempt))",
     "Slough Town|Tonbridge Angels (retry cooldown (6h after failed attempt))",
+    "Leicester City|Mansfield Town (retry cooldown (6h after failed attempt))",
     "Pescara|Pianese (retry cooldown (6h after failed attempt))",
     "IRAKLIS|PANAITOLIKOS (retry cooldown (6h after failed attempt))",
     "VfB Stuttgart|Eintracht Frankfurt (retry cooldown (6h after failed attempt))",
@@ -180,6 +107,7 @@
     "IPSWICH|ASTON VILLA (retry cooldown (6h after failed attempt))",
     "Swindon Town|Chesterfield (retry cooldown (6h after failed attempt))",
     "WREXHAM|PORTSMOUTH (retry cooldown (6h after failed attempt))",
+    "Aberdeen|Dundee FC (retry cooldown (6h after failed attempt))",
     "ASCOLI|VIRTUS ENTELLA (retry cooldown (6h after failed attempt))",
     "MANCHESTER UNITED|BRENTFORD (retry cooldown (6h after failed attempt))",
     "CHIPPA UTD.|KAIZER CHIEFS (retry cooldown (6h after failed attempt))",
@@ -196,32 +124,11 @@
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Boreham Wood vs Gateshead (league not covered: Enterprise National League)",
-    "Hamburger SV vs FC Bayern M\u00fcnchen (league not covered: Bundesliga)",
-    "Paris Saint Germain vs Lorient (league not covered: Ligue 1)",
-    "MACCABI TEL AVIV vs HAPOEL PETAH TIKVA (league not covered: IL1)",
-    "PARTIZAN vs RADNICKI NIS (league not covered: RS1)",
-    "\u010cukari\u010dki vs Mladost Lu\u010dani (league not covered: Super Liga)",
-    "Bnei Sakhnin vs Maccabi Haifa (league not covered: Ligat ha'Al)",
-    "Rochdale vs Barnet (league not covered: League Two)",
-    "Real Betis vs Rayo Vallecano (league not covered: La Liga)",
-    "Leicester City vs Mansfield Town (league not covered: League One)",
-    "Aberdeen vs Dundee FC (league not covered: Scottish Premiership)",
-    "Rangers vs Falkirk (keys exhausted)",
-    "Dundee United vs St. Johnstone (keys exhausted)"
+    "Maccabi Tel Aviv vs Hapoel Petah Tikva (league not covered: Ligat ha'Al)",
+    "Partizan vs Radni\u010dki Ni\u0161 (league not covered: Super Liga)"
   ],
   "unmatched_reasons": {
-    "keys exhausted": 2,
-    "league not covered: Bundesliga": 1,
-    "league not covered: Enterprise National League": 1,
-    "league not covered: IL1": 1,
-    "league not covered: La Liga": 1,
-    "league not covered: League One": 1,
-    "league not covered: League Two": 1,
     "league not covered: Ligat ha'Al": 1,
-    "league not covered: Ligue 1": 1,
-    "league not covered: RS1": 1,
-    "league not covered: Scottish Premiership": 1,
     "league not covered: Super Liga": 1
   }
 }

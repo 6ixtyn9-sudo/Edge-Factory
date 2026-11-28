@@ -10,151 +10,16 @@
     "remaining_today": 0,
     "spent_today": 27
   },
-  "budget_deferred": 200,
-  "captured_at": "2026-11-28T13:24:15+00:00",
+  "captured_at": "2026-11-28T16:27:17+00:00",
   "date": "2026-11-28",
   "errors": [],
-  "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 1,
-  "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 719,
-  "future_slate_fixtures": 0,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 0,
   "markets": {},
-  "markets_source": "cache",
   "matched": 0,
-  "odds_vocabulary": "unchanged",
-  "parse_skips_classified": {
-    "expected": {},
-    "loss_or_diagnosis": {}
-  },
-  "pending_fixtures": 539,
   "quoted_fixtures": [],
-  "reserved_requests": 0,
   "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 42,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 17,
-  "slate_provider_overlap_fixtures": 23,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Csikszereda",
-      "home": "FCSB",
-      "league": "Superliga",
-      "normalized_pair": "csikszereda|fcsb"
-    },
-    {
-      "away": "Falkirk",
-      "home": "Rangers",
-      "league": "Premiership",
-      "normalized_pair": "falkirk|rangers"
-    },
-    {
-      "away": "FC Bayern M\u00fcnchen",
-      "home": "Hamburger SV",
-      "league": "Bundesliga",
-      "normalized_pair": "bayern munchen|hamburger sv"
-    },
-    {
-      "away": "Lorient",
-      "home": "Paris Saint Germain",
-      "league": "Ligue 1",
-      "normalized_pair": "lorient|paris saint germain"
-    },
-    {
-      "away": "LORIENT",
-      "home": "PARIS SG",
-      "league": "FR1",
-      "normalized_pair": "lorient|paris sg"
-    },
-    {
-      "away": "Al Dhafra",
-      "home": "Al Wasl",
-      "league": "UAE Pro League",
-      "normalized_pair": "al dhafra|al wasl"
-    },
-    {
-      "away": "GENOA",
-      "home": "INTER MILAN",
-      "league": "IT1",
-      "normalized_pair": "genoa|inter milan"
-    },
-    {
-      "away": "RADNICKI NIS",
-      "home": "PARTIZAN",
-      "league": "RS1",
-      "normalized_pair": "partizan|radnicki nis"
-    },
-    {
-      "away": "Leyton Orient",
-      "home": "Stockport County",
-      "league": "League One",
-      "normalized_pair": "leyton orient|stockport county"
-    },
-    {
-      "away": "Zrinjski",
-      "home": "Siroki Brijeg",
-      "league": "Premier Liga",
-      "normalized_pair": "siroki brijeg|zrinjski"
-    },
-    {
-      "away": "Llandudno",
-      "home": "Holywell",
-      "league": "Premier League",
-      "normalized_pair": "holywell|llandudno"
-    },
-    {
-      "away": "Mladost Lu\u010dani",
-      "home": "\u010cukari\u010dki",
-      "league": "Super Liga",
-      "normalized_pair": "cukaricki|mladost lucani"
-    },
-    {
-      "away": "Dunajsk\u00e1 Streda",
-      "home": "Podbrezov\u00e1",
-      "league": "Nik\u00e9 Liga",
-      "normalized_pair": "dunajska streda|podbrezova"
-    },
-    {
-      "away": "De Treffers",
-      "home": "Quick Boys",
-      "league": "Tweede Divisie",
-      "normalized_pair": "de treffers|quick boys"
-    },
-    {
-      "away": "LENS",
-      "home": "ANGERS",
-      "league": "FR1",
-      "normalized_pair": "angers|lens"
-    },
-    {
-      "away": "LILLE",
-      "home": "LE MANS",
-      "league": "FR1",
-      "normalized_pair": "le mans|lille"
-    },
-    {
-      "away": "ASTON VILLA",
-      "home": "IPSWICH",
-      "league": "ENP",
-      "normalized_pair": "aston villa|ipswich"
-    },
-    {
-      "away": "LAZIO",
-      "home": "TORINO",
-      "league": "IT1",
-      "normalized_pair": "lazio|torino"
-    },
-    {
-      "away": "STRASBOURG",
-      "home": "LE HAVRE",
-      "league": "FR1",
-      "normalized_pair": "le havre|strasbourg"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
